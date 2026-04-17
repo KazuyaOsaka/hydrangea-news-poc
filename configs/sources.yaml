@@ -1,0 +1,304 @@
+# ニュースソース設定
+# G20+地域代表国への拡張を見越して、国・媒体・RSS URLをここで一元管理する
+#
+# フィールド説明:
+#   country        : ISO 3166-1 alpha-2 または "Global"
+#   name           : 媒体名（ファイル名に使うので英数字推奨）
+#   category       : general / economy / technology / politics / sports
+#   rss_url        : RSS/Atom フィード URL
+#   priority       : 同一国内での優先度（低い数値 = 高優先）
+#   enabled        : false にすると取得対象から除外
+#   language       : ISO 639-1 言語コード (ja / en / ar / zh / fr / de / ...)
+#   region         : 地域区分 (japan / global / middle_east / europe / east_asia / global_south)
+#   source_type    : メディア種別 (public_broadcaster / wire_service / newspaper /
+#                    broadcast_news / state_media / digital_native)
+#   bridge_source  : 英語だが特定地域視点を代表する媒体は true
+#   licensing_notes: 取得・利用条件に関する注記
+#
+# 取得成功率メモ（2026-04時点の確認状況）:
+#   NHK*          : 安定（公式フィード、更新頻度高）
+#   Nikkei        : wor.jp 経由・第三者RDF。準公式的に機能しているが公式ではない
+#   Asahi         : 公式RDF。安定
+#   Kyodo47       : 47news.jp 経由（共同通信配信）。2026-04確認: HTTP 404 で取得不可
+#   Reuters       : Google News経由。feeds.reuters.com 廃止のためこの経路のみ現実的
+#   APNews        : Google News経由。直接RSSなし
+#   BBC           : 公式フィード。安定
+#   Bloomberg     : Google News経由。直接RSSは有料会員向け
+#   FT            : 公式RSSだがフィード内容は要約のみ（全文なし）
+#   AlJazeera     : 公式RSS。安定（2026-04確認済み）
+#   France24      : 公式RSS（English）。安定
+#   CNA           : Google News経由（直接RSSの安定性が低いため）
+
+sources:
+  # ── Japan ────────────────────────────────────────────────────────────────
+  - country: JP
+    name: NHK
+    category: general
+    rss_url: https://www3.nhk.or.jp/rss/news/cat0.xml
+    priority: 1
+    enabled: true
+    language: ja
+    region: japan
+    source_type: public_broadcaster
+    bridge_source: false
+    licensing_notes: "公式フィード。個人・研究利用は問題なし。商用利用・転載は別途確認要。"
+
+  - country: JP
+    name: NHK_Politics
+    category: politics
+    # NHK 政治カテゴリ専用フィード。一般フィードと重複する場合があるが、
+    # 政治ニュースの取得密度を上げるために追加。event_builderでURLデdup済み。
+    rss_url: https://www3.nhk.or.jp/rss/news/cat4.xml
+    priority: 2
+    enabled: true
+    language: ja
+    region: japan
+    source_type: public_broadcaster
+    bridge_source: false
+    licensing_notes: "公式フィード。個人・研究利用は問題なし。商用利用・転載は別途確認要。"
+
+  - country: JP
+    name: NHK_Economy
+    category: economy
+    # NHK 経済カテゴリ専用フィード。日銀・金融・貿易関連の JP 記事密度向上に寄与。
+    rss_url: https://www3.nhk.or.jp/rss/news/cat6.xml
+    priority: 3
+    enabled: true
+    language: ja
+    region: japan
+    source_type: public_broadcaster
+    bridge_source: false
+    licensing_notes: "公式フィード。個人・研究利用は問題なし。商用利用・転載は別途確認要。"
+
+  - country: JP
+    name: Nikkei
+    category: economy
+    # 公式RSSは廃止済み。wor.jp 経由の第三者RDFフィードを使用
+    rss_url: https://assets.wor.jp/rss/rdf/nikkei/news.rdf
+    priority: 4
+    enabled: true
+    language: ja
+    region: japan
+    source_type: newspaper
+    bridge_source: false
+    licensing_notes: "wor.jp 経由の第三者RDF。公式サポート外。取得はできているが、利用継続可否は定期確認が必要。"
+
+  - country: JP
+    name: Asahi
+    category: general
+    rss_url: https://rss.asahi.com/rss/asahi/newsheadlines.rdf
+    priority: 5
+    enabled: true
+    language: ja
+    region: japan
+    source_type: newspaper
+    bridge_source: false
+    licensing_notes: "公式RDF。個人・研究利用は問題なし。商用利用・記事転載は朝日新聞社への確認要。"
+
+  - country: JP
+    name: Kyodo47
+    category: general
+    # 共同通信（共同配信）の記事を 47news.jp 経由で取得。
+    # 2026-04-03 確認: https://www.47news.jp/rss/47news.rss → HTTP 404 で取得不可。
+    # 代替候補: https://www.47news.jp/rss のパス変更、または Google News 経由
+    #   (https://news.google.com/rss/search?q=kyodoonline.co.jp+when:24h&ceid=JP:ja)
+    # 有効化する前に取得確認が必要。
+    rss_url: https://www.47news.jp/rss/47news.rss
+    priority: 6
+    enabled: false
+    language: ja
+    region: japan
+    source_type: wire_service
+    bridge_source: false
+    licensing_notes: "共同通信配信。直接利用は著作権上問題あり。RSS取得も現在404で停止中。"
+
+  # ── Global ───────────────────────────────────────────────────────────────
+  - country: Global
+    name: Reuters
+    category: general
+    # feeds.reuters.com は2020年に廃止。Google News経由でReuters記事を取得
+    rss_url: https://news.google.com/rss/search?q=when:24h+allinurl:reuters.com&ceid=US:en&hl=en-US&gl=US
+    priority: 1
+    enabled: true
+    language: en
+    region: global
+    source_type: wire_service
+    bridge_source: false
+    licensing_notes: "Google News経由。Reuters記事の商用利用はライセンス契約要。RSS取得・研究目的は許容範囲。"
+
+  - country: Global
+    name: APNews
+    category: general
+    # AP通信。直接RSSは提供していないため Google News 経由で取得。
+    rss_url: https://news.google.com/rss/search?q=when:24h+allinurl:apnews.com&ceid=US:en&hl=en-US&gl=US
+    priority: 2
+    enabled: true
+    language: en
+    region: global
+    source_type: wire_service
+    bridge_source: false
+    licensing_notes: "Google News経由。AP記事の商用利用はライセンス契約要。RSS取得・研究目的は許容範囲。"
+
+  - country: Global
+    name: BBC
+    category: general
+    rss_url: http://feeds.bbci.co.uk/news/rss.xml
+    priority: 3
+    enabled: true
+    language: en
+    region: global
+    source_type: public_broadcaster
+    bridge_source: false
+    licensing_notes: "公式RSS。BBCコンテンツは英国公共放送。個人・研究利用は問題なし。商用利用は要確認。"
+
+  - country: Global
+    name: Bloomberg
+    category: economy
+    # Bloomberg は直接RSSを公式提供していない（有料会員向けのみ）。
+    # Google News 経由で bloomberg.com 記事を取得。
+    rss_url: https://news.google.com/rss/search?q=when:24h+allinurl:bloomberg.com&ceid=US:en&hl=en-US&gl=US
+    priority: 4
+    enabled: true
+    language: en
+    region: global
+    source_type: newspaper
+    bridge_source: false
+    licensing_notes: "Google News経由。Bloombergコンテンツは有料サービス。RSS取得・研究目的は許容範囲。"
+
+  - country: Global
+    name: FinancialTimes
+    category: economy
+    # FT の RSS は会員登録なしでも閲覧可能なフィードを使用
+    rss_url: https://www.ft.com/rss/home
+    priority: 5
+    enabled: true
+    language: en
+    region: global
+    source_type: newspaper
+    bridge_source: false
+    licensing_notes: "公式RSS（要約のみ・全文なし）。FTコンテンツは有料。RSS取得・研究目的は許容範囲。"
+
+  # ── Middle East (Pilot) ────────────────────────────────────────────────
+  - country: QA
+    name: AlJazeera
+    category: general
+    # Al Jazeera English 公式RSS。中東・グローバルサウス視点の英語報道。
+    # カタール国営放送だが、英語版は中東・アフリカ・アジアをカバーする国際報道機関として機能。
+    # 欧米メディアとは異なる視点（中東・パレスチナ・グローバルサウス）を代表するブリッジソース。
+    rss_url: https://www.aljazeera.com/xml/rss/all.xml
+    priority: 1
+    enabled: true
+    language: en
+    region: middle_east
+    source_type: broadcast_news
+    bridge_source: true
+    licensing_notes: >
+      公式RSSフィード。Al Jazeeraはカタール政府系だが英語版は国際報道機関として広く参照される。
+      RSS取得・研究目的は許容範囲。商用利用・記事転載はAl Jazeera Media Networkへの確認要。
+
+  # ── Continental Europe (Pilot) ────────────────────────────────────────
+  - country: FR
+    name: France24
+    category: general
+    # France 24 English 公式RSS。フランス政府系だが英語国際放送として欧州・仏語圏視点を提供。
+    # 欧州・アフリカ・中東に関する報道でAP/Reutersとは異なる視角が得られるブリッジソース。
+    rss_url: https://www.france24.com/en/rss
+    priority: 1
+    enabled: true
+    language: en
+    region: europe
+    source_type: broadcast_news
+    bridge_source: true
+    licensing_notes: >
+      公式RSSフィード。France24はフランス政府系国際放送局。
+      RSS取得・研究目的は許容範囲。商用利用・記事転載はFrance24への確認要。
+
+  # ── East Asia (Pilot) ─────────────────────────────────────────────────
+  - country: SG
+    name: CNA
+    category: general
+    # Channel News Asia (CNA)。シンガポール拠点のアジア報道専門局。
+    # 東南アジア・中国・インド・日本を含む東アジア・アジア太平洋視点を提供するブリッジソース。
+    # 直接RSSの安定性が低いため Google News 経由で取得。
+    rss_url: https://news.google.com/rss/search?q=when:24h+allinurl:channelnewsasia.com&ceid=US:en&hl=en-US&gl=US
+    priority: 1
+    enabled: true
+    language: en
+    region: east_asia
+    source_type: broadcast_news
+    bridge_source: true
+    licensing_notes: >
+      Google News経由。CNAはMediacorp（シンガポール政府系）。
+      RSS取得・研究目的は許容範囲。商用利用・記事転載はCNAへの確認要。
+
+  # ── Candidate Sources (disabled / proposal stage) ─────────────────────
+  # 以下は将来の有効化候補。利用条件・取得安定性の確認が必要。
+
+  - country: HK
+    name: SCMP
+    category: general
+    # South China Morning Post。香港拠点、Alibaba傘下（2016年〜）。
+    # 中国本土・香港・東アジアに関する英語報道。Alibaba傘下化後の独立性について議論あり。
+    # RSS直接取得が不安定なため、Google News経由を推奨。
+    rss_url: https://news.google.com/rss/search?q=when:24h+allinurl:scmp.com&ceid=US:en&hl=en-US&gl=US
+    priority: 2
+    enabled: false
+    language: en
+    region: east_asia
+    source_type: newspaper
+    bridge_source: true
+    licensing_notes: >
+      Google News経由。SCMPはAlibaba傘下（2016〜）。中国・香港視点の英語報道として有用だが、
+      編集独立性に関する懸念を念頭に置くこと。商用利用・記事転載はSCMPへの確認要。
+
+  - country: DE
+    name: DeutscheWelle
+    category: general
+    # Deutsche Welle (DW) English。ドイツ公共国際放送。欧州・独語圏視点の安定した英語報道。
+    # 公式RSSが安定しており、France24の補完または代替として優先度が高い。
+    rss_url: https://rss.dw.com/rss/en-all
+    priority: 2
+    enabled: false
+    language: en
+    region: europe
+    source_type: public_broadcaster
+    bridge_source: true
+    licensing_notes: >
+      公式RSSフィード。DWはドイツ政府系国際放送局。RSS取得・研究目的は許容範囲。
+      商用利用・記事転載はDWへの確認要。有効化は容易（安定RSS）。
+
+  - country: CN
+    name: GlobalTimes
+    category: general
+    # Global Times（环球时报）英語版。中国国営メディア（人民日報グループ）。
+    # 中国政府の公式立場・対外論調を代表するが、プロパガンダ的傾向が強い。
+    # 視点差分析（中国vs欧米vs日本）に参照価値はあるが、出力には中立性への注意書き必須。
+    # 有効化前に編集方針のガイドラインを整備すること。
+    rss_url: https://www.globaltimes.cn/rss/outbrain.xml
+    priority: 3
+    enabled: false
+    language: en
+    region: east_asia
+    source_type: state_media
+    bridge_source: false
+    licensing_notes: >
+      中国国営メディア（人民日報グループ）。取得は可能だが、state_mediaとして明示的に
+      ラベリングし、他ソースと区別して扱うことが必要。商用利用・記事転載は要確認。
+      有効化には編集ガイドライン整備が前提。
+
+  - country: SA
+    name: ArabNews
+    category: general
+    # Arab News。サウジアラビア拠点の英語新聞。サウジ政府と近い立場。
+    # 中東・湾岸地域の英語報道として参照価値はあるが、サウジ視点に偏る傾向あり。
+    # Al Jazeeraと補完関係だが、偏向リスクの観点から有効化前に評価が必要。
+    rss_url: https://news.google.com/rss/search?q=when:24h+allinurl:arabnews.com&ceid=US:en&hl=en-US&gl=US
+    priority: 2
+    enabled: false
+    language: en
+    region: middle_east
+    source_type: newspaper
+    bridge_source: false
+    licensing_notes: >
+      Google News経由。Arab Newsはサウジアラビア政府と近い関係にある英字紙。
+      取得は可能だが、state_mediaに準じた取り扱いが推奨される。商用利用・記事転載は要確認。

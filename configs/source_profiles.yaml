@@ -1,0 +1,213 @@
+# Source Authority Profiles
+# 出典権威プロファイル — スクリプト内での媒体名言及に使用
+#
+# フィールド説明:
+#   source_name          : sources.yaml の name と一致させること
+#   display_name_ja      : 日本語表示名
+#   country              : ISO 3166-1 alpha-2 または "Global"
+#   region               : sources.yaml の region と一致
+#   language             : ja / en
+#   authority_tier       : top / major / standard
+#     top      — 世界的プレステージ、高い名前認知度 (Reuters, FT, Bloomberg, Nikkei)
+#     major    — 強い地域・分野権威 (BBC, AlJazeera, France24, CNA, NHK)
+#     standard — 信頼できる地域メディア (Asahi, APNews)
+#   mention_style_short  : 短い言及形 (スクリプト内で使用)
+#   mention_style_long   : 長い文脈形 (arbitrage_gap / fact セクション向け)
+#   can_authority_mention: true → スクリプトで媒体名を明示してよい
+#
+# 重要: evidence.json に存在するソースのみ言及すること。
+#        このファイルは言及「許可」リストであり、言及「根拠」ではない。
+
+source_profiles:
+
+  # ── 日本 ────────────────────────────────────────────────────────────────────
+
+  - source_name: NHK
+    display_name_ja: NHK
+    country: JP
+    region: japan
+    language: ja
+    authority_tier: major
+    mention_style_short: NHK
+    mention_style_long: NHK
+    can_authority_mention: true
+
+  - source_name: NHK_Politics
+    display_name_ja: NHK
+    country: JP
+    region: japan
+    language: ja
+    authority_tier: major
+    mention_style_short: NHK
+    mention_style_long: NHK（政治）
+    can_authority_mention: true
+
+  - source_name: NHK_Economy
+    display_name_ja: NHK
+    country: JP
+    region: japan
+    language: ja
+    authority_tier: major
+    mention_style_short: NHK
+    mention_style_long: NHK（経済）
+    can_authority_mention: true
+
+  - source_name: Nikkei
+    display_name_ja: 日経
+    country: JP
+    region: japan
+    language: ja
+    authority_tier: top
+    mention_style_short: 日経
+    mention_style_long: 日本経済新聞
+    can_authority_mention: true
+
+  - source_name: Asahi
+    display_name_ja: 朝日新聞
+    country: JP
+    region: japan
+    language: ja
+    authority_tier: standard
+    mention_style_short: 朝日新聞
+    mention_style_long: 朝日新聞
+    can_authority_mention: true
+
+  - source_name: Kyodo47
+    display_name_ja: 共同通信
+    country: JP
+    region: japan
+    language: ja
+    authority_tier: standard
+    mention_style_short: 共同通信
+    mention_style_long: 共同通信
+    can_authority_mention: true
+
+  # ── グローバル ───────────────────────────────────────────────────────────────
+
+  - source_name: Reuters
+    display_name_ja: ロイター
+    country: Global
+    region: global
+    language: en
+    authority_tier: top
+    mention_style_short: ロイター
+    mention_style_long: 国際通信社ロイター
+    can_authority_mention: true
+
+  - source_name: APNews
+    display_name_ja: AP通信
+    country: Global
+    region: global
+    language: en
+    authority_tier: top
+    mention_style_short: AP通信
+    mention_style_long: 米AP通信
+    can_authority_mention: true
+
+  - source_name: BBC
+    display_name_ja: 英BBC
+    country: GB
+    region: global
+    language: en
+    authority_tier: major
+    mention_style_short: 英BBC
+    mention_style_long: 英公共放送BBC
+    can_authority_mention: true
+
+  - source_name: Bloomberg
+    display_name_ja: ブルームバーグ
+    country: Global
+    region: global
+    language: en
+    authority_tier: top
+    mention_style_short: ブルームバーグ
+    mention_style_long: 米金融メディアのブルームバーグ
+    can_authority_mention: true
+
+  - source_name: FinancialTimes
+    display_name_ja: 英Financial Times
+    country: GB
+    region: global
+    language: en
+    authority_tier: top
+    mention_style_short: 英FT
+    mention_style_long: 英Financial Times
+    can_authority_mention: true
+
+  # ── 中東 ────────────────────────────────────────────────────────────────────
+
+  - source_name: AlJazeera
+    display_name_ja: 中東のAl Jazeera
+    country: QA
+    region: middle_east
+    language: en
+    authority_tier: major
+    mention_style_short: Al Jazeera
+    mention_style_long: 中東のAl Jazeera
+    can_authority_mention: true
+
+  # ── 欧州 ────────────────────────────────────────────────────────────────────
+
+  - source_name: France24
+    display_name_ja: フランスのFrance 24
+    country: FR
+    region: europe
+    language: en
+    authority_tier: major
+    mention_style_short: France 24
+    mention_style_long: フランスのFrance 24
+    can_authority_mention: true
+
+  - source_name: DeutscheWelle
+    display_name_ja: ドイツのDW
+    country: DE
+    region: europe
+    language: en
+    authority_tier: major
+    mention_style_short: DW
+    mention_style_long: ドイツのDW（ドイチェ・ヴェレ）
+    can_authority_mention: true
+
+  # ── 東アジア ─────────────────────────────────────────────────────────────────
+
+  - source_name: CNA
+    display_name_ja: シンガポールのCNA
+    country: SG
+    region: east_asia
+    language: en
+    authority_tier: major
+    mention_style_short: CNA
+    mention_style_long: シンガポールのCNA
+    can_authority_mention: true
+
+  - source_name: SCMP
+    display_name_ja: 香港のSCMP
+    country: HK
+    region: east_asia
+    language: en
+    authority_tier: standard
+    mention_style_short: SCMP
+    mention_style_long: 香港のサウスチャイナ・モーニング・ポスト
+    can_authority_mention: true
+
+  # ── 中東（その他） ───────────────────────────────────────────────────────────
+
+  - source_name: ArabNews
+    display_name_ja: アラブニュース
+    country: SA
+    region: middle_east
+    language: en
+    authority_tier: standard
+    mention_style_short: アラブニュース
+    mention_style_long: サウジアラビアのアラブニュース
+    can_authority_mention: false
+
+  - source_name: GlobalTimes
+    display_name_ja: 中国のGlobal Times
+    country: CN
+    region: east_asia
+    language: en
+    authority_tier: standard
+    mention_style_short: Global Times
+    mention_style_long: 中国国営メディアのGlobal Times
+    can_authority_mention: false
