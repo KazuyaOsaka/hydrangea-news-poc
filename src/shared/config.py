@@ -49,11 +49,25 @@ EN_CANDIDATES_PER_JP_CLUSTER: int = int(os.getenv("EN_CANDIDATES_PER_JP_CLUSTER"
 
 # Gemini設定
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_SCRIPT_MODEL = os.getenv("GEMINI_SCRIPT_MODEL", "gemini-2.5-flash")
-GEMINI_ARTICLE_MODEL = os.getenv("GEMINI_ARTICLE_MODEL", "gemini-2.5-flash")
-GEMINI_TRIAGE_MODEL = os.getenv("GEMINI_TRIAGE_MODEL", "gemini-2.5-flash-lite")
-GEMINI_CLUSTER_MODEL = os.getenv("GEMINI_CLUSTER_MODEL", "gemini-2.5-flash-lite")
-GEMINI_JUDGE_MODEL = os.getenv("GEMINI_JUDGE_MODEL", "gemini-2.5-flash-lite")
+
+# 階層型フォールバック (TIER1 → TIER4 の順に試行、各 Tier は 3回指数バックオフ後に次へ)
+GEMINI_MODEL_TIER1: str = os.getenv("GEMINI_MODEL_TIER1", "gemini-3.1-flash-preview-0419")
+GEMINI_MODEL_TIER2: str = os.getenv("GEMINI_MODEL_TIER2", "gemini-3.1-flash-lite-preview")
+GEMINI_MODEL_TIER3: str = os.getenv("GEMINI_MODEL_TIER3", "gemini-2.5-flash")
+GEMINI_MODEL_TIER4: str = os.getenv("GEMINI_MODEL_TIER4", "gemini-2.5-flash-lite")
+GEMINI_MODEL_TIERS: list[str] = [
+    GEMINI_MODEL_TIER1,
+    GEMINI_MODEL_TIER2,
+    GEMINI_MODEL_TIER3,
+    GEMINI_MODEL_TIER4,
+]
+
+# 旧ロール別モデル変数 (後方互換; factory は GEMINI_MODEL_TIERS を使用)
+GEMINI_SCRIPT_MODEL = os.getenv("GEMINI_SCRIPT_MODEL", GEMINI_MODEL_TIER1)
+GEMINI_ARTICLE_MODEL = os.getenv("GEMINI_ARTICLE_MODEL", GEMINI_MODEL_TIER1)
+GEMINI_TRIAGE_MODEL = os.getenv("GEMINI_TRIAGE_MODEL", GEMINI_MODEL_TIER2)
+GEMINI_CLUSTER_MODEL = os.getenv("GEMINI_CLUSTER_MODEL", GEMINI_MODEL_TIER2)
+GEMINI_JUDGE_MODEL = os.getenv("GEMINI_JUDGE_MODEL", GEMINI_MODEL_TIER2)
 
 # Gemini Judge fallback priority list (comma-separated, tried in order when
 # GEMINI_JUDGE_MODEL is unavailable in the current API tier).

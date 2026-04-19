@@ -1930,8 +1930,8 @@ def _generate_outputs(
         return record
     try:
         script = write_script(event, triage_result=top, budget=budget, authority_pair=authority_pair)
-    except ValueError as _script_err:
-        logger.error(f"[ScriptWriter] {_script_err}")
+    except Exception as _script_err:
+        logger.error(f"event_id={event.id}: Script generation failed — {type(_script_err).__name__}: {_script_err}")
         record = JobRecord(
             id=job_id,
             event_id=event.id,
@@ -1949,8 +1949,8 @@ def _generate_outputs(
     budget.record_phase("before_article")
     try:
         article = write_article(event, triage_result=top, video_script=script, budget=budget)
-    except ValueError as _article_err:
-        logger.error(f"[ArticleWriter] {_article_err}")
+    except Exception as _article_err:
+        logger.error(f"event_id={event.id}: Article generation failed — {type(_article_err).__name__}: {_article_err}")
         record = JobRecord(
             id=job_id,
             event_id=event.id,
@@ -1965,13 +1965,28 @@ def _generate_outputs(
     logger.info(f"Article saved: {article_path}")
 
     # 5. 動画制作用JSON生成
-    payload = write_video_payload(event, script)
-    payload_path = output_dir / f"{event.id}_video_payload.json"
-    payload_path.write_text(payload.model_dump_json(indent=2), encoding="utf-8")
-    logger.info(f"Video payload saved: {payload_path}")
+    try:
+        payload = write_video_payload(event, script)
+        payload_path = output_dir / f"{event.id}_video_payload.json"
+        payload_path.write_text(payload.model_dump_json(indent=2), encoding="utf-8")
+        logger.info(f"Video payload saved: {payload_path}")
+    except Exception as _payload_err:
+        logger.error(f"event_id={event.id}: Video payload generation failed — {type(_payload_err).__name__}: {_payload_err}")
+        record = JobRecord(
+            id=job_id,
+            event_id=event.id,
+            status="failed",
+            error=str(_payload_err),
+        )
+        save_job(db_path, record)
+        record._triage_source_counts = triage_source_counts  # type: ignore[attr-defined]
+        return record
 
     # 6. 根拠ファイル保存
-    write_evidence(event, top, script, article, output_dir)
+    try:
+        write_evidence(event, top, script, article, output_dir)
+    except Exception as _evidence_err:
+        logger.warning(f"event_id={event.id}: Evidence saving failed (non-fatal) — {type(_evidence_err).__name__}: {_evidence_err}")
 
     # 7. DB保存 & 公開カウント加算
     record = JobRecord(

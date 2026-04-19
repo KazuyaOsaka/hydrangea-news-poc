@@ -265,6 +265,9 @@ def _build_article_from_llm(
 
     markdown, retry_count = call_with_retry(lambda: client.generate(prompt), role="generation")
 
+    if not markdown or not markdown.strip():
+        raise ValueError("LLM returned None or empty string for article")
+
     # コードブロックで囲まれていれば除去
     if markdown.startswith("```"):
         markdown = markdown.split("```")[1]

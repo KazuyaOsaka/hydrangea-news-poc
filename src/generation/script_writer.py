@@ -481,6 +481,9 @@ def _build_script_from_llm(
 
     raw, retry_count = call_with_retry(lambda: client.generate(prompt), role="generation")
 
+    if not raw or not raw.strip():
+        raise ValueError("LLM returned None or empty string for script")
+
     # コードブロックで囲まれていれば除去
     if raw.startswith("```"):
         raw = raw.split("```")[1]

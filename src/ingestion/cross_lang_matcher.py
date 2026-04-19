@@ -541,6 +541,54 @@ def extract_anchor_tokens(title: str) -> set[str]:
     return tokens
 
 
+from typing import Literal
+
+from pydantic import BaseModel, ValidationError
+
+
+class _MergeVerdict(BaseModel):
+    pair_id: int
+    verdict: Literal["same_event", "related_but_distinct", "different_event"]
+    reason: str = ""
+
+
+_BATCH_MERGE_PROMPT_TEMPLATE = """\
+You are a semantic news deduplication system.
+
+TASK: For each numbered pair (A and B), decide if both headlines describe \
+the EXACT SAME real-world event.
+
+STRICT RULE — same_event requires ALL of the following:
+  1. Same SUBJECT  — the same actor/entity is the subject of the story
+  2. Same PREDICATE — the same specific action or development is described
+  3. Same OBJECT/SCOPE — the target or scope of the action matches
+
+COUNTER-EXAMPLES (must NOT be merged even though subjects share a country):
+  • "Canada cuts gasoline tax" vs "Canada sends troops to Lebanon"
+    → different_event (tax policy ≠ military deployment)
+  • "Trump announces China tariffs" vs "Trump meets NATO allies"
+    → different_event (trade policy ≠ diplomatic meeting)
+  • "Israel strikes Gaza" vs "Israel negotiates hostage deal"
+    → different_event (military strike ≠ negotiation)
+
+CORRECT same_event examples:
+  • "日本銀行が利上げを決定" vs "Bank of Japan raises interest rates"
+    → same_event (BOJ = BOJ; rate hike = rate hike)
+  • "ガザ停戦合意が成立" vs "Gaza ceasefire agreement reached"
+    → same_event (Gaza ceasefire = Gaza ceasefire)
+
+VERDICT OPTIONS (choose exactly one per pair):
+  same_event           — identical subject AND predicate AND scope (merge)
+  related_but_distinct — same broad topic, different specific events (keep separate)
+  different_event      — clearly different or unrelated events (keep separate)
+
+Return ONLY a valid JSON array — no markdown fences, no text outside JSON.
+Format: [{{"pair_id":<int>,"verdict":"<verdict>","reason":"<one-sentence subject+predicate analysis>"}}]
+
+Pairs:
+{pairs}"""
+
+
 def llm_batch_merge(
     pairs: list[dict],
     llm_client: "LLMClient",
@@ -548,9 +596,13 @@ def llm_batch_merge(
 ) -> list[dict]:
     """Batch LLM call to determine merge verdict for multiple title pairs.
 
-    Sends up to ``batch_size`` pairs per LLM request and returns structured
-    verdicts.  Uses the merge_batch role client (resolved by the caller via
-    factory.get_llm_client("merge_batch")).
+    Sends up to ``batch_size`` pairs per LLM request and returns Pydantic-
+    validated verdicts.  Uses the merge_batch role client (resolved by the
+    caller via factory.get_llm_client("merge_batch")).
+
+    The prompt enforces subject+predicate semantic matching: a pair is
+    same_event only when both the acting entity AND the concrete action match,
+    not merely when they share a country name or keyword.
 
     Args:
         pairs:      List of dicts with keys pair_id (int), title_a (str), title_b (str).
@@ -559,7 +611,7 @@ def llm_batch_merge(
 
     Returns:
         List of dicts: {pair_id, verdict: same_event|related_but_distinct|different_event, reason}.
-        On parse failure, all pairs in the failed batch default to different_event.
+        On parse/validation failure all pairs in the failed batch default to different_event.
     """
     if not pairs:
         return []
@@ -569,42 +621,37 @@ def llm_batch_merge(
     for batch_start in range(0, len(pairs), batch_size):
         batch = pairs[batch_start : batch_start + batch_size]
 
-        lines = [
+        pair_lines = "\n".join(
             f'[{item["pair_id"]}] A: "{item["title_a"]}" | B: "{item["title_b"]}"'
             for item in batch
-        ]
-
-        prompt = (
-            "You are a news deduplication system.\n"
-            "For each numbered pair, determine if both headlines report the SAME "
-            "real-world event/story.\n\n"
-            "Verdict options (choose exactly one per pair):\n"
-            "  same_event           — identical real-world event (merge)\n"
-            "  related_but_distinct — related topic but different concrete events "
-            "(keep separate)\n"
-            "  different_event      — clearly unrelated events (keep separate)\n\n"
-            "Return ONLY a valid JSON array. No markdown, no explanation outside JSON.\n"
-            'Format: [{"pair_id":<int>,"verdict":"same_event|related_but_distinct'
-            '|different_event","reason":"<brief>"}]\n\n'
-            "Pairs:\n" + "\n".join(lines)
         )
+        prompt = _BATCH_MERGE_PROMPT_TEMPLATE.format(pairs=pair_lines)
 
         try:
             raw = llm_client.generate(prompt).strip()
             # Strip markdown code fences if present
             if "```" in raw:
                 raw = re.sub(r"```(?:json)?\s*", "", raw).replace("```", "").strip()
-            batch_results: list[dict] = _json.loads(raw)
-            # Sanitize verdicts
-            _valid_verdicts = {"same_event", "related_but_distinct", "different_event"}
-            for r in batch_results:
-                if not isinstance(r, dict):
-                    raise ValueError(f"Expected dict, got: {type(r)}")
-                if "pair_id" not in r or "verdict" not in r:
-                    raise ValueError(f"Missing keys in batch result: {r}")
-                if r["verdict"] not in _valid_verdicts:
-                    r["verdict"] = "different_event"
-            results.extend(batch_results)
+
+            raw_list: list[dict] = _json.loads(raw)
+            if not isinstance(raw_list, list):
+                raise ValueError(f"Expected JSON array, got {type(raw_list)}")
+
+            validated: list[dict] = []
+            for item in raw_list:
+                try:
+                    verdict = _MergeVerdict.model_validate(item)
+                    validated.append(verdict.model_dump())
+                except ValidationError as ve:
+                    # Coerce invalid verdict to different_event rather than dropping
+                    pair_id = item.get("pair_id") if isinstance(item, dict) else None
+                    if pair_id is not None:
+                        validated.append({
+                            "pair_id": pair_id,
+                            "verdict": "different_event",
+                            "reason": f"validation_error:{str(ve)[:80]}",
+                        })
+            results.extend(validated)
         except Exception as exc:
             # Conservative fallback: treat all as different_event
             for item in batch:
