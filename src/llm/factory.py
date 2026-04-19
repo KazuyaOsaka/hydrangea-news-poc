@@ -22,6 +22,9 @@ from src.llm.base import LLMClient
 from src.llm.retry import is_retryable
 from src.shared.config import (
     GEMINI_API_KEY,
+    GEMINI_MODEL_TIER2,
+    GEMINI_MODEL_TIER3,
+    GEMINI_MODEL_TIER4,
     GEMINI_MODEL_TIERS,
     GENERATION_MODEL,
     GENERATION_PROVIDER,
@@ -172,6 +175,21 @@ def get_judge_llm_client() -> Optional[LLMClient]:
     Returns None if GEMINI_API_KEY is not set.
     """
     return _make_tiered_gemini_client()
+
+
+def get_garbage_filter_client() -> Optional[LLMClient]:
+    """Gate 1 Garbage Filter 用クライアント (Tier 2 = Lite 優先).
+
+    TIER1 をスキップし TIER2→TIER4 の順でフォールバックする。
+    これにより高速・低コストなスクリーニングを実現する。
+    Returns None if GEMINI_API_KEY is not set.
+    """
+    if not GEMINI_API_KEY:
+        return None
+    return TieredGeminiClient(
+        GEMINI_API_KEY,
+        [GEMINI_MODEL_TIER2, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4],
+    )
 
 
 # ── Tier connectivity verification ──────────────────────────────────────────

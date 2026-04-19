@@ -103,6 +103,16 @@ JUDGE_CANDIDATE_LIMIT: int = int(os.getenv("JUDGE_CANDIDATE_LIMIT", "3"))
 # ジャッジを有効にするか（false にすると完全スキップ）
 JUDGE_ENABLED: bool = os.getenv("JUDGE_ENABLED", "true").lower() != "false"
 
+# ── Garbage Filter 設定（Gate 1: 高速スクリーニング） ────────────────────────
+# Tier 2 Lite モデルによるノイズ除去を有効にするか（false で完全スキップ）
+GARBAGE_FILTER_ENABLED: bool = os.getenv("GARBAGE_FILTER_ENABLED", "true").lower() != "false"
+
+# ── Elite Judge 設定（Gate 3: 編集長・一点突破判定） ──────────────────────────
+# evaluate_cluster_buzz (Tier 1) による最終採用判定を有効にするか
+ELITE_JUDGE_ENABLED: bool = os.getenv("ELITE_JUDGE_ENABLED", "true").lower() != "false"
+# Elite Judge を実行する上位候補の件数（budget 節約のため上限を設ける）
+ELITE_JUDGE_CANDIDATE_LIMIT: int = int(os.getenv("ELITE_JUDGE_CANDIDATE_LIMIT", "10"))
+
 # ── Viral Filter 設定（Pass C） ──────────────────────────────────────────────
 # Step-1 prescore から LLM scoring に送る上位候補数
 VIRAL_PRESCORE_TOP_N: int = int(os.getenv("VIRAL_PRESCORE_TOP_N", "20"))

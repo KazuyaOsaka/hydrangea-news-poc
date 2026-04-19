@@ -1343,6 +1343,7 @@ def build_events_from_normalized(
     run_stats: dict | None = None,
     normalized_files: list[str | Path] | None = None,
     already_seen_urls: set[str] | None = None,
+    garbage_filter_client: "LLMClient | None" = None,
 ) -> list[NewsEvent]:
     """data/normalized/ の実ニュースを読み込み、クラスタリングして NewsEvent リストを返す。
 
@@ -1375,6 +1376,22 @@ def build_events_from_normalized(
     if not articles:
         logger.warning("No articles found; returning empty event list.")
         return []
+
+    # ── Gate 1: Garbage Filter（高速スクリーニング）──────────────────────────
+    # Tier 2 Lite モデルで 50件単位バッチ判定し、ノイズ記事を除去する。
+    # クラスタリング（Gate 2）に渡す前に不要な記事を間引くことで
+    # Semantic Merge の品質と API コストを同時に改善する。
+    if garbage_filter_client is not None:
+        from src.triage.garbage_filter import apply_garbage_filter
+        _before_filter = len(articles)
+        articles = apply_garbage_filter(articles, garbage_filter_client)
+        if run_stats is not None:
+            run_stats["garbage_filter_before"] = _before_filter
+            run_stats["garbage_filter_after"] = len(articles)
+            run_stats["garbage_filter_removed"] = _before_filter - len(articles)
+        if not articles:
+            logger.warning("[GarbageFilter] 全記事が除外されました。空のイベントリストを返します。")
+            return []
 
     jp_count = sum(1 for a in articles if a.get("country") == "JP")
     en_count = len(articles) - jp_count

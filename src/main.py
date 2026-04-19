@@ -32,7 +32,9 @@ from src.ingestion.discovery_audit import write_discovery_audit
 from src.ingestion.event_builder import build_events_from_normalized
 from src.ingestion.loader import load_events
 from src.ingestion.source_profiles import load_source_profiles, select_authority_pair
-from src.llm.factory import get_cluster_llm_client, get_judge_llm_client
+from src.llm.factory import get_cluster_llm_client, get_garbage_filter_client, get_judge_llm_client
+from src.llm.judge import evaluate_cluster_buzz
+from src.llm.schemas import EditorScore
 from src.llm.model_registry import (
     ModelResolution,
     get_judge_model_resolution,
@@ -68,6 +70,9 @@ from src.shared.config import (
     VIDEO_HEIGHT,
     VIDEO_RENDER_ENABLED,
     VIDEO_WIDTH,
+    ELITE_JUDGE_CANDIDATE_LIMIT,
+    ELITE_JUDGE_ENABLED,
+    GARBAGE_FILTER_ENABLED,
     VIRAL_FILTER_ENABLED,
     VIRAL_LLM_ENABLED,
     VIRAL_PRESCORE_TOP_N,
@@ -183,6 +188,12 @@ def _save_run_summary(
             "en_article_count": build_stats.get("en_article_count", 0),
             "total_article_count": build_stats.get("total_article_count", 0),
             "region_article_counts": build_stats.get("region_article_counts", {}),
+            "garbage_filter": {
+                "enabled": build_stats.get("garbage_filter_before") is not None,
+                "before": build_stats.get("garbage_filter_before", 0),
+                "after": build_stats.get("garbage_filter_after", 0),
+                "removed": build_stats.get("garbage_filter_removed", 0),
+            },
         },
         "clustering": {
             "clusters_before_llm": build_stats.get("clusters_before_llm", 0),
@@ -2278,6 +2289,11 @@ def run_from_normalized(
         else:
             cluster_llm = get_cluster_llm_client()
 
+        # ── Gate 1 クライアント (Tier 2 Lite) ────────────────────────────────
+        _garbage_filter_client = get_garbage_filter_client() if GARBAGE_FILTER_ENABLED else None
+        if GARBAGE_FILTER_ENABLED and _garbage_filter_client is None:
+            logger.warning("[GarbageFilter] GARBAGE_FILTER_ENABLED=true だが API キー未設定のためスキップ")
+
         run_stats: dict = {}
         _viral_filter_summary: dict = {"viral_filter_applied": False}
         events = build_events_from_normalized(
@@ -2289,6 +2305,7 @@ def run_from_normalized(
             run_stats=run_stats,
             normalized_files=normalized_files,
             already_seen_urls=seen_urls,
+            garbage_filter_client=_garbage_filter_client,
         )
 
         batch_info["total_articles_loaded"] = run_stats.get("total_article_count", 0)
@@ -2369,6 +2386,75 @@ def run_from_normalized(
                 f"rejected={_viral_filter_summary.get('rejected_before_generation', 0)}, "
                 f"llm_scored={_viral_filter_summary.get('llm_scored_count', 0)}"
             )
+
+        # ── Gate 3: Elite Judge（編集長・一点突破判定）──────────────────────────
+        # evaluate_cluster_buzz (Tier 1: gemini-3.1-flash-preview) で最終採用判定。
+        # is_adopted=False のクラスタは即座に破棄し、台本生成には絶対進行させない。
+        _elite_judge_results: dict[str, EditorScore] = {}
+        if ELITE_JUDGE_ENABLED and GEMINI_API_KEY:
+            _elite_judge_client = get_judge_llm_client()
+            if _elite_judge_client is not None:
+                _elite_adopted: list[ScoredEvent] = []
+                _elite_candidates = all_ranked[:ELITE_JUDGE_CANDIDATE_LIMIT]
+                _elite_passthrough = all_ranked[ELITE_JUDGE_CANDIDATE_LIMIT:]
+
+                for _se in _elite_candidates:
+                    if not budget.can_afford_judge():
+                        logger.info(
+                            "[EliteJudge] 予算上限に達したため残候補は全件通過とします。"
+                        )
+                        _elite_adopted.append(_se)
+                        continue
+
+                    _cluster_data = {
+                        "title": _se.event.title,
+                        "summary": _se.event.summary,
+                        "sources": [
+                            s.name for s in (_se.event.sources_jp + _se.event.sources_en)
+                        ],
+                    }
+                    try:
+                        _editor_score = evaluate_cluster_buzz(_cluster_data)
+                        budget.record_call("elite_judge")
+                        _elite_judge_results[_se.event.id] = _editor_score
+
+                        if _editor_score.is_adopted:
+                            _axis_map = {
+                                "アンチ忖度": _editor_score.score_anti_sontaku,
+                                "多極的視点": _editor_score.score_multipolar,
+                                "アウトサイド・イン": _editor_score.score_outside_in,
+                                "知的優越感": _editor_score.score_insight,
+                                "ファンダム最速": _editor_score.score_fandom_fast,
+                            }
+                            _top_axis = max(_axis_map, key=lambda k: _axis_map[k])
+                            _top_score = _axis_map[_top_axis]
+                            logger.info(
+                                f"[EliteJudge] ✦ Adopted: 一点突破 "
+                                f"({_top_axis}: {_top_score}点) / "
+                                f"Total: {_editor_score.total_score}点 "
+                                f"— {_se.event.title[:50]}"
+                            )
+                            _elite_adopted.append(_se)
+                        else:
+                            logger.info(
+                                f"[EliteJudge] ✗ Skipped: 基準未達 "
+                                f"(Total: {_editor_score.total_score}点) "
+                                f"— {_se.event.title[:50]}"
+                            )
+                    except Exception as _exc:
+                        logger.warning(
+                            f"[EliteJudge] {_se.event.id} 評価エラー: {_exc}. 通過させます。"
+                        )
+                        _elite_adopted.append(_se)
+
+                _before_elite = len(all_ranked)
+                all_ranked = _elite_adopted + _elite_passthrough
+                logger.info(
+                    f"[EliteJudge] Gate 3 完了: "
+                    f"{len(_elite_candidates)}件評価 → "
+                    f"採用 {len(_elite_adopted)} / 棄却 {len(_elite_candidates) - len(_elite_adopted)} "
+                    f"(total ranked: {_before_elite} → {len(all_ranked)})"
+                )
 
         # ── Stage D: Gemini 編集審判パス（evidence-grounded judge）──────────────
         # appraisal 済み候補の上位 JUDGE_CANDIDATE_LIMIT 件を Gemini で評価し、
