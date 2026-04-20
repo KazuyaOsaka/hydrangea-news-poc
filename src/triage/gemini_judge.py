@@ -65,7 +65,7 @@ _JUDGE_PROMPT = """\
 {
   "divergence_score": <0-10: JP と海外の報道視点・フレーミングの乖離度>,
   "blind_spot_global_score": <0-10: 日本が見落としているグローバル重要性>,
-  "indirect_japan_impact_score_judge": <0-10: 日本への間接的インパクトの強さ>,
+  "indirect_japan_impact_score_judge": <0-10: 日本への間接的インパクトの強さ。日本企業・日本人が直接関与していなくても、(1)グローバルなパワーバランス変動（欧米対立・BRICS台頭）(2)世界経済・サプライチェーンの前提を変えるマクロ事象(3)日本のビジネスパーソンが教養・リスクシナリオとして知るべきパラダイムシフト に該当する場合は高得点（7〜10点）を与えること。逆に、他国のローカル事件・局地的事故・芸能ゴシップなど日本への波及が皆無のニュースは低得点（0〜2点）とすること>,
   "authority_signal_score": <0-10: top/major 権威ソースの証拠強度>,
   "publishability_class": "<linked_jp_global|blind_spot_global|jp_only|insufficient_evidence|investigate_more>",
   "why_this_matters_to_japan": "<日本にとってなぜ重要か。1文で。>",

@@ -595,6 +595,7 @@ def build_daily_schedule(
 # ── Flagship クラス定数 ─────────────────────────────────────────────────────
 FLAGSHIP_LINKED_JP_GLOBAL  = "flagship_linked_jp_global"
 FLAGSHIP_BLIND_SPOT_GLOBAL = "flagship_blind_spot_global"
+FLAGSHIP_MACRO_PARADIGM    = "flagship_macro_paradigm"
 
 
 def get_flagship_class(se: ScoredEvent) -> str | None:
@@ -607,6 +608,12 @@ def get_flagship_class(se: ScoredEvent) -> str | None:
     flagship_blind_spot_global: "Blind Spot Global" appraisal が付き、
         indirect_japan_impact が高く国際的注目も高い EN-only 候補。
         → 「JP記事はないが日本への間接的インパクトが強いグローバル重要案件」
+
+    flagship_macro_paradigm: 日本関連性は低くても、グローバルなパワーバランスや
+        世界経済の前提を覆すマクロ事象・パラダイムシフト。日本のビジネスパーソンが
+        「教養・リスクシナリオ」として知るべき強烈なグローバルニュース。
+        → perspective_gap が極めて高く国際注目度も高い案件を、japan_relevance の
+          低さだけで足切りしない。
     """
     bd = se.score_breakdown
     pg   = float(bd.get("editorial:perspective_gap_score", 0.0))
@@ -621,10 +628,16 @@ def get_flagship_class(se: ScoredEvent) -> str | None:
     # Hard blocks (非 flagship の絶対条件)
     if not has_en_src:
         return None
-    if bip == 0.0 and ijai < 3.0:
+    if bip == 0.0 and ijai < 3.0 and pg < 6.0:
         return None
-    if jr < 2.0 and ijai < 3.0:
+    # weak_japan 足切り: jr と ijai が両方低い場合でも、強烈なマクロパラダイム候補は免除
+    if jr < 2.0 and ijai < 3.0 and not (pg >= 6.0 and ga >= 6.0):
         return None
+
+    # flagship_macro_paradigm: 極めて強い perspective_gap × 高い global_attention
+    # 日本直接関与なしでも、グローバルなパラダイムシフトとして採用
+    if pg >= 6.0 and ga >= 6.0 and has_en_src:
+        return FLAGSHIP_MACRO_PARADIGM
 
     # flagship_blind_spot_global: Blind Spot Global appraisal + 強い間接インパクト
     if (
@@ -671,9 +684,11 @@ def _passes_flagship_gate(se: ScoredEvent) -> tuple[bool, str]:
 
     if not has_en_src:
         return False, "no_en_sources"
-    if bip == 0.0 and ijai < 3.0:
+    # no_depth: bip=0 かつ ijai<3 の場合でも、強烈なマクロパラダイム（pg>=6, ga>=6）は免除
+    if bip == 0.0 and ijai < 3.0 and not (pg >= 6.0 and ga >= 6.0):
         return False, f"no_depth:bip=0,ijai={ijai:.1f}"
-    if jr < 2.0 and ijai < 3.0:
+    # weak_japan: jr と ijai が低くても、強烈な global paradigm shift（pg>=6, ga>=6）は通過させる
+    if jr < 2.0 and ijai < 3.0 and not (pg >= 6.0 and ga >= 6.0):
         return False, f"weak_japan:jr={jr:.1f},ijai={ijai:.1f}"
     # ある程度の evidence はあるが flagship 水準に届かない
     return False, f"below_flagship:pg={pg:.1f},jr={jr:.1f},ga={ga:.1f},ijai={ijai:.1f}"

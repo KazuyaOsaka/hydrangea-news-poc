@@ -56,7 +56,7 @@ def fetch_source(source: dict) -> dict:
     logger.info(f"Fetching {name} ({url})")
     try:
         feed = feedparser.parse(url)
-        entries = [_serialize_entry(e) for e in feed.entries]
+        entries = [_serialize_entry(e) for e in feed.entries[:50]]
         http_status = getattr(feed, "status", "N/A")
         if not entries:
             logger.warning(

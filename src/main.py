@@ -2558,7 +2558,7 @@ def run_from_normalized(
             date=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
             generated_at=datetime.now(timezone.utc).isoformat(),
             total_candidates=len(all_ranked),
-            selected=[scored_event_to_schedule_entry(override_top)],
+            selected=[scored_event_to_schedule_entry(override_top, 1)],
             rejected=[],
             held_back=[],
             open_slots=0,
