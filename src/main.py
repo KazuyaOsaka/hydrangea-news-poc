@@ -2834,190 +2834,83 @@ def run_from_normalized(
                 )
                 return _fg_skip
 
-        # ── Viral Filter Gate: block generation if slot-1 failed viral filter ──
-        # If the candidate was rejected by the viral filter (too low Japan-market
-        # viral potential), skip generation entirely.  This prevents wasting the
-        # expensive LLM script/article budget on low-probability stories.
-        if _candidate_to_generate is not None and _candidate_to_generate.why_rejected_before_generation:
-            _viral_block_reason = _candidate_to_generate.why_rejected_before_generation
-            logger.warning(
-                f"[ViralFilter] Blocking generation: slot-1 candidate failed viral filter "
-                f"({_viral_block_reason}): '{_candidate_to_generate.event.title[:50]}'"
-            )
-            _vf_block_record = JobRecord(
-                id=job_id,
-                event_id="none",
-                status="skipped",
-                error=f"viral_filter_rejected:{_viral_block_reason}",
-            )
-            save_job(db_path, _vf_block_record)
-            batch_info["schedule_action"] = "skipped_viral_filter_rejected"
-            _vf_archived = 0
-            try:
-                _vf_archived = _archive_batch(batch, archive_dir)
-                mark_batch_status(
-                    db_path, batch_id, "archived",
-                    archived_at=datetime.now(timezone.utc).isoformat(),
-                )
-            except Exception as _vf_arc_err:
-                logger.error(f"[Archive] Failed to archive batch={batch_id}: {_vf_arc_err}")
-            batch_info["archived_file_count"] = _vf_archived
-            _write_debug_artifacts(output_dir, run_stats, schedule, rolling_window_stats)
-            _write_discovery_audit_safe(all_ranked_appraised, run_stats, output_dir, schedule)
-            _write_latest_candidate_report(
-                output_dir,
-                scheduled_slot1_id=_scheduled_slot1_id,
-                reranked_top_id=_reranked_top_id,
-                final_selected_slot1_id=_final_selected_slot1_id,
-                slot1_selection_source=_slot1_selection_source,
-                slot1_block_reason=f"viral_filter_rejected:{_viral_block_reason}",
-                all_ranked=all_ranked,
-                judge_results=judge_results,
-                model_resolution=_judge_model_resolution,
-                budget_mode_summary=budget.to_publish_mode_summary(),
-            )
-            _save_run_summary(
-                output_dir, job_id, run_stats, _vf_block_record, budget,
-                daily_schedule=schedule,
-                batch_info=batch_info,
-                schedule_tracking={
-                    "scheduled_event_id": scheduled_event_id,
-                    "schedule_snapshot_used": schedule_snapshot_used,
-                    "schedule_mismatch_resolved": schedule_mismatch_resolved,
-                    "no_publishable_candidates": False,
-                    "all_selected_published": False,
-                    "fallback_blocked_by_quality_floor": False,
-                    "viral_filter_rejected": True,
-                    "viral_filter_reason": _viral_block_reason,
-                    **_slot1_audit(_candidate_to_generate),
-                },
-                rolling_window_stats=rolling_window_stats,
-                judge_summary=_build_judge_summary(
-                    judge_results, all_ranked, _candidate_to_generate, [],
-                    model_resolution=_judge_model_resolution,
-                ),
-                viral_filter_summary=_viral_filter_summary,
-            )
-            budget.log_summary(
-                day_runs=stats_after["run_count"],
-                day_publishes=stats_after["publish_count"],
-            )
-            return _vf_block_record
+        # ── Top-3 台本生成ループ: Elite Judge 採用済みリスト上位3件を順次処理 ────
+        # ViralFilter による生成ブロックは廃止。Elite Judge (Gate 3) の決定を最終とする。
+        _top_3_candidates: list[ScoredEvent] = sorted(
+            all_ranked,
+            key=lambda se: (
+                _elite_judge_results[se.event.id].total_score
+                if se.event.id in _elite_judge_results else 0
+            ),
+            reverse=True,
+        )[:3]
 
-        # ── Populate why_slot1_won_editorially ───────────────────────────────
-        if _candidate_to_generate is not None:
-            _candidate_to_generate.why_slot1_won_editorially = (
-                build_why_slot1_won_editorially(_candidate_to_generate)
+        record: JobRecord = JobRecord(
+            id=job_id, event_id="none", status="skipped", error="no_slots_attempted"
+        )
+        _published_event_id: str | None = None
+        _rescue_triggered = False
+        authority_pair: list[str] = []
+
+        for _slot_idx, _slot_candidate in enumerate(_top_3_candidates):
+            _slot_num = _slot_idx + 1
+            _slot_job_id = job_id if _slot_idx == 0 else f"{job_id}-s{_slot_num}"
+            _slot_ej_score = (
+                _elite_judge_results[_slot_candidate.event.id].total_score
+                if _slot_candidate.event.id in _elite_judge_results else "N/A"
             )
             logger.info(
-                f"[FinalEditor] Slot-1 editorial rationale: "
-                f"{_candidate_to_generate.why_slot1_won_editorially}"
+                f"[Slot-{_slot_num}] 台本生成開始 "
+                f"(total_score={_slot_ej_score}): "
+                f"{_slot_candidate.event.title[:60]}"
             )
 
-        # ── Judge Rescue Path: investigate_more → rescue files, skip generation ──
-        # Flagship gate を通過しても、judge が requires_more_evidence=True かつ
-        # high potential（blind_spot>=6 or divergence>=6）と判定した場合は
-        # スクリプト生成をスキップし、judge_report.json / followup_queries.json を出力する。
-        _candidate_judge = (
-            _candidate_to_generate.judge_result
-            if _candidate_to_generate is not None
-            else None
-        )
-        _rescue_triggered = False
-        if _candidate_to_generate is not None and _candidate_judge is not None:
-            from src.triage.gemini_judge import is_rescue_candidate
-            if is_rescue_candidate(_candidate_judge):
-                logger.warning(
-                    f"[GeminiJudge] Rescue path triggered for '{_candidate_to_generate.event.title[:50]}': "
-                    f"requires_more_evidence=True, "
-                    f"blind_spot={_candidate_judge.blind_spot_global_score:.1f}, "
-                    f"divergence={_candidate_judge.divergence_score:.1f}. "
-                    "Skipping script generation — writing rescue files instead."
-                )
-                _write_judge_rescue(_candidate_to_generate, _candidate_judge, output_dir)
-                _rescue_triggered = True
-                _rescue_record = JobRecord(
-                    id=job_id,
-                    event_id="none",
-                    status="skipped",
-                    error=(
-                        f"judge_rescue:requires_more_evidence "
-                        f"blind_spot={_candidate_judge.blind_spot_global_score:.1f} "
-                        f"divergence={_candidate_judge.divergence_score:.1f}"
-                    ),
-                )
-                save_job(db_path, _rescue_record)
-                batch_info["schedule_action"] = "skipped_judge_rescue"
-                archived_count = 0
-                try:
-                    archived_count = _archive_batch(batch, archive_dir)
-                    mark_batch_status(
-                        db_path, batch_id, "archived",
-                        archived_at=datetime.now(timezone.utc).isoformat(),
-                    )
-                except Exception as arc_err:
-                    logger.error(f"[Archive] Failed to archive batch={batch_id}: {arc_err}")
-                batch_info["archived_file_count"] = archived_count
-                _write_debug_artifacts(output_dir, run_stats, schedule, rolling_window_stats)
-                _write_discovery_audit_safe(all_ranked_appraised, run_stats, output_dir, schedule)
-                _write_latest_candidate_report(
-                    output_dir,
-                    scheduled_slot1_id=_scheduled_slot1_id,
-                    reranked_top_id=_reranked_top_id,
-                    final_selected_slot1_id=_final_selected_slot1_id,
-                    slot1_selection_source=_slot1_selection_source,
-                    slot1_block_reason="judge_rescue:requires_more_evidence",
-                    all_ranked=all_ranked,
-                    judge_results=judge_results,
-                    model_resolution=_judge_model_resolution,
-                    budget_mode_summary=budget.to_publish_mode_summary(),
-                )
-                _judge_summary = _build_judge_summary(
-                    judge_results, all_ranked, _candidate_to_generate,
-                    slot1_authority_pair=[],
-                    model_resolution=_judge_model_resolution,
-                )
-                _save_run_summary(
-                    output_dir, job_id, run_stats, _rescue_record, budget,
-                    daily_schedule=schedule,
-                    batch_info=batch_info,
-                    schedule_tracking={
-                        "scheduled_event_id": scheduled_event_id,
-                        "schedule_snapshot_used": schedule_snapshot_used,
-                        "schedule_mismatch_resolved": schedule_mismatch_resolved,
-                        "no_publishable_candidates": False,
-                        "all_selected_published": False,
-                        "fallback_blocked_by_quality_floor": False,
-                        "judge_rescue": True,
-                        **_slot1_audit(_candidate_to_generate),
-                    },
-                    rolling_window_stats=rolling_window_stats,
-                    judge_summary=_judge_summary,
-                    viral_filter_summary=_viral_filter_summary,
-                )
-                budget.log_summary(
-                    day_runs=stats_after["run_count"],
-                    day_publishes=stats_after["publish_count"],
-                )
-                return _rescue_record
+            # ── why_slot_won_editorially ─────────────────────────────────────
+            _slot_candidate.why_slot1_won_editorially = (
+                build_why_slot1_won_editorially(_slot_candidate)
+            )
 
-        # ── Authority Pair: evidence に存在するソースから媒体名ペアを選択 ────────
-        # judge の strongest_authority_pair を優先。なければ select_authority_pair() で構築。
-        # いずれの場合も mention_style_short（表示名）に変換してスクリプトに渡す。
-        authority_pair: list[str] = []
-        if _candidate_to_generate is not None:
+            # ── Judge Rescue Path ─────────────────────────────────────────────
+            _slot_judge = _slot_candidate.judge_result
+            if _slot_judge is not None:
+                from src.triage.gemini_judge import is_rescue_candidate
+                if is_rescue_candidate(_slot_judge):
+                    logger.warning(
+                        f"[GeminiJudge] Slot-{_slot_num} rescue path triggered for "
+                        f"'{_slot_candidate.event.title[:50]}': "
+                        f"requires_more_evidence=True, "
+                        f"blind_spot={_slot_judge.blind_spot_global_score:.1f}, "
+                        f"divergence={_slot_judge.divergence_score:.1f}. "
+                        "Skipping script generation."
+                    )
+                    if _slot_idx == 0:
+                        _write_judge_rescue(_slot_candidate, _slot_judge, output_dir)
+                        _rescue_triggered = True
+                    record = JobRecord(
+                        id=_slot_job_id,
+                        event_id="none",
+                        status="skipped",
+                        error=(
+                            f"judge_rescue:requires_more_evidence "
+                            f"blind_spot={_slot_judge.blind_spot_global_score:.1f} "
+                            f"divergence={_slot_judge.divergence_score:.1f}"
+                        ),
+                    )
+                    save_job(db_path, record)
+                    continue
+
+            # ── Authority Pair ────────────────────────────────────────────────
+            _slot_authority_pair: list[str] = []
             try:
                 _profiles = load_source_profiles()
-                ev = _candidate_to_generate.event
+                ev = _slot_candidate.event
                 overseas = list(ev.sources_en)
                 if ev.sources_by_locale:
                     for loc, refs in ev.sources_by_locale.items():
                         if loc != "japan":
                             overseas.extend(refs)
-                _cj = _candidate_to_generate.judge_result
+                _cj = _slot_candidate.judge_result
                 if _cj and _cj.judge_error is None and _cj.strongest_authority_pair:
-                    # judge が evidence から検証済みのペアを提案している場合:
-                    # 生ソース名を mention_style_short に変換（表示用）
                     from src.ingestion.source_profiles import find_profile
                     converted: list[str] = []
                     for raw_name in _cj.strongest_authority_pair[:2]:
@@ -3025,66 +2918,48 @@ def run_from_normalized(
                         if p and p.get("can_authority_mention", False):
                             converted.append(p.get("mention_style_short", raw_name))
                         else:
-                            # プロファイルにない → raw 名をそのまま（フォールバック）
                             converted.append(raw_name)
-                    authority_pair = converted
-                    logger.info(f"[AuthorityMention] Using judge pair (display): {authority_pair}")
+                    _slot_authority_pair = converted
+                    logger.info(f"[AuthorityMention] Slot-{_slot_num} judge pair: {_slot_authority_pair}")
                 else:
-                    # judge なし / 失敗 → select_authority_pair() で構築
-                    authority_pair = select_authority_pair(ev.sources_jp, overseas, _profiles)
-                    if authority_pair:
-                        logger.info(f"[AuthorityMention] Computed pair: {authority_pair}")
+                    _slot_authority_pair = select_authority_pair(ev.sources_jp, overseas, _profiles)
+                    if _slot_authority_pair:
+                        logger.info(f"[AuthorityMention] Slot-{_slot_num} computed pair: {_slot_authority_pair}")
             except Exception as ap_err:
-                logger.warning(f"[AuthorityMention] Failed to build pair: {ap_err}")
+                logger.warning(f"[AuthorityMention] Slot-{_slot_num} failed: {ap_err}")
+            if _slot_idx == 0:
+                authority_pair = _slot_authority_pair
 
-        # all_ranked を渡して _generate_outputs 内での再計算を防ぐ
-        record = _generate_outputs(
-            events, output_dir, db_path, job_id,
-            budget=budget,
-            day_publishes=stats["publish_count"],
-            max_publishes=MAX_PUBLISHES_PER_DAY,
-            override_top=override_top,
-            all_ranked=all_ranked,
-            authority_pair=authority_pair,
-        )
+            # ── 台本生成 (all_ranked を渡して再計算を防ぐ) ───────────────────
+            record = _generate_outputs(
+                events, output_dir, db_path, _slot_job_id,
+                budget=budget,
+                day_publishes=stats["publish_count"],
+                max_publishes=MAX_PUBLISHES_PER_DAY,
+                override_top=_slot_candidate,
+                all_ranked=all_ranked,
+                authority_pair=_slot_authority_pair,
+            )
 
-        # 配信済みマーク: generated_event_id (= record.event_id) を正規の published ID とする。
-        # FinalSelection が scheduler slot を override した場合:
-        #   - schedule: scheduled slot を consumed にマーク（再キュー防止）
-        #   - pool:     actually generated event を published にマーク（sibling 抑制）
-        # override がない場合は両方を generated_event_id で統一。
-        _published_event_id: str | None = None
+            # ── 配信済みマーク ────────────────────────────────────────────────
+            if record.status == "completed":
+                _ev_id = record.event_id
+                _published_event_id = _ev_id
+                schedule = mark_published(schedule, _ev_id)
+                _save_daily_schedule(schedule, output_dir)
+                try:
+                    mark_pool_event_published(db_path, _ev_id)
+                    logger.info(f"[Pool] Slot-{_slot_num} event {_ev_id} marked published.")
+                except Exception as pool_err:
+                    logger.warning(f"[Pool] Slot-{_slot_num} failed to mark {_ev_id} published: {pool_err}")
+
+        # Slot-1 候補を downstream の報告・監査変数として保持
+        _candidate_to_generate = _top_3_candidates[0] if _top_3_candidates else _candidate_to_generate
         _selection_override_applied: bool = (
             _final_selected_slot1_id is not None
             and _scheduled_slot1_id is not None
             and _final_selected_slot1_id != _scheduled_slot1_id
         )
-        if record.status == "completed":
-            _published_event_id = record.event_id
-            if _selection_override_applied:
-                logger.info(
-                    f"[FinalSelection] Override applied: "
-                    f"scheduled_slot={_scheduled_slot1_id} "
-                    f"→ generated={_published_event_id} "
-                    f"({_slot1_selection_source}). "
-                    "Marking scheduled slot consumed in schedule; "
-                    "pool marks generated event as published."
-                )
-                # Consume the scheduled slot so it is not re-queued
-                schedule = mark_published(schedule, _scheduled_slot1_id)
-            else:
-                schedule = mark_published(schedule, _published_event_id)
-            _save_daily_schedule(schedule, output_dir)
-            # Pool: always target the actually generated event
-            try:
-                mark_pool_event_published(db_path, _published_event_id)
-                logger.info(
-                    f"[Pool] Event {_published_event_id} marked published in pool."
-                )
-            except Exception as pool_err:
-                logger.warning(
-                    f"[Pool] Failed to mark {_published_event_id} published in pool: {pool_err}"
-                )
 
         # ── Job 成功後: batch を archive へ移動 ─────────────────────────────
         archived_count = 0

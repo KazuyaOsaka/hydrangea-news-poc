@@ -40,7 +40,7 @@ class BudgetTracker:
     RESERVED_FOR_ARTICLE: int = 1
 
     # publish_mode のデフォルト publish_reserve_calls
-    DEFAULT_PUBLISH_RESERVE_CALLS: int = 6  # viral(1) + judge(3) + script(1) + article(1)
+    DEFAULT_PUBLISH_RESERVE_CALLS: int = 15  # 3本分の台本生成+リトライ余裕
 
     def __init__(
         self,
