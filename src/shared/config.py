@@ -39,10 +39,10 @@ PUBLISH_RESERVE_CALLS: int = int(os.getenv("PUBLISH_RESERVE_CALLS", "6"))
 
 # ── LLM 呼び出し予算 ──────────────────────────────────────────────────────────
 # 1回の実行あたりの LLM 呼び出し上限
-LLM_CALL_BUDGET_PER_RUN: int = int(os.getenv("LLM_CALL_BUDGET_PER_RUN", "12"))
+LLM_CALL_BUDGET_PER_RUN: int = int(os.getenv("LLM_CALL_BUDGET_PER_RUN", "30"))
 
 # 1日あたりの LLM 呼び出し上限
-LLM_CALL_BUDGET_PER_DAY: int = int(os.getenv("LLM_CALL_BUDGET_PER_DAY", "120"))
+LLM_CALL_BUDGET_PER_DAY: int = int(os.getenv("LLM_CALL_BUDGET_PER_DAY", "300"))
 
 # normalized モードで各 JP クラスタにつき LLM に渡す EN 候補の上限
 EN_CANDIDATES_PER_JP_CLUSTER: int = int(os.getenv("EN_CANDIDATES_PER_JP_CLUSTER", "2"))
@@ -51,8 +51,8 @@ EN_CANDIDATES_PER_JP_CLUSTER: int = int(os.getenv("EN_CANDIDATES_PER_JP_CLUSTER"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # 階層型フォールバック (TIER1 → TIER4 の順に試行、各 Tier は 3回指数バックオフ後に次へ)
-GEMINI_MODEL_TIER1: str = os.getenv("GEMINI_MODEL_TIER1", "gemini-3.1-flash-preview-0419")
-GEMINI_MODEL_TIER2: str = os.getenv("GEMINI_MODEL_TIER2", "gemini-3.1-flash-lite-preview")
+GEMINI_MODEL_TIER1: str = os.getenv("GEMINI_MODEL_TIER1", "gemini-3.1-flash-lite-preview")
+GEMINI_MODEL_TIER2: str = os.getenv("GEMINI_MODEL_TIER2", "gemini-3-flash-preview")
 GEMINI_MODEL_TIER3: str = os.getenv("GEMINI_MODEL_TIER3", "gemini-2.5-flash")
 GEMINI_MODEL_TIER4: str = os.getenv("GEMINI_MODEL_TIER4", "gemini-2.5-flash-lite")
 GEMINI_MODEL_TIERS: list[str] = [

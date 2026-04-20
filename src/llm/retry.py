@@ -1,6 +1,6 @@
 """retry.py — LLM call retry with exponential backoff.
 
-Policy: 1s → 2s → 4s, max 3 attempts per call.
+Policy: 3s → 9s → 27s → 60s → 60s (×3 per retry, capped at 60s), max 5 attempts.
 Retryable: 429 / RESOURCE_EXHAUSTED, 503 / UNAVAILABLE.
 Non-retryable: 404 / NOT_FOUND, JSON parse errors, unknown errors.
 """
@@ -27,16 +27,20 @@ def is_retryable(exc: Exception) -> bool:
 def call_with_retry(
     fn: Callable[[], T],
     role: str,
-    max_attempts: int = 3,
-    initial_delay: float = 1.0,
+    max_attempts: int = 5,
+    initial_delay: float = 3.0,
+    delay_multiplier: float = 3.0,
+    max_delay: float = 60.0,
 ) -> tuple[T, int]:
     """Call fn with exponential backoff on retryable errors.
 
     Args:
-        fn:             Zero-argument callable to invoke.
-        role:           Role label for logging ("judge", "generation", "merge_batch").
-        max_attempts:   Maximum total attempts (default 3).
-        initial_delay:  Seconds before first retry; doubled each retry.
+        fn:               Zero-argument callable to invoke.
+        role:             Role label for logging ("judge", "generation", "merge_batch").
+        max_attempts:     Maximum total attempts (default 5).
+        initial_delay:    Seconds before first retry (default 3s).
+        delay_multiplier: Backoff multiplier per retry (default 3 → 3s, 9s, 27s, 60s…).
+        max_delay:        Cap on wait time in seconds (default 60s).
 
     Returns:
         (result, retry_count) — retry_count is 0 on first-try success.
@@ -67,7 +71,7 @@ def call_with_retry(
                     f"Retrying in {delay:.0f}s"
                 )
                 time.sleep(delay)
-                delay *= 2
+                delay = min(delay * delay_multiplier, max_delay)
             else:
                 logger.warning(
                     f"[Retry:{role}] All {max_attempts} attempts exhausted. "

@@ -1,6 +1,6 @@
 """garbage_filter.py — Gate 1: Garbage Filter（高速スクリーニング）
 
-50件単位のバッチで Tier 2 Lite モデルに投入し、
+30件単位のバッチで Tier 2 Lite モデルに投入し、
 Hydrangea のメディア理念に合致しないノイズを is_valuable=False として排除する。
 """
 from __future__ import annotations
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__)
 
-_BATCH_SIZE = 50
+_BATCH_SIZE = 30
 
 _SYSTEM_PROMPT = """\
 あなたは独立メディア「Hydrangea」のニュース編集アシスタントです。
@@ -61,7 +61,7 @@ def apply_garbage_filter(
     articles: list[dict],
     llm_client: "LLMClient",
 ) -> list[dict]:
-    """Gate 1: 50件単位バッチで Tier 2 Lite モデルによるノイズ除去を実行。
+    """Gate 1: 30件単位バッチで Tier 2 Lite モデルによるノイズ除去を実行。
 
     Returns:
         is_valuable=True と判定された記事のみのリスト。

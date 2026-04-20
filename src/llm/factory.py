@@ -22,6 +22,7 @@ from src.llm.base import LLMClient
 from src.llm.retry import is_retryable
 from src.shared.config import (
     GEMINI_API_KEY,
+    GEMINI_MODEL_TIER1,
     GEMINI_MODEL_TIER2,
     GEMINI_MODEL_TIER3,
     GEMINI_MODEL_TIER4,
@@ -101,10 +102,22 @@ class TieredGeminiClient(LLMClient):
         ) from last_exc
 
 
-def _make_tiered_gemini_client() -> Optional[LLMClient]:
+def _make_triage_client() -> Optional[LLMClient]:
+    """Gate 1/2/3・選別工程専用クライアント (TIER2=3-flash-preview を物理除外).
+
+    TIER1 (3.1-flash-lite, RPD 500) → TIER3 → TIER4 の順でフォールバックする。
+    TIER2 (3-flash-preview, RPD 20) は write_script 専用枠として絶対に呼ばない。
+    """
     if not GEMINI_API_KEY:
         return None
-    return TieredGeminiClient(GEMINI_API_KEY, GEMINI_MODEL_TIERS)
+    return TieredGeminiClient(
+        GEMINI_API_KEY,
+        [GEMINI_MODEL_TIER1, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4],
+    )
+
+
+def _make_tiered_gemini_client() -> Optional[LLMClient]:
+    return _make_triage_client()
 
 
 def _make_client(provider: str, model: str) -> Optional[LLMClient]:
@@ -157,7 +170,13 @@ def get_llm_client(role: str) -> Optional[LLMClient]:
 # ── Backward-compat wrappers ─────────────────────────────────────────────────
 
 def get_script_llm_client() -> Optional[LLMClient]:
-    return get_llm_client("generation")
+    """台本執筆専用クライアント (TIER2=3-flash-preview を優先使用)."""
+    if not GEMINI_API_KEY:
+        return None
+    return TieredGeminiClient(
+        GEMINI_API_KEY,
+        [GEMINI_MODEL_TIER2, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4],
+    )
 
 
 def get_article_llm_client() -> Optional[LLMClient]:
@@ -169,27 +188,21 @@ def get_cluster_llm_client() -> Optional[LLMClient]:
 
 
 def get_judge_llm_client() -> Optional[LLMClient]:
-    """Gemini 編集審判用クライアント.
+    """Gemini 編集審判用クライアント (TIER2=3-flash 除外).
 
-    Always uses Gemini TieredGeminiClient regardless of LLM_PROVIDER.
+    Always uses Gemini _make_triage_client regardless of LLM_PROVIDER.
     Returns None if GEMINI_API_KEY is not set.
     """
-    return _make_tiered_gemini_client()
+    return _make_triage_client()
 
 
 def get_garbage_filter_client() -> Optional[LLMClient]:
-    """Gate 1 Garbage Filter 用クライアント (Tier 2 = Lite 優先).
+    """Gate 1 Garbage Filter 用クライアント (TIER2=3-flash 除外).
 
-    TIER1 をスキップし TIER2→TIER4 の順でフォールバックする。
-    これにより高速・低コストなスクリーニングを実現する。
+    TIER1 (3.1-flash-lite, RPD 500) → TIER3 → TIER4 の順でフォールバック。
     Returns None if GEMINI_API_KEY is not set.
     """
-    if not GEMINI_API_KEY:
-        return None
-    return TieredGeminiClient(
-        GEMINI_API_KEY,
-        [GEMINI_MODEL_TIER2, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4],
-    )
+    return _make_triage_client()
 
 
 # ── Tier connectivity verification ──────────────────────────────────────────

@@ -28,8 +28,8 @@ from src.shared.logger import get_logger
 
 logger = get_logger(__name__)
 
-# Exploration-phase LLM call feature names (used to classify record_call calls)
-_EXPLORATION_FEATURES: frozenset[str] = frozenset({"cluster", "viral_filter", "judge"})
+# Exploration-phase LLM call feature names (exact match; elite_judge is mandatory — not exploration)
+_EXPLORATION_FEATURES: frozenset[str] = frozenset({"cluster_post_merge_batch", "viral_filter", "judge"})
 
 
 class BudgetTracker:
@@ -146,6 +146,14 @@ class BudgetTracker:
             return self.day_remaining >= 1
         return self.day_remaining > self._publish_reserve_calls
 
+    def can_afford_elite_judge(self) -> bool:
+        """Elite Judge (Gate 3) を実行できるか。
+
+        Elite Judge は必須の門番であるため publish_reserve チェックをバイパスする。
+        基本的な run/day 残量のみ確認する。
+        """
+        return self.run_remaining >= 1 and self.day_remaining >= 1
+
     def can_afford_judge(self) -> bool:
         """Judge LLM を実行できるか。
 
@@ -257,8 +265,8 @@ class BudgetTracker:
         self._day_calls += 1
         if "cluster" in feature:
             self._cluster_calls += 1
-        # Track exploration calls (cluster, viral_filter, judge) separately
-        if any(f in feature for f in _EXPLORATION_FEATURES):
+        # Track exploration calls (cluster/viral/judge); elite_judge is mandatory and excluded
+        if feature in _EXPLORATION_FEATURES:
             self._exploration_calls += 1
         logger.debug(
             f"[Budget] LLM call ({feature}): "

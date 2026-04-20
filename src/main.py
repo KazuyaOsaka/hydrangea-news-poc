@@ -2388,23 +2388,22 @@ def run_from_normalized(
             )
 
         # ── Gate 3: Elite Judge（編集長・一点突破判定）──────────────────────────
-        # evaluate_cluster_buzz (Tier 1: gemini-3.1-flash-preview) で最終採用判定。
+        # evaluate_cluster_buzz (TIER1: gemini-3.1-flash-lite-preview) で最終採用判定。
         # is_adopted=False のクラスタは即座に破棄し、台本生成には絶対進行させない。
+        # TIER1 (RPD 500) に余裕があるため全マージ済みクラスタに適用する。
         _elite_judge_results: dict[str, EditorScore] = {}
         if ELITE_JUDGE_ENABLED and GEMINI_API_KEY:
             _elite_judge_client = get_judge_llm_client()
             if _elite_judge_client is not None:
                 _elite_adopted: list[ScoredEvent] = []
-                _elite_candidates = all_ranked[:ELITE_JUDGE_CANDIDATE_LIMIT]
-                _elite_passthrough = all_ranked[ELITE_JUDGE_CANDIDATE_LIMIT:]
+                _elite_candidates = all_ranked
 
                 for _se in _elite_candidates:
-                    if not budget.can_afford_judge():
-                        logger.info(
-                            "[EliteJudge] 予算上限に達したため残候補は全件通過とします。"
+                    if not budget.can_afford_elite_judge():
+                        logger.warning(
+                            "[EliteJudge] 予算上限に達しました。残候補を破棄し処理を安全停止します。"
                         )
-                        _elite_adopted.append(_se)
-                        continue
+                        break
 
                     _cluster_data = {
                         "title": _se.event.title,
@@ -2448,7 +2447,7 @@ def run_from_normalized(
                         _elite_adopted.append(_se)
 
                 _before_elite = len(all_ranked)
-                all_ranked = _elite_adopted + _elite_passthrough
+                all_ranked = _elite_adopted
                 logger.info(
                     f"[EliteJudge] Gate 3 完了: "
                     f"{len(_elite_candidates)}件評価 → "
@@ -2464,192 +2463,110 @@ def run_from_normalized(
         if judge_results:
             all_ranked = _apply_judge_reranking(all_ranked)
 
-        # ── Daily Programming: 番組表を参照・生成 ────────────────────────────
-        schedule = _load_daily_schedule(output_dir)
+        # ── Slot-1 Selection: Elite Judge 直結モード ─────────────────────────────
+        # Scheduler 廃止。Elite Judge (Gate 3) で is_adopted=True の候補のみが対象。
+        # total_score 最高値を Slot-1 に直接選出。採用0件の場合はフォールバックせず終了。
         override_top: ScoredEvent | None = None
-        schedule_action = "unknown"
+        schedule_action = "elite_judge_direct"
         replaced_slots: list[str] = []
-
-        if schedule is None:
-            # 今日の番組表が存在しない → 新規作成
-            schedule = build_daily_schedule(all_ranked)
-            selected_scored = [
-                se for se in all_ranked
-                if se.event.id in {e.event_id for e in schedule.selected}
-            ]
-            review_warnings = final_review(selected_scored)
-            for w in review_warnings:
-                logger.info(w)
-            _save_daily_schedule(schedule, output_dir)
-            schedule_action = "created"
-            logger.info(
-                f"[Scheduler] New schedule built: {len(schedule.selected)} slots, "
-                f"buckets={list(schedule.coverage_summary.keys())}"
-            )
-        else:
-            # 既存スケジュール: 未配信枠を新 batch の高スコア記事で差し替える
-            schedule, replaced_slots = _maybe_upgrade_unpublished_slots(schedule, all_ranked)
-            if replaced_slots:
-                _save_daily_schedule(schedule, output_dir)
-                schedule_action = f"upgraded ({len(replaced_slots)} slots replaced)"
-                logger.info(
-                    f"[Scheduler] Existing schedule upgraded: {len(replaced_slots)} slot(s) replaced"
-                )
-            else:
-                schedule_action = "reused"
-                logger.info("[Scheduler] Existing schedule reused (no upgrade needed)")
-
-        batch_info["schedule_action"] = schedule_action
-
-        # ── 番組表から未配信の次の1本を取得 (snapshot 復元 / rebuild 対応) ──────
         scheduled_event_id: str | None = None
         schedule_snapshot_used = False
         schedule_mismatch_resolved = False
 
-        next_entry = get_next_unpublished(schedule)
-        if next_entry:
-            scheduled_event_id = next_entry.event_id
-            override_top = _find_scored_event(all_ranked, next_entry.event_id)
-
-            if override_top is not None:
-                logger.info(
-                    f"[Scheduler] Next scheduled: {next_entry.event_id} "
-                    f"({next_entry.primary_bucket}) — {next_entry.title[:40]} "
-                    "(found in current batch)"
-                )
-            else:
-                # Not in current batch — attempt snapshot restoration
-                if next_entry.event_snapshot:
-                    try:
-                        override_top = ScoredEvent.model_validate(next_entry.event_snapshot)
-                        schedule_snapshot_used = True
-                        schedule_mismatch_resolved = True
-                        logger.info(
-                            f"[Scheduler] Scheduled event {next_entry.event_id} not in current "
-                            f"batch — restored from snapshot. schedule_snapshot_used=True"
-                        )
-                    except Exception as snap_err:
-                        logger.warning(
-                            f"[Scheduler] Snapshot restore failed for {next_entry.event_id}: "
-                            f"{snap_err}"
-                        )
-
-                if override_top is None:
-                    # Snapshot absent or corrupt → rebuild schedule from current batch
-                    logger.warning(
-                        f"[Scheduler] Scheduled event {next_entry.event_id} is not in current "
-                        "batch and has no valid snapshot — rebuilding schedule from current batch."
-                    )
-                    schedule = build_daily_schedule(all_ranked)
-                    _save_daily_schedule(schedule, output_dir)
-                    schedule_action = (
-                        f"rebuilt (event {next_entry.event_id[:20]} unresolvable)"
-                    )
-                    batch_info["schedule_action"] = schedule_action
-
-                    next_entry = get_next_unpublished(schedule)
-                    if next_entry:
-                        scheduled_event_id = next_entry.event_id
-                        override_top = _find_scored_event(all_ranked, next_entry.event_id)
-                        if override_top is None and next_entry.event_snapshot:
-                            try:
-                                override_top = ScoredEvent.model_validate(
-                                    next_entry.event_snapshot
-                                )
-                                schedule_snapshot_used = True
-                                logger.info(
-                                    f"[Scheduler] After rebuild: restored {next_entry.event_id} "
-                                    "from snapshot."
-                                )
-                            except Exception:
-                                pass
-                        logger.info(
-                            f"[Scheduler] After rebuild: next scheduled: {next_entry.event_id}"
-                        )
-        else:
-            # next_entry is None — two distinct cases must be separated:
-            #
-            # Case A: schedule.selected is non-empty AND all are published AND open_slots == 0
-            #   → truly "all scheduled slots are published"
-            #   → allowed to proceed with triage top (daily-limit guard will still apply)
-            #
-            # Case B: schedule.selected is empty (selected=0), OR open_slots > 0
-            #   → quality floor prevented publishable candidates from being selected
-            #   → must NOT fall back to triage top; skip this batch
-            _all_slots_published = (
-                len(schedule.selected) > 0
-                and all(e.published for e in schedule.selected)
-                and schedule.open_slots == 0
+        if not all_ranked:
+            logger.warning(
+                "[EliteJudge] Elite Judge に採用されたニュースが0件。"
+                "フォールバックは禁止されているため、本日の採用ニュースなしとして終了します。"
             )
-            _no_pub_candidates = (not _all_slots_published)
-
-            if _no_pub_candidates:
-                # Case B: quality floor blocked all top candidates — do NOT generate content
-                logger.warning(
-                    f"[Scheduler] No publishable candidates in this batch "
-                    f"(selected={len(schedule.selected)}, open_slots={schedule.open_slots}, "
-                    f"held_back={len(schedule.held_back)}). "
-                    "Skipping generation — all top candidates held_back by quality floor."
+            _skip_record = JobRecord(
+                id=job_id,
+                event_id="none",
+                status="skipped",
+                error="no_elite_adopted: Elite Judge の採用候補が0件（予算切れ含む）",
+            )
+            save_job(db_path, _skip_record)
+            _dummy_schedule = DailySchedule(
+                date=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                generated_at=datetime.now(timezone.utc).isoformat(),
+                total_candidates=0,
+                selected=[],
+                rejected=[],
+                held_back=[],
+                open_slots=1,
+                diversity_rules_applied=["elite_judge_direct"],
+                coverage_summary={},
+                region_coverage={},
+            )
+            batch_info["schedule_action"] = "skipped_no_elite_adopted"
+            archived_count = 0
+            try:
+                archived_count = _archive_batch(batch, archive_dir)
+                mark_batch_status(
+                    db_path, batch_id, "archived",
+                    archived_at=datetime.now(timezone.utc).isoformat(),
                 )
-                _skip_record = JobRecord(
-                    id=job_id,
-                    event_id="none",
-                    status="skipped",
-                    error=(
-                        f"no_publishable_candidates: selected={len(schedule.selected)}, "
-                        f"open_slots={schedule.open_slots}, "
-                        f"held_back={len(schedule.held_back)}"
-                    ),
-                )
-                save_job(db_path, _skip_record)
-                batch_info["schedule_action"] = "skipped_no_publishable_candidates"
-                archived_count = 0
-                try:
-                    archived_count = _archive_batch(batch, archive_dir)
-                    mark_batch_status(
-                        db_path, batch_id, "archived",
-                        archived_at=datetime.now(timezone.utc).isoformat(),
-                    )
-                    logger.info(
-                        f"[Archive] batch={batch_id} archived "
-                        f"(no_publishable_candidates, {archived_count} files)"
-                    )
-                except Exception as arc_err:
-                    logger.error(
-                        f"[Archive] Failed to archive batch={batch_id}: {arc_err}. "
-                        "Batch will remain as 'processing' for manual cleanup."
-                    )
-                batch_info["archived_file_count"] = archived_count
-                _write_debug_artifacts(output_dir, run_stats, schedule, rolling_window_stats)
-                _write_discovery_audit_safe(all_ranked_appraised, run_stats, output_dir, schedule)
-                _save_run_summary(
-                    output_dir, job_id, run_stats, _skip_record, budget,
-                    daily_schedule=schedule,
-                    batch_info=batch_info,
-                    schedule_tracking={
-                        "scheduled_event_id": scheduled_event_id,
-                        "schedule_snapshot_used": schedule_snapshot_used,
-                        "schedule_mismatch_resolved": schedule_mismatch_resolved,
-                        "no_publishable_candidates": True,
-                        "all_selected_published": False,
-                        "fallback_blocked_by_quality_floor": True,
-                    },
-                    rolling_window_stats=rolling_window_stats,
-                    judge_summary=_build_judge_summary(judge_results, all_ranked, None, [], model_resolution=_judge_model_resolution),
-                    viral_filter_summary=_viral_filter_summary,
-                )
-                budget.log_summary(
-                    day_runs=stats_after["run_count"],
-                    day_publishes=stats_after["publish_count"],
-                )
-                return _skip_record
-            else:
-                # Case A: all scheduled slots are truly published → proceed with generation
                 logger.info(
-                    f"[Scheduler] All scheduled slots are published "
-                    f"(selected={len(schedule.selected)}, open_slots={schedule.open_slots}). "
-                    "Proceeding with triage top."
+                    f"[Archive] batch={batch_id} archived "
+                    f"(no_elite_adopted, {archived_count} files)"
                 )
+            except Exception as arc_err:
+                logger.error(
+                    f"[Archive] Failed to archive batch={batch_id}: {arc_err}. "
+                    "Batch will remain as 'processing' for manual cleanup."
+                )
+            batch_info["archived_file_count"] = archived_count
+            _write_debug_artifacts(output_dir, run_stats, _dummy_schedule, rolling_window_stats)
+            _write_discovery_audit_safe(all_ranked_appraised, run_stats, output_dir, _dummy_schedule)
+            _save_run_summary(
+                output_dir, job_id, run_stats, _skip_record, budget,
+                daily_schedule=_dummy_schedule,
+                batch_info=batch_info,
+                schedule_tracking={
+                    "scheduled_event_id": None,
+                    "schedule_snapshot_used": False,
+                    "schedule_mismatch_resolved": False,
+                    "no_publishable_candidates": True,
+                    "all_selected_published": False,
+                    "fallback_blocked_by_quality_floor": False,
+                },
+                rolling_window_stats=rolling_window_stats,
+                judge_summary=_build_judge_summary(judge_results, [], None, [], model_resolution=_judge_model_resolution),
+                viral_filter_summary=_viral_filter_summary,
+            )
+            budget.log_summary(
+                day_runs=stats_after["run_count"],
+                day_publishes=stats_after["publish_count"],
+            )
+            return _skip_record
+
+        # Elite Judge 採用候補の中から total_score 最高を Slot-1 に選出
+        override_top = max(
+            all_ranked,
+            key=lambda se: (
+                _elite_judge_results[se.event.id].total_score
+                if se.event.id in _elite_judge_results else 0
+            ),
+        )
+        scheduled_event_id = override_top.event.id
+        _top_ej = _elite_judge_results.get(override_top.event.id)
+        logger.info(
+            f"[EliteJudge→Slot1] Slot-1 決定 "
+            f"(total_score={_top_ej.total_score if _top_ej else 'N/A'}): "
+            f"{override_top.event.title[:60]}"
+        )
+        schedule = DailySchedule(
+            date=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            generated_at=datetime.now(timezone.utc).isoformat(),
+            total_candidates=len(all_ranked),
+            selected=[scored_event_to_schedule_entry(override_top)],
+            rejected=[],
+            held_back=[],
+            open_slots=0,
+            diversity_rules_applied=["elite_judge_direct"],
+            coverage_summary={"elite_judge": 1},
+            region_coverage={},
+        )
+        batch_info["schedule_action"] = schedule_action
 
         # ── Final Selection Stage: slot-1 integrity enforcement ─────────────────
         # Judge が評価した場合、slot-1 は judged flagship 候補から選ばなければならない。
