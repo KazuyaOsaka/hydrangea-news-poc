@@ -1,6 +1,6 @@
 """retry.py — LLM call retry with exponential backoff.
 
-Policy: 3s → 9s → 27s → 60s → 60s (×3 per retry, capped at 60s), max 5 attempts.
+Policy: 20s → 60s → 180s → 180s → 180s (×3 per retry, capped at 180s), max 5 attempts.
 Retryable: 429 / RESOURCE_EXHAUSTED, 503 / UNAVAILABLE.
 Non-retryable: 404 / NOT_FOUND, JSON parse errors, unknown errors.
 """
@@ -28,9 +28,9 @@ def call_with_retry(
     fn: Callable[[], T],
     role: str,
     max_attempts: int = 5,
-    initial_delay: float = 3.0,
+    initial_delay: float = 20.0,
     delay_multiplier: float = 3.0,
-    max_delay: float = 60.0,
+    max_delay: float = 180.0,
 ) -> tuple[T, int]:
     """Call fn with exponential backoff on retryable errors.
 

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
+
+from pydantic import BaseModel, Field
 
 from src.generation.title_generator import generate_title_layer
 from src.llm.base import LLMClient
@@ -15,26 +17,33 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__)
 
-# 各セクションの秒数（合計75秒）
+# ── 4ブロック構成の秒数 ───────────────────────────────────────────────────────
 _DURATIONS = {
-    "hook": 3,
-    "fact": 12,
-    "arbitrage_gap": 25,
-    "background": 15,
-    "japan_impact": 20,
+    "hook":      4,   # hook_variants[0] を採用
+    "setup":    16,   # ~70字
+    "twist":    40,   # ~180字
+    "punchline": 20,  # ~90字
 }
 
-_SECTION_KEYS = ["hook", "fact", "arbitrage_gap", "background", "japan_impact"]
+_SECTION_KEYS = ["hook", "setup", "twist", "punchline"]
+
+# ── 文字数ハードバリデーション境界 ────────────────────────────────────────────
+# Python側で計測し、範囲外ならLLMに修正を指示してリトライ
+_CHAR_BOUNDS: dict[str, tuple[int, int]] = {
+    "setup":     (60,  90),
+    "twist":     (150, 220),
+    "punchline": (70,  110),
+}
+_MAX_VALIDATION_RETRIES = 3  # 文字数違反による最大リトライ回数
 
 # ── プラットフォームプロファイル ──────────────────────────────────────────────
-# "shared" = TikTok + YouTube Shorts 共通。将来分岐できる設計。
 PLATFORM_PROFILES: dict[str, dict[str, int]] = {
     "shared": {
-        "target_sec":   75,
+        "target_sec":   80,
         "min_sec":      70,
         "max_sec":      90,
-        "hard_min_sec": 60,   # TikTok 収益化ボーダー
-        "hard_max_sec": 100,  # 絶対上限
+        "hard_min_sec": 60,
+        "hard_max_sec": 100,
     },
     "tiktok": {
         "target_sec":   72,
@@ -52,29 +61,113 @@ PLATFORM_PROFILES: dict[str, dict[str, int]] = {
     },
 }
 
-# 日本語ナレーション速度（文字/秒）
 _JP_CHARS_PER_SEC: float = 4.5
-
-# セクションごとの目標文字数（_DURATIONS × _JP_CHARS_PER_SEC の近似値）
 _TARGET_CHARS = {k: round(v * _JP_CHARS_PER_SEC) for k, v in _DURATIONS.items()}
 
 
+# ── LLM出力パース用スキーマ ───────────────────────────────────────────────────
+
+class ScriptDraft(BaseModel):
+    """LLMが生成するJSON全体をパースするための内部スキーマ。
+    VideoScriptへの変換・文字数バリデーションに使用し、外部に公開しない。
+    """
+    # ── ディレクター思考 ─────────────────────────────────────────────────────
+    director_thought: str = Field(
+        description="事象の本質と選択した武器・仮想敵をどう叩くかの宣言（200字以内）"
+    )
+    target_enemy: str = Field(
+        description="財務省/日銀・大手メディア・米国政府/中国共産党・GAFAM・既存秩序 等"
+    )
+    selected_pattern: str = Field(
+        description="Breaking Shock / Media Critique / Geopolitics / Paradigm Shift / Anti-Sontaku / Cultural Divide"
+    )
+    loop_mechanism: str = Field(
+        description="loop-1(冒頭伏線回収) / loop-2(未完結フック) / loop-3(冒頭単語回帰)"
+    )
+    # ── SEO・サムネ ──────────────────────────────────────────────────────────
+    seo_keywords: dict[str, Any] = Field(
+        description="{'primary': '主要検索語', 'secondary': ['副検索語1', '副検索語2']}"
+    )
+    thumbnail_text: dict[str, str] = Field(
+        description="{'main': 'サムネ主文字10字以内', 'sub': 'サムネ副文字'}"
+    )
+    # ── Hook A/Bテスト候補 ───────────────────────────────────────────────────
+    hook_variants: list[dict[str, str]] = Field(
+        description="5類型から3つ選択。各18文字以内。[{'type':'A','label':'数字ショック','text':'...'},...] "
+    )
+    # ── 本文 ─────────────────────────────────────────────────────────────────
+    setup: str = Field(description="事件の概要・建前（60〜90文字）")
+    twist: str = Field(description="裏の文脈・構造を展開（150〜220文字）")
+    punchline: str = Field(description="価値観を揺さぶる結末・loop_mechanism実装（70〜110文字）")
+    # ── 視聴維持ピーク設計 ───────────────────────────────────────────────────
+    peaks: dict[str, str] = Field(
+        description="{'3s':'継続フック','7s':'具体的数字/固有名詞','15s':'第1のReveal','30s':'第2のReveal'}"
+    )
+
+
+# ── 文字数バリデーション ──────────────────────────────────────────────────────
+
+def _count_chars(text: str) -> int:
+    """空白・改行を除いた実文字数を返す。"""
+    return len("".join(text.split()))
+
+
+class _CharViolation:
+    def __init__(self, field: str, actual: int, lo: int, hi: int) -> None:
+        self.field = field
+        self.actual = actual
+        self.lo = lo
+        self.hi = hi
+
+    def correction_message(self) -> str:
+        if self.actual > self.hi:
+            diff = self.actual - self.hi
+            return f"- {self.field}: 現在{self.actual}文字 → 目標{self.lo}〜{self.hi}文字（{diff}文字削ってください）"
+        diff = self.lo - self.actual
+        return f"- {self.field}: 現在{self.actual}文字 → 目標{self.lo}〜{self.hi}文字（{diff}文字増やしてください）"
+
+
+def _validate_draft_chars(draft: ScriptDraft) -> list[_CharViolation]:
+    """setup/twist/punchlineの文字数を検証し、違反リストを返す。空なら合格。"""
+    violations: list[_CharViolation] = []
+    for field, (lo, hi) in _CHAR_BOUNDS.items():
+        text = getattr(draft, field, "")
+        n = _count_chars(text)
+        if not (lo <= n <= hi):
+            violations.append(_CharViolation(field, n, lo, hi))
+    return violations
+
+
+def _build_correction_prompt(base_prompt: str, draft: ScriptDraft, violations: list[_CharViolation]) -> str:
+    """文字数違反を具体的に示した修正リクエストプロンプトを返す。"""
+    lines = ["以下のフィールドが文字数規定を逸脱しています。該当箇所のみ修正し、JSONをそのまま再出力してください。"]
+    lines += [v.correction_message() for v in violations]
+    lines += [
+        "",
+        "【修正ルール】",
+        "- 違反フィールド以外は変更しないこと。",
+        "- JSONのみを返すこと（前置き・説明不要）。",
+        "",
+        "## 前回の出力（参照用）",
+        f"```json",
+        json.dumps(draft.model_dump(), ensure_ascii=False, indent=2),
+        "```",
+    ]
+    correction_instruction = "\n".join(lines)
+    return f"{base_prompt}\n\n---\n## 🔁 修正指示\n{correction_instruction}"
+
+
+# ── ユーティリティ ────────────────────────────────────────────────────────────
+
 def _estimate_duration_sec(text: str) -> int:
-    """日本語テキストの読み上げ秒数を推定する（空白・改行を除いた文字数ベース）。"""
     chars = len("".join(text.split()))
     return round(chars / _JP_CHARS_PER_SEC)
 
 
 def _trim_to_fit(text: str, max_chars: int) -> str:
-    """テキストを max_chars 文字（空白除く）以下に、文末単位で切り詰める。
-
-    句点（。）で自然に切る。ただし、目標長の 80% 以上の位置にある句点のみ使う。
-    これにより、最初の短い文で大幅に短縮されるのを防ぐ。
-    """
     cleaned_len = len("".join(text.split()))
     if cleaned_len <= max_chars:
         return text
-    # 空白除き文字数で cut 位置を特定
     char_count = 0
     cut_pos = len(text)
     for i, ch in enumerate(text):
@@ -83,8 +176,6 @@ def _trim_to_fit(text: str, max_chars: int) -> str:
         if char_count >= max_chars:
             cut_pos = i + 1
             break
-    # cut_pos より手前の最後の句点で終わらせる（自然な文末）
-    # 80% より前の句点は使わない（大幅な短縮を防ぐ）
     last_kuten = text.rfind("。", 0, cut_pos)
     if last_kuten > int(cut_pos * 0.8):
         return text[:last_kuten + 1]
@@ -96,16 +187,6 @@ def _compress_sections(
     target_max_sec: int,
     estimated_sec: int,
 ) -> tuple[list[ScriptSection], int]:
-    """
-    推定秒数が target_max_sec を超えている場合にセクションを圧縮する。
-
-    - hook / fact は短いため触らない
-    - arbitrage_gap / background / japan_impact を比率で削る
-    - 句点単位で自然に切り詰める
-
-    Returns:
-        (compressed_sections, new_estimated_sec)
-    """
     if estimated_sec <= target_max_sec:
         return sections, estimated_sec
 
@@ -118,7 +199,7 @@ def _compress_sections(
     if excess <= 0:
         return sections, estimated_sec
 
-    _COMPRESSIBLE = ("arbitrage_gap", "background", "japan_impact")
+    _COMPRESSIBLE = ("setup", "twist", "punchline")
     compress_source_chars = sum(
         len("".join(s.body.split())) for s in sections if s.heading in _COMPRESSIBLE
     )
@@ -131,9 +212,7 @@ def _compress_sections(
             new_sections.append(s)
             continue
         chars = len("".join(s.body.split()))
-        # 超過分をこのセクションの比率で削る
         trim = int(excess * chars / compress_source_chars)
-        # セクション目標文字数の 75% を下限とする
         new_max = max(chars - trim, int(_TARGET_CHARS.get(s.heading, chars) * 0.75))
         trimmed_body = _trim_to_fit(s.body, new_max)
         new_sections.append(s.model_copy(update={"body": trimmed_body}))
@@ -146,11 +225,14 @@ def _compress_sections(
     )
     return new_sections, new_estimated
 
-# 動画台本生成プロンプト
-# 呼び出し側で {{SELECTED_EVENT_JSON}} と {{TRIAGE_RESULT_JSON}} を .replace() で置換すること
+
+# ── システムプロンプト ────────────────────────────────────────────────────────
+# {{EVIDENCE_WARNING}} / {{AUTHORITY_MENTION_INSTRUCTION}}
+# / {{SELECTED_EVENT_JSON}} / {{TRIAGE_RESULT_JSON}} を呼び出し側で置換すること
+
 _PROMPT_TEMPLATE = """\
 あなたは、TikTok・YouTube Shorts 向けの知的ショート動画台本作家です。
-目的は、日本の視聴者に「点と点が繋がって霧が晴れる」という知的興奮（Intellectual High）を、60〜90秒で届けることです。
+目的は「点と点が繋がって霧が晴れる」という知的興奮（Intellectual High）を、約60秒・350〜400文字で届けることです。
 
 ## メディアのコンセプト
 「このチャンネルを見ると、世界がいつもと違って見える」——煽りではなく、純粋な知的好奇心を満たすインテリジェンス・ショートメディア。
@@ -158,131 +240,139 @@ _PROMPT_TEMPLATE = """\
 ## ターゲット
 20代後半〜40代の、知的好奇心が高く、世界の動きで損をしたくない日本人ビジネス層。
 
-## 台本のゴール（Intellectual High）
-1. **情報の価値提示**: 「今、この瞬間に世界で起きている本当の変化」を知るべき理由を冒頭で提示する
-2. **3Dの世界観**: 日英だけでなく、中東・アジア・欧州など複数地域の視点を組み合わせ、「パズルが揃う」体験を作る
-3. **圧倒的なわかりやすさ**: 専門用語を直感的なメタファーに置き換え（「キャリートレード」→「低金利円を借りて他国に投資する手法」「地政学的緊張」→「隣国同士の縄張り争い」）
-4. **知的な祝福で締める**: 最後に「この視点を持てば、明日からのニュースが違って見えます」という一言で視聴者の成長を後押しする
+---
 
-## 台本構成（Facts → Global Map → Deep Insight → Empowerment）
-必ず以下の5部構成にしてください。
+## STEP 1: ディレクター思考（台本を書く前に必ず実行）
 
-1. hook（0〜3秒）— 【Opening: 問い or 視点差の逆転】
-- 冒頭の1文で「問い」か「視点差の逆転」を提示する
-- 1文で完結させる。20字以内が理想
-- 「日本ではA。でも世界ではBという問いが立っている」のように視点を反転させる
-- 汎用的な挨拶（「こんにちは」「今日は〜についてです」）は禁止
-- 長い文・複数文・自分の立場表明は禁止
-- 例: 「なぜ世界がこれほど違う反応をしたのか。」（18字）
+`director_thought` フィールドに200字以内で以下を宣言せよ。
+1. **この事象の本質** — 構造・権力・格差・価値観の衝突を一言で。
+2. **`target_enemy`** — 財務省/日銀・大手メディア・米国政府/中国共産党・GAFAM・既存秩序 から選べ。視聴者が「そいつか！」と感じる仮想敵を明確にする。
+3. **`selected_pattern`** — 以下の武器庫から最適な1つを選べ。選んだ理由と棄却理由を一言で。
+4. **`loop_mechanism`** — loop-1(冒頭伏線回収) / loop-2(未完結フック) / loop-3(冒頭単語回帰) から選べ。
 
-2. fact（3〜15秒）— 【FACTS: 起きたこと】
-- 最重要の事実を1点に絞り、2〜3文以内で書く
-- 余計な装飾・背景・推測を入れない
-- 事実を短く、客観的に示す
+---
 
-3. arbitrage_gap（15〜40秒）— 【Global Map: 世界の見え方マップ】
-- sources_by_locale の各地域（japan / global / middle_east / europe / east_asia 等）の視点を積極的に活用する
-- 「日本ではA、米英ではB」という対比で示す。ただし列挙しすぎない
-- **報道差の中で最も鮮明な差を1〜2点だけ取り上げる**（冗長な列挙は禁止）
-- どの媒体が何を強調し、何を強調しなかったかを具体的に示す
-- ここはまだ「事実の差」の提示であり、その理由の推測は次のセクションで行う
+## STEP 2: 武器庫（6つの解説パターン）
 
-4. background（40〜55秒）— 【Deep Insight: 構造的な「なぜ？」】
-- **冒頭の1文で「結局、これは〇〇の問題なんです」と構造を一言で言う**
-- 続けて、直感的なメタファーで構造を解き明かす（「〇〇の取り合い」「クラス内の〇〇関係と同じ構図」）
-- 文化・制度・地政学・経済合理性・歴史的経緯などから背景仮説を立てる
-- 【重要】必ず推定表現を使うこと:
-  「〜という仮説が立てられます」
-  「〜という背景が影響している可能性があります」
-  「報道の差を見る限り、〜という見方が考えられます」
-- 事実と仮説を混ぜない。断定しない。陰謀論・誹謗中傷は禁止
+選択は数値スコアではなく、**このニュースの本質・入力データの強み・視聴者の感情反応**で判断すること。組み合わせも可。
 
-5. japan_impact（55〜75秒）— 【Empowerment: あなたへの知的武器】
-- **生活・市場・キャリア・家計のどれか1つに具体的に落とす**（複数並べない）
-- 「今後どこを注視すべきか」を一言で指し示す
-- **必ず「この視点を持てば〜」「これを知っておくと〜」という知的な祝福の一文で締める**
-- 煽りすぎず、余韻を残す
+### [1] Breaking Shock（速報・歴史的スケール）
+- **Hook**: 「たった今、〇〇の常識が崩壊しました」等。圧倒的な速報感・緊迫感で指を止める。
+- **Twist**: この事態がどれほど異常か、過去のデータや歴史と比較してスケールを語る。「こんな数字は〇〇年ぶり」等。
+- **Punchline**: 「明日からの〇〇に警戒してください」と具体的なアラートを鳴らして締める。
 
-## 文体（TikTok向け口語・短文ルール — 最重要）
-- 日本語で書く
-- 1文は20字以内を目安にする。長い文は句点で区切る
-- 話し言葉に近づける（「〜ですよね」「〜なんです」「実はこうなんです」）
-- 接続詞を使って流れを作る（「でも」「だから」「つまり」「ここが重要で」）
-- 難しい専門用語は必ず言い換える（例: 「キャリートレード」→「低金利円を借りて他国に投資する手法」）
-- 1文に1つの情報だけ入れる
-- 「〜という背景があります」「〜ということです」は使わない（冗長）
-- 「こんにちは」「今日は〜についてです」などの弱い導入は禁止
-- 陰謀論っぽい言い回しは禁止
-- 過激な煽りは禁止
+### [2] Media Critique（情報格差・メディア批判）
+- **Hook**: 「なぜ日本のテレビはこれを報じないのか？」等。タブー感・情報格差への怒りで指を止める。
+- **Twist**: 海外の熱狂/危機感と日本の無関心のギャップをデータで突きつける。「現地では〇〇万件の投稿」等。
+- **Punchline**: 「情報鎖国ニッポン」への皮肉と、自衛のための情報収集の必要性で締める。
+
+### [3] Geopolitics（地政学・多極的視点）
+- **Hook**: 「裏で糸を引く真の黒幕は××です」等。善悪二元論を超えた「もう一つの真実」で指を止める。
+- **Twist**: 対立陣営（中露・グローバルサウス等）から見た「彼らの正義」と資源・覇権争いを暴く。
+- **Punchline**: 「これは正義ではなく、国益の衝突です」という冷徹な現実認識で締める。
+
+### [4] Paradigm Shift（構造変化・時代の転換点）
+- **Hook**: 「今日から〇〇のルールが変わりました」等。不可逆的な変化の節目感で指を止める。
+- **Twist**: 旧時代の誰が没落し、誰が新覇権を握るか、勝者と敗者を具体的に語る。
+- **Punchline**: 仕事・投資・生活への具体的なリスクまたはチャンスを1つだけ提示して締める。
+
+### [5] Anti-Sontaku（アンチ忖度・権力の解剖）
+- **Hook**: 「綺麗事抜きで言います。真の勝者は××です」等。建前を剥ぎ取る直球で指を止める。
+- **Twist**: SDGs・平和・公平等の建前の裏で動く、生々しいカネと権力の流れを冷徹に指摘する。
+- **Punchline**: 「綺麗事を信じた側が損をする世界で、あなたはどう動くか」というシニカルな問いで締める。
+
+### [6] Cultural Divide（文化・価値観の断層）
+- **Hook**: 「なぜ〇〇国でこんな異常な事件が起きるのか？」等。文化的ギャップへの驚きと好奇心で指を止める。
+- **Twist**: 表層的な事件の奥にある、歴史・宗教・民族・制度という価値観の断層まで潜って解説する。
+- **Punchline**: 「日本の常識で世界を測ってはいけない」という教訓で締める。
+
+---
+
+## STEP 3: アルゴリズム・ハック（必須実装）
+
+### 【Hook 5類型 — A/Bテスト用3案を必ず作れ】
+以下の5類型のうち3種類を選び `hook_variants` に格納せよ（各18文字以内）。
+- **A: 数字ショック** — 最初の単語を数字にする（例:「3兆円。日本人の預金が...」）
+- **B: 固有名詞否定** — 有名機関・人物を否定する（例:「NHKが言わない真実があります」）
+- **C: カウントダウン** — 時限性で焦りを作る（例:「あと3日で〇〇が変わります」）
+- **D: 逆説宣言** — 常識の逆を冒頭で言い切る（例:「円高は日本にとって損です」）
+- **E: 名指し暴露** — 固有名詞で具体的に暴く（例:「〇〇省が隠していた数字」）
+
+### 【ループ機構 — 2周目再視聴を設計せよ】
+`loop_mechanism` に従い、Punchlineの最後を以下で締めること:
+- **loop-1（冒頭伏線回収）**: Hookで仄めかした謎・伏線をPunchlineで「これがその答えです」と回収する。
+- **loop-2（未完結フック）**: 「続きは次の動画で」「もう一つの真実がある」等で未完結感を残す。
+- **loop-3（冒頭単語回帰）**: Hookの最初のキーワードをPunchlineの最後の文に再登場させる。
+
+### 【SEOキーワード配置】
+`seo_keywords.primary` をSetupのセリフ内に1回、`seo_keywords.secondary[0]` をTwistのセリフ内に1回、
+自然な形で発話として組み込め（不自然なキーワード挿入は禁止）。
+
+### 【視聴維持ピーク設計】
+`peaks` に記した通り、各時間帯に引きがある要素を必ず配置せよ:
+- 3秒: 継続フック（Hook終わりで「でも実は...」「しかし...」等の引き）
+- 7秒: 具体的な数字または固有名詞（Setupの中で）
+- 15秒: 第1のReveal（Twistの冒頭で視点を反転させる）
+- 30秒: 第2のReveal（Twistの中盤で最大の「なぜ？」への答えを提示）
+
+---
+
+## STEP 4: 絶対ルール——ショート動画の黄金構成
+
+| ブロック | 文字数 | 役割 |
+|---------|--------|------|
+| **hook** (hook_variants[0].text を使用) | 約20文字 | 指を止める1文。必ず1文完結。 |
+| **setup** | **60〜90文字** | 前提・建前を事実のみで。推測禁止。 |
+| **twist** | **150〜220文字** | 武器で視点をひっくり返す最大の見せ場。 |
+| **punchline** | **70〜110文字** | シニカルで知的な結末。loop_mechanism必須。 |
+
+**⚠️ 文字数は Python 側でハードチェックされます。範囲外の場合は自動リジェクトされ再生成を求められます。**
+
+## 文体ルール
+- 1文は20字以内。句点で積極的に区切る。
+- 話し言葉（「〜ですよね」「〜なんです」「実はこうなんです」）。
+- 接続詞でテンポを作る（「でも」「だから」「つまり」「ここが重要で」）。
+- 専門用語は必ず言い換える（例:「地政学的緊張」→「隣国同士の縄張り争い」）。
+- 陰謀論的表現・過激な煽りは禁止。
 
 ## 根拠ルール
-- 断定形（「〜だ」「〜である」）は、必ず sources_jp / sources_en / sources_by_locale の報道内容を根拠とすること
-- 元記事に明記されていない推論は必ず「〜とみられる」「〜という見方もある」「〜という仮説が考えられる」で表現する
-- gap_reasoning と japan_impact_reasoning が入力にある場合は、それを根拠として優先参照する
-- background セクションでの仮説生成は、報道差の「構造的パターン」から導くこと（根拠のない飛躍は禁止）
-- 事実と仮説の区別を常に明確にする: 事実は fact / arbitrage_gap に、仮説は background に入れる
+- gap_reasoning / japan_impact_reasoning が入力にある場合は優先参照する。
+- 断定形は sources_jp / sources_en / sources_by_locale の報道内容を根拠とする場合のみ。
+- 根拠のない推論は「〜とみられる」「〜という見方がある」で表現する。
+- 事実は setup/twist 前半に、仮説は twist 後半に入れる。
 
-## 文字量の目安（厳守）
-- 目標は 72〜78秒（TikTok + YouTube Shorts 共通）
-- 下限: 60秒（TikTok 収益化ライン）、上限: 100秒（絶対上限）
-- 日本語ナレーション速度の目安: 約4.5文字/秒
-- **各セクションの目標文字数（空白除く）:**
-  - hook: 約13字（3秒）— 短い問いまたは視点差の逆転
-  - fact: 約45字（10秒）— 主要事実1点のみ
-  - arbitrage_gap: 約113字（25秒）— 最鮮明な差1〜2点
-  - background: 約68字（15秒）— 構造を一言で解く
-  - japan_impact: 約90字（20秒）— 具体的な生活・市場接続
-  - 全体合計: 約329字（73秒）
-- 各セクションは上記の目標文字数を±20%以内に収めること
-- 冗長な接続詞・繰り返しは削除する
-- 一文を短く区切る（句点で20字以内）
-- "賢そうな長文" より "一発で入る短文" を徹底する
-- 視聴者が「結局、何が本質か」を1行で言える構成にする
-
-## 必ず含めること
-- 世界で何が起きたか
-- 複数地域からの見え方の差（sources_by_locale を最大活用）
-- その背景にある構造（直感的メタファーで）
-- 視聴者への知的な祝福（明日からの世界が変わる一言）
-
-## 入力
-以下に、選定済みニュースの情報と、トリアージ結果を渡します。
-入力の sources_jp（日本語媒体）と sources_en（英語媒体）を参照し、台本の根拠として使うこと。
+---
 
 ## 出力形式
 必ずJSONのみで返してください。前置きや説明は不要です。
 
 {
-  "title": "動画用の短いタイトル",
-  "total_duration_sec": 75,
-  "sections": [
-    {
-      "name": "hook",
-      "duration_sec": 3,
-      "text": "..."
-    },
-    {
-      "name": "fact",
-      "duration_sec": 12,
-      "text": "..."
-    },
-    {
-      "name": "arbitrage_gap",
-      "duration_sec": 25,
-      "text": "..."
-    },
-    {
-      "name": "background",
-      "duration_sec": 15,
-      "text": "..."
-    },
-    {
-      "name": "japan_impact",
-      "duration_sec": 20,
-      "text": "..."
-    }
+  "director_thought": "事象の本質は〇〇。target_enemyは〇〇。武器[X]を選んだ理由は〜。loop_mechanismはloop-Xとする。（200字以内）",
+  "target_enemy": "大手メディア",
+  "selected_pattern": "Media Critique",
+  "loop_mechanism": "loop-3",
+  "seo_keywords": {
+    "primary": "主要検索語",
+    "secondary": ["副検索語1", "副検索語2"]
+  },
+  "thumbnail_text": {
+    "main": "サムネ主文字（10字以内）",
+    "sub": "サムネ副文字"
+  },
+  "hook_variants": [
+    {"type": "B", "label": "固有名詞否定", "text": "NHKが言わない真実があります"},
+    {"type": "A", "label": "数字ショック",  "text": "3兆円。今日から消えます。"},
+    {"type": "D", "label": "逆説宣言",     "text": "円安は日本の勝利ではない。"}
   ],
-  "keywords": ["...", "...", "..."]
+  "setup": "事件の概要・世間の建前（60〜90文字）",
+  "twist": "裏の文脈・構造を展開（150〜220文字）",
+  "punchline": "価値観を揺さぶる結末、loop_mechanism実装（70〜110文字）",
+  "peaks": {
+    "3s":  "継続フック（Hook終わりの引き）",
+    "7s":  "具体的数字か固有名詞",
+    "15s": "第1のReveal",
+    "30s": "第2のReveal"
+  }
 }
 
 {{EVIDENCE_WARNING}}
@@ -294,11 +384,6 @@ _PROMPT_TEMPLATE = """\
 
 
 def _build_authority_mention_instruction(authority_pair: list[str]) -> str:
-    """evidence に存在する媒体名を最大2つ使ってよいという指示文を返す。
-
-    authority_pair が空の場合は空文字列を返す（媒体名言及なし）。
-    このリストは呼び出し元 (main.py) が evidence に実在するソースのみで構築すること。
-    """
     if not authority_pair:
         return ""
     names = "、".join(f"「{n}」" for n in authority_pair[:2])
@@ -314,19 +399,16 @@ def _build_authority_mention_instruction(authority_pair: list[str]) -> str:
 守るべきルール:
   - 上記リスト以外の媒体名を追加・創作しないこと
   - hook セクションに媒体名を並べるだけの文は禁止（内容の対比を示すこと）
-  - 媒体名を入れると文が不自然になる場合は省略してよい
   - 台本全体（全セクション合計）で媒体名は最大2つまで
 
 """
 
 
-# 疑惑・未確認情報の検出キーワード
 _ALLEGATION_KW = [
     "疑惑", "インサイダー", "insider trading", "insider deal", "alleged", "allegation",
     "不正", "横領", "背任", "粉飾", "accounting fraud", "市場操作", "market manipulation",
     "容疑", "被疑", "捜査中", "under investigation",
 ]
-# 権威ある一次ソース（これがあり且つ証拠もある場合のみ断定許可）
 _ALLEGATION_AUTH_SOURCES = [
     "reuters", "ap ", "afp", "associated press",
     "financial times", "wsj", "wall street journal",
@@ -335,7 +417,6 @@ _ALLEGATION_AUTH_SOURCES = [
 
 
 def _allegation_warning(event: NewsEvent) -> str:
-    """疑惑・未確認情報を含む場合に警告文を返す。権威ソース+証拠が揃っていれば空文字列。"""
     text = f"{(event.title or '').lower()} {(event.summary or '').lower()}"
     if not any(kw in text for kw in _ALLEGATION_KW):
         return ""
@@ -343,14 +424,13 @@ def _allegation_warning(event: NewsEvent) -> str:
     has_auth = any(s in source_lower for s in _ALLEGATION_AUTH_SOURCES)
     has_evidence = bool(event.sources_en or event.gap_reasoning)
     if has_auth and has_evidence:
-        return ""  # 権威ソース + 証拠あり: 通常の根拠ルールで十分
+        return ""
     return """
 ## ⚠️ 疑惑・未確認情報の警告【allegation-unverified】
 このイベントには疑惑・未確認情報が含まれる可能性があります。以下を厳守すること:
 - Reuters / AP / AFP / FT / WSJ / Bloomberg 等の権威ある一次ソースの明示的な裏付けがない限り、疑惑の内容を断言しない
 - 「報道によると」「疑いがある」「当局が調査中とされる」など、未確定であることを必ず明示する
 - insider trading / 不正 / 疑惑などの表現は推定形（「〜の疑いが報じられている」）のみ使用する
-- 訴訟・刑事事件の段階（「疑い」「調査中」「起訴」「有罪判決」）を正確に区別し、混同しない
 - script 内でこの疑惑を「確定事実」として断言してはならない
 """
 
@@ -359,166 +439,109 @@ def _evidence_warning_section(
     event: NewsEvent,
     triage_result: "Optional[ScoredEvent]" = None,
 ) -> str:
-    """エビデンス強度に応じた断定制限指示を返す。証拠が弱い場合のみ非空文字列を返す。
-
-    優先度順に判定:
-    0. allegation-unverified: 疑惑キーワードあり + 権威ソースなし → 断言禁止
-    1. EN-sources-absent: sources_en も global_view も存在しない → 海外比較・推論を全面禁止
-    2. inference-absent : gap_reasoning なし かつ bip < 2 → background 仮説を禁止
-    3. perspective-weak : gap_reasoning なし かつ sources_en なし → 比較に推定表現を強制
-    4. moderate / weak  : 既存のシグナル強度ベース判定
-    """
-    # 疑惑警告を先頭に結合（他の警告と独立して付与）
     allegation = _allegation_warning(event)
-    has_sources_jp = bool(event.sources_jp)
     has_sources_en = bool(event.sources_en)
     has_global_view = bool(event.global_view and event.global_view.strip())
     has_gap = bool(event.gap_reasoning)
+    has_sources_jp = bool(event.sources_jp)
     has_impact = bool(event.impact_on_japan)
     has_bg = bool(event.background)
 
-    # background_inference_potential を triage_result から取得（0 = 仮説余地ゼロ）
     bip = 0.0
     if triage_result is not None and triage_result.score_breakdown:
         bip = float(
             triage_result.score_breakdown.get("editorial:background_inference_potential", 0.0)
         )
 
-    # ── 条件 1: EN ソースが存在しない ────────────────────────────────────────
     if not has_sources_en and not has_global_view:
         base = """
 ## ⚠️ エビデンス警告【EN-sources-absent】
 このイベントには海外ソース・海外報道が確認されていません。以下を厳守すること:
-- arbitrage_gap セクションに「日本 vs 海外の報道差」や「海外の反応・評価」を書いてはならない
-- background セクションで「海外での見方」「欧米の視点」「グローバルな文脈」を推測補完しない
+- Twist セクションに「日本 vs 海外の報道差」や「海外の反応・評価」を書いてはならない
 - 「現時点で十分な海外報道は確認できない」と台本内に明示すること
 - 断定形・比較形・対比表現はすべて禁止
-- japan_impact は「動向を注視している」「影響が出る可能性がある」程度に留めること
-- hook は「〜かもしれない」「〜という指摘もある」などの疑問・推測形で開くこと
 """
         return allegation + base
 
-    # ── 条件 2: 背景推論の根拠が存在しない ──────────────────────────────────
     if not has_gap and bip < 2.0:
         base = """
 ## ⚠️ エビデンス警告【inference-absent】
 日英の報道差に関する根拠（gap_reasoning）がなく、背景推論の余地が不十分です:
-- background セクションで「なぜこの差が生まれるか」という背景仮説を書かない
-- 「この時点では強い比較仮説は置けない」という方向で記述すること
-- arbitrage_gap セクションは事実の記述に留め、構造的解釈・仮説を加えない
+- Twist セクションで「なぜこの差が生まれるか」という背景仮説を書かない
 - 比較・対比は「〜とみられる」「〜という見方もある」を必ずつける
-- japan_impact は「今後の動向に注視が必要」「影響の可能性がある」程度に留める
 """
         return allegation + base
 
-    # ── 条件 3: perspective_conflict が弱い（sources_en なし + gap_reasoning なし）──
     if not has_gap and not has_sources_en:
         base = """
 ## ⚠️ エビデンス注意【perspective-weak】
 gap_reasoning と sources_en が未設定です:
-- 認識差の説明は推定表現のみ（「〜とみられる」「〜という見方もある」）で書く
-- background セクションの仮説は「可能性がある」「示唆される」程度に留める
-- EN 媒体名・報道内容を具体的に引用しない（根拠なし）
+- 認識差の説明は推定表現のみで書く
+- EN 媒体名・報道内容を具体的に引用しない
 """
         return allegation + base
 
-    # ── 条件 4: シグナル強度ベースの従来判定 ────────────────────────────────
     has_sources = has_sources_jp or has_sources_en
     strength = sum([has_sources, has_gap, has_impact, has_bg])
 
     if strength >= 3:
-        return allegation  # 証拠十分: 疑惑警告のみ（あれば）
+        return allegation
 
     if strength >= 1:
         base = """
 ## ⚠️ エビデンス注意（moderate）
-入力データの証拠シグナルが一部不足しています。以下を守ること:
-- gap_reasoning が未設定のため、JP/EN の認識差は「〜とみられる」「〜という見方もある」で表現する
-- japan_impact セクションは「影響が懸念される」「今後の注視が必要」程度に留める
-- 断定形は入力 sources_jp/sources_en に実際に記載のある内容にのみ使用する
+入力データの証拠シグナルが一部不足しています:
+- gap_reasoning が未設定のため、JP/EN の認識差は「〜とみられる」で表現する
+- 断定形は sources に実際に記載のある内容にのみ使用する
 """
         return allegation + base
 
     base = """
 ## ⚠️ エビデンス警告（weak）
-入力データの証拠シグナルが不十分です。以下のルールを厳守すること:
-- sources が不完全なため、ソース名・媒体名を断定的に引用しない
-- JP/EN の認識差は必ず推定表現で書く（「〜とみられる」「〜と推測される」）
-- japan_impact セクションは「影響が考えられる」「動向に注目したい」程度に留め、断言しない
-- hook も断定的な煽りにせず、疑問形や「〜かもしれない」で開くこと
+入力データの証拠シグナルが不十分です:
+- ソース名・媒体名を断定的に引用しない
+- JP/EN の認識差は必ず推定表現で書く
+- Punchline は「影響が考えられる」「動向に注目したい」程度に留める
 """
     return allegation + base
 
 
 def _validate_script(script: VideoScript) -> bool:
-    """Return True if all required sections have non-empty body text."""
     if not script.sections:
         return False
     return all(bool(s.body and s.body.strip()) for s in script.sections)
 
 
-def _build_script_from_llm(
-    client: LLMClient,
-    event: NewsEvent,
-    triage_result: Optional[ScoredEvent] = None,
-    authority_pair: list[str] | None = None,
-) -> tuple[VideoScript, int]:
-    """Build script via LLM. Returns (VideoScript, retry_count)."""
-    from src.llm.retry import call_with_retry
-
-    event_json = event.model_dump_json(indent=2)
-    triage_json = triage_result.model_dump_json(indent=2) if triage_result else "{}"
-    evidence_warning = _evidence_warning_section(event, triage_result)
-    authority_instruction = _build_authority_mention_instruction(authority_pair or [])
-
-    prompt = (
-        _PROMPT_TEMPLATE
-        .replace("{{SELECTED_EVENT_JSON}}", event_json)
-        .replace("{{TRIAGE_RESULT_JSON}}", triage_json)
-        .replace("{{EVIDENCE_WARNING}}", evidence_warning)
-        .replace("{{AUTHORITY_MENTION_INSTRUCTION}}", authority_instruction)
-    )
-
-    raw, retry_count = call_with_retry(lambda: client.generate(prompt), role="generation")
-
-    if not raw or not raw.strip():
-        raise ValueError("LLM returned None or empty string for script")
-
-    # コードブロックで囲まれていれば除去
+def _parse_raw_json(raw: str) -> dict:
+    """LLM出力からJSONを抽出・パースする。"""
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):
             raw = raw[4:]
         raw = raw.strip()
+    return json.loads(raw)
 
-    data = json.loads(raw)
 
-    # 新フォーマット: sections は [{name, duration_sec, text}, ...] の配列
-    sections_data = data.get("sections", [])
-    if not sections_data:
-        raise ValueError("Missing 'sections' in response")
+def _draft_to_video_script(draft: ScriptDraft, event: NewsEvent) -> VideoScript:
+    """ScriptDraft → VideoScript に変換する。hook は hook_variants[0] を採用。"""
+    # hook_variants の先頭をメインhookとして採用
+    hook_text = ""
+    if draft.hook_variants:
+        hook_text = draft.hook_variants[0].get("text", "")
+    if not hook_text:
+        hook_text = f"今、世界が動いています。"
 
-    sections_by_name = {s["name"]: s for s in sections_data}
-
-    sections = []
-    for key in _SECTION_KEYS:
-        section = sections_by_name.get(key)
-        if not section or not section.get("text"):
-            raise ValueError(f"Missing section: {key}")
-        sections.append(ScriptSection(
-            heading=key,
-            body=section["text"],
-            duration_sec=section.get("duration_sec", _DURATIONS[key]),
-        ))
-
-    title = data.get("title", event.title)
-    total = data.get("total_duration_sec", sum(_DURATIONS.values()))
+    sections = [
+        ScriptSection(heading="hook",      body=hook_text,       duration_sec=_DURATIONS["hook"]),
+        ScriptSection(heading="setup",     body=draft.setup,     duration_sec=_DURATIONS["setup"]),
+        ScriptSection(heading="twist",     body=draft.twist,     duration_sec=_DURATIONS["twist"]),
+        ScriptSection(heading="punchline", body=draft.punchline, duration_sec=_DURATIONS["punchline"]),
+    ]
 
     all_body = " ".join(s.body for s in sections)
     estimated = _estimate_duration_sec(all_body)
     profile = PLATFORM_PROFILES["shared"]
 
-    # ── 再圧縮パス: max_sec (90s) を超えている場合に削る ───────────────────
     if estimated > profile["max_sec"]:
         sections, estimated = _compress_sections(sections, profile["max_sec"], estimated)
 
@@ -535,23 +558,132 @@ def _build_script_from_llm(
 
     return VideoScript(
         event_id=event.id,
-        title=title,
+        title=draft.director_thought[:25] if draft.director_thought else event.title,
         intro="",
         sections=sections,
         outro="",
-        total_duration_sec=total,
+        total_duration_sec=sum(_DURATIONS.values()),
         target_duration_sec=profile["target_sec"],
         estimated_duration_sec=estimated,
         platform_profile="shared",
-    ), retry_count
+    )
+
+
+def _build_script_from_llm(
+    client: LLMClient,
+    event: NewsEvent,
+    triage_result: Optional[ScoredEvent] = None,
+    authority_pair: list[str] | None = None,
+) -> tuple[VideoScript, int]:
+    """Build script via LLM with char-count hard-validation and retry.
+
+    Flow:
+    1. Build base prompt.
+    2. Call LLM → parse → validate char counts (Python hard check).
+    3. If violations: inject correction message and retry (max _MAX_VALIDATION_RETRIES).
+    4. On final failure: trim offending fields to bound, emit warning, accept.
+    Returns (VideoScript, total_api_retry_count).
+    """
+    from src.llm.retry import call_with_retry
+
+    event_json = event.model_dump_json(indent=2)
+    triage_json = triage_result.model_dump_json(indent=2) if triage_result else "{}"
+    evidence_warning = _evidence_warning_section(event, triage_result)
+    authority_instruction = _build_authority_mention_instruction(authority_pair or [])
+
+    base_prompt = (
+        _PROMPT_TEMPLATE
+        .replace("{{SELECTED_EVENT_JSON}}", event_json)
+        .replace("{{TRIAGE_RESULT_JSON}}", triage_json)
+        .replace("{{EVIDENCE_WARNING}}", evidence_warning)
+        .replace("{{AUTHORITY_MENTION_INSTRUCTION}}", authority_instruction)
+    )
+
+    current_prompt = base_prompt
+    total_api_retries = 0
+    last_draft: ScriptDraft | None = None
+
+    try:
+        for validation_attempt in range(_MAX_VALIDATION_RETRIES + 1):
+            raw, api_retry_count = call_with_retry(
+                lambda: client.generate(current_prompt), role="generation"
+            )
+            total_api_retries += api_retry_count
+
+            if not raw or not raw.strip():
+                raise ValueError("LLM returned None or empty string for script")
+
+            data = _parse_raw_json(raw)
+
+            # ── LLM の演出判断をログ出力 ────────────────────────────────────────
+            dt = data.get("director_thought", "")
+            if dt:
+                logger.info(
+                    f"[ScriptWriter] director_thought (attempt {validation_attempt + 1}): {dt[:200]}"
+                )
+            pat = data.get("selected_pattern", "")
+            enemy = data.get("target_enemy", "")
+            loop = data.get("loop_mechanism", "")
+            if pat or enemy:
+                logger.info(
+                    f"[ScriptWriter] pattern={pat!r} enemy={enemy!r} loop={loop!r}"
+                )
+
+            # ── ScriptDraft パース ───────────────────────────────────────────────
+            # 必須フィールドが欠けている場合は ValueError → call_with_retry の外側で捕捉
+            try:
+                draft = ScriptDraft(**data)
+            except Exception as exc:
+                raise ValueError(f"ScriptDraft parse error: {exc}") from exc
+
+            last_draft = draft
+
+            # ── 文字数ハードバリデーション ───────────────────────────────────────
+            violations = _validate_draft_chars(draft)
+            if not violations:
+                logger.info(
+                    f"[ScriptWriter] char validation passed "
+                    f"(setup={_count_chars(draft.setup)}, "
+                    f"twist={_count_chars(draft.twist)}, "
+                    f"punchline={_count_chars(draft.punchline)})"
+                )
+                break
+
+            # 違反あり
+            viol_summary = ", ".join(
+                f"{v.field}={v.actual}字" for v in violations
+            )
+            if validation_attempt < _MAX_VALIDATION_RETRIES:
+                logger.warning(
+                    f"[ScriptWriter] char validation FAILED (attempt {validation_attempt + 1}/"
+                    f"{_MAX_VALIDATION_RETRIES}): {viol_summary} — retrying with correction prompt"
+                )
+                current_prompt = _build_correction_prompt(base_prompt, draft, violations)
+            else:
+                # リトライ上限到達 → 強制採用（例外を出さず次の処理へ進む）
+                logger.warning(
+                    f"[ScriptWriter] 文字数調整失敗、そのまま採用 — "
+                    f"{_MAX_VALIDATION_RETRIES} retries exhausted ({viol_summary}). "
+                    f"Accepting best available draft without further correction."
+                )
+                break
+
+    except Exception as exc:
+        if last_draft is not None:
+            logger.warning(
+                f"[ScriptWriter] 文字数調整失敗、そのまま採用 — "
+                f"exception during validation loop: {exc}. "
+                f"Falling back to last available draft."
+            )
+        else:
+            raise
+
+    assert last_draft is not None
+    return _draft_to_video_script(last_draft, event), total_api_retries
 
 
 def _build_script_fallback(event: NewsEvent) -> VideoScript:
-    """API失敗時のテンプレートフォールバック。
-
-    EN ソース・global_view が存在しない場合は、海外比較・推論を生成しない。
-    証拠がある場合のみ比較を示す。
-    """
+    """API失敗時の4ブロック構成テンプレートフォールバック。"""
     _CATEGORY_CONTEXT = {
         "tech": ("テクノロジー", "AI・半導体・プラットフォーム競争"),
         "technology": ("テクノロジー", "AI・半導体・プラットフォーム競争"),
@@ -568,72 +700,48 @@ def _build_script_fallback(event: NewsEvent) -> VideoScript:
     has_en_evidence = bool(event.global_view or event.sources_en)
     has_gap = bool(event.gap_reasoning)
 
-    # hook: EN ソースがある場合のみ「世界との差」を匂わせる
     if has_en_evidence:
-        hook_body = f"「{event.title}」——日本と海外でこの出来事の受け止め方が異なっているかもしれない。"
+        hook_body = "日本と海外でこの出来事の受け止め方が、大きく異なっています。"
     else:
-        hook_body = f"「{event.title}」——この動きが、今後の{category_theme}にどう影響するか注目されている。"
+        hook_body = f"今、{category_theme}の構図が静かに変わっています。"
 
-    # arbitrage_gap: EN 証拠がある場合のみ差分を示す、なければ国内状況のみ
-    if has_en_evidence:
-        global_summary = event.global_view or ""
-        gap_text = (
-            f"日本のメディアは{category_label}分野の出来事として伝えた。"
-            + (f"一方、海外では「{global_summary[:60]}…」という文脈で報じられているとみられる。" if global_summary else "海外報道との比較は現時点では限られた情報しかない。")
-        )
-    else:
-        gap_text = (
-            f"現時点では、この件に関する海外報道は確認できていない。"
-            f"{event.source}の報道をもとに、国内の状況を整理する。"
-        )
+    setup_body = f"{event.summary[:85]}"
 
-    # background: gap_reasoning があれば使う、なければ推論しない
-    if has_gap:
-        background_body = (
-            f"この報道差が生まれる背景として、{event.gap_reasoning}という可能性が指摘されている。"
+    if has_en_evidence and has_gap:
+        twist_body = (
+            f"日本メディアは{category_label}分野の出来事として報じた。"
+            f"しかし海外では、{event.gap_reasoning[:80]}という文脈で語られているとみられる。"
+            f"この温度差が、今後の動向を左右する可能性がある。"
         )
     elif has_en_evidence:
-        background_body = (
-            f"この動きの背景については、現時点では具体的な根拠が十分ではない。"
-            f"{category_label}分野における構造変化との関連が考えられるが、仮説の域を出ない段階だ。"
+        global_summary = event.global_view or ""
+        twist_body = (
+            f"日本での報道は限られているが、"
+            f"海外では{global_summary[:60]}という見方が広がっているとみられる。"
+            f"この認識差が、{category_label}分野の今後に影響する可能性がある。"
         )
     else:
-        background_body = (
-            f"現時点では背景の詳細を裏付ける十分な情報がない。"
-            f"続報や海外メディアの報道が出てから、改めて分析が必要な段階だ。"
+        twist_body = (
+            f"現時点では海外報道の裏付けが十分ではない。"
+            f"{category_label}分野における構造変化との関連が考えられるが、続報を待つ必要がある。"
+        )
+
+    if event.impact_on_japan:
+        punchline_body = (
+            f"{event.impact_on_japan[:75]}"
+            "この視点を持っておくと、今後のニュースが違って見えるはずです。"
+        )
+    else:
+        punchline_body = (
+            f"国内の{category_label}関連の動向に引き続き注目が必要だ。"
+            "これを知っておくだけで、次のニュースへの解像度が上がります。"
         )
 
     sections = [
-        ScriptSection(
-            heading="hook",
-            body=hook_body,
-            duration_sec=_DURATIONS["hook"],
-        ),
-        ScriptSection(
-            heading="fact",
-            body=event.summary,
-            duration_sec=_DURATIONS["fact"],
-        ),
-        ScriptSection(
-            heading="arbitrage_gap",
-            body=gap_text,
-            duration_sec=_DURATIONS["arbitrage_gap"],
-        ),
-        ScriptSection(
-            heading="background",
-            body=background_body,
-            duration_sec=_DURATIONS["background"],
-        ),
-        ScriptSection(
-            heading="japan_impact",
-            body=(
-                f"日本への影響としては、"
-                + (event.impact_on_japan if event.impact_on_japan else
-                   f"国内の{category_label}関連企業や政策立案者にとって動向を注視すべき局面が続く。")
-                + "続報とともに引き続き確認していく必要がある。"
-            ),
-            duration_sec=_DURATIONS["japan_impact"],
-        ),
+        ScriptSection(heading="hook",      body=hook_body,      duration_sec=_DURATIONS["hook"]),
+        ScriptSection(heading="setup",     body=setup_body,     duration_sec=_DURATIONS["setup"]),
+        ScriptSection(heading="twist",     body=twist_body,     duration_sec=_DURATIONS["twist"]),
+        ScriptSection(heading="punchline", body=punchline_body, duration_sec=_DURATIONS["punchline"]),
     ]
 
     total = sum(_DURATIONS.values())
@@ -641,7 +749,6 @@ def _build_script_fallback(event: NewsEvent) -> VideoScript:
     estimated = _estimate_duration_sec(all_body)
     profile = PLATFORM_PROFILES["shared"]
 
-    # ── 再圧縮パス: max_sec (90s) を超えている場合に削る ───────────────────
     if estimated > profile["max_sec"]:
         sections, estimated = _compress_sections(sections, profile["max_sec"], estimated)
 
@@ -664,20 +771,15 @@ def write_script(
     budget: "BudgetTracker | None" = None,
     authority_pair: list[str] | None = None,
 ) -> VideoScript:
-    """
-    動画台本を生成する。LLM_PROVIDER のクライアントが利用可能な場合はそちらを使用し、
-    失敗時はテンプレートにフォールバックする。
-    budget が指定された場合、残量不足ならフォールバックを使用する。
-    目標尺: 60〜90秒（目標75秒）
+    """動画台本を生成する。
+
+    LLMが利用可能な場合はScriptDraftスキーマで生成し、文字数ハードバリデーション後に
+    VideoScriptへ変換する。失敗時はテンプレートにフォールバックする。
+    目標尺: 約80秒（350〜400文字）
 
     Args:
         authority_pair: evidence.json に実在が確認済みの媒体名リスト（最大2件）。
-                        呼び出し元 (main.py) が select_authority_pair() で構築して渡すこと。
-                        None または空リストの場合は媒体名言及なし。
     """
-    # ── 安全装置: quality floor 未達候補の検出 ──────────────────────────────
-    # スケジューラが held_back に回すべき候補が誤ってここに到達した場合に警告する。
-    # （正常フローでは get_next_unpublished が selected のみを返すため、通常は発生しない）
     if triage_result is not None:
         cautions = triage_result.appraisal_cautions or ""
         if (
@@ -699,7 +801,6 @@ def write_script(
     _retry_count = 0
     script: VideoScript | None = None
 
-    # 予算チェック
     if budget is not None and not budget.can_use_script_llm():
         budget.skip("script_llm")
         _used_fallback = True
@@ -711,7 +812,9 @@ def write_script(
             _fallback_reason = "no_client"
         else:
             try:
-                script, _retry_count = _build_script_from_llm(client, event, triage_result, authority_pair)
+                script, _retry_count = _build_script_from_llm(
+                    client, event, triage_result, authority_pair
+                )
                 if budget is not None:
                     budget.record_call("script")
                 logger.info(
@@ -734,7 +837,6 @@ def write_script(
             f"{len(script.sections)} sections, {script.total_duration_sec}s total"
         )
 
-    # Fail-safe: never save an empty/broken script
     if not _validate_script(script):
         raise ValueError(
             f"[ScriptWriter] empty_script: all fallbacks produced empty sections "

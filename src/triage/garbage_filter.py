@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__)
 
-_BATCH_SIZE = 50
+_BATCH_SIZE = 30
 
 _SYSTEM_PROMPT = """\
 あなたは独立メディア「Hydrangea」のニュース編集アシスタントです。

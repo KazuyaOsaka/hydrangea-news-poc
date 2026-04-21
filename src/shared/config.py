@@ -35,7 +35,7 @@ RUN_MODE: str = os.getenv("RUN_MODE", "publish_mode")
 
 # publish_mode 時に production ステージ用として day_budget から確保する呼び出し数の最小値。
 # デフォルト = 6: viral(1) + judge(up to 3) + script(1) + article(1)
-PUBLISH_RESERVE_CALLS: int = int(os.getenv("PUBLISH_RESERVE_CALLS", "6"))
+PUBLISH_RESERVE_CALLS: int = int(os.getenv("PUBLISH_RESERVE_CALLS", "15"))
 
 # ── LLM 呼び出し予算 ──────────────────────────────────────────────────────────
 # 1回の実行あたりの LLM 呼び出し上限
@@ -102,6 +102,9 @@ GENERATION_MODEL: str = os.getenv("GENERATION_MODEL", GEMINI_SCRIPT_MODEL)
 JUDGE_CANDIDATE_LIMIT: int = int(os.getenv("JUDGE_CANDIDATE_LIMIT", "3"))
 # ジャッジを有効にするか（false にすると完全スキップ）
 JUDGE_ENABLED: bool = os.getenv("JUDGE_ENABLED", "true").lower() != "false"
+
+# Gemini API 呼び出し間の最小インターバル (秒) — 429 抑制のためのレート制限
+GEMINI_CALL_INTERVAL_SEC: float = float(os.getenv("GEMINI_CALL_INTERVAL_SEC", "0.5"))
 
 # ── Garbage Filter 設定（Gate 1: 高速スクリーニング） ────────────────────────
 # Tier 2 Lite モデルによるノイズ除去を有効にするか（false で完全スキップ）

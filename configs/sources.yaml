@@ -329,30 +329,6 @@ sources:
     bridge_source: false
     licensing_notes: "ABC Australia公共放送公式RSS。研究目的は許容範囲。商用利用・転載は別途確認要。"
 
-  - country: SA
-    name: ArabNewsRSS
-    category: general
-    rss_url: https://www.arabnews.com/rss.xml
-    priority: 1
-    enabled: true
-    language: en
-    region: middle_east
-    source_type: newspaper
-    bridge_source: true
-    licensing_notes: "Arab News公式RSS。サウジ政府と近い立場の英字紙。state_mediaに準じた取り扱いを推奨。商用利用・転載は要確認。"
-
-  - country: IL
-    name: JerusalemPost
-    category: general
-    rss_url: https://www.jpost.com/rss/rssfeedsfrontpage
-    priority: 1
-    enabled: true
-    language: en
-    region: middle_east
-    source_type: newspaper
-    bridge_source: true
-    licensing_notes: "Jerusalem Post公式RSS。研究目的は許容範囲。商用利用・転載は別途確認要。"
-
   - country: ZA
     name: News24
     category: general
@@ -376,18 +352,6 @@ sources:
     source_type: newspaper
     bridge_source: false
     licensing_notes: "NYT World公式RSS。研究目的は許容範囲。全文はペイウォール。商用利用・転載は要確認。"
-
-  - country: CA
-    name: CBC
-    category: general
-    rss_url: https://www.cbc.ca/cmlink/rss-world
-    priority: 1
-    enabled: true
-    language: en
-    region: global
-    source_type: public_broadcaster
-    bridge_source: false
-    licensing_notes: "CBC（カナダ公共放送）公式RSS。研究目的は許容範囲。商用利用・転載は別途確認要。"
 
   - country: BR
     name: FolhaDeSPaulo

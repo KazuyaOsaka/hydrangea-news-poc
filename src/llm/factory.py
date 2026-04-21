@@ -1,13 +1,22 @@
-"""factory.py — Role-based LLM client factory with 4-tier Gemini fallback.
+"""factory.py — Role-based LLM client factory with purpose-driven routing.
 
-Business logic must call get_llm_client(role) with one of:
-  "merge_batch"  — cluster post-merge LLM (lightweight)
-  "judge"        — editorial judgment (always Gemini)
-  "generation"   — script + article generation
+Routing strategy:
+  Lightweight (high-throughput): garbage_filter, event_builder (cluster)
+    → TIER4 (gemini-2.5-flash-lite) fixed; same-model retry only (no upward fallback).
+    Rationale: already the cheapest tier — escalating would waste the premium quota.
 
-Gemini roles use a 4-tier model hierarchy defined in .env (GEMINI_MODEL_TIER1-4).
-Each tier is retried up to 3 times with exponential backoff (1s→2s→4s) on
-429/RESOURCE_EXHAUSTED or 503/UNAVAILABLE errors before falling to the next tier.
+  Quality (high-reasoning): elite_judge, script_writer, article_writer
+    → TIER1 → TIER2 → TIER3 → TIER4 full 4-tier fallback.
+    Rationale: accuracy matters; escalate only after per-tier retries are exhausted.
+
+Fallback priority (quality path):
+  [1] gemini-3.1-flash-lite-preview  (TIER1)
+  [2] gemini-3-flash-preview         (TIER2)
+  [3] gemini-2.5-flash               (TIER3)
+  [4] gemini-2.5-flash-lite          (TIER4)
+
+Per-tier policy: up to _MAX_ATTEMPTS_PER_TIER retries with exponential backoff
+(1s→2s→4s) on 429/RESOURCE_EXHAUSTED or 503/UNAVAILABLE, then next tier.
 If all tiers are exhausted, RuntimeError is raised — no silent degradation.
 
 Resolution path: .env → config.py → factory.py
@@ -15,6 +24,7 @@ No hardcoded model strings in business logic.
 """
 from __future__ import annotations
 
+import threading
 import time
 from typing import Optional
 
@@ -22,6 +32,7 @@ from src.llm.base import LLMClient
 from src.llm.retry import is_retryable
 from src.shared.config import (
     GEMINI_API_KEY,
+    GEMINI_CALL_INTERVAL_SEC,
     GEMINI_MODEL_TIER1,
     GEMINI_MODEL_TIER2,
     GEMINI_MODEL_TIER3,
@@ -39,21 +50,36 @@ from src.shared.logger import get_logger
 logger = get_logger(__name__)
 
 _MAX_ATTEMPTS_PER_TIER = 3
-_INITIAL_DELAY_SEC = 1.0
+_INITIAL_DELAY_SEC = 15.0
+_MAX_DELAY_SEC = 120.0
+
+# 429対策: 最大同時API呼び出し数を3に制限 (15 RPM制限を安全に回避)
+_API_SEMAPHORE = threading.Semaphore(3)
 
 
 class TieredGeminiClient(LLMClient):
-    """GeminiClient that walks TIER1→TIER4 on quota exhaustion.
+    """GeminiClient that walks through a provided tier list on quota exhaustion.
 
     Per-tier policy: up to _MAX_ATTEMPTS_PER_TIER retries with exponential
     backoff on 429/RESOURCE_EXHAUSTED or 503/UNAVAILABLE errors.
     After all attempts for a tier fail, the next tier is tried.
     If all tiers are exhausted, RuntimeError is raised.
+
+    Single-element tier list → same-model retry only (no fallback).
     """
 
     def __init__(self, api_key: str, tiers: list[str]) -> None:
         self._api_key = api_key
         self._tiers = tiers
+        self._last_call_time: float = 0.0
+
+    def _throttle(self) -> None:
+        """Enforce GEMINI_CALL_INTERVAL_SEC between consecutive API calls."""
+        elapsed = time.time() - self._last_call_time
+        wait = GEMINI_CALL_INTERVAL_SEC - elapsed
+        if wait > 0:
+            time.sleep(wait)
+        self._last_call_time = time.time()
 
     def generate(self, prompt: str) -> str:
         from google import genai
@@ -65,10 +91,12 @@ class TieredGeminiClient(LLMClient):
             delay = _INITIAL_DELAY_SEC
             for attempt in range(_MAX_ATTEMPTS_PER_TIER):
                 try:
-                    response = client.models.generate_content(
-                        model=model,
-                        contents=prompt,
-                    )
+                    with _API_SEMAPHORE:
+                        self._throttle()
+                        response = client.models.generate_content(
+                            model=model,
+                            contents=prompt,
+                        )
                     if tier_idx > 1 or attempt > 0:
                         logger.info(
                             f"[TieredGemini] Success: tier={tier_idx} model={model} "
@@ -86,48 +114,64 @@ class TieredGeminiClient(LLMClient):
                             f"retrying in {delay:.0f}s: {str(exc)[:120]}"
                         )
                         time.sleep(delay)
-                        delay *= 2
+                        delay = min(delay * 2, _MAX_DELAY_SEC)
                     else:
+                        if tier_idx < len(self._tiers):
+                            next_model = self._tiers[tier_idx]
+                            next_label = f"tier {tier_idx + 1} ({next_model})"
+                        else:
+                            next_label = "none (all tiers exhausted)"
                         logger.warning(
-                            f"[TieredGemini] tier={tier_idx} model={model} all "
-                            f"{_MAX_ATTEMPTS_PER_TIER} attempts exhausted — "
-                            f"falling to tier {tier_idx + 1}: {str(exc)[:120]}"
+                            f"[TieredGemini] FAIL tier={tier_idx} model={model} — "
+                            f"all {_MAX_ATTEMPTS_PER_TIER} attempts exhausted. "
+                            f"Next: {next_label}. Error: {str(exc)[:120]}"
                         )
 
         assert last_exc is not None
         raise RuntimeError(
-            f"All {len(self._tiers)} Gemini tiers exhausted. "
+            f"All {len(self._tiers)} Gemini tier(s) exhausted. "
             f"Models tried: {self._tiers}. "
             f"Last error: {last_exc}"
         ) from last_exc
 
 
-def _make_triage_client() -> Optional[LLMClient]:
-    """Gate 1/2/3・選別工程専用クライアント (TIER2=3-flash-preview を物理除外).
+# ── Internal factory helpers ─────────────────────────────────────────────────
 
-    TIER1 (3.1-flash-lite, RPD 500) → TIER3 → TIER4 の順でフォールバックする。
-    TIER2 (3-flash-preview, RPD 20) は write_script 専用枠として絶対に呼ばない。
+def _make_lightweight_client() -> Optional[LLMClient]:
+    """大量処理用クライアント: TIER4 (gemini-2.5-flash-lite) 固定。
+
+    Garbage Filter / Event Builder 等の高スループット工程専用。
+    フォールバックなし — TIER4 で最大 _MAX_ATTEMPTS_PER_TIER 回リトライ後に失敗。
+    既に最廉価 Tier のため上位へのエスカレーションは不要。
+    """
+    if not GEMINI_API_KEY:
+        return None
+    return TieredGeminiClient(GEMINI_API_KEY, [GEMINI_MODEL_TIER4])
+
+
+def _make_quality_client() -> Optional[LLMClient]:
+    """高品質推論用クライアント: TIER1→TIER2→TIER3→TIER4 完全4段フォールバック。
+
+    Elite Judge / Script Writer / Article Writer 等の高精度工程専用。
+    TIER1 から順に試行し、429/503 が規定回数を超えた段階で次の Tier へ降格。
     """
     if not GEMINI_API_KEY:
         return None
     return TieredGeminiClient(
         GEMINI_API_KEY,
-        [GEMINI_MODEL_TIER1, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4],
+        [GEMINI_MODEL_TIER1, GEMINI_MODEL_TIER2, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4],
     )
 
 
-def _make_tiered_gemini_client() -> Optional[LLMClient]:
-    return _make_triage_client()
-
-
-def _make_client(provider: str, model: str) -> Optional[LLMClient]:
+def _make_client(provider: str, model: str, quality: bool = False) -> Optional[LLMClient]:
     """Construct an LLMClient for the given provider + model pair.
 
-    For the Gemini provider, `model` is ignored — TieredGeminiClient uses
-    GEMINI_MODEL_TIERS from config instead.
+    For Gemini, `model` is ignored — routing is determined by `quality`:
+      quality=True  → _make_quality_client()  (TIER1→TIER4 full fallback)
+      quality=False → _make_lightweight_client() (TIER4 retry-only)
     """
     if provider == "gemini":
-        return _make_tiered_gemini_client()
+        return _make_quality_client() if quality else _make_lightweight_client()
 
     if provider == "groq":
         from src.llm.groq import GroqClient
@@ -147,62 +191,67 @@ def get_llm_client(role: str) -> Optional[LLMClient]:
         role: One of "merge_batch", "judge", or "generation".
 
     Returns:
-        Configured LLMClient, or None if the provider is not configured
-        (e.g. GEMINI_API_KEY missing).
+        Configured LLMClient, or None if the provider is not configured.
 
     Raises:
         ValueError: If role is not recognised.
     """
     if role == "merge_batch":
-        return _make_client(MERGE_BATCH_PROVIDER, MERGE_BATCH_MODEL)
+        # Event Builder / cluster: lightweight (TIER4 retry-only)
+        return _make_client(MERGE_BATCH_PROVIDER, MERGE_BATCH_MODEL, quality=False)
 
     if role == "judge":
         return get_judge_llm_client()
 
     if role == "generation":
-        return _make_client(GENERATION_PROVIDER, GENERATION_MODEL)
+        # Script / Article Writer: quality (TIER1→TIER4 full fallback)
+        return _make_client(GENERATION_PROVIDER, GENERATION_MODEL, quality=True)
 
     raise ValueError(
         f"Unknown LLM role: {role!r}. Must be 'merge_batch', 'judge', or 'generation'."
     )
 
 
-# ── Backward-compat wrappers ─────────────────────────────────────────────────
+# ── Named client accessors (called by business logic) ───────────────────────
 
-def get_script_llm_client() -> Optional[LLMClient]:
-    """台本執筆専用クライアント (TIER2=3-flash-preview を優先使用)."""
-    if not GEMINI_API_KEY:
-        return None
-    return TieredGeminiClient(
-        GEMINI_API_KEY,
-        [GEMINI_MODEL_TIER2, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4],
-    )
+def get_garbage_filter_client() -> Optional[LLMClient]:
+    """Gate 1 Garbage Filter 用クライアント — 大量処理ルート。
 
-
-def get_article_llm_client() -> Optional[LLMClient]:
-    return get_llm_client("generation")
+    TIER4 (gemini-2.5-flash-lite) 固定、同一モデルでリトライのみ。
+    フォールバック不要（既に最廉価 Tier）。
+    """
+    return _make_lightweight_client()
 
 
 def get_cluster_llm_client() -> Optional[LLMClient]:
+    """Event Builder / cluster post-merge 用クライアント — 大量処理ルート。
+
+    TIER4 (gemini-2.5-flash-lite) 固定、同一モデルでリトライのみ。
+    """
     return get_llm_client("merge_batch")
 
 
 def get_judge_llm_client() -> Optional[LLMClient]:
-    """Gemini 編集審判用クライアント (TIER2=3-flash 除外).
+    """Elite Judge 用クライアント — 高品質推論ルート。
 
-    Always uses Gemini _make_triage_client regardless of LLM_PROVIDER.
-    Returns None if GEMINI_API_KEY is not set.
+    TIER1 (gemini-3.1-flash-lite-preview) から開始し、
+    TIER1→TIER2→TIER3→TIER4 の完全4段フォールバック。
     """
-    return _make_triage_client()
+    return _make_quality_client()
 
 
-def get_garbage_filter_client() -> Optional[LLMClient]:
-    """Gate 1 Garbage Filter 用クライアント (TIER2=3-flash 除外).
+def get_script_llm_client() -> Optional[LLMClient]:
+    """Script Writer 用クライアント — 高品質推論ルート。
 
-    TIER1 (3.1-flash-lite, RPD 500) → TIER3 → TIER4 の順でフォールバック。
-    Returns None if GEMINI_API_KEY is not set.
+    TIER1 (gemini-3.1-flash-lite-preview) から開始し、
+    TIER1→TIER2→TIER3→TIER4 の完全4段フォールバック。
     """
-    return _make_triage_client()
+    return _make_quality_client()
+
+
+def get_article_llm_client() -> Optional[LLMClient]:
+    """Article Writer 用クライアント — 高品質推論ルート。"""
+    return get_llm_client("generation")
 
 
 # ── Tier connectivity verification ──────────────────────────────────────────
