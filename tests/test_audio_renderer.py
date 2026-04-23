@@ -283,3 +283,81 @@ class TestRenderVoiceover:
             mock_tts.return_value = (_make_silence(2.0, 22050), False)
             _, _, manifest = render_voiceover(script, tmp_path)
         assert manifest["total_duration_sec"] > 0.0
+
+
+# ── _render_av_outputs: 全 segment silent placeholder のときの安全停止 ────────
+
+
+class TestRenderAvOutputsAllSilentGuard:
+    """macOS 以外など TTS が無い環境で「無音動画が成功扱い」にならないことを保証する。"""
+
+    def test_all_silent_marks_error_and_skips_video(self, tmp_path, monkeypatch):
+        """placeholder_count == segment_count なら error を立てて video 生成に進まない。"""
+        from src.main import _render_av_outputs
+        from src.shared.models import JobRecord, ScriptSection, VideoScript
+
+        # スクリプトを書き出す
+        script = VideoScript(
+            event_id="ev-silent",
+            title="t",
+            intro="",
+            sections=[
+                ScriptSection(heading="hook", body="テスト", duration_sec=4),
+                ScriptSection(heading="setup", body="本体", duration_sec=16),
+            ],
+            outro="",
+            total_duration_sec=20,
+        )
+        script_path = tmp_path / "ev-silent_script.json"
+        script_path.write_text(script.model_dump_json(indent=2), encoding="utf-8")
+
+        record = JobRecord(
+            id="j-silent", event_id="ev-silent", status="completed",
+            script_path=str(script_path),
+        )
+
+        # AUDIO_RENDER_ENABLED=True を強制し、render_voiceover が全 placeholder の
+        # audio_segments を返すようモックする。
+        monkeypatch.setattr("src.main.AUDIO_RENDER_ENABLED", True)
+        monkeypatch.setattr("src.main.VIDEO_RENDER_ENABLED", True)
+
+        def _fake_voiceover(*args, **kwargs):
+            from src.generation.audio_renderer import AudioSegment
+            segments = [
+                AudioSegment(
+                    scene_index=0, scene_id="ev-silent_s00_hook", heading="hook",
+                    narration_text="テスト", target_duration_sec=4.0,
+                    actual_duration_sec=0.24, timing_mismatch_sec=-3.76,
+                    placeholder=True,
+                ),
+                AudioSegment(
+                    scene_index=1, scene_id="ev-silent_s01_setup", heading="setup",
+                    narration_text="本体", target_duration_sec=16.0,
+                    actual_duration_sec=0.12, timing_mismatch_sec=-15.88,
+                    placeholder=True,
+                ),
+            ]
+            manifest = {
+                "total_duration_sec": 0.36,
+                "placeholder_count": 2,
+                "timing_mismatches": [],
+            }
+            wav_path = tmp_path / "ev-silent_voiceover.wav"
+            wav_path.write_bytes(b"\x00" * 44)
+            return wav_path, segments, manifest
+
+        # render_voiceover の import は _render_av_outputs 内部なので、
+        # import 対象のモジュール経路をそのまま patch する
+        monkeypatch.setattr("src.generation.audio_renderer.render_voiceover", _fake_voiceover)
+
+        summary = _render_av_outputs(record, tmp_path)
+
+        assert summary["audio_generated"] is True
+        assert summary["placeholder_count"] == 2
+        assert summary["video_generated"] is False, (
+            "All-silent audio must not proceed to video assembly"
+        )
+        assert summary["error"] is not None
+        assert summary["error"].startswith("tts_unavailable_all_silent:"), (
+            f"Expected tts_unavailable_all_silent error, got {summary['error']!r}"
+        )

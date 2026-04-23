@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from src.shared.config import PUBLISH_RESERVE_CALLS
 from src.shared.logger import get_logger
 
 logger = get_logger(__name__)
@@ -39,9 +40,6 @@ class BudgetTracker:
     RESERVED_FOR_SCRIPT: int = 1
     RESERVED_FOR_ARTICLE: int = 1
 
-    # publish_mode のデフォルト publish_reserve_calls
-    DEFAULT_PUBLISH_RESERVE_CALLS: int = 15  # 3本分の台本生成+リトライ余裕
-
     def __init__(
         self,
         run_budget: int,
@@ -49,8 +47,12 @@ class BudgetTracker:
         day_calls_so_far: int,
         db_path: Path | None = None,
         mode: str = "publish_mode",
-        publish_reserve_calls: int = DEFAULT_PUBLISH_RESERVE_CALLS,
+        publish_reserve_calls: int | None = None,
     ) -> None:
+        # publish_reserve_calls が None のときは config.py の PUBLISH_RESERVE_CALLS を
+        # 単一の出所として使う（.env 変更がそのまま反映される）。
+        if publish_reserve_calls is None:
+            publish_reserve_calls = PUBLISH_RESERVE_CALLS
         self.run_budget = run_budget
         self.day_budget = day_budget
         self._run_calls: int = 0

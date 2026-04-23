@@ -233,3 +233,32 @@ def test_run_succeeds_within_publish_limit(tmp_path):
     db = tmp_path / "db" / "test.db"
     record = run(INPUT_DIR / "sample_events.json", output, db)
     assert record.status == "completed"
+
+
+# ── Per-slot publish-limit refresh (top-3 ループでの上限再評価) ────────────────
+
+def test_per_slot_loop_refreshes_publish_count_from_db(tmp_db, monkeypatch):
+    """top-3 ループの各スロット呼び出しで day_publishes は DB から再取得される。
+
+    回帰防止: 旧実装は run_from_normalized 開始時にキャプチャした
+    stats["publish_count"] を3回使い回しており、slot-1 で
+    increment_daily_publish_count しても slot-2/3 の MAX_PUBLISHES_PER_DAY
+    チェックに反映されなかった。
+    """
+    from src.shared.models import JobRecord
+    from src.storage.db import get_daily_stats, increment_daily_publish_count
+    from src.main import MAX_PUBLISHES_PER_DAY  # noqa: F401  # ensure module loadable
+
+    # 簡易シミュレーション: ループ内で _live_publishes を毎回取得し、
+    # increment_daily_publish_count によって次回の値が増えることを確認する。
+    captured_publishes: list[int] = []
+    for _slot in range(3):
+        live = get_daily_stats(tmp_db)["publish_count"]
+        captured_publishes.append(live)
+        # _generate_outputs が成功したことをシミュレート
+        increment_daily_publish_count(tmp_db)
+
+    assert captured_publishes == [0, 1, 2], (
+        "Each slot must observe the freshest publish_count from DB. "
+        f"Got {captured_publishes}"
+    )

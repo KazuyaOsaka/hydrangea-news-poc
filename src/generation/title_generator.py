@@ -42,10 +42,20 @@ def _is_strong_evidence(event: NewsEvent, triage_result: "Optional[ScoredEvent]"
     """タイトルで強い表現を使って良いほど evidence が揃っているか判定する。
 
     条件（全て必要ではなく、組み合わせで判定）:
-      - sources_en が存在 OR has_en_view スコアあり
+      - 海外ソース（sources_en または sources_by_locale の non-japan）が存在
+        OR has_en_view スコアあり
       - かつ gap_reasoning が存在 OR perspective_gap_score >= 3
+
+    多地域ソース対応: sources_en が空でも sources_by_locale に middle_east /
+    europe / east_asia / global_south / global などのエントリがあれば「海外ソースあり」
+    と判定する。script_writer._pattern_restrictions_section と同じ基準。
     """
-    has_en_src = bool(event.sources_en)
+    has_sources_en = bool(event.sources_en)
+    has_overseas_locale = any(
+        loc != "japan" and refs
+        for loc, refs in (event.sources_by_locale or {}).items()
+    )
+    has_en_src = has_sources_en or has_overseas_locale
     has_gap = bool(event.gap_reasoning)
 
     bd: dict = {}
@@ -159,6 +169,47 @@ def _platform_title_candidates(
             f"知っておきたい{topic}の話",
         ]
 
+    # ── 6パターン直接対応（selected_pattern 渡し時に使用） ────────────────────
+
+    if appraisal_type == "Breaking Shock":
+        if is_strong:
+            return [
+                f"速報：{topic}の常識が崩壊",        # 強い言い回し
+                f"{topic}——歴史的スケールの転換",
+                f"今、{topic}に異変が起きている",
+            ]
+        return [
+            f"今、{topic}に動きあり",
+            f"{topic}の最新ニュース",
+            f"{topic}——速報の意味を読む",
+        ]
+
+    if appraisal_type == "Anti-Sontaku":
+        if is_strong:
+            return [
+                f"{topic}——綺麗事の裏側",            # 強い言い回し
+                f"{topic}で本当に得をするのは誰か",
+                f"{topic}——建前を剥がす",
+            ]
+        return [
+            f"{topic}——別の見方もある",
+            f"{topic}の知られざる側面",
+            f"{topic}——もう一歩深く",
+        ]
+
+    if appraisal_type == "Blind Spot Global":
+        if is_strong:
+            return [
+                f"日本では報道されない{topic}",       # 強い言い回し（Media Blind Spot 系列）
+                f"海外で重要視される{topic}",
+                f"日本が見逃している{topic}",
+            ]
+        return [
+            f"海外で注目される{topic}",
+            f"{topic}——日本ではあまり報じられない",
+            f"海外で話題の{topic}",
+        ]
+
     # appraisal なし: 元タイトルを短く整形するデフォルト
     return []
 
@@ -206,6 +257,36 @@ def _hook_line_candidates(
         return [
             "これ、あなたに関係ある話です。",
             f"{short_topic}——生活に影響します。",
+        ]
+
+    # ── 6パターン直接対応 ──────────────────────────────────────────────────
+
+    if appraisal_type == "Breaking Shock":
+        return [
+            f"速報：{short_topic}に異変。",
+            f"{short_topic}——常識が崩れる瞬間。",
+        ]
+
+    if appraisal_type == "Anti-Sontaku":
+        if is_strong:
+            return [
+                f"綺麗事の裏側、{short_topic}。",
+                f"{short_topic}——本当に得するのは誰？",
+            ]
+        return [
+            f"{short_topic}——別の角度で見ると。",
+            f"{short_topic}の知られざる側面。",
+        ]
+
+    if appraisal_type == "Blind Spot Global":
+        if is_strong:
+            return [
+                "海外では大きいが、日本では？",
+                f"{short_topic}——日本では見えていない。",
+            ]
+        return [
+            "海外で注目——日本では見えにくい。",
+            f"海外で話題の{short_topic}。",
         ]
 
     # デフォルト
@@ -301,8 +382,47 @@ def _make_thumbnail_text(
     if appraisal_type == "Personal Stakes":
         return "生活への影響"
 
+    # ── 6パターン直接対応 ──────────────────────────────────────────────────
+
+    if appraisal_type == "Breaking Shock":
+        return "速報・歴史的" if is_strong else "速報"
+
+    if appraisal_type == "Anti-Sontaku":
+        return "綺麗事の裏" if is_strong else "別の見方"
+
+    if appraisal_type == "Blind Spot Global":
+        return "日本で無報道" if is_strong else "海外では注目"
+
     # デフォルト: タイトル先頭8字
     return _short_topic(event.title, 8)
+
+
+# ── selected_pattern（script_writer の6パターン）→ title テンプレ軸へのマッピング ─
+# Breaking Shock / Anti-Sontaku は専用テンプレ持ちなので恒等マップ。
+# 専用テンプレを持たない Media Critique / Geopolitics / Paradigm Shift / Cultural Divide は
+# 既存の appraisal_type 軸（Media Blind Spot / Perspective Inversion / Structural Why）に寄せる。
+_PATTERN_TO_APPRAISAL: dict[str, str] = {
+    "Breaking Shock":   "Breaking Shock",         # 専用テンプレあり
+    "Media Critique":   "Media Blind Spot",       # 完全一致の意図
+    "Geopolitics":      "Perspective Inversion",  # 海外視点の導入
+    "Paradigm Shift":   "Structural Why",         # 構造変化
+    "Anti-Sontaku":     "Anti-Sontaku",           # 専用テンプレあり
+    "Cultural Divide":  "Perspective Inversion",  # 文化的視点差
+}
+
+
+def _resolve_style_from_pattern(
+    selected_pattern: Optional[str],
+    appraisal_type_fallback: Optional[str],
+) -> Optional[str]:
+    """selected_pattern（6種）を既存 appraisal_type（4種）にマップする。
+
+    selected_pattern が未設定なら triage の appraisal_type をそのまま使う。
+    未知のパターンは None を返し、デフォルト挙動（タイトル軽加工）に落とす。
+    """
+    if not selected_pattern:
+        return appraisal_type_fallback
+    return _PATTERN_TO_APPRAISAL.get(selected_pattern, appraisal_type_fallback)
 
 
 # ── 公開 API ──────────────────────────────────────────────────────────────────
@@ -310,12 +430,14 @@ def _make_thumbnail_text(
 def generate_title_layer(
     event: NewsEvent,
     triage_result: "Optional[ScoredEvent]" = None,
+    selected_pattern: Optional[str] = None,
 ) -> TitleLayer:
     """4層タイトル + サムネイルテロップ + 強度メタを生成して TitleLayer として返す。
 
-    appraisal_type と evidence 強度に連動し、
+    selected_pattern（script_writer の director が選択した6パターン）が指定されていれば
+    そちらを優先し、既存の appraisal_type 軸へマッピングしてタイトルのトーンを揃える。
+    未指定なら従来通り triage_result.appraisal_type をそのまま使う（後方互換）。
     強い言い回しは evidence が十分な候補にのみ使用する。
-    platform_title は 2〜3 案、hook_line は 2 案を内部生成し、最適な1案を採用する。
     """
     appraisal_type: Optional[str] = None
     appraisal_hook: Optional[str] = None
@@ -323,12 +445,17 @@ def generate_title_layer(
         appraisal_type = triage_result.appraisal_type
         appraisal_hook = triage_result.appraisal_hook
 
+    # selected_pattern 優先、無ければ appraisal_type
+    effective_style = _resolve_style_from_pattern(selected_pattern, appraisal_type)
     is_strong = _is_strong_evidence(event, triage_result)
 
     canonical_title = event.title
-    platform_title = _make_platform_title(event, appraisal_type, is_strong)
-    hook_line = _make_hook_line(event, appraisal_type, appraisal_hook, is_strong)
-    thumbnail_text = _make_thumbnail_text(event, appraisal_type, is_strong)
+    platform_title = _make_platform_title(event, effective_style, is_strong)
+    hook_line = _make_hook_line(event, effective_style, appraisal_hook, is_strong)
+    thumbnail_text = _make_thumbnail_text(event, effective_style, is_strong)
+
+    # title_style はトレーサビリティのため原値（selected_pattern 優先）を保存
+    style_label = selected_pattern or appraisal_type or "default"
 
     return TitleLayer(
         canonical_title=canonical_title,
@@ -336,5 +463,5 @@ def generate_title_layer(
         hook_line=hook_line,
         thumbnail_text=thumbnail_text,
         title_strength="strong" if is_strong else "soft",
-        title_style=appraisal_type or "default",
+        title_style=style_label,
     )

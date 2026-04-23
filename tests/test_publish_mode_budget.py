@@ -272,7 +272,9 @@ class TestObservabilityFields:
         b = _tracker()
         b.record_call("judge")
         b.record_call("viral_filter")
-        b.record_call("cluster_post_merge")
+        # 正式 feature 名は cluster_post_merge_batch
+        # (src/budget.py:_EXPLORATION_FEATURES と event_builder.py の呼び出し元に一致)
+        b.record_call("cluster_post_merge_batch")
         b.record_call("script")   # not exploration
         b.record_call("article")  # not exploration
         assert b.exploration_budget_used == 3
@@ -327,11 +329,16 @@ class TestObservabilityFields:
         assert summary["stopped_exploration_due_to_publish_reserve"] is True
         assert summary["publish_reserve_preserved"] is True  # reserve is still intact (6 remaining)
 
-    def test_default_publish_reserve_calls_is_6(self):
-        """Default publish_reserve_calls must equal DEFAULT_PUBLISH_RESERVE_CALLS = 6."""
+    def test_default_publish_reserve_calls_matches_config(self):
+        """Default publish_reserve_calls must equal config.PUBLISH_RESERVE_CALLS.
+
+        旧実装は BudgetTracker.DEFAULT_PUBLISH_RESERVE_CALLS（クラス定数）が二重定義
+        となっており、config.PUBLISH_RESERVE_CALLS を変更しても反映されなかった。
+        修正後は config.py が唯一の出所で、.env 変更がそのまま反映される。
+        """
+        from src.shared.config import PUBLISH_RESERVE_CALLS
         b = BudgetTracker(run_budget=12, day_budget=120, day_calls_so_far=0)
-        assert b.publish_reserve_calls == BudgetTracker.DEFAULT_PUBLISH_RESERVE_CALLS
-        assert b.publish_reserve_calls == 6
+        assert b.publish_reserve_calls == PUBLISH_RESERVE_CALLS
 
     def test_default_mode_is_publish_mode(self):
         """Default mode must be publish_mode."""

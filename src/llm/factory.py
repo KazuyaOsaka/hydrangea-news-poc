@@ -73,6 +73,17 @@ class TieredGeminiClient(LLMClient):
         self._tiers = tiers
         self._last_call_time: float = 0.0
 
+    @property
+    def _model(self) -> str:
+        """The primary (tier 1) model this client will attempt first.
+
+        Kept as a property (not a stored attribute) so it always reflects the
+        current tier list if that is ever reassigned. Down-stream code and tests
+        expecting a single-model GeminiClient-style `_model` attribute keep
+        working without caring whether the underlying client does tiered fallback.
+        """
+        return self._tiers[0] if self._tiers else ""
+
     def _throttle(self) -> None:
         """Enforce GEMINI_CALL_INTERVAL_SEC between consecutive API calls."""
         elapsed = time.time() - self._last_call_time
@@ -232,25 +243,61 @@ def get_cluster_llm_client() -> Optional[LLMClient]:
 
 
 def get_judge_llm_client() -> Optional[LLMClient]:
-    """Elite Judge 用クライアント — 高品質推論ルート。
+    """Elite Judge / Gemini Judge 用クライアント — 高品質推論ルート。
 
-    TIER1 (gemini-3.1-flash-lite-preview) から開始し、
-    TIER1→TIER2→TIER3→TIER4 の完全4段フォールバック。
+    model_registry.get_judge_model_resolution() が models.list で解決した
+    resolved_model を primary tier として採用し、残りの TIER2〜TIER4 を
+    フォールバックに連結する（重複除去済み）。
+    GEMINI_API_KEY 未設定 or models.list が使えない場合は従来通り
+    [TIER1, TIER2, TIER3, TIER4] で構築する。
     """
-    return _make_quality_client()
+    if not GEMINI_API_KEY:
+        return None
+
+    # Import here to keep the module import graph light (model_registry imports
+    # google.genai at call time).
+    # JUDGE_MODEL は role-based で config が単一解決; GEMINI_JUDGE_MODEL は back-compat alias。
+    from src.shared.config import GEMINI_JUDGE_FALLBACK_MODELS, JUDGE_MODEL
+    from src.llm.model_registry import get_judge_model_resolution
+
+    try:
+        resolution = get_judge_model_resolution(
+            GEMINI_API_KEY, JUDGE_MODEL, GEMINI_JUDGE_FALLBACK_MODELS
+        )
+        resolved = resolution.resolved_model
+    except Exception as exc:
+        logger.warning(
+            f"[Factory] Judge model resolution failed ({exc}); "
+            f"falling back to full TIER1→TIER4 list."
+        )
+        resolved = ""
+
+    if not resolved:
+        return TieredGeminiClient(
+            GEMINI_API_KEY,
+            [GEMINI_MODEL_TIER1, GEMINI_MODEL_TIER2, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4],
+        )
+
+    # resolved を primary に置き、残り Tier を重複除去して後続に連結する。
+    # dict.fromkeys で順序を保ったまま重複除去。
+    tiers = list(dict.fromkeys(
+        [resolved, GEMINI_MODEL_TIER1, GEMINI_MODEL_TIER2, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4]
+    ))
+    return TieredGeminiClient(GEMINI_API_KEY, tiers)
 
 
 def get_script_llm_client() -> Optional[LLMClient]:
-    """Script Writer 用クライアント — 高品質推論ルート。
+    """Script Writer 用クライアント — 高品質推論ルート (role=generation)。
 
-    TIER1 (gemini-3.1-flash-lite-preview) から開始し、
-    TIER1→TIER2→TIER3→TIER4 の完全4段フォールバック。
+    GENERATION_PROVIDER=gemini の場合: TIER1→TIER4 完全4段フォールバック。
+    GENERATION_PROVIDER=groq/ollama の場合: 該当プロバイダの単一クライアント。
+    未知プロバイダ / APIキー未設定の場合: None。
     """
-    return _make_quality_client()
+    return get_llm_client("generation")
 
 
 def get_article_llm_client() -> Optional[LLMClient]:
-    """Article Writer 用クライアント — 高品質推論ルート。"""
+    """Article Writer 用クライアント — 高品質推論ルート (role=generation)。"""
     return get_llm_client("generation")
 
 

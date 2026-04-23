@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field, model_validator
@@ -183,6 +183,18 @@ class TitleLayer(BaseModel):
 
 
 class VideoScript(BaseModel):
+    """ショート動画の台本。
+
+    duration 系フィールドの役割:
+      - total_duration_sec      : sections の duration_sec 合計（sections 非空なら必ずこれに同期）。
+                                  下流 (audio_renderer / video_renderer) が TTS タイミングの基準に使う。
+      - target_duration_sec     : platform プロファイルの目標秒数（shared=80, tiktok=72, shorts=78）。
+                                  total とほぼ一致するはずだが、プロファイルの変更で独立して動きうる。
+      - estimated_duration_sec  : 実際のテキスト文字数ベースで推定した秒数（~4.5字/秒）。
+                                  total/target は「その尺で話す予定」の宣言値、estimated は「現状のテキストなら
+                                  実際にはこれくらい」という実測推定値。3者の乖離は観測性のシグナル。
+    """
+
     event_id: str
     title: str
     intro: str
@@ -193,6 +205,33 @@ class VideoScript(BaseModel):
     estimated_duration_sec: Optional[int] = None
     platform_profile: str = "shared"
     title_layer: Optional["TitleLayer"] = None
+    # ── ディレクター思考メタデータ（additive / optional） ─────────────
+    # 既存パイプライン（render/audio/payload/article）は sections のみ消費するため、
+    # 下記フィールドはログ・分析・サムネ生成など upstream 用途で参照される。
+    # 旧形式の script.json とも互換（全て Optional）。
+    director_thought: Optional[str] = None
+    target_enemy: Optional[str] = None
+    selected_pattern: Optional[str] = None
+    loop_mechanism: Optional[str] = None
+    seo_keywords: Optional[dict[str, Any]] = None
+    thumbnail_text_variants: Optional[dict[str, str]] = None
+    hook_variants: list[dict[str, str]] = Field(default_factory=list)
+    peaks: Optional[dict[str, str]] = None
+
+    @model_validator(mode="after")
+    def _sync_total_duration_from_sections(self) -> "VideoScript":
+        """sections が非空なら total_duration_sec を sections の合計に同期させる。
+
+        - `_compress_sections` 等で section.duration_sec を変更したあと、呼び出し側が
+          total_duration_sec の更新を忘れる drift を防ぐ。
+        - sections が空（テスト fixture の VideoScript(sections=[], total_duration_sec=75) 等）
+          の場合は後方互換のため既存値を維持する。
+        """
+        if self.sections:
+            actual = sum(int(s.duration_sec) for s in self.sections)
+            if self.total_duration_sec != actual:
+                object.__setattr__(self, "total_duration_sec", actual)
+        return self
 
 
 class WebArticle(BaseModel):
@@ -294,5 +333,6 @@ class JobRecord(BaseModel):
     video_payload_path: Optional[str] = None
     voiceover_path: Optional[str] = None
     review_mp4_path: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    # tz-aware で生成する。datetime.utcnow は Python 3.12 で deprecation 警告。
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     error: Optional[str] = None

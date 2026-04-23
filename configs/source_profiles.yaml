@@ -211,3 +211,125 @@ source_profiles:
     mention_style_short: Global Times
     mention_style_long: 中国国営メディアのGlobal Times
     can_authority_mention: false
+
+  # ── G20 / グローバルサウス拡張（sources.yaml と整合） ────────────────────────
+
+  - source_name: TheGuardian
+    display_name_ja: 英ガーディアン
+    country: GB
+    region: europe
+    language: en
+    authority_tier: major
+    mention_style_short: 英ガーディアン
+    mention_style_long: 英ガーディアン紙
+    can_authority_mention: true
+
+  - source_name: LeMonde
+    display_name_ja: 仏ルモンド
+    country: FR
+    region: europe
+    language: en
+    authority_tier: major
+    mention_style_short: 仏ルモンド
+    mention_style_long: 仏ルモンド紙（英語版）
+    can_authority_mention: true
+
+  - source_name: DerSpiegel
+    display_name_ja: 独シュピーゲル
+    country: DE
+    region: europe
+    language: en
+    authority_tier: major
+    mention_style_short: 独シュピーゲル
+    mention_style_long: 独誌シュピーゲル（英語版）
+    can_authority_mention: true
+
+  - source_name: ElPais
+    display_name_ja: 西エルパイス
+    country: ES
+    region: europe
+    language: en
+    authority_tier: standard
+    mention_style_short: 西エルパイス
+    mention_style_long: スペインのエルパイス（英語版）
+    can_authority_mention: true
+
+  - source_name: Yonhap
+    display_name_ja: 韓国の聯合ニュース
+    country: KR
+    region: east_asia
+    language: en
+    authority_tier: major
+    mention_style_short: 聯合ニュース
+    mention_style_long: 韓国の聯合ニュース
+    can_authority_mention: true
+
+  - source_name: StraitsTimes
+    display_name_ja: シンガポールのストレーツ・タイムズ
+    country: SG
+    region: east_asia
+    language: en
+    authority_tier: standard
+    mention_style_short: ストレーツ・タイムズ
+    mention_style_long: シンガポールのストレーツ・タイムズ
+    can_authority_mention: true
+
+  - source_name: TimesOfIndia
+    display_name_ja: タイムズ・オブ・インディア
+    country: IN
+    region: global_south
+    language: en
+    authority_tier: standard
+    mention_style_short: タイムズ・オブ・インディア
+    mention_style_long: インドのタイムズ・オブ・インディア
+    can_authority_mention: true
+
+  - source_name: ABCNewsAU
+    display_name_ja: 豪ABC
+    country: AU
+    region: global
+    language: en
+    authority_tier: standard
+    mention_style_short: 豪ABC
+    mention_style_long: オーストラリア公共放送ABC
+    can_authority_mention: true
+
+  - source_name: News24
+    display_name_ja: 南アフリカのNews24
+    country: ZA
+    region: global_south
+    language: en
+    authority_tier: standard
+    mention_style_short: News24
+    mention_style_long: 南アフリカのNews24
+    can_authority_mention: true
+
+  - source_name: NYTWorld
+    display_name_ja: 米ニューヨーク・タイムズ
+    country: US
+    region: global
+    language: en
+    authority_tier: top
+    mention_style_short: 米NYT
+    mention_style_long: 米ニューヨーク・タイムズ
+    can_authority_mention: true
+
+  - source_name: FolhaDeSPaulo
+    display_name_ja: ブラジルのフォーリャ
+    country: BR
+    region: global_south
+    language: en
+    authority_tier: standard
+    mention_style_short: フォーリャ
+    mention_style_long: ブラジルのフォーリャ・デ・サンパウロ（英語版）
+    can_authority_mention: true
+
+  - source_name: BuenosAiresTimes
+    display_name_ja: アルゼンチンのBuenos Aires Times
+    country: AR
+    region: global_south
+    language: en
+    authority_tier: standard
+    mention_style_short: Buenos Aires Times
+    mention_style_long: アルゼンチンのBuenos Aires Times
+    can_authority_mention: true

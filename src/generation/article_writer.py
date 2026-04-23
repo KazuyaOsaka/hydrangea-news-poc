@@ -6,7 +6,7 @@ from src.llm.base import LLMClient
 from src.llm.factory import get_article_llm_client
 from src.shared.config import LLM_PROVIDER
 from src.shared.logger import get_logger
-from src.shared.models import NewsEvent, ScoredEvent, VideoScript, WebArticle
+from src.shared.models import NewsEvent, ScoredEvent, SourceRef, VideoScript, WebArticle
 
 if TYPE_CHECKING:
     from src.budget import BudgetTracker
@@ -39,7 +39,8 @@ _PROMPT_TEMPLATE = """\
 - 「〜かもしれない」「〜とみられる」を適切に使う
 
 ## 根拠ルール（必須）
-- 断定形で書く文は、必ず入力の sources_jp または sources_en の報道内容を根拠とすること
+- 断定形で書く文は、必ず入力の sources_jp / sources_en / sources_by_locale のいずれかに
+  実在する媒体の報道内容を根拠とすること
 - 元記事に記載のない推論は「〜とみられる」「〜という見方もある」「〜と指摘する声もある」で表現する
 - gap_reasoning が入力にある場合は、日本と海外の差の説明に活用すること
 - japan_impact_reasoning が入力にある場合は、日本への影響説明の根拠として参照すること
@@ -82,10 +83,13 @@ _PROMPT_TEMPLATE = """\
 - 煽りすぎない。余韻を残す
 
 6. ## Sources
-- 入力の sources_jp と sources_en に含まれる媒体名とURLのみを使うこと
+- 入力の sources_jp / sources_en、および sources_by_locale の各 locale（japan 以外を含む）
+  に含まれる媒体名とURLのみを使うこと
 - 勝手に新しいURLを捏造しない
 - 形式: `- [媒体名](URL)` のMarkdownリンク形式で列挙
-- sources_jp を先に、sources_en を後に並べる
+- sources_jp を先に、海外（sources_en または sources_by_locale の japan 以外）を後に並べる
+- 多地域ソース（middle_east / europe / east_asia / global_south など）が
+  sources_by_locale にある場合は、そのメディアも海外側に含めること
 - ソース情報が空の場合のみ「ソース情報なし」と記載
 
 ## 必ず含めること
@@ -96,7 +100,9 @@ _PROMPT_TEMPLATE = """\
 
 ## 入力
 以下に、選ばれたイベント情報、トリアージ結果、動画台本を渡します。
-入力の sources_jp（日本語媒体リスト）と sources_en（英語媒体リスト）に含まれるURLと媒体名を、Sourcesセクションにそのまま使うこと。
+入力の sources_jp（日本語媒体リスト）、sources_en（英語媒体リスト）、および
+sources_by_locale（地域別媒体リスト：japan / middle_east / europe / east_asia /
+global_south / global 等）に含まれるURLと媒体名を、Sourcesセクションにそのまま使うこと。
 
 ## 出力形式
 Markdown本文のみを返してください。前置き不要です。
@@ -107,6 +113,45 @@ Markdown本文のみを返してください。前置き不要です。
 {{TRIAGE_RESULT_JSON}}
 {{VIDEO_SCRIPT_JSON}}
 """
+
+
+# ── 多地域ソースヘルパー ────────────────────────────────────────────────────
+# sources_by_locale への移行に合わせて、海外ソース有無の判定は sources_en 直参照を
+# 避ける。script_writer と同じ基準で locale の japan 以外キーを拾う。
+
+
+def _has_overseas_sources(event: NewsEvent) -> bool:
+    """海外ソース (sources_en or sources_by_locale の japan 以外) が存在するか。"""
+    if event.sources_en:
+        return True
+    return any(
+        loc != "japan" and refs
+        for loc, refs in (event.sources_by_locale or {}).items()
+    )
+
+
+def _collect_overseas_sources(event: NewsEvent) -> list[SourceRef]:
+    """記事の Sources セクション用に海外 SourceRef を重複除去して返す。
+
+    sources_en を優先的に使い、空なら sources_by_locale の non-japan エントリから
+    拾う。両方ある場合は sources_en を採用（後方互換のシリアライズと一致させる）。
+    """
+    if event.sources_en:
+        return list(event.sources_en)
+    if not event.sources_by_locale:
+        return []
+    seen: set[str] = set()
+    out: list[SourceRef] = []
+    for loc, refs in event.sources_by_locale.items():
+        if loc == "japan":
+            continue
+        for ref in refs:
+            key = ref.url or ref.name
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(ref)
+    return out
 
 
 # 疑惑・未確認情報の検出キーワード（script_writer と共通）
@@ -129,7 +174,8 @@ def _allegation_warning(event: NewsEvent) -> str:
         return ""
     source_lower = (event.source or "").lower()
     has_auth = any(s in source_lower for s in _ALLEGATION_AUTH_SOURCES)
-    has_evidence = bool(event.sources_en or event.gap_reasoning)
+    # has_evidence: 海外ソース (sources_en or sources_by_locale の non-japan) または gap_reasoning。
+    has_evidence = _has_overseas_sources(event) or bool(event.gap_reasoning)
     if has_auth and has_evidence:
         return ""
     return """
@@ -158,7 +204,8 @@ def _evidence_warning_section(
     """
     allegation = _allegation_warning(event)
     has_sources_jp = bool(event.sources_jp)
-    has_sources_en = bool(event.sources_en)
+    # 多地域対応: sources_en が空でも sources_by_locale の non-japan があれば海外ソース扱い。
+    has_sources_en = _has_overseas_sources(event)
     has_global_view = bool(event.global_view and event.global_view.strip())
     has_gap = bool(event.gap_reasoning)
     has_impact = bool(event.impact_on_japan)
@@ -294,7 +341,8 @@ def _build_article_fallback(event: NewsEvent) -> WebArticle:
     """
     pub = event.published_at.strftime("%Y年%m月%d日 %H:%M")
 
-    has_en_evidence = bool(event.global_view or event.sources_en)
+    # 多地域対応: sources_en が空でも sources_by_locale に non-japan があれば evidence あり。
+    has_en_evidence = bool(event.global_view) or _has_overseas_sources(event)
     has_gap = bool(event.gap_reasoning)
 
     md_lines = [
@@ -379,12 +427,13 @@ def _build_article_fallback(event: NewsEvent) -> WebArticle:
         for s in event.sources_jp:
             md_lines.append(f"- [{s.name}]({s.url})")
         md_lines.append("")
-    if event.sources_en:
+    overseas_refs = _collect_overseas_sources(event)
+    if overseas_refs:
         md_lines.append("**海外メディア**")
-        for s in event.sources_en:
+        for s in overseas_refs:
             md_lines.append(f"- [{s.name}]({s.url})")
         md_lines.append("")
-    if not event.sources_jp and not event.sources_en:
+    if not event.sources_jp and not overseas_refs:
         md_lines.append(f"- {event.source} ({pub})")
 
     md_lines += [

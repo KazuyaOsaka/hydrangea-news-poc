@@ -7,7 +7,8 @@ from unittest.mock import patch
 import pytest
 
 from src.llm.base import LLMClient
-from src.llm.gemini import GeminiClient
+from src.llm.factory import TieredGeminiClient
+from src.llm.gemini import GeminiClient  # noqa: F401  # legacy re-export still valid
 from src.llm.groq import GroqClient
 from src.llm.ollama import OllamaClient
 
@@ -25,13 +26,19 @@ def test_gemini_client_returns_none_when_no_api_key():
 
 
 def test_gemini_client_created_when_api_key_set():
+    """Gemini provider: factory は階層フォールバック付きの TieredGeminiClient を返す。
+
+    旧実装は単一モデル GeminiClient を返していたが、現在は 4 段 Tier フォールバック
+    (TIER1→TIER4) を実現する TieredGeminiClient が標準。
+    """
     with patch.dict("os.environ", {"LLM_PROVIDER": "gemini", "GEMINI_API_KEY": "dummy-key"}):
         import src.shared.config as cfg
         import src.llm.factory as factory
         importlib.reload(cfg)
         importlib.reload(factory)
         client = factory.get_script_llm_client()
-        assert isinstance(client, GeminiClient)
+        assert isinstance(client, factory.TieredGeminiClient)
+        assert isinstance(client, LLMClient)
 
 
 # --- GroqClient ---

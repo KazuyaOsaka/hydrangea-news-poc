@@ -21,11 +21,12 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
 
 # ── 運用スケジュール ──────────────────────────────────────────────────────────
-# 1日の実行回数上限 (スケジューラ側の目安値、コードでは参照のみ)
-RUNS_PER_DAY: int = int(os.getenv("RUNS_PER_DAY", "5"))
-
 # 1日の最大公開件数 (これを超えると publish をスキップする)
 MAX_PUBLISHES_PER_DAY: int = int(os.getenv("MAX_PUBLISHES_PER_DAY", "5"))
+
+# NOTE: 旧 RUNS_PER_DAY はコード上で参照されない dead constant だったため削除。
+# 実行回数上限を設けたい場合は main.py で get_daily_stats()["run_count"] を
+# チェックするコードと併せて新設すること。
 
 # ── 実行モード ────────────────────────────────────────────────────────────────
 # publish_mode (default): daily budget を exploration / publish_reserve に分割し、
@@ -34,7 +35,8 @@ MAX_PUBLISHES_PER_DAY: int = int(os.getenv("MAX_PUBLISHES_PER_DAY", "5"))
 RUN_MODE: str = os.getenv("RUN_MODE", "publish_mode")
 
 # publish_mode 時に production ステージ用として day_budget から確保する呼び出し数の最小値。
-# デフォルト = 6: viral(1) + judge(up to 3) + script(1) + article(1)
+# デフォルト = 15: top-3 生成（script+article）× 3 本 + retry 余裕 + elite_judge 分
+# BudgetTracker(publish_reserve_calls=...) に未指定時はこの値が使われる。
 PUBLISH_RESERVE_CALLS: int = int(os.getenv("PUBLISH_RESERVE_CALLS", "15"))
 
 # ── LLM 呼び出し予算 ──────────────────────────────────────────────────────────
@@ -67,7 +69,11 @@ GEMINI_SCRIPT_MODEL = os.getenv("GEMINI_SCRIPT_MODEL", GEMINI_MODEL_TIER1)
 GEMINI_ARTICLE_MODEL = os.getenv("GEMINI_ARTICLE_MODEL", GEMINI_MODEL_TIER1)
 GEMINI_TRIAGE_MODEL = os.getenv("GEMINI_TRIAGE_MODEL", GEMINI_MODEL_TIER2)
 GEMINI_CLUSTER_MODEL = os.getenv("GEMINI_CLUSTER_MODEL", GEMINI_MODEL_TIER2)
-GEMINI_JUDGE_MODEL = os.getenv("GEMINI_JUDGE_MODEL", GEMINI_MODEL_TIER2)
+
+# 旧環境変数 GEMINI_JUDGE_MODEL は JUDGE_MODEL の bootstrap デフォルトとして残す。
+# 下流コードは JUDGE_MODEL を使うこと（GEMINI_JUDGE_MODEL は JUDGE_MODEL への alias で、
+# 常に同値）。これにより .env の書き換えと run_summary の表記が食い違うことがなくなる。
+_LEGACY_GEMINI_JUDGE_MODEL_ENV = os.getenv("GEMINI_JUDGE_MODEL", GEMINI_MODEL_TIER2)
 
 # Gemini Judge fallback priority list (comma-separated, tried in order when
 # GEMINI_JUDGE_MODEL is unavailable in the current API tier).
@@ -91,7 +97,11 @@ MERGE_BATCH_MODEL: str = os.getenv("MERGE_BATCH_MODEL", GEMINI_CLUSTER_MODEL)
 
 # judge role: editorial judgment (always Gemini; independent of LLM_PROVIDER)
 JUDGE_PROVIDER: str = os.getenv("JUDGE_PROVIDER", "gemini")
-JUDGE_MODEL: str = os.getenv("JUDGE_MODEL", GEMINI_JUDGE_MODEL)
+JUDGE_MODEL: str = os.getenv("JUDGE_MODEL", _LEGACY_GEMINI_JUDGE_MODEL_ENV)
+
+# Back-compat alias — always equal to JUDGE_MODEL after both env vars are resolved.
+# 新規コードは JUDGE_MODEL を使うこと。
+GEMINI_JUDGE_MODEL: str = JUDGE_MODEL
 
 # generation role: script + article generation (heavier capable model)
 GENERATION_PROVIDER: str = os.getenv("GENERATION_PROVIDER", LLM_PROVIDER)

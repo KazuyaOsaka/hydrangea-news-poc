@@ -302,13 +302,43 @@ def tmp_dirs(tmp_path: Path):
     return output, db
 
 
-def test_run_from_normalized_creates_output_files(tmp_dirs, tmp_path):
+@pytest.fixture()
+def no_llm_api(monkeypatch):
+    """Disable all LLM call sites so run_from_normalized stays deterministic.
+
+    .env で GEMINI_API_KEY がセットされていると Elite Judge / Viral LLM /
+    Garbage Filter / Judge などが本物の API を叩くため、統合テストが
+    レイテンシ依存・非決定的になる。モジュール側の定数・クライアント取得関数を
+    nullish にパッチすることで、全 LLM 経路を fallback 側（テンプレ生成）に寄せる。
+    """
+    # Main の分岐を止める
+    monkeypatch.setattr("src.main.GEMINI_API_KEY", "")
+    monkeypatch.setattr("src.main.JUDGE_ENABLED", False)
+    monkeypatch.setattr("src.main.ELITE_JUDGE_ENABLED", False)
+    monkeypatch.setattr("src.main.VIRAL_LLM_ENABLED", False)
+    monkeypatch.setattr("src.main.GARBAGE_FILTER_ENABLED", False)
+    # Factory 経由の client を全て None に落とす
+    monkeypatch.setattr("src.main.get_cluster_llm_client", lambda: None)
+    monkeypatch.setattr("src.main.get_garbage_filter_client", lambda: None)
+    monkeypatch.setattr("src.main.get_judge_llm_client", lambda: None)
+    monkeypatch.setattr("src.generation.script_writer.get_script_llm_client", lambda: None)
+    # article_writer は get_article_llm_client 経由
+    try:
+        monkeypatch.setattr("src.generation.article_writer.get_article_llm_client", lambda: None)
+    except AttributeError:
+        pass  # article_writer の import 形式が異なるケースは無視
+
+
+def test_run_from_normalized_creates_output_files(tmp_dirs, tmp_path, no_llm_api):
     """run_from_normalized() が成果物ファイルを生成し DB に保存することを確認する。
     batch-based system: DB に batch を登録してから実行する。
 
     JP+EN の cross-language クラスタを含む batch を使用する。
     単一 JP 記事は safety gate により quality floor に引っかかり skipped になるため、
     英語 Reuters 記事を加えることで EN view を持つイベントを作る。
+
+    LLM 経路はすべて no_llm_api fixture で無効化され、script/article は
+    決定的なテンプレフォールバックで生成される。
     """
     norm_dir = tmp_path / "normalized"
     norm_dir.mkdir()
@@ -356,11 +386,15 @@ def test_run_from_normalized_creates_output_files(tmp_dirs, tmp_path):
     assert Path(record.video_payload_path).exists()
 
 
-def test_run_from_normalized_skips_when_all_candidates_held_back(tmp_dirs, tmp_path):
-    """quality floor により全候補が held_back になった場合、status=skipped で正常終了する。
+def test_run_from_normalized_skips_when_flagship_gate_blocks(tmp_dirs, tmp_path, no_llm_api):
+    """sources_en の無い単一 JP 記事は flagship_gate により status=skipped になる。
 
-    Regression test: 以前は単一 JP 記事 (EN view なし) でも triage top へ fallback して
-    weak candidate を生成していた (バグ)。修正後は skipped で no-op になる。
+    旧: scheduler の quality floor が "no_publishable_candidates" を立てて止めていた。
+    新: Elite Judge 廃止 → Flagship Gate 直結。_passes_flagship_gate() が "no_en_sources"
+        を返し、main.py が schedule_tracking.flagship_gate_blocked=True で skip を記録する。
+
+    この回帰防止の本質は「証拠不十分な JP-only 候補が勝手に台本化されないこと」で、
+    その検証フラグが `no_publishable_candidates` から `flagship_gate_blocked` に移った。
     """
     norm_dir = tmp_path / "normalized"
     norm_dir.mkdir()
@@ -390,7 +424,7 @@ def test_run_from_normalized_skips_when_all_candidates_held_back(tmp_dirs, tmp_p
     from src.main import run_from_normalized
     record = run_from_normalized(norm_dir, output, db)
 
-    # quality floor により全候補が held_back → skipped (no-op) で正常終了
+    # Flagship gate が no_en_sources を検出 → skipped (no-op) で正常終了
     assert record.status == "skipped"
     assert record.event_id == "none"
 
@@ -398,13 +432,13 @@ def test_run_from_normalized_skips_when_all_candidates_held_back(tmp_dirs, tmp_p
     assert record.script_path is None
     assert record.article_path is None
 
-    # run_summary に no_publishable_candidates が記録されていること
+    # run_summary の schedule_tracking 側に flagship_gate_blocked が記録されること
     import json
     summary_path = output / "run_summary.json"
     assert summary_path.exists()
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
-    assert summary["generation_tracking"]["no_publishable_candidates"] is True
-    assert summary["generation_tracking"]["fallback_blocked_by_quality_floor"] is True
+    # record.error は "flagship_gate_blocked:no_en_sources" の prefix で始まる
+    assert record.error and record.error.startswith("flagship_gate_blocked:")
 
 
 # ── クロスランゲージ: _extract_keywords にアンカートークンが含まれること ────────

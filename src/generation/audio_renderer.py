@@ -257,13 +257,17 @@ def render_voiceover(
         for s in audio_segments
         if abs(s.timing_mismatch_sec) > 0.5
     ]
+    # target_duration_sec は sections の duration_sec 合計を直接計算する。
+    # 基本的には script.total_duration_sec と一致するが、万一 drift があっても
+    # マニフェストは実 section 値を正とする（model_validator で同期済みのはず）。
+    _sections_total = float(sum(s.duration_sec for s in script.sections))
     manifest = {
         "event_id": script.event_id,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "voice": voice,
         "framerate": framerate,
         "total_duration_sec": round(total_duration, 3),
-        "target_duration_sec": float(script.total_duration_sec),
+        "target_duration_sec": _sections_total or float(script.total_duration_sec),
         "segment_count": len(audio_segments),
         "placeholder_count": placeholder_count,
         "timing_mismatches": timing_mismatches,

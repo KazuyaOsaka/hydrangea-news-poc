@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from functools import lru_cache
+from pathlib import Path
+
 from src.shared.models import NewsEvent
 
 # ── カテゴリ基礎スコア ──────────────────────────────────────────────────────────
@@ -48,10 +51,48 @@ _ADJ_CG_CAP    = 1.5   # 上限（旧 2.0）
 _CRIME_LOCAL_PENALTY = -20.0  # 戦略的文脈なしの犯罪/地域事件
 
 # ── 地域スコアリング定数（multi-region pilot） ────────────────────────────────
-_PILOT_REGIONS = frozenset({"middle_east", "europe", "east_asia"})
-_NON_WESTERN_REGIONS = frozenset({"middle_east", "east_asia"})
-# 既知の bridge source 名（小文字マッチ）
-_BRIDGE_SOURCE_NAMES = frozenset({"al jazeera", "aljazeera", "france24", "cna"})
+# global_south を pilot/non-western 両方に含める。TimesOfIndia / News24 /
+# FolhaDeSPaulo / BuenosAiresTimes などのグローバルサウス媒体が
+# multi_region_score / regional_contrast_score の加点対象になる。
+_PILOT_REGIONS = frozenset({"middle_east", "europe", "east_asia", "global_south"})
+_NON_WESTERN_REGIONS = frozenset({"middle_east", "east_asia", "global_south"})
+
+# bridge source 名: sources.yaml の bridge_source:true から動的ロード。
+# 読み込み失敗時は旧ハードコード集合にフォールバックする。
+_BRIDGE_SOURCE_NAMES_FALLBACK: frozenset[str] = frozenset(
+    {"al jazeera", "aljazeera", "france24", "cna"}
+)
+
+
+@lru_cache(maxsize=1)
+def _load_bridge_source_names() -> frozenset[str]:
+    """sources.yaml から bridge_source:true のソース名を小文字で取得する。
+
+    取得失敗時（yaml 欠損・破損）はフォールバック集合を返す。呼び出しは lru_cache
+    のため 1 プロセスで 1 回のみ yaml を読む。
+    """
+    try:
+        import yaml
+        cfg_path = Path(__file__).resolve().parents[2] / "configs" / "sources.yaml"
+        if not cfg_path.exists():
+            return _BRIDGE_SOURCE_NAMES_FALLBACK
+        with open(cfg_path, encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+        names = {
+            s["name"].lower()
+            for s in data.get("sources", [])
+            if s.get("bridge_source", False) and s.get("name")
+        }
+        if not names:
+            return _BRIDGE_SOURCE_NAMES_FALLBACK
+        return frozenset(names)
+    except Exception:
+        return _BRIDGE_SOURCE_NAMES_FALLBACK
+
+
+# 名前の付き合わせには部分一致（substring）を維持したいので、下流は
+# _load_bridge_source_names() をそのまま in チェックに使う。
+_BRIDGE_SOURCE_NAMES = _load_bridge_source_names()
 # 地域ラベル（日本語表示用）
 _REGION_LABELS: dict[str, str] = {
     "japan": "日本", "global": "欧米英語圏",
@@ -468,15 +509,21 @@ def _score_editorial_axes(event: NewsEvent) -> dict[str, float]:
     ijai_raw = sum(w for kw, w in _INDIRECT_JAPAN_IMPACT_KW if kw in ijai_text)
     ijai = min(ijai_raw, 10.0)
 
-    # bridge_source_bonus: AlJazeera / France24 / CNA などの bridge source 検出
-    all_src_names_lower = frozenset(
-        ref.name.lower()
+    # bridge_source_bonus: sources.yaml で bridge_source:true に設定された媒体の検出。
+    # 比較時は両辺で空白を除去し、"Al Jazeera" / "AlJazeera" / "al jazeera" を
+    # 同一に扱う（legacy pool snapshot の表記揺れに耐える）。
+    def _norm(s: str) -> str:
+        return s.replace(" ", "").lower()
+
+    all_src_names_norm = frozenset(
+        _norm(ref.name)
         for refs in event.sources_by_locale.values()
         for ref in refs
     ) if event.sources_by_locale else frozenset()
+    bridge_names_norm = frozenset(_norm(b) for b in _BRIDGE_SOURCE_NAMES)
     bridge_count = sum(
-        1 for n in all_src_names_lower
-        if any(b in n for b in _BRIDGE_SOURCE_NAMES)
+        1 for n in all_src_names_norm
+        if any(b in n for b in bridge_names_norm)
     )
     bsb = min(bridge_count * 2.0, 4.0)
 

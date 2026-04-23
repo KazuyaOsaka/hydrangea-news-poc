@@ -5,17 +5,42 @@ from src.shared.models import NewsEvent, VideoPayload, VideoScene, VideoScript
 
 logger = get_logger(__name__)
 
-# 各セクションに対応するビジュアルヒント（後方互換）
+# 各セクションに対応するビジュアルヒント。
+# 新 heading（hook/setup/twist/punchline）が正。旧 heading（fact/arbitrage_gap/
+# background/japan_impact）は過去出力・テスト互換のために残す。
 _VISUAL_HINTS = {
-    "hook": "インパクトのあるタイトルカードとBGM開始",
-    "fact": "ニュースソースのロゴと本文テロップ",
+    # 新 heading（script_writer の 4 ブロック構成）
+    "hook":       "インパクトのあるタイトルカードとBGM開始",
+    "setup":      "建前・公式発表のテロップと媒体ロゴの提示",
+    "twist":      "構造図・対立軸インフォグラフィックで裏の文脈を可視化",
+    "punchline":  "シニカルな余韻を残すロワーサード + ループ回帰テロップ",
+    # 旧 heading（後方互換）
+    "fact":          "ニュースソースのロゴと本文テロップ",
     "arbitrage_gap": "インフォグラフィック: 構造変化の矢印図",
-    "japan_impact": "日本地図 + 関連業界アイコン",
+    "background":    "背景・構造の図解",
+    "japan_impact":  "日本地図 + 関連業界アイコン",
 }
 
 # セクションごとの visual_mode（evidence_strength → mode）
 _VISUAL_MODES: dict[str, str | dict[str, str]] = {
+    # 新 heading
     "hook": "anchor_style",
+    "setup": {
+        "strong": "document_style",
+        "partial": "document_style",
+        "weak":    "infographic",
+    },
+    "twist": {
+        "strong": "split_screen",
+        "partial": "structure_diagram",
+        "weak":    "symbolic",
+    },
+    "punchline": {
+        "strong": "market_graphic",
+        "partial": "infographic",
+        "weak":    "symbolic",
+    },
+    # 旧 heading（後方互換）
     "fact": {
         "strong": "grounded_broll",
         "partial": "document_style",
@@ -35,15 +60,25 @@ _VISUAL_MODES: dict[str, str | dict[str, str]] = {
 }
 
 _VISUAL_GOALS = {
-    "hook": "視聴者の注意を引き、テーマを一言で提示する",
-    "fact": "何が起きたかを正確に・ソース明示で伝える",
+    # 新 heading
+    "hook":      "視聴者の注意を引き、テーマを一言で提示する",
+    "setup":     "公式発表・建前を『建前』として名指しで提示する",
+    "twist":     "裏の構造・仮想敵・地政学/カネ/権力の文脈を図解で暴く",
+    "punchline": "価値観を揺さぶる結末と loop 機構をテロップで定着させる",
+    # 旧 heading（後方互換）
+    "fact":          "何が起きたかを正確に・ソース明示で伝える",
     "arbitrage_gap": "日本と海外の報道差・認識差を視覚化し、独自視点を示す",
-    "background": "事件の背景・構造・文脈を図解で解説する",
-    "japan_impact": "日本への具体的・潜在的影響を視聴者に実感させる",
+    "background":    "事件の背景・構造・文脈を図解で解説する",
+    "japan_impact":  "日本への具体的・潜在的影響を視聴者に実感させる",
 }
 
 _TRANSITION_HINTS = {
-    "hook":          "cut → news headline graphic (0.3s)",
+    # 新 heading
+    "hook":      "cut → news headline graphic (0.3s)",
+    "setup":     "wipe → document / press statement graphic (0.5s)",
+    "twist":     "fade → structure diagram / split-screen contrast (0.8s)",
+    "punchline": "fade-out with cynical lower-third title card (1.0s)",
+    # 旧 heading（後方互換）
     "fact":          "wipe → split-screen infographic (0.5s)",
     "arbitrage_gap": "fade → map / structure diagram (0.8s)",
     "background":    "zoom → Japan region on map (0.6s)",
@@ -102,6 +137,52 @@ def _make_video_prompt(heading: str, narration: str, event: NewsEvent, strength:
             f"Title card animation: bold Japanese headline text on screen, "
             f"abstract {category}-themed background with motion graphics, "
             f"high-contrast color scheme, no human faces, no specific identifiable locations"
+        )
+
+    # ── 新 heading: setup（建前・公式発表） ──────────────────────────────────
+    if heading == "setup":
+        if strength == "weak":
+            return (
+                f"Document-style infographic: official announcement text card on neutral background, "
+                f"single-source label visible, typographic motion-graphic, "
+                f"no photorealistic footage, clearly marked as preliminary report"
+            )
+        return (
+            f"Document-style graphic: clean lower-third for the official statement, "
+            f"press-conference podium silhouette without identifiable faces, "
+            f"newspaper headline overlays from {', '.join(regions)} as supporting context, "
+            f"typographic emphasis on the 'official' framing — no reenactment"
+        )
+
+    # ── 新 heading: twist（裏の構造・地政学・カネ・権力） ────────────────────
+    if heading == "twist":
+        if strength == "strong":
+            return (
+                f"Split-screen analytical infographic: contrasting national/sector perspectives, "
+                f"flag icons + arrow diagrams showing structural incentives ({category}), "
+                f"explicit labels for actors (governments, regulators, industries), "
+                f"no real faces, no reenactment, clearly framed as structural analysis"
+            )
+        if strength == "partial":
+            return (
+                f"Structure diagram: animated arrows linking actors and incentives in {category}, "
+                f"abstract icons for involved governments/industries, "
+                f"side-callouts pointing to underlying drivers, "
+                f"clearly labeled as analytical hypothesis, no reenactment footage"
+            )
+        return (
+            f"Symbolic structure motif: abstract diagram of competing interests in {category}, "
+            f"question-mark connectors for uncertain links, neutral palette, "
+            f"text-based callouts for hypothesis framing, no photorealistic footage"
+        )
+
+    # ── 新 heading: punchline（loop 機構 + 余韻） ────────────────────────────
+    if heading == "punchline":
+        return (
+            f"Closing lower-third title card: cynical takeaway phrasing in bold Japanese type, "
+            f"loop-mechanism callback motif (matching the hook's keyword/visual), "
+            f"muted background, single accent color, no human faces, "
+            f"clearly framed as editorial conclusion (not a confirmed prediction)"
         )
 
     if heading == "fact":
@@ -179,7 +260,12 @@ def _make_negative_prompt(heading: str, strength: str) -> str:
     result = _BASE_NEGATIVE
     if strength == "weak":
         result += _WEAK_EVIDENCE_NEGATIVE_EXTRA
-    if heading in ("arbitrage_gap", "background", "japan_impact") and strength in ("weak", "partial"):
+    # 仮説・分析パートは新旧 heading の両方で写実的映像を抑制する
+    _hypothesis_headings = (
+        "arbitrage_gap", "background", "japan_impact",  # 旧
+        "twist", "punchline",                           # 新
+    )
+    if heading in _hypothesis_headings and strength in ("weak", "partial"):
         result += _HYPOTHESIS_NEGATIVE_EXTRA
     return result
 
@@ -196,7 +282,23 @@ def _make_on_screen_text(narration: str, max_chars: int = 28) -> str:
 
 def _make_must_include(heading: str, strength: str, regions: list[str]) -> list[str]:
     base: list[str] = []
-    if heading == "fact":
+    # ── 新 heading ───────────────────────────────────────────────────────────
+    if heading == "setup":
+        base.append("『公式発表 / 建前』であることを示すロワーサード")
+        base.append("ソース名の明示（媒体名テロップ）")
+        if strength == "weak":
+            base.append("「単一ソース報道」の注記")
+    elif heading == "twist":
+        base.append("対立軸・構造を示す矢印 / split-screen / フローチャート")
+        base.append("関与アクター（政府・業界・媒体）のラベル")
+        non_jp = [r for r in regions if r != "japan"]
+        if non_jp:
+            base.append(f"比較対象地域の明示: {', '.join(non_jp)}")
+    elif heading == "punchline":
+        base.append("loop_mechanism を示す視覚要素（hookで使った語/図の再登場）")
+        base.append("シニカルな余韻を示す閉じテロップ")
+    # ── 旧 heading（後方互換） ───────────────────────────────────────────────
+    elif heading == "fact":
         base.append("ソース名の明示（媒体名テロップ）")
         if strength == "weak":
             base.append("「単一ソース報道」の注記")
@@ -222,10 +324,11 @@ def _make_must_avoid(heading: str, strength: str) -> list[str]:
     if strength == "weak":
         avoid.append("事実確認されていない場所・状況の写実的映像")
         avoid.append("単一ソース情報の断定的映像表現")
-    if heading in ("arbitrage_gap", "background") and strength != "strong":
+    # 仮説パート（旧 arbitrage_gap/background, 新 twist）の写実的描写を抑制
+    if heading in ("arbitrage_gap", "background", "twist") and strength != "strong":
         avoid.append("仮説・推論パートでの写実的ドキュメンタリー映像")
-    if heading == "japan_impact" and strength == "weak":
-        avoid.append("日本経済・社会への影響を断定するグラフィック（エビデンス不十分）")
+    if heading in ("japan_impact", "punchline") and strength == "weak":
+        avoid.append("結論・影響を断定するグラフィック（エビデンス不十分）")
     return avoid
 
 
@@ -237,8 +340,8 @@ def _make_source_grounding(event: NewsEvent, heading: str) -> list[str]:
             regions.append("japan")
         if event.sources_en:
             regions.append("global")
-    # japan_impact は必ず japan を含む
-    if heading == "japan_impact" and "japan" not in regions:
+    # japan_impact / punchline は日本視聴者向けの結論部のため必ず japan を含める
+    if heading in ("japan_impact", "punchline") and "japan" not in regions:
         regions = ["japan"] + regions
     return regions or ["japan"]
 
@@ -258,6 +361,14 @@ def write_video_payload(event: NewsEvent, script: VideoScript) -> VideoPayload:
 
     title_layer = script.title_layer
 
+    # LLM 生成のサムネ主文字（thumbnail_text_variants.main）があれば優先し、
+    # 無ければテンプレ由来の title_layer.thumbnail_text にフォールバック。
+    llm_thumb_main = ""
+    if script.thumbnail_text_variants:
+        llm_thumb_main = (script.thumbnail_text_variants.get("main") or "").strip()
+    template_thumb = (title_layer.thumbnail_text if title_layer else "") or ""
+    hook_thumbnail = llm_thumb_main or template_thumb
+
     for i, section in enumerate(script.sections):
         heading = section.heading
         narration = section.body
@@ -266,9 +377,9 @@ def write_video_payload(event: NewsEvent, script: VideoScript) -> VideoPayload:
         visual_mode = _resolve_mode(heading, strength)
         video_prompt = _make_video_prompt(heading, narration, event, strength)
         negative_prompt = _make_negative_prompt(heading, strength)
-        # hook シーンは thumbnail_text を優先して on_screen_text に使う（platform_title と整合）
-        if heading == "hook" and title_layer and title_layer.thumbnail_text:
-            on_screen_text = title_layer.thumbnail_text
+        # hook シーンはサムネ用テキスト（LLM優先 / テンプレfallback）を on_screen_text に使う
+        if heading == "hook" and hook_thumbnail:
+            on_screen_text = hook_thumbnail
         else:
             on_screen_text = _make_on_screen_text(narration)
         must_include = _make_must_include(heading, strength, source_regions_all)
@@ -304,16 +415,40 @@ def write_video_payload(event: NewsEvent, script: VideoScript) -> VideoPayload:
     safety_level = {"strong": "standard", "partial": "elevated", "weak": "strict"}[strength]
 
     # title_layer フィールドを metadata に展開する
+    # thumbnail_text は LLM 側（hook_thumbnail）を正、テンプレを fallback として保存。
+    # 解析時にどちら由来かが追えるよう両方残す。
     title_meta: dict = {}
     if title_layer is not None:
         title_meta = {
-            "canonical_title":  title_layer.canonical_title,
-            "platform_title":   title_layer.platform_title,
-            "hook_line":        title_layer.hook_line,
-            "thumbnail_text":   title_layer.thumbnail_text,
-            "title_strength":   title_layer.title_strength,
-            "title_style":      title_layer.title_style,
+            "canonical_title":   title_layer.canonical_title,
+            "platform_title":    title_layer.platform_title,
+            "hook_line":         title_layer.hook_line,
+            "thumbnail_text":    hook_thumbnail,                          # 実際に使われるテキスト
+            "thumbnail_text_template": title_layer.thumbnail_text,       # テンプレ由来（常時保存）
+            "thumbnail_text_llm":      llm_thumb_main or None,           # LLM 由来（ある時だけ）
+            "thumbnail_text_sub":      (script.thumbnail_text_variants or {}).get("sub") or None,
+            "thumbnail_source":  "llm" if llm_thumb_main else "template",
+            "title_strength":    title_layer.title_strength,
+            "title_style":       title_layer.title_style,
         }
+
+    # LLM 由来の配信メタ（director の意思決定・SEO・loop 機構）を payload にも露出する。
+    # YouTube/TikTok description / キーワード設定 / A/B 分析などの下流で利用可能。
+    director_meta: dict = {}
+    if script.director_thought:
+        director_meta["director_thought"] = script.director_thought
+    if script.selected_pattern:
+        director_meta["selected_pattern"] = script.selected_pattern
+    if script.target_enemy:
+        director_meta["target_enemy"] = script.target_enemy
+    if script.loop_mechanism:
+        director_meta["loop_mechanism"] = script.loop_mechanism
+    if script.seo_keywords:
+        director_meta["seo_primary"] = (script.seo_keywords or {}).get("primary")
+        secondary = (script.seo_keywords or {}).get("secondary") or []
+        director_meta["seo_secondary"] = list(secondary) if isinstance(secondary, (list, tuple)) else []
+    if script.hook_variants:
+        director_meta["hook_variants"] = script.hook_variants
 
     payload = VideoPayload(
         event_id=event.id,
@@ -337,6 +472,8 @@ def write_video_payload(event: NewsEvent, script: VideoScript) -> VideoPayload:
             "source_regions": source_regions_all,
             # Title layer
             **title_meta,
+            # Director メタデータ（SEO / pattern / loop）
+            **director_meta,
         },
     )
     logger.info(

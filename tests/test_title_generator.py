@@ -141,6 +141,31 @@ class TestIsStrongEvidence:
         se = _make_scored_event(event, bip=4.0, has_en_view=1.0)
         assert _is_strong_evidence(event, se) is True
 
+    def test_strong_with_sources_by_locale_only(self):
+        """sources_en が空でも sources_by_locale の non-japan があれば強 evidence として扱う。
+
+        回帰防止: 旧実装は event.sources_en のみを参照していたため、
+        sources_by_locale = {"japan": ..., "middle_east": ...} で設定された
+        多地域ソースで is_strong が常に False に落ちていた。
+        """
+        event = NewsEvent(
+            id="test-locale",
+            title="テスト：多地域ソース",
+            summary="summary",
+            category="economy",
+            source="NHK,AlJazeera",
+            published_at=datetime.now(timezone.utc),
+            gap_reasoning="日本と中東で報道軸が違う",
+            sources_jp=[_src("NHK", "japan")],
+            sources_en=[],  # 後方互換フィールドは空
+            sources_by_locale={
+                "japan": [_src("NHK", "japan")],
+                "middle_east": [_src("AlJazeera", "middle_east")],
+            },
+        )
+        se = _make_scored_event(event, pg=4.0, bip=3.0)
+        assert _is_strong_evidence(event, se) is True
+
 
 # ── _short_topic ──────────────────────────────────────────────────────────────
 

@@ -34,7 +34,8 @@ def test_platform_profiles_shared_exists():
 
 def test_platform_profiles_shared_values():
     p = PLATFORM_PROFILES["shared"]
-    assert p["target_sec"] == 75
+    # target を 80 秒に引き上げ済み（hook4 + setup16 + twist40 + punchline20 = 80s）
+    assert p["target_sec"] == 80
     assert p["hard_min_sec"] == 60
     assert p["hard_max_sec"] == 100
     assert p["min_sec"] < p["max_sec"]
@@ -127,7 +128,8 @@ def test_videoscript_accepts_estimated_duration():
 def test_fallback_sets_target_duration_sec():
     event = _make_event()
     script = _build_script_fallback(event)
-    assert script.target_duration_sec == 75
+    # shared プロファイル target_sec=80 に追従
+    assert script.target_duration_sec == 80
 
 
 def test_fallback_sets_estimated_duration_sec():
@@ -200,3 +202,87 @@ def test_video_payload_duration_metadata_tiktok_profile():
     payload = write_video_payload(event, script)
     assert payload.metadata["platform_profile"] == "tiktok"
     assert payload.metadata["target_duration_sec"] == 72
+
+
+# ── total_duration_sec の sections 合計への自動同期 ────────────────────────────
+
+
+def test_videoscript_total_duration_sync_from_sections():
+    """sections 非空なら total_duration_sec は sections 合計に自動同期する。
+
+    回帰防止: 呼び出し側が古い total_duration_sec を渡しても、sections の合計が
+    正であることを保証する。これにより audio_renderer 等で "想定 80s vs 実測 62s"
+    のような誤解を招く数値ズレを防ぐ。
+    """
+    script = VideoScript(
+        event_id="e-sync",
+        title="t",
+        intro="",
+        sections=[
+            ScriptSection(heading="hook", body="a", duration_sec=4),
+            ScriptSection(heading="setup", body="b", duration_sec=16),
+            ScriptSection(heading="twist", body="c", duration_sec=40),
+            ScriptSection(heading="punchline", body="d", duration_sec=20),
+        ],
+        outro="",
+        total_duration_sec=9999,  # 故意にズレた値を渡す
+    )
+    # validator が sections の合計 80 に同期するはず
+    assert script.total_duration_sec == 80
+
+
+def test_videoscript_empty_sections_keeps_explicit_total():
+    """sections が空の場合は後方互換のため渡された total_duration_sec をそのまま使う。"""
+    script = VideoScript(
+        event_id="e-empty",
+        title="t",
+        intro="",
+        sections=[],
+        outro="",
+        total_duration_sec=75,
+    )
+    assert script.total_duration_sec == 75
+
+
+# ── _pattern_restrictions_section: 多地域ソースの認識 ─────────────────────────
+
+def test_pattern_restrictions_recognizes_overseas_via_sources_by_locale():
+    """sources_en が空でも sources_by_locale に non-japan があれば
+    Media Critique / Geopolitics を禁止しない（多地域ソース対応）。
+
+    回帰防止: 旧実装は event.sources_en のみで判定していたため、
+    sources_by_locale に middle_east 等を直接設定したケースで誤って
+    Media Critique を禁止していた。
+    """
+    from src.shared.models import SourceRef
+    from src.generation.script_writer import _pattern_restrictions_section
+
+    event = _make_event(
+        sources_jp=[SourceRef(name="NHK", url="https://nhk.example", region="japan")],
+        sources_by_locale={
+            "japan": [SourceRef(name="NHK", url="https://nhk.example", region="japan")],
+            "middle_east": [SourceRef(name="Al Jazeera", url="https://aj.example", region="middle_east")],
+        },
+        gap_reasoning="日本では補助線として、中東では主軸として報じられている。",
+    )
+    section = _pattern_restrictions_section(event, triage_result=None)
+    assert "Media Critique" not in section, (
+        "sources_by_locale に non-japan ソースがあれば Media Critique は許可されるべき"
+    )
+    assert "Geopolitics" not in section
+
+
+def test_pattern_restrictions_blocks_when_no_overseas_anywhere():
+    """sources_en も sources_by_locale の非 japan も空なら従来通り Media Critique を禁止する。"""
+    from src.shared.models import SourceRef
+    from src.generation.script_writer import _pattern_restrictions_section
+
+    event = _make_event(
+        sources_jp=[SourceRef(name="NHK", url="https://nhk.example", region="japan")],
+        sources_by_locale={
+            "japan": [SourceRef(name="NHK", url="https://nhk.example", region="japan")],
+        },
+    )
+    section = _pattern_restrictions_section(event, triage_result=None)
+    assert "Media Critique" in section
+    assert "Geopolitics" in section

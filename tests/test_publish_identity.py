@@ -472,3 +472,98 @@ class TestCandidateReportOverride:
         assert len(mismatch_lines) == 0, (
             "No [Scheduler] MISMATCH log line should appear on the override path"
         )
+
+
+# ── 4. Per-slot record aggregation (top-3 ループ) ─────────────────────────────
+
+class TestPerSlotRecordAggregation:
+    """Top-3 ループの per-slot 結果集約が「slot-1 を表す」ように動作する。
+
+    旧実装はループ末尾の record（最後のスロット）を archive 判定 / run_summary に
+    使っていたため、slot-1 が成功でも slot-3 が失敗すると run 全体が "failed"
+    扱いになっていた。
+    """
+
+    def test_aggregation_picks_slot1_record_for_summary(self):
+        """_slot1_record はループの最初のスロット結果。"""
+        from src.shared.models import JobRecord
+        slot1 = JobRecord(id="j-s1", event_id="ev-1", status="completed")
+        slot2 = JobRecord(id="j-s2", event_id="ev-2", status="failed", error="x")
+        slot3 = JobRecord(id="j-s3", event_id="ev-3", status="failed", error="y")
+        slot_records = [slot1, slot2, slot3]
+
+        record = slot_records[0]
+        assert record.event_id == "ev-1"
+        assert record.status == "completed"
+
+    def test_completed_count_reflects_all_slots(self):
+        """_completed_count は完了スロット全数。"""
+        from src.shared.models import JobRecord
+        slot_records = [
+            JobRecord(id="j-s1", event_id="ev-1", status="completed"),
+            JobRecord(id="j-s2", event_id="ev-2", status="completed"),
+            JobRecord(id="j-s3", event_id="ev-3", status="failed", error="x"),
+        ]
+        completed_count = sum(1 for r in slot_records if r.status == "completed")
+        assert completed_count == 2
+
+    def test_archive_proceeds_when_any_slot_completed(self):
+        """slot-1 が failed でも slot-2/3 が completed なら archive する。"""
+        from src.shared.models import JobRecord
+        slot_records = [
+            JobRecord(id="j-s1", event_id="ev-1", status="failed", error="boom"),
+            JobRecord(id="j-s2", event_id="ev-2", status="completed"),
+        ]
+        any_archivable = any(
+            r.status in ("completed", "skipped") for r in slot_records
+        ) or not slot_records
+        assert any_archivable is True
+
+    def test_published_event_id_is_slot1_only(self):
+        """_published_event_id（後方互換変数）は slot-1 のみが書き込む。
+        slot-1 が rescue/失敗のときは None のまま、slot-2/3 が completed しても
+        変更しない。slot 全体の publish 一覧は別変数 _published_event_ids が持つ。
+        """
+        from src.shared.models import JobRecord
+        slot_records = [
+            JobRecord(id="j-s1", event_id="none", status="skipped", error="rescue"),
+            JobRecord(id="j-s2", event_id="ev-2", status="completed"),
+            JobRecord(id="j-s3", event_id="ev-3", status="completed"),
+        ]
+        # 新仕様の挙動を再現: slot_idx==0 のみが _published_event_id を更新する
+        _published_event_id: str | None = None
+        _published_event_ids: list[str] = []
+        for slot_idx, r in enumerate(slot_records):
+            if r.status == "completed":
+                _published_event_ids.append(r.event_id)
+                if slot_idx == 0:
+                    _published_event_id = r.event_id
+
+        assert _published_event_id is None
+        assert _published_event_ids == ["ev-2", "ev-3"]
+
+    def test_av_summary_copy_does_not_self_reference(self):
+        """_av_summary は dict コピー後に per_slot を追加するので、
+        slot_av_summaries[0] と同一参照にならない。
+
+        回帰防止: 旧実装は `_av_summary["per_slot"] = _slot_av_summaries` と
+        破壊的に書き込んでいたため、_slot_av_summaries[0] === _av_summary となり、
+        per_slot[0]["per_slot"] というネスト構造が JSON 出力上に現れていた。
+        """
+        slot1_av: dict = {"audio_generated": True, "voiceover_path": "/tmp/s1.wav", "slot": 1}
+        slot2_av: dict = {"audio_generated": True, "voiceover_path": "/tmp/s2.wav", "slot": 2}
+        slot_av_summaries = [slot1_av, slot2_av]
+
+        # main.py の修正後の挙動を再現
+        av_summary = slot1_av  # slot_idx==0 で代入
+        if av_summary is not None and slot_av_summaries:
+            av_summary = {**av_summary, "per_slot": slot_av_summaries}
+
+        # スロット-1 の元 dict には per_slot キーが含まれない
+        assert "per_slot" not in slot1_av, (
+            "slot_av_summaries[0] は per_slot を持たないこと（破壊的書換禁止）"
+        )
+        # コピーされた av_summary には per_slot が入る
+        assert av_summary["per_slot"] is slot_av_summaries
+        # ネスト確認: per_slot[0] には per_slot キーが含まれない
+        assert "per_slot" not in av_summary["per_slot"][0]

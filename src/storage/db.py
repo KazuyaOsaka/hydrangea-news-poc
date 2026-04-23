@@ -80,9 +80,25 @@ CREATE TABLE IF NOT EXISTS recent_event_pool (
 
 
 def _connect(db_path: Path) -> sqlite3.Connection:
+    """Open a SQLite connection configured for concurrent use.
+
+    - journal_mode=WAL: ライターが増えても読み取りが止まらない。
+    - busy_timeout=5000: 他接続のロック中は最大5秒 OS レベルで待つ。
+      read-modify-write レース（daily_stats increment の多重実行）での
+      "database is locked" 例外発生率を下げる。
+    - synchronous=NORMAL: WAL と併用して安全かつ高速。
+    """
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(db_path))
+    # isolation_level=None にはしない（既存コードは with 文の暗黙 commit に依存）。
+    conn = sqlite3.connect(str(db_path), timeout=5.0)
     conn.row_factory = sqlite3.Row
+    # PRAGMA 設定は接続ごとに必要（WAL はファイル全体で共有されるが、busy_timeout は接続属性）。
+    try:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA synchronous=NORMAL")
+        conn.execute("PRAGMA busy_timeout=5000")
+    except sqlite3.Error as exc:  # pragma: no cover — WAL 未対応環境向け
+        logger.warning(f"[DB] PRAGMA setup failed ({exc}); falling back to default mode.")
     return conn
 
 

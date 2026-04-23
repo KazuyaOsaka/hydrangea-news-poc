@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import TYPE_CHECKING, Any, Optional
 
 from pydantic import BaseModel, Field
@@ -30,6 +31,7 @@ _SECTION_KEYS = ["hook", "setup", "twist", "punchline"]
 # ── 文字数ハードバリデーション境界 ────────────────────────────────────────────
 # Python側で計測し、範囲外ならLLMに修正を指示してリトライ
 _CHAR_BOUNDS: dict[str, tuple[int, int]] = {
+    "hook":      (8,   22),   # hook_variants[0].text: _DURATIONS['hook']=4s × 4.5字/s = 18字 + 余裕
     "setup":     (60,  90),
     "twist":     (150, 220),
     "punchline": (70,  110),
@@ -127,11 +129,44 @@ class _CharViolation:
         return f"- {self.field}: 現在{self.actual}文字 → 目標{self.lo}〜{self.hi}文字（{diff}文字増やしてください）"
 
 
+_LOOP3_TOKEN_RE = re.compile(r"[一-龥ぁ-んァ-ヶ々ーA-Za-z]{2,}")
+
+
+def _check_loop3_recurrence(draft: ScriptDraft) -> Optional[str]:
+    """loop-3（冒頭単語回帰）のソフト検証。
+
+    loop_mechanism=='loop-3' のとき hook の先頭キーワード（長さ2〜4のプレフィックス）が
+    punchline に出現していなければ違反理由を返す（再生成はしない、WARNログ用）。
+    日本語の助詞分割は簡易化のため、先頭2〜4字のいずれかが含まれていれば合格とする寛容判定。
+    """
+    if draft.loop_mechanism != "loop-3":
+        return None
+    hook_text = draft.hook_variants[0].get("text", "") if draft.hook_variants else ""
+    if not hook_text:
+        return "hook empty"
+    m = _LOOP3_TOKEN_RE.search(hook_text)
+    if not m:
+        return None  # 数字のみ等で抽出不能 → ベネフィット・オブ・ザ・ダウト
+    keyword = m.group()
+    # 長いプレフィックスから順に確認（"NHKが言わない真実" → 先に4字→3字→2字）
+    for prefix_len in (4, 3, 2):
+        if len(keyword) >= prefix_len and keyword[:prefix_len] in draft.punchline:
+            return None
+    probe = keyword[: min(4, len(keyword))]
+    return f"hook keyword prefix {probe!r} not found in punchline"
+
+
 def _validate_draft_chars(draft: ScriptDraft) -> list[_CharViolation]:
-    """setup/twist/punchlineの文字数を検証し、違反リストを返す。空なら合格。"""
+    """hook/setup/twist/punchlineの文字数を検証し、違反リストを返す。空なら合格。
+
+    hook は hook_variants[0].text（メイン採用される先頭候補）を対象とする。
+    """
     violations: list[_CharViolation] = []
     for field, (lo, hi) in _CHAR_BOUNDS.items():
-        text = getattr(draft, field, "")
+        if field == "hook":
+            text = draft.hook_variants[0].get("text", "") if draft.hook_variants else ""
+        else:
+            text = getattr(draft, field, "")
         n = _count_chars(text)
         if not (lo <= n <= hi):
             violations.append(_CharViolation(field, n, lo, hi))
@@ -328,6 +363,33 @@ _PROMPT_TEMPLATE = """\
 
 **⚠️ 文字数は Python 側でハードチェックされます。範囲外の場合は自動リジェクトされ再生成を求められます。**
 
+---
+
+## STEP 4.5: 🚫 禁忌——Wikipedia 要約化の撲滅
+
+**sections は記事の要約ではない。視聴者の世界観を揺さぶる『暴露と皮肉』の舞台である。**
+
+### ❌ NG（要約型・教科書型）— 自動リジェクト対象
+- setup: 「〇〇が△△を発表した。市場は反応した。」 ← 建前のみ、感情ゼロ
+- twist: 「海外ではこの動きが注目されている。日本では報道が少ない。」 ← 事実の並列、構造不在
+- punchline: 「今後の動向に注目したい。」 ← テレビのニュース閉め、loop機構も皮肉もない
+
+### ✅ OK（暴露型・皮肉型）— 視聴者が二度見するやつ
+- setup: 「公式発表は〇〇。NHKも日経もこの建前を繰り返しています。でも一歩引いて見てください。」 ← 建前を『建前』と名指しする意志
+- twist: 「裏で動いているのは××という構造です。A国は〇〇という本音で、B国は△△という国益で動いている。日本のメディアが触れないのは、□□という空気があるからです。つまりこれは◯◯の覇権の話で、〇〇ではありません。」 ← 地政学/構造/仮想敵を具体的に暴く
+- punchline: 「建前を信じた側が損をする。そして明日のニュースで、またあの単語を聞くことになります。」 ← シニカルな余韻 + loop機構
+
+### 🔑 Twist 必達チェックリスト
+- [ ] **構造が暴かれているか？** （単なる事実の列挙ではなく、「なぜこうなっているか」の仕組み）
+- [ ] **target_enemy が存在感を持っているか？** （「誰がトクしているか」が見える）
+- [ ] **地政学・カネ・権力のいずれかに踏み込んでいるか？** （綺麗事の一段下を見せる）
+- [ ] **日本メディアが触れない理由まで言及したか？** （Media Critique を選んだ場合）
+
+### 🔑 Punchline 必達チェックリスト
+- [ ] **シニカルな知的余韻があるか？** （「〜に注目したい」等の無害な締めは禁止）
+- [ ] **loop_mechanism が実装されているか？** （冒頭の伏線を回収／未完結／単語回帰）
+- [ ] **視聴者の価値観を一度揺さぶるか？** （常識 → 反転 → 新しい視点）
+
 ## 文体ルール
 - 1文は20字以内。句点で積極的に区切る。
 - 話し言葉（「〜ですよね」「〜なんです」「実はこうなんです」）。
@@ -375,6 +437,7 @@ _PROMPT_TEMPLATE = """\
   }
 }
 
+{{PATTERN_RESTRICTIONS}}
 {{EVIDENCE_WARNING}}
 {{AUTHORITY_MENTION_INSTRUCTION}}
 ## 入力データ
@@ -433,6 +496,54 @@ def _allegation_warning(event: NewsEvent) -> str:
 - insider trading / 不正 / 疑惑などの表現は推定形（「〜の疑いが報じられている」）のみ使用する
 - script 内でこの疑惑を「確定事実」として断言してはならない
 """
+
+
+def _pattern_restrictions_section(
+    event: NewsEvent,
+    triage_result: "Optional[ScoredEvent]" = None,
+) -> str:
+    """selected_pattern の候補から、証拠状況で整合しないものを除外する指示を返す。
+
+    evidence_warning が twist 内容をガードするのと合わせ、そもそもパターン選択段階で
+    禁止を明示することで「Media Critique を選んだのに海外比較が書けない」矛盾を防ぐ。
+    """
+    forbidden: list[tuple[str, str]] = []
+    # 海外ソースは sources_en（後方互換）と sources_by_locale の non-japan エントリの和集合。
+    # event_builder では country!=JP のソースは sources_en に入るが、テスト・将来の
+    # 多地域ソース直接設定でも sources_by_locale 経由の海外ソースを認識できるようにする。
+    has_overseas_locale = any(
+        loc != "japan" and refs
+        for loc, refs in (event.sources_by_locale or {}).items()
+    )
+    has_sources_en = bool(event.sources_en) or has_overseas_locale
+    has_global_view = bool(event.global_view and event.global_view.strip())
+    has_gap = bool(event.gap_reasoning)
+
+    if not has_sources_en and not has_global_view:
+        forbidden.append(
+            ("Media Critique", "海外報道との比較が前提だが sources_en / global_view が不在")
+        )
+        forbidden.append(
+            ("Geopolitics", "海外アクターの言説・視点の根拠が必要だが sources_en / global_view が不在")
+        )
+    elif not has_gap and not has_sources_en:
+        forbidden.append(
+            ("Media Critique", "海外との認識差（gap_reasoning）が未設定で、比較の切り口を断定できない")
+        )
+
+    if not forbidden:
+        return ""
+
+    lines = [
+        "## ⚠️ パターン選択制約【pattern-candidate-restriction】",
+        "以下のパターンは入力データの証拠不足により選択禁止。director_thought にも選ばないこと。",
+    ]
+    for name, reason in forbidden:
+        lines.append(f"- **{name}** — {reason}")
+    lines.append(
+        "上記以外（Breaking Shock / Paradigm Shift / Anti-Sontaku / Cultural Divide 等）から必ず選ぶこと。"
+    )
+    return "\n".join(lines) + "\n"
 
 
 def _evidence_warning_section(
@@ -558,7 +669,7 @@ def _draft_to_video_script(draft: ScriptDraft, event: NewsEvent) -> VideoScript:
 
     return VideoScript(
         event_id=event.id,
-        title=draft.director_thought[:25] if draft.director_thought else event.title,
+        title=event.title,
         intro="",
         sections=sections,
         outro="",
@@ -566,6 +677,15 @@ def _draft_to_video_script(draft: ScriptDraft, event: NewsEvent) -> VideoScript:
         target_duration_sec=profile["target_sec"],
         estimated_duration_sec=estimated,
         platform_profile="shared",
+        # ── ディレクター思考メタデータを永続化（additive / 後続処理は無視しても可） ──
+        director_thought=draft.director_thought,
+        target_enemy=draft.target_enemy,
+        selected_pattern=draft.selected_pattern,
+        loop_mechanism=draft.loop_mechanism,
+        seo_keywords=draft.seo_keywords,
+        thumbnail_text_variants=draft.thumbnail_text,
+        hook_variants=draft.hook_variants,
+        peaks=draft.peaks,
     )
 
 
@@ -590,6 +710,7 @@ def _build_script_from_llm(
     triage_json = triage_result.model_dump_json(indent=2) if triage_result else "{}"
     evidence_warning = _evidence_warning_section(event, triage_result)
     authority_instruction = _build_authority_mention_instruction(authority_pair or [])
+    pattern_restrictions = _pattern_restrictions_section(event, triage_result)
 
     base_prompt = (
         _PROMPT_TEMPLATE
@@ -597,6 +718,7 @@ def _build_script_from_llm(
         .replace("{{TRIAGE_RESULT_JSON}}", triage_json)
         .replace("{{EVIDENCE_WARNING}}", evidence_warning)
         .replace("{{AUTHORITY_MENTION_INSTRUCTION}}", authority_instruction)
+        .replace("{{PATTERN_RESTRICTIONS}}", pattern_restrictions)
     )
 
     current_prompt = base_prompt
@@ -641,12 +763,20 @@ def _build_script_from_llm(
             # ── 文字数ハードバリデーション ───────────────────────────────────────
             violations = _validate_draft_chars(draft)
             if not violations:
+                hook_text = draft.hook_variants[0].get("text", "") if draft.hook_variants else ""
                 logger.info(
                     f"[ScriptWriter] char validation passed "
-                    f"(setup={_count_chars(draft.setup)}, "
+                    f"(hook={_count_chars(hook_text)}, "
+                    f"setup={_count_chars(draft.setup)}, "
                     f"twist={_count_chars(draft.twist)}, "
                     f"punchline={_count_chars(draft.punchline)})"
                 )
+                loop3_reason = _check_loop3_recurrence(draft)
+                if loop3_reason:
+                    logger.warning(
+                        f"[ScriptWriter] loop-3 soft check failed: {loop3_reason} "
+                        f"(hook={hook_text!r} / punchline tail={draft.punchline[-40:]!r})"
+                    )
                 break
 
             # 違反あり
@@ -846,5 +976,9 @@ def write_script(
     if budget is not None:
         budget.record_generation_outcome("script", _used_fallback, _fallback_reason, _retry_count)
 
-    title_layer = generate_title_layer(event, triage_result)
+    # script の selected_pattern をタイトル生成に渡し、語り口とタイトルのトーンを揃える
+    # （LLM 経路では script.selected_pattern が入る / fallback 経路では None → 従来挙動）
+    title_layer = generate_title_layer(
+        event, triage_result, selected_pattern=script.selected_pattern
+    )
     return script.model_copy(update={"title_layer": title_layer})

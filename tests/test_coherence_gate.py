@@ -317,10 +317,23 @@ class TestJudgeModelDefault:
             "Judge model default was not fixed from the invalid gemini-3.1-flash-lite value"
         )
 
-    def test_judge_model_default_is_25_flash_lite(self):
-        """Pass 2C: default should be gemini-2.5-flash-lite (an available model)."""
-        assert GEMINI_JUDGE_MODEL == "gemini-2.5-flash-lite", (
-            f"Expected 'gemini-2.5-flash-lite', got {GEMINI_JUDGE_MODEL!r}"
+    def test_judge_model_default_is_valid_gemini_model(self):
+        """Judge model must be a non-empty Gemini model identifier.
+
+        旧 Pass 2C の gemini-2.5-flash-lite は階層フォールバックの末端 TIER4 に移動。
+        GEMINI_JUDGE_MODEL は config.py で GEMINI_MODEL_TIER2 をデフォルトに取る
+        （.env で上書きされうる）。具体的な値ではなく「無効な値に戻っていないこと」だけを
+        不変条件として保証する。
+        """
+        assert isinstance(GEMINI_JUDGE_MODEL, str) and GEMINI_JUDGE_MODEL, (
+            f"GEMINI_JUDGE_MODEL must be a non-empty string, got {GEMINI_JUDGE_MODEL!r}"
+        )
+        assert GEMINI_JUDGE_MODEL.startswith("gemini-"), (
+            f"Expected a gemini-* model name, got {GEMINI_JUDGE_MODEL!r}"
+        )
+        # かつて 404 を引き起こした無効値には戻さない
+        assert GEMINI_JUDGE_MODEL != "gemini-3.1-flash-lite", (
+            "Judge model regressed to the invalid gemini-3.1-flash-lite value"
         )
 
 

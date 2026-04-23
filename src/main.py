@@ -47,7 +47,6 @@ from src.shared.config import (
     DB_PATH,
     GEMINI_API_KEY,
     GEMINI_JUDGE_FALLBACK_MODELS,
-    GEMINI_JUDGE_MODEL,
     INPUT_DIR,
     JUDGE_CANDIDATE_LIMIT,
     JUDGE_ENABLED,
@@ -628,7 +627,7 @@ def _run_judge_pass(
     resolution: ModelResolution | None = None
     if GEMINI_API_KEY:
         resolution = get_judge_model_resolution(
-            GEMINI_API_KEY, GEMINI_JUDGE_MODEL, GEMINI_JUDGE_FALLBACK_MODELS
+            GEMINI_API_KEY, JUDGE_MODEL, GEMINI_JUDGE_FALLBACK_MODELS
         )
         logger.info(
             f"[GeminiJudge] Model resolution: "
@@ -1082,8 +1081,8 @@ def _write_latest_candidate_report(
         and se.judge_result.publishability_class in _ELIGIBLE_PUBLISHABILITY
     ]
 
-    _mr_req = model_resolution.requested_model if model_resolution else GEMINI_JUDGE_MODEL
-    _mr_res = model_resolution.resolved_model if model_resolution else GEMINI_JUDGE_MODEL
+    _mr_req = model_resolution.requested_model if model_resolution else JUDGE_MODEL
+    _mr_res = model_resolution.resolved_model if model_resolution else JUDGE_MODEL
     _mr_reason = model_resolution.resolution_reason if model_resolution else "not_resolved"
 
     lines: list[str] = [
@@ -1500,11 +1499,10 @@ def _build_judge_summary(
     model_resolution: "ModelResolution | None" = None,
 ) -> dict:
     """run_summary に含める judge サマリを構築する。"""
-    from src.shared.config import GEMINI_JUDGE_MODEL
-
     # Resolve requested/resolved model names for observability.
-    _req = model_resolution.requested_model if model_resolution else GEMINI_JUDGE_MODEL
-    _res = model_resolution.resolved_model if model_resolution else GEMINI_JUDGE_MODEL
+    # JUDGE_MODEL は config で role-based に解決済み (GEMINI_JUDGE_MODEL と同値)。
+    _req = model_resolution.requested_model if model_resolution else JUDGE_MODEL
+    _res = model_resolution.resolved_model if model_resolution else JUDGE_MODEL
     _res_reason = model_resolution.resolution_reason if model_resolution else "not_resolved"
 
     if not judge_results:
@@ -1796,11 +1794,15 @@ def _generate_outputs(
     override_top: "ScoredEvent | None" = None,
     all_ranked: "list[ScoredEvent] | None" = None,
     authority_pair: "list[str] | None" = None,
+    write_triage_scores: bool = True,
 ) -> JobRecord:
     """トリアージ〜生成〜保存の共通処理。
 
     all_ranked が渡された場合は rank_events + apply_editorial_appraisal を再実行しない。
     run_from_normalized では呼び出し元で1回だけ計算して渡すこと。
+
+    write_triage_scores=False の場合は triage_scores.json を書き出さない。
+    top-3 ループの slot-2/3 で渡すと、slot-1 が書いた選定根拠を上書きしない。
     """
 
     # 1. トリアージ（スコアリング & 選択）: publish スキップ時も常に実行・保存
@@ -1832,75 +1834,76 @@ def _generate_outputs(
             if s:
                 triage_source_counts[s] = triage_source_counts.get(s, 0) + 1
 
-    # 2. スコアリング結果保存
-    score_path = output_dir / "triage_scores.json"
-    score_path.write_text(
-        json.dumps(
-            {
-                "selected": top.event.id,
-                "score": top.score,
-                "primary_tier": top.primary_tier,
-                "primary_bucket": top.primary_bucket,
-                "editorial_tags": top.editorial_tags,
-                "editorial_reason": top.editorial_reason,
-                "appraisal_type": top.appraisal_type,
-                "appraisal_hook": top.appraisal_hook,
-                "appraisal_reason": top.appraisal_reason,
-                "appraisal_cautions": top.appraisal_cautions,
-                "editorial_appraisal_score": top.editorial_appraisal_score,
-                "tags_multi": top.tags_multi,
-                "viral_filter_score": top.viral_filter_score,
-                "viral_filter_breakdown": top.viral_filter_breakdown or {},
-                "why_slot1_won_editorially": top.why_slot1_won_editorially,
-                "breakdown": top.score_breakdown,
-                "all_candidates": [
-                    {
-                        "rank": i + 1,
-                        "id": s.event.id,
-                        "title": s.event.title[:60],
-                        "category": s.event.category,
-                        "score": s.score,
-                        "cluster_size": s.event.cluster_size,
-                        "has_japan_view": s.event.japan_view is not None,
-                        "has_global_view": s.event.global_view is not None,
-                        "source": s.event.source,
-                        "primary_tier": s.primary_tier,
-                        "primary_bucket": s.primary_bucket,
-                        "editorial_tags": s.editorial_tags,
-                        "editorial_reason": s.editorial_reason,
-                        "tags_multi": s.tags_multi,
-                        "appraisal_type": s.appraisal_type,
-                        "appraisal_hook": s.appraisal_hook,
-                        "appraisal_reason": s.appraisal_reason,
-                        "appraisal_cautions": s.appraisal_cautions,
-                        "editorial_appraisal_score": s.editorial_appraisal_score,
-                        # Rolling window transparency
-                        "story_fingerprint": s.story_fingerprint,
-                        "freshness_decay": s.freshness_decay,
-                        "from_recent_pool": s.from_recent_pool,
-                        "pool_created_at": s.pool_created_at,
-                        # Pass C: Viral Filter
-                        "viral_filter_score": s.viral_filter_score,
-                        "viral_filter_breakdown": s.viral_filter_breakdown or {},
-                        "why_rejected_before_generation": s.why_rejected_before_generation,
-                        "why_slot1_won_editorially": s.why_slot1_won_editorially,
-                        **(
-                            {"triage_explanation": s.score_breakdown.get("triage_explanation", [])}
-                            if i < 10 else {}
-                        ),
-                        "breakdown": {
-                            k: v for k, v in s.score_breakdown.items()
-                            if k != "triage_explanation"
-                        },
-                    }
-                    for i, s in enumerate(all_ranked)
-                ],
-            },
-            ensure_ascii=False,
-            indent=2,
-        ),
-        encoding="utf-8",
-    )
+    # 2. スコアリング結果保存（slot-1 のみ書き出す。slot-2/3 では skip）
+    if write_triage_scores:
+        score_path = output_dir / "triage_scores.json"
+        score_path.write_text(
+            json.dumps(
+                {
+                    "selected": top.event.id,
+                    "score": top.score,
+                    "primary_tier": top.primary_tier,
+                    "primary_bucket": top.primary_bucket,
+                    "editorial_tags": top.editorial_tags,
+                    "editorial_reason": top.editorial_reason,
+                    "appraisal_type": top.appraisal_type,
+                    "appraisal_hook": top.appraisal_hook,
+                    "appraisal_reason": top.appraisal_reason,
+                    "appraisal_cautions": top.appraisal_cautions,
+                    "editorial_appraisal_score": top.editorial_appraisal_score,
+                    "tags_multi": top.tags_multi,
+                    "viral_filter_score": top.viral_filter_score,
+                    "viral_filter_breakdown": top.viral_filter_breakdown or {},
+                    "why_slot1_won_editorially": top.why_slot1_won_editorially,
+                    "breakdown": top.score_breakdown,
+                    "all_candidates": [
+                        {
+                            "rank": i + 1,
+                            "id": s.event.id,
+                            "title": s.event.title[:60],
+                            "category": s.event.category,
+                            "score": s.score,
+                            "cluster_size": s.event.cluster_size,
+                            "has_japan_view": s.event.japan_view is not None,
+                            "has_global_view": s.event.global_view is not None,
+                            "source": s.event.source,
+                            "primary_tier": s.primary_tier,
+                            "primary_bucket": s.primary_bucket,
+                            "editorial_tags": s.editorial_tags,
+                            "editorial_reason": s.editorial_reason,
+                            "tags_multi": s.tags_multi,
+                            "appraisal_type": s.appraisal_type,
+                            "appraisal_hook": s.appraisal_hook,
+                            "appraisal_reason": s.appraisal_reason,
+                            "appraisal_cautions": s.appraisal_cautions,
+                            "editorial_appraisal_score": s.editorial_appraisal_score,
+                            # Rolling window transparency
+                            "story_fingerprint": s.story_fingerprint,
+                            "freshness_decay": s.freshness_decay,
+                            "from_recent_pool": s.from_recent_pool,
+                            "pool_created_at": s.pool_created_at,
+                            # Pass C: Viral Filter
+                            "viral_filter_score": s.viral_filter_score,
+                            "viral_filter_breakdown": s.viral_filter_breakdown or {},
+                            "why_rejected_before_generation": s.why_rejected_before_generation,
+                            "why_slot1_won_editorially": s.why_slot1_won_editorially,
+                            **(
+                                {"triage_explanation": s.score_breakdown.get("triage_explanation", [])}
+                                if i < 10 else {}
+                            ),
+                            "breakdown": {
+                                k: v for k, v in s.score_breakdown.items()
+                                if k != "triage_explanation"
+                            },
+                        }
+                        for i, s in enumerate(all_ranked)
+                    ],
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
 
     # 当日公開済み件数チェック
     if day_publishes >= max_publishes:
@@ -2080,6 +2083,23 @@ def _render_av_outputs(record: JobRecord, output_dir: Path) -> dict:
     except Exception as e:
         logger.warning(f"[AV] Audio render failed: {e}")
         summary["error"] = f"audio_render_error:{e}"
+        return summary
+
+    # 全 segment が silent placeholder だった場合は TTS が機能していない環境。
+    # MP4 組み立てに進むと「無音動画」が成功扱いで保存されてしまうため、
+    # ここで明示的にエラーフラグを立て、video_generated=False のまま返す。
+    # （audio_segments が空 = そもそも生成スクリプトが空 の場合は別バグなので除外）
+    _seg_total = len(audio_segments) if audio_segments else 0
+    _ph = summary.get("placeholder_count", 0) or 0
+    if _seg_total > 0 and _ph >= _seg_total:
+        logger.error(
+            f"[AV] All {_seg_total} segment(s) are silent placeholders — "
+            "TTS is unavailable (macOS `say` not found or failing). "
+            "Aborting MP4 assembly to avoid emitting a silent video."
+        )
+        summary["error"] = (
+            f"tts_unavailable_all_silent:{_ph}/{_seg_total}_segments_were_placeholder"
+        )
         return summary
 
     if not VIDEO_RENDER_ENABLED:
@@ -2396,7 +2416,15 @@ def run_from_normalized(
             _elite_judge_client = get_judge_llm_client()
             if _elite_judge_client is not None:
                 _elite_adopted: list[ScoredEvent] = []
-                _elite_candidates = all_ranked
+                # ELITE_JUDGE_CANDIDATE_LIMIT 件に絞る。all_ranked は Viral Filter 通過後の
+                # effective_score 降順なので、上位から LIMIT 件を Elite Judge にかける。
+                # 残りは elite_judge 未評価のまま all_ranked からは除外（= 棄却扱い）する。
+                _elite_candidates = all_ranked[:ELITE_JUDGE_CANDIDATE_LIMIT]
+                if len(all_ranked) > ELITE_JUDGE_CANDIDATE_LIMIT:
+                    logger.info(
+                        f"[EliteJudge] Capping candidates to top {ELITE_JUDGE_CANDIDATE_LIMIT} "
+                        f"of {len(all_ranked)} (ELITE_JUDGE_CANDIDATE_LIMIT)"
+                    )
 
                 for _se in _elite_candidates:
                     if not budget.can_afford_elite_judge():
@@ -2405,12 +2433,29 @@ def run_from_normalized(
                         )
                         break
 
+                    # Elite Judge のプロンプトは「グローバルサウス/中東/東南アジア等」の
+                    # 非欧米視点を高く評価する。sources_en だけを渡すと
+                    # sources_by_locale = {japan, middle_east, global_south, ...}
+                    # 形式のイベントで多地域ソース名が Elite Judge に届かず、
+                    # "multipolar" / "outside_in" 軸のスコアが不当に低く出る。
+                    # sources_by_locale がある場合はそれを優先し、後方互換で
+                    # sources_jp + sources_en にフォールバックする。
+                    if _se.event.sources_by_locale:
+                        _src_names: list[str] = []
+                        _seen: set[str] = set()
+                        for _loc, _refs in _se.event.sources_by_locale.items():
+                            for _ref in _refs:
+                                if _ref.name and _ref.name not in _seen:
+                                    _src_names.append(_ref.name)
+                                    _seen.add(_ref.name)
+                    else:
+                        _src_names = [
+                            s.name for s in (_se.event.sources_jp + _se.event.sources_en)
+                        ]
                     _cluster_data = {
                         "title": _se.event.title,
                         "summary": _se.event.summary,
-                        "sources": [
-                            s.name for s in (_se.event.sources_jp + _se.event.sources_en)
-                        ],
+                        "sources": _src_names,
                     }
                     try:
                         _editor_score = evaluate_cluster_buzz(_cluster_data)
@@ -2845,12 +2890,38 @@ def run_from_normalized(
             reverse=True,
         )[:3]
 
-        record: JobRecord = JobRecord(
-            id=job_id, event_id="none", status="skipped", error="no_slots_attempted"
-        )
-        _published_event_id: str | None = None
+        # schedule.selected には slot-1 のみ入っているので、slot-2/3 を追記する。
+        # こうすることで mark_published(schedule, ev_id) が全スロットで効く。
+        # slot-1 (override_top) と top-3 が同一 ID の場合は重複させない。
+        # rank_in_candidates は「全候補中のスコア順位」を表すフィールドなので、
+        # slot 番号ではなく all_ranked 内の本来順位を使う（順位不明時は末尾扱い）。
+        _existing_ids = {e.event_id for e in schedule.selected}
+        _ranked_index = {se.event.id: i for i, se in enumerate(all_ranked)}
+        for _slot_idx, _se in enumerate(_top_3_candidates):
+            if _se.event.id in _existing_ids:
+                continue
+            _orig_rank = _ranked_index.get(_se.event.id, len(all_ranked)) + 1
+            schedule.selected.append(
+                scored_event_to_schedule_entry(_se, _orig_rank)
+            )
+            _existing_ids.add(_se.event.id)
+
+        # Per-slot 結果はすべて _slot_records に集約する。
+        # ループ後の集約変数:
+        #   _slot1_record       — slot-1 の結果（archive 判定 / run_summary の基底）
+        #   _completed_count    — 完了スロット数（publish カウンタ更新に使う）
+        #   _published_event_ids — 完了したスロットの event_id 一覧（追加観測用）
+        # 旧実装は record / _published_event_id / _av_summary を「最後に完了したスロット」
+        # で上書きしていたため、slot-1 が rescue されると slot-2/3 の値が混ざり、
+        # レポートの「slot-1 の状態」が崩れていた。
+        _slot_records: list[JobRecord] = []
+        _published_event_id: str | None = None  # slot-1 のみが書き込む
+        _published_event_ids: list[str] = []
         _rescue_triggered = False
         authority_pair: list[str] = []
+        # AV render: slot-1 の結果を _av_summary に固定し、全スロット分は _slot_av_summaries。
+        _av_summary: dict | None = None
+        _slot_av_summaries: list[dict] = []
 
         for _slot_idx, _slot_candidate in enumerate(_top_3_candidates):
             _slot_num = _slot_idx + 1
@@ -2886,7 +2957,7 @@ def run_from_normalized(
                     if _slot_idx == 0:
                         _write_judge_rescue(_slot_candidate, _slot_judge, output_dir)
                         _rescue_triggered = True
-                    record = JobRecord(
+                    _rescue_record = JobRecord(
                         id=_slot_job_id,
                         event_id="none",
                         status="skipped",
@@ -2896,7 +2967,8 @@ def run_from_normalized(
                             f"divergence={_slot_judge.divergence_score:.1f}"
                         ),
                     )
-                    save_job(db_path, record)
+                    save_job(db_path, _rescue_record)
+                    _slot_records.append(_rescue_record)
                     continue
 
             # ── Authority Pair ────────────────────────────────────────────────
@@ -2931,20 +3003,31 @@ def run_from_normalized(
                 authority_pair = _slot_authority_pair
 
             # ── 台本生成 (all_ranked を渡して再計算を防ぐ) ───────────────────
-            record = _generate_outputs(
+            # day_publishes は per-slot で DB から再取得する。
+            # ループ前にキャプチャした stats を使い回すと、slot-1 で
+            # increment_daily_publish_count しても slot-2/3 の MAX_PUBLISHES_PER_DAY
+            # チェックに反映されず、上限を超えて公開してしまうため。
+            _live_publishes = get_daily_stats(db_path)["publish_count"]
+            # slot-1 のみが triage_scores.json を書き出す。後続スロットでは
+            # slot-1 の選定根拠ファイルを上書きしないよう抑制する。
+            _slot_record = _generate_outputs(
                 events, output_dir, db_path, _slot_job_id,
                 budget=budget,
-                day_publishes=stats["publish_count"],
+                day_publishes=_live_publishes,
                 max_publishes=MAX_PUBLISHES_PER_DAY,
                 override_top=_slot_candidate,
                 all_ranked=all_ranked,
                 authority_pair=_slot_authority_pair,
+                write_triage_scores=(_slot_idx == 0),
             )
+            _slot_records.append(_slot_record)
 
             # ── 配信済みマーク ────────────────────────────────────────────────
-            if record.status == "completed":
-                _ev_id = record.event_id
-                _published_event_id = _ev_id
+            if _slot_record.status == "completed":
+                _ev_id = _slot_record.event_id
+                _published_event_ids.append(_ev_id)
+                if _slot_idx == 0:
+                    _published_event_id = _ev_id
                 schedule = mark_published(schedule, _ev_id)
                 _save_daily_schedule(schedule, output_dir)
                 try:
@@ -2952,6 +3035,22 @@ def run_from_normalized(
                     logger.info(f"[Pool] Slot-{_slot_num} event {_ev_id} marked published.")
                 except Exception as pool_err:
                     logger.warning(f"[Pool] Slot-{_slot_num} failed to mark {_ev_id} published: {pool_err}")
+
+                # ── AV レンダリング (per-slot) ─────────────────────────────
+                # slot-1〜3 すべて WAV / review MP4 を作成する。
+                # AUDIO_RENDER_ENABLED=False の場合 _render_av_outputs は no-op
+                # （summary に audio_generated=False を返す）。
+                _slot_av = _render_av_outputs(_slot_record, output_dir)
+                _slot_av["slot"] = _slot_num
+                _slot_av["event_id"] = _ev_id
+                _slot_av_summaries.append(_slot_av)
+                if _slot_av.get("audio_generated") or _slot_av.get("error"):
+                    save_job(db_path, _slot_record)
+                # _av_summary は slot-1 の結果のみを表す（旧実装は最初に completed
+                # したスロットだったが、slot-1 が rescue/失敗のときに slot-2/3 の
+                # 値が混じり、レポートが「slot-1 の AV」と一致しなくなっていた）。
+                if _slot_idx == 0:
+                    _av_summary = _slot_av
 
         # Slot-1 候補を downstream の報告・監査変数として保持
         _candidate_to_generate = _top_3_candidates[0] if _top_3_candidates else _candidate_to_generate
@@ -2961,9 +3060,27 @@ def run_from_normalized(
             and _final_selected_slot1_id != _scheduled_slot1_id
         )
 
+        # ── Per-slot 結果の集約 ────────────────────────────────────────────
+        # record 変数は「slot-1 の結果」を表すように固定する。
+        # 旧実装はループ末尾の値（最後のスロット）を使っていたため、slot-1 が
+        # 成功でも slot-3 が失敗すると run_summary 全体が failed 扱いになっていた。
+        record: JobRecord
+        if _slot_records:
+            record = _slot_records[0]
+        else:
+            record = JobRecord(
+                id=job_id, event_id="none", status="skipped", error="no_slots_attempted"
+            )
+        _completed_count = sum(1 for r in _slot_records if r.status == "completed")
+        # archive 判定: 全スロット中に1件でも処理完了相当があれば archive する。
+        # （slot-1 が失敗でも slot-2/3 が completed なら成果物は残っている）
+        _any_archivable = any(
+            r.status in ("completed", "skipped") for r in _slot_records
+        ) or not _slot_records  # スロット未到達も archive 対象（既存挙動を維持）
+
         # ── Job 成功後: batch を archive へ移動 ─────────────────────────────
         archived_count = 0
-        if record.status in ("completed", "skipped"):
+        if _any_archivable:
             # skipped (daily limit) も archive 済み = 処理完了とみなす
             try:
                 archived_count = _archive_batch(batch, archive_dir)
@@ -3006,12 +3123,14 @@ def run_from_normalized(
             quota_fallback_candidate_title=_quota_fallback_candidate_title,
             model_resolution=_judge_model_resolution,
         )
-        # ── Audio & Video Render (Pass D-2) ─────────────────────────────────
-        _av_summary: dict | None = None
-        if record.status == "completed":
-            _av_summary = _render_av_outputs(record, output_dir)
-            if _av_summary.get("audio_generated") or _av_summary.get("error"):
-                save_job(db_path, record)
+        # ── Audio & Video Render ────────────────────────────────────────────
+        # NOTE: per-slot AV レンダリングはループ内で完了済み（_slot_av_summaries）。
+        # _av_summary は slot-1 由来。下流レポートには slot-1 の AV を表示しつつ、
+        # per_slot に全スロット分を添える。元の _av_summary dict を破壊的に
+        # 書き換えると、_slot_av_summaries[0] と同一参照のままで JSON が紛らわしく
+        # なるため、新しい dict にコピーして per_slot を追加する。
+        if _av_summary is not None and _slot_av_summaries:
+            _av_summary = {**_av_summary, "per_slot": _slot_av_summaries}
 
         _write_debug_artifacts(output_dir, run_stats, schedule, rolling_window_stats)
         _write_discovery_audit_safe(all_ranked_appraised, run_stats, output_dir, schedule)
@@ -3059,9 +3178,12 @@ def run_from_normalized(
             av_render_summary=_av_summary,
         )
 
+        # publish カウンタは完了スロット数で集計する。
+        # 旧実装は record (= 最後のスロット) のみ +1 だったため、3件公開しても
+        # ログ上は +1 しかカウントされず観測値が不正確だった。
         budget.log_summary(
             day_runs=stats_after["run_count"],
-            day_publishes=stats_after["publish_count"] + (1 if record.status == "completed" else 0),
+            day_publishes=stats_after["publish_count"] + _completed_count,
         )
         return record
 
