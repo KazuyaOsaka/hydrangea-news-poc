@@ -1,7 +1,13 @@
 from __future__ import annotations
 
 from src.shared.logger import get_logger
-from src.shared.models import NewsEvent, VideoPayload, VideoScene, VideoScript
+from src.shared.models import (
+    AnalysisResult,
+    NewsEvent,
+    VideoPayload,
+    VideoScene,
+    VideoScript,
+)
 
 logger = get_logger(__name__)
 
@@ -346,10 +352,19 @@ def _make_source_grounding(event: NewsEvent, heading: str) -> list[str]:
     return regions or ["japan"]
 
 
-def write_video_payload(event: NewsEvent, script: VideoScript) -> VideoPayload:
+def write_video_payload(
+    event: NewsEvent,
+    script: VideoScript,
+    *,
+    analysis_result: "AnalysisResult | None" = None,
+) -> VideoPayload:
     """
     動画制作用JSONペイロードを生成する（映像設計書付き）。
     各ScriptSectionをVideoSceneにマッピングし、visual brief を付与する。
+
+    analysis_result が渡された場合は visual_mood_tags / selected_perspective /
+    selected_duration_profile を metadata に転送する（Phase 2 で具体的な
+    ビジュアル選定に利用される情報の前段転送のみ。具体ビジュアル選定は手動 PoC で行う）。
     """
     logger.info(f"Generating video payload for event [{event.id}]")
 
@@ -450,6 +465,17 @@ def write_video_payload(event: NewsEvent, script: VideoScript) -> VideoPayload:
     if script.hook_variants:
         director_meta["hook_variants"] = script.hook_variants
 
+    # ── 分析レイヤー由来のメタデータ転送（Phase 1 はタグ転送のみ） ───────────────
+    # 具体的なビジュアル選定は Phase 2 の手動 PoC で詰めるため、ここでは
+    # AnalysisResult 由来の情報をそのまま metadata に乗せる（破壊変更なし）。
+    analysis_meta: dict = {}
+    if analysis_result is not None:
+        analysis_meta["analysis_layer_enabled"] = True
+        analysis_meta["selected_perspective"] = analysis_result.selected_perspective.axis
+        analysis_meta["selected_duration_profile"] = analysis_result.selected_duration_profile
+        analysis_meta["visual_mood_tags"] = list(analysis_result.visual_mood_tags or [])
+        analysis_meta["analysis_version"] = analysis_result.analysis_version
+
     payload = VideoPayload(
         event_id=event.id,
         title=event.title,
@@ -474,6 +500,8 @@ def write_video_payload(event: NewsEvent, script: VideoScript) -> VideoPayload:
             **title_meta,
             # Director メタデータ（SEO / pattern / loop）
             **director_meta,
+            # 分析レイヤー由来（Phase 1 はタグ転送のみ）
+            **analysis_meta,
         },
     )
     logger.info(

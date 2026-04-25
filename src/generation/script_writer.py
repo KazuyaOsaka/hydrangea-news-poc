@@ -11,7 +11,15 @@ from src.llm.base import LLMClient
 from src.llm.factory import get_script_llm_client
 from src.shared.config import LLM_PROVIDER
 from src.shared.logger import get_logger
-from src.shared.models import NewsEvent, ScoredEvent, ScriptSection, VideoScript
+from src.shared.models import (
+    AnalysisResult,
+    ChannelConfig,
+    Insight,
+    NewsEvent,
+    ScoredEvent,
+    ScriptSection,
+    VideoScript,
+)
 
 if TYPE_CHECKING:
     from src.budget import BudgetTracker
@@ -980,5 +988,478 @@ def write_script(
     # （LLM 経路では script.selected_pattern が入る / fallback 経路では None → 従来挙動）
     title_layer = generate_title_layer(
         event, triage_result, selected_pattern=script.selected_pattern
+    )
+    return script.model_copy(update={"title_layer": title_layer})
+
+
+# ── 後方互換エイリアス（Batch 5 引継ぎ仕様） ──────────────────────────────────
+# main.py / 呼び出し側から「旧ルート」と「新ルート（generate_script_with_analysis）」を
+# 明示的に書き分けられるよう、write_script を generate_script_legacy として再公開する。
+# シンボル追加のみで、既存呼び出しは write_script のままで動作する（破壊変更なし）。
+generate_script_legacy = write_script
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 分析レイヤー連携ルート（Batch 5）
+#
+# AnalysisResult を入力に受け取り、insights を Hook/Setup/Twist/Punchline に
+# 配分して台本生成する。情報密度型のみを許可し、扇動 / 物申す系 YouTuber 構文 /
+# 抽象煽り Hook を禁止する。失敗時は legacy ルートに自動フォールバック。
+# ─────────────────────────────────────────────────────────────────────────────
+
+# 設計書 Section 6.2 の 6 プロファイル → 4 ブロックの目安秒数。
+# 既存の _DURATIONS（合計 80s）と整合させつつ、duration_profile ごとに
+# 全体時間と各ブロックの比率を変える（厳密な秒数より「尺感」のシグナル）。
+# Phase 1 では _CHAR_BOUNDS を流用するため、estimated_duration は 80s 前後に着地する。
+_ANALYSIS_DURATION_PROFILES: dict[str, dict[str, int]] = {
+    "breaking_shock_60s":   {"hook": 4, "setup": 12, "twist": 28, "punchline": 16, "target_total_sec":  60},
+    "media_critique_80s":   {"hook": 4, "setup": 16, "twist": 40, "punchline": 20, "target_total_sec":  80},
+    "anti_sontaku_90s":     {"hook": 4, "setup": 18, "twist": 46, "punchline": 22, "target_total_sec":  90},
+    "paradigm_shift_100s":  {"hook": 4, "setup": 20, "twist": 52, "punchline": 24, "target_total_sec": 100},
+    "cultural_divide_100s": {"hook": 4, "setup": 20, "twist": 52, "punchline": 24, "target_total_sec": 100},
+    "geopolitics_120s":     {"hook": 4, "setup": 24, "twist": 64, "punchline": 28, "target_total_sec": 120},
+}
+
+# 観点軸 → プロンプトに渡す推奨パターンのヒント（情報密度型のみ）。
+# LLM の最終決定が優先されるが、パターン選択の出発点として渡す。
+_AXIS_TO_PATTERN_HINT: dict[str, str] = {
+    "silence_gap":        "Breaking Shock",
+    "framing_inversion":  "Geopolitics",
+    "hidden_stakes":      "Paradigm Shift",
+    "cultural_blindspot": "Cultural Divide",
+}
+
+# selected_pattern として許容するのは「情報密度型 4 種」のみ。
+# Media Critique / Anti-Sontaku は Phase 1 では禁止（仕様）。
+_INFO_DENSITY_PATTERNS: tuple[str, ...] = (
+    "Breaking Shock",
+    "Geopolitics",
+    "Paradigm Shift",
+    "Cultural Divide",
+)
+
+
+class ScriptWithAnalysisDraft(BaseModel):
+    """分析レイヤー連携ルートの LLM 出力スキーマ。
+
+    既存 `ScriptDraft` から `target_enemy` を排除し、`selected_pattern` は
+    情報密度型 4 種に制限する。`thumbnail_text` / `seo_keywords` / `peaks` は
+    legacy と同じ形式（VideoPayload metadata で同様に展開される）。
+    """
+
+    director_thought: str = Field(description="選んだ pattern の理由・配分方針（200 字以内）")
+    selected_pattern: str = Field(
+        description="Breaking Shock / Geopolitics / Paradigm Shift / Cultural Divide のいずれか"
+    )
+    loop_mechanism: str = Field(description="loop-1 / loop-2 / loop-3")
+    seo_keywords: dict[str, Any] = Field(
+        default_factory=dict,
+        description="{'primary': '...', 'secondary': ['...', '...']}",
+    )
+    thumbnail_text: dict[str, str] = Field(
+        default_factory=dict,
+        description="{'main': '...', 'sub': '...'}",
+    )
+    hook_variants: list[dict[str, str]] = Field(
+        description="3 案。各 18 字以内。hook_variants[0] が VideoScript.hook に採用される",
+    )
+    setup: str = Field(description="60〜90 字")
+    twist: str = Field(description="150〜220 字")
+    punchline: str = Field(description="70〜110 字")
+    peaks: dict[str, str] = Field(default_factory=dict)
+
+
+def _format_insights_for_prompt(insights: list[Insight]) -> str:
+    """importance 降順で並び替えた insights を 1 行 1 件の整形済み文字列にする。"""
+    if not insights:
+        return "(no insights)"
+    sorted_ins = sorted(insights, key=lambda i: i.importance, reverse=True)
+    lines: list[str] = []
+    for idx, ins in enumerate(sorted_ins, start=1):
+        refs = ",".join(ins.evidence_refs) if ins.evidence_refs else "-"
+        # 改行はプロンプト整形を壊すので潰す
+        text = (ins.text or "").replace("\n", " ").strip()
+        lines.append(f"{idx}. [{ins.importance:.2f}] {text}  (evidence: {refs})")
+    return "\n".join(lines)
+
+
+def _resolve_duration_profile(
+    profile_id: str, channel_config: Optional[ChannelConfig]
+) -> tuple[str, dict[str, int]]:
+    """profile_id を解決し、(profile_id, profile_config dict) を返す。
+
+    未知の ID は ChannelConfig.duration_profiles の先頭、またはデフォルト
+    `anti_sontaku_90s` にフォールバックする。
+    """
+    if profile_id in _ANALYSIS_DURATION_PROFILES:
+        return profile_id, _ANALYSIS_DURATION_PROFILES[profile_id]
+    # ChannelConfig の duration_profiles 先頭にフォールバック
+    if channel_config and channel_config.duration_profiles:
+        head = channel_config.duration_profiles[0]
+        if head in _ANALYSIS_DURATION_PROFILES:
+            logger.warning(
+                f"[ScriptWithAnalysis] Unknown duration_profile {profile_id!r}; "
+                f"falling back to ChannelConfig head {head!r}."
+            )
+            return head, _ANALYSIS_DURATION_PROFILES[head]
+    fallback = "anti_sontaku_90s"
+    logger.warning(
+        f"[ScriptWithAnalysis] Unknown duration_profile {profile_id!r}; "
+        f"falling back to {fallback!r}."
+    )
+    return fallback, _ANALYSIS_DURATION_PROFILES[fallback]
+
+
+def _build_script_with_analysis_prompt(
+    scored_event: ScoredEvent,
+    analysis_result: AnalysisResult,
+    channel_config: Optional[ChannelConfig],
+) -> tuple[str, str, dict[str, int]]:
+    """LLM プロンプトと、(profile_id, profile_config) を返す。
+
+    Returns:
+        prompt: フォーマット済みプロンプト（load_prompt のテンプレートを .format した結果）
+        profile_id: 実際に使われた duration_profile ID
+        profile_config: ブロックごとの推奨秒数
+    """
+    from src.analysis.prompt_loader import load_prompt
+
+    profile_id, profile_config = _resolve_duration_profile(
+        analysis_result.selected_duration_profile, channel_config
+    )
+    target_total_sec = profile_config["target_total_sec"]
+    target_total_chars = int(target_total_sec * _JP_CHARS_PER_SEC)
+
+    perspective = analysis_result.selected_perspective
+    multi = analysis_result.multi_angle
+    pattern_hint = _AXIS_TO_PATTERN_HINT.get(perspective.axis, "Geopolitics")
+
+    template = load_prompt(
+        channel_config.channel_id if channel_config else "geo_lens",
+        "script_with_analysis",
+    )
+    prompt = template.format(
+        event_id=scored_event.event.id,
+        event_title=scored_event.event.title or "",
+        event_summary=(scored_event.event.summary or "").replace("\n", " "),
+        perspective_axis=perspective.axis,
+        perspective_reasoning=(perspective.reasoning or "").replace("\n", " "),
+        multi_angle_geopolitical=(multi.geopolitical or "").replace("\n", " "),
+        multi_angle_political_intent=(multi.political_intent or "").replace("\n", " "),
+        multi_angle_economic_impact=(multi.economic_impact or "").replace("\n", " "),
+        multi_angle_cultural_context=(multi.cultural_context or "").replace("\n", " "),
+        multi_angle_media_divergence=(multi.media_divergence or "").replace("\n", " "),
+        insights_block=_format_insights_for_prompt(analysis_result.insights),
+        duration_profile=profile_id,
+        target_total_chars=target_total_chars,
+        selected_pattern_hint=pattern_hint,
+    )
+    return prompt, profile_id, profile_config
+
+
+def _validate_analysis_draft_chars(draft: ScriptWithAnalysisDraft) -> list[_CharViolation]:
+    """ScriptWithAnalysisDraft 用の文字数バリデーション（_CHAR_BOUNDS を流用）。"""
+    violations: list[_CharViolation] = []
+    for field, (lo, hi) in _CHAR_BOUNDS.items():
+        if field == "hook":
+            text = draft.hook_variants[0].get("text", "") if draft.hook_variants else ""
+        else:
+            text = getattr(draft, field, "")
+        n = _count_chars(text)
+        if not (lo <= n <= hi):
+            violations.append(_CharViolation(field, n, lo, hi))
+    return violations
+
+
+def _build_analysis_correction_prompt(
+    base_prompt: str,
+    draft: ScriptWithAnalysisDraft,
+    violations: list[_CharViolation],
+) -> str:
+    """文字数違反を具体的に示した修正リクエスト（新ルート版）。"""
+    lines = ["以下のフィールドが文字数規定を逸脱しています。該当箇所のみ修正し、JSON をそのまま再出力してください。"]
+    lines += [v.correction_message() for v in violations]
+    lines += [
+        "",
+        "【修正ルール】",
+        "- 違反フィールド以外は変更しないこと。",
+        "- selected_pattern は元のまま維持すること（Media Critique / Anti-Sontaku 等への変更禁止）。",
+        "- JSON のみを返すこと（前置き・説明不要）。",
+        "",
+        "## 前回の出力（参照用）",
+        "```json",
+        json.dumps(draft.model_dump(), ensure_ascii=False, indent=2),
+        "```",
+    ]
+    return f"{base_prompt}\n\n---\n## 🔁 修正指示\n" + "\n".join(lines)
+
+
+def _analysis_draft_to_video_script(
+    draft: ScriptWithAnalysisDraft,
+    event: NewsEvent,
+    profile_id: str,
+    profile_config: dict[str, int],
+) -> VideoScript:
+    """ScriptWithAnalysisDraft → VideoScript。
+
+    duration_profile に応じてブロックごとの duration_sec を割り当てる。
+    estimated_duration_sec が hard_max を超える場合は legacy と同じ
+    `_compress_sections` で詰める。
+    """
+    hook_text = ""
+    if draft.hook_variants:
+        hook_text = draft.hook_variants[0].get("text", "")
+    if not hook_text:
+        hook_text = "今、世界が動いています。"
+
+    sections = [
+        ScriptSection(heading="hook",      body=hook_text,       duration_sec=profile_config["hook"]),
+        ScriptSection(heading="setup",     body=draft.setup,     duration_sec=profile_config["setup"]),
+        ScriptSection(heading="twist",     body=draft.twist,     duration_sec=profile_config["twist"]),
+        ScriptSection(heading="punchline", body=draft.punchline, duration_sec=profile_config["punchline"]),
+    ]
+
+    all_body = " ".join(s.body for s in sections)
+    estimated = _estimate_duration_sec(all_body)
+    profile = PLATFORM_PROFILES["shared"]
+
+    if estimated > profile["max_sec"]:
+        sections, estimated = _compress_sections(sections, profile["max_sec"], estimated)
+
+    if estimated < profile["hard_min_sec"]:
+        logger.warning(
+            f"[ScriptWithAnalysis] Estimated {estimated}s < hard_min {profile['hard_min_sec']}s "
+            f"(profile={profile_id})"
+        )
+    elif estimated > profile["hard_max_sec"]:
+        logger.warning(
+            f"[ScriptWithAnalysis] Estimated {estimated}s > hard_max {profile['hard_max_sec']}s "
+            f"(profile={profile_id})"
+        )
+
+    return VideoScript(
+        event_id=event.id,
+        title=event.title,
+        intro="",
+        sections=sections,
+        outro="",
+        total_duration_sec=sum(s.duration_sec for s in sections),
+        target_duration_sec=profile["target_sec"],
+        estimated_duration_sec=estimated,
+        platform_profile="shared",
+        director_thought=draft.director_thought,
+        target_enemy=None,  # 仕様: 仮想敵濫用を抑止するため新ルートでは付与しない
+        selected_pattern=draft.selected_pattern,
+        loop_mechanism=draft.loop_mechanism,
+        seo_keywords=draft.seo_keywords or None,
+        thumbnail_text_variants=draft.thumbnail_text or None,
+        hook_variants=draft.hook_variants,
+        peaks=draft.peaks or None,
+    )
+
+
+def _build_script_with_analysis_from_llm(
+    client: LLMClient,
+    scored_event: ScoredEvent,
+    analysis_result: AnalysisResult,
+    channel_config: Optional[ChannelConfig],
+) -> tuple[VideoScript, int, str]:
+    """新ルート LLM 呼び出し本体（リトライ・文字数バリデーション込み）。
+
+    Returns: (VideoScript, total_api_retries, profile_id)
+    """
+    from src.llm.retry import call_with_retry
+
+    base_prompt, profile_id, profile_config = _build_script_with_analysis_prompt(
+        scored_event, analysis_result, channel_config
+    )
+    current_prompt = base_prompt
+    total_api_retries = 0
+    last_draft: ScriptWithAnalysisDraft | None = None
+
+    try:
+        for validation_attempt in range(_MAX_VALIDATION_RETRIES + 1):
+            raw, api_retry_count = call_with_retry(
+                lambda: client.generate(current_prompt), role="generation"
+            )
+            total_api_retries += api_retry_count
+
+            if not raw or not raw.strip():
+                raise ValueError("LLM returned None or empty string for analysis-route script")
+
+            data = _parse_raw_json(raw)
+
+            # 仕様: 情報密度型 4 パターンのみ許可。違反時は同じプロンプトでリトライ。
+            sel = (data.get("selected_pattern") or "").strip()
+            if sel and sel not in _INFO_DENSITY_PATTERNS:
+                logger.warning(
+                    f"[ScriptWithAnalysis] forbidden pattern '{sel}' returned; "
+                    f"retrying same prompt to coerce to info-density set."
+                )
+                # selected_pattern が違反した場合、強制的にヒントへ寄せる修正指示。
+                pattern_axis = analysis_result.selected_perspective.axis
+                hint = _AXIS_TO_PATTERN_HINT.get(pattern_axis, "Geopolitics")
+                current_prompt = (
+                    f"{base_prompt}\n\n---\n## 🔁 修正指示\n"
+                    f"前回の selected_pattern={sel!r} は許可されていません。\n"
+                    f"必ず Breaking Shock / Geopolitics / Paradigm Shift / Cultural Divide のいずれかに変更し、\n"
+                    f"観点軸 {pattern_axis} に対応する推奨パターンは {hint} です。\n"
+                    "JSON 全体をそのまま再出力してください（前置き・説明不要）。"
+                )
+                continue
+
+            try:
+                draft = ScriptWithAnalysisDraft(**data)
+            except Exception as exc:
+                raise ValueError(f"ScriptWithAnalysisDraft parse error: {exc}") from exc
+            last_draft = draft
+
+            # ロギング（ディレクター思考 / pattern / loop）
+            if draft.director_thought:
+                logger.info(
+                    f"[ScriptWithAnalysis] director_thought "
+                    f"(attempt {validation_attempt + 1}): {draft.director_thought[:200]}"
+                )
+            logger.info(
+                f"[ScriptWithAnalysis] pattern={draft.selected_pattern!r} "
+                f"loop={draft.loop_mechanism!r} profile={profile_id!r}"
+            )
+
+            violations = _validate_analysis_draft_chars(draft)
+            if not violations:
+                hook_text = draft.hook_variants[0].get("text", "") if draft.hook_variants else ""
+                logger.info(
+                    f"[ScriptWithAnalysis] char validation passed "
+                    f"(hook={_count_chars(hook_text)}, setup={_count_chars(draft.setup)}, "
+                    f"twist={_count_chars(draft.twist)}, punchline={_count_chars(draft.punchline)})"
+                )
+                break
+
+            viol_summary = ", ".join(f"{v.field}={v.actual}字" for v in violations)
+            if validation_attempt < _MAX_VALIDATION_RETRIES:
+                logger.warning(
+                    f"[ScriptWithAnalysis] char validation FAILED "
+                    f"(attempt {validation_attempt + 1}/{_MAX_VALIDATION_RETRIES}): "
+                    f"{viol_summary} — retrying with correction prompt"
+                )
+                current_prompt = _build_analysis_correction_prompt(
+                    base_prompt, draft, violations
+                )
+            else:
+                logger.warning(
+                    f"[ScriptWithAnalysis] 文字数調整失敗、そのまま採用 — "
+                    f"{_MAX_VALIDATION_RETRIES} retries exhausted ({viol_summary})."
+                )
+                break
+
+    except Exception as exc:
+        if last_draft is not None:
+            logger.warning(
+                f"[ScriptWithAnalysis] 文字数調整失敗、そのまま採用 — "
+                f"exception during validation loop: {exc}. Falling back to last draft."
+            )
+        else:
+            raise
+
+    assert last_draft is not None
+    script = _analysis_draft_to_video_script(
+        last_draft, scored_event.event, profile_id, profile_config
+    )
+    return script, total_api_retries, profile_id
+
+
+def generate_script_with_analysis(
+    scored_event: ScoredEvent,
+    analysis_result: AnalysisResult,
+    channel_config: Optional[ChannelConfig] = None,
+    *,
+    budget: "BudgetTracker | None" = None,
+    authority_pair: list[str] | None = None,
+) -> VideoScript:
+    """分析レイヤー連携ルートのエントリポイント（Batch 5）。
+
+    AnalysisResult を入力に台本を生成する。情報密度型 4 パターン
+    （Breaking Shock / Geopolitics / Paradigm Shift / Cultural Divide）のみ許可し、
+    扇動・物申す系 YouTuber 構文・抽象煽り Hook を禁止する。
+
+    LLM 呼び出しに失敗した場合は legacy ルート（write_script）に自動フォールバックする。
+    生成された VideoScript には title_layer も付与される（legacy と同様）。
+
+    Args:
+        scored_event: 既存パイプラインのスコア済みイベント。
+        analysis_result: 分析レイヤー出力（main.py で slot_1_event.analysis_result に格納済み）。
+        channel_config: 任意。channel_id とプロンプトディレクトリ解決に使用。
+        budget: 任意。LLM 呼び出し予算管理。
+        authority_pair: 任意。新ルートでは現状未使用（legacy フォールバック時のみ伝播）。
+
+    Returns:
+        VideoScript: title_layer 付き。
+    """
+    event = scored_event.event
+    logger.info(
+        f"[ScriptWithAnalysis] Generating script for event=[{event.id}] "
+        f"perspective={analysis_result.selected_perspective.axis} "
+        f"insights={len(analysis_result.insights)} "
+        f"profile={analysis_result.selected_duration_profile}"
+    )
+
+    _used_fallback = False
+    _fallback_reason: str | None = None
+    _retry_count = 0
+    script: VideoScript | None = None
+
+    if budget is not None and not budget.can_use_script_llm():
+        budget.skip("script_llm")
+        _used_fallback = True
+        _fallback_reason = "budget_exhausted"
+    else:
+        client = get_script_llm_client()
+        if client is None:
+            _used_fallback = True
+            _fallback_reason = "no_client"
+        else:
+            try:
+                script, _retry_count, _profile_id = _build_script_with_analysis_from_llm(
+                    client, scored_event, analysis_result, channel_config
+                )
+                if budget is not None:
+                    budget.record_call("script")
+                logger.info(
+                    f"[ScriptWithAnalysis] Generated via {LLM_PROVIDER}: "
+                    f"{len(script.sections)} sections, total={script.total_duration_sec}s, "
+                    f"profile={_profile_id}, retries={_retry_count}"
+                )
+            except Exception as e:
+                logger.warning(
+                    f"[ScriptWithAnalysis] {LLM_PROVIDER} generation failed "
+                    f"(retries={_retry_count}); falling back to legacy route: "
+                    f"{type(e).__name__}: {e}"
+                )
+                _used_fallback = True
+                _fallback_reason = f"llm_error:{type(e).__name__}"
+
+    if _used_fallback or script is None:
+        logger.info(
+            f"[ScriptWithAnalysis] Falling back to legacy route "
+            f"(reason={_fallback_reason})."
+        )
+        return generate_script_legacy(
+            event,
+            triage_result=scored_event,
+            budget=budget,
+            authority_pair=authority_pair,
+        )
+
+    if not _validate_script(script):
+        raise ValueError(
+            f"[ScriptWithAnalysis] empty_script: produced empty sections "
+            f"for event_id={event.id}."
+        )
+
+    if budget is not None:
+        budget.record_generation_outcome("script", _used_fallback, _fallback_reason, _retry_count)
+
+    title_layer = generate_title_layer(
+        event, scored_event, selected_pattern=script.selected_pattern
     )
     return script.model_copy(update={"title_layer": title_layer})

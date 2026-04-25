@@ -21,7 +21,7 @@ from pathlib import Path
 from src.budget import BudgetTracker
 from src.generation.article_writer import write_article
 from src.generation.evidence_writer import write_evidence
-from src.generation.script_writer import write_script
+from src.generation.script_writer import generate_script_with_analysis, write_script
 from src.generation.video_payload_writer import write_video_payload
 from src.ingestion.debug_reports import (
     write_cross_lang_merge_report,
@@ -1944,7 +1944,27 @@ def _generate_outputs(
         record._triage_source_counts = triage_source_counts  # type: ignore[attr-defined]
         return record
     try:
-        script = write_script(event, triage_result=top, budget=budget, authority_pair=authority_pair)
+        # 分析レイヤー有効時は AnalysisResult を入力に新ルートで台本生成。
+        # analysis_result が None（フィーチャーフラグ off / 分析失敗時）は従来ルート。
+        if top.analysis_result is not None:
+            try:
+                from src.shared.models import ChannelConfig as _ChannelConfig
+                _cc = _ChannelConfig.load(top.channel_id or "geo_lens")
+            except Exception as _cc_err:
+                logger.warning(
+                    f"[ScriptWithAnalysis] ChannelConfig load failed for "
+                    f"channel_id={top.channel_id!r}: {_cc_err}; passing None."
+                )
+                _cc = None
+            script = generate_script_with_analysis(
+                top,
+                top.analysis_result,
+                _cc,
+                budget=budget,
+                authority_pair=authority_pair,
+            )
+        else:
+            script = write_script(event, triage_result=top, budget=budget, authority_pair=authority_pair)
     except Exception as _script_err:
         logger.error(f"event_id={event.id}: Script generation failed — {type(_script_err).__name__}: {_script_err}")
         record = JobRecord(
@@ -1981,7 +2001,7 @@ def _generate_outputs(
 
     # 5. 動画制作用JSON生成
     try:
-        payload = write_video_payload(event, script)
+        payload = write_video_payload(event, script, analysis_result=top.analysis_result)
         payload_path = output_dir / f"{event.id}_video_payload.json"
         payload_path.write_text(payload.model_dump_json(indent=2), encoding="utf-8")
         logger.info(f"Video payload saved: {payload_path}")
