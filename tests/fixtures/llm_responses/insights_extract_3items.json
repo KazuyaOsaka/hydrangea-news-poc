@@ -1,0 +1,19 @@
+{
+  "insights": [
+    {
+      "text": "世界の海上原油輸送の20%が通るホルムズ海峡を、人口9000万人のイランが事実上の通行権として握っている。これは2025年のOPEC+調整能力の崩壊と直結している。",
+      "importance": 0.95,
+      "evidence_refs": ["https://en.example.com/0", "https://en.example.com/2"]
+    },
+    {
+      "text": "日本の原油輸入の80%超が同海峡経由。短期封鎖でブレント先物が10〜15%上振れすれば INPEX や ENEOS の四半期決算に直接的な打撃が波及する。",
+      "importance": 0.9,
+      "evidence_refs": ["https://en.example.com/1"]
+    },
+    {
+      "text": "イランは2019年にも同様の威嚇を行ったが実封鎖は行わなかった。中国・サウジ関係正常化という新たな構造的拘束により、再封鎖の地政学的コストはさらに高い。",
+      "importance": 0.85,
+      "evidence_refs": ["https://en.example.com/0"]
+    }
+  ]
+}
