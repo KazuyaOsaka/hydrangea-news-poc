@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import uuid
 from datetime import datetime, timezone
@@ -2879,8 +2880,71 @@ def run_from_normalized(
                 )
                 return _fg_skip
 
+        # ── 分析レイヤー（ANALYSIS_LAYER_ENABLED=true 時のみ） ──────────────────
+        # 設計書 Section 4.2 のフロー: Recency Guard → 観点抽出 → LLM 観点選定/検証
+        # → 多角的分析 → 洞察抽出 → 動画尺プロファイル選定。
+        # 失敗時は analysis_result=None のまま既存ルートにフォールバックする。
+        # ANALYSIS_LAYER_ENABLED=false 時はこのブロックを丸ごとスキップし、
+        # 従来の Top-3 ループ挙動を完全に維持する。
+        _analysis_channel_id: str | None = None
+        if os.getenv("ANALYSIS_LAYER_ENABLED", "false").lower() == "true":
+            try:
+                from src.analysis.analysis_engine import (
+                    run_analysis_layer,
+                    save_analysis_json,
+                )
+                from src.analysis.recency_guard import apply_recency_guard
+                from src.shared.models import ChannelConfig as _ChannelConfig
+
+                _analysis_channel_id = os.getenv("DEFAULT_CHANNEL_ID", "geo_lens")
+                _channel_config = _ChannelConfig.load(_analysis_channel_id)
+
+                # Recency Guard: 直近 24h 内の重複 entity/topic を持つ候補を降格。
+                all_ranked = apply_recency_guard(
+                    all_ranked, _analysis_channel_id, db_path
+                )
+
+                # Recency Guard 後のスコア順で slot-1 を再決定。
+                if all_ranked:
+                    _new_slot1 = all_ranked[0]
+                    _prev_slot1_id = override_top.event.id if override_top else None
+                    if _prev_slot1_id and _prev_slot1_id != _new_slot1.event.id:
+                        logger.info(
+                            f"[AnalysisLayer] Recency Guard reordered slot-1: "
+                            f"{_prev_slot1_id} → {_new_slot1.event.id}"
+                        )
+                    override_top = _new_slot1
+                    override_top.channel_id = _analysis_channel_id
+
+                    _analysis_result = run_analysis_layer(
+                        override_top, _channel_config, db_path
+                    )
+                    if _analysis_result is not None:
+                        override_top.analysis_result = _analysis_result
+                        save_analysis_json(_analysis_result, output_dir)
+                        logger.info(
+                            f"[AnalysisLayer] Completed for event={_analysis_result.event_id} "
+                            f"(perspective={_analysis_result.selected_perspective.axis}, "
+                            f"insights={len(_analysis_result.insights)})"
+                        )
+                    else:
+                        logger.warning(
+                            f"[AnalysisLayer] Returned None for event={override_top.event.id}; "
+                            f"falling back to legacy generation route."
+                        )
+            except Exception as _al_exc:
+                logger.error(
+                    f"[AnalysisLayer] Integration failed; falling back to legacy: "
+                    f"{type(_al_exc).__name__}: {_al_exc}",
+                    exc_info=True,
+                )
+
         # ── Top-3 台本生成ループ: Elite Judge 採用済みリスト上位3件を順次処理 ────
         # ViralFilter による生成ブロックは廃止。Elite Judge (Gate 3) の決定を最終とする。
+        # TOP_N_GENERATION で絞り込み件数を上書き可能（デフォルト 3 = 既存挙動）。
+        # 分析レイヤー設計（Section 6）では 1 本フォーカスを推奨するが、ここでは
+        # 既存挙動を壊さないため env 未指定時は 3 のまま。
+        _top_n = max(1, int(os.getenv("TOP_N_GENERATION", "3")))
         _top_3_candidates: list[ScoredEvent] = sorted(
             all_ranked,
             key=lambda se: (
@@ -2888,7 +2952,7 @@ def run_from_normalized(
                 if se.event.id in _elite_judge_results else 0
             ),
             reverse=True,
-        )[:3]
+        )[:_top_n]
 
         # schedule.selected には slot-1 のみ入っているので、slot-2/3 を追記する。
         # こうすることで mark_published(schedule, ev_id) が全スロットで効く。
@@ -3035,6 +3099,22 @@ def run_from_normalized(
                     logger.info(f"[Pool] Slot-{_slot_num} event {_ev_id} marked published.")
                 except Exception as pool_err:
                     logger.warning(f"[Pool] Slot-{_slot_num} failed to mark {_ev_id} published: {pool_err}")
+
+                # ── Recency Guard 投稿記録 (ANALYSIS_LAYER_ENABLED=true 時のみ) ─
+                # 同一 entity/topic を直近 24h 内に再投稿しないための痕跡を残す。
+                # 失敗しても後段に影響を与えない（warn にとどめる）。
+                if (
+                    _analysis_channel_id is not None
+                    and os.getenv("ANALYSIS_LAYER_ENABLED", "false").lower() == "true"
+                ):
+                    try:
+                        from src.analysis.recency_guard import record_publication
+                        record_publication(_slot_candidate, _analysis_channel_id, db_path)
+                    except Exception as _rec_err:
+                        logger.warning(
+                            f"[AnalysisLayer] record_publication failed for "
+                            f"event={_ev_id}: {_rec_err}"
+                        )
 
                 # ── AV レンダリング (per-slot) ─────────────────────────────
                 # slot-1〜3 すべて WAV / review MP4 を作成する。
