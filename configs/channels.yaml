@@ -1,0 +1,50 @@
+# 分析レイヤーのチャンネル設定。
+# Phase 1 では geo_lens のみ enabled、japan_athletes / k_pulse は雛形のみ。
+#
+# フィールド定義は src/shared/models.py の ChannelConfig を参照。
+
+channels:
+  - channel_id: geo_lens
+    display_name: "Geopolitical Lens"
+    enabled: true
+    source_regions:
+      - global
+      - middle_east
+      - europe
+      - east_asia
+      - global_south
+    perspective_axes:
+      - silence_gap
+      - framing_inversion
+      - hidden_stakes
+      - cultural_blindspot
+    duration_profiles:
+      - breaking_shock_60s
+      - media_critique_80s
+      - anti_sontaku_90s
+      - paradigm_shift_100s
+      - cultural_divide_100s
+      - geopolitics_120s
+    prompt_variant: geo_lens_v1
+    posts_per_day: 3
+    schedule_cron: "0 0,8,16 * * *"
+    voice_id: null
+    visual_style: dark_cinematic
+
+  - channel_id: japan_athletes
+    display_name: "Japan Athletes Abroad"
+    enabled: false
+    source_regions: []
+    perspective_axes: []
+    duration_profiles: []
+    prompt_variant: japan_athletes_v1
+    posts_per_day: 0
+
+  - channel_id: k_pulse
+    display_name: "K-Pulse"
+    enabled: false
+    source_regions: []
+    perspective_axes: []
+    duration_profiles: []
+    prompt_variant: k_pulse_v1
+    posts_per_day: 0

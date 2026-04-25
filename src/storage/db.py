@@ -6,7 +6,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 from src.shared.logger import get_logger
-from src.shared.models import JobRecord
+from src.shared.models import JobRecord, RecencyRecord
 
 logger = get_logger(__name__)
 
@@ -76,6 +76,21 @@ CREATE TABLE IF NOT EXISTS recent_event_pool (
     expired           INTEGER NOT NULL DEFAULT 0,   -- 1 = expired (> 48 h)
     published_at      TEXT
 );
+
+-- 分析レイヤー Recency Guard 用: 投稿成功時の primary_entities/topics を記録。
+-- 直近 24h 内に同じ entity/topic を含む候補は -50% 降格される。
+CREATE TABLE IF NOT EXISTS recency_records (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id          TEXT NOT NULL,
+    channel_id        TEXT NOT NULL,
+    primary_entities  TEXT NOT NULL,          -- JSON 配列
+    primary_topics    TEXT NOT NULL,          -- JSON 配列
+    published_at      TEXT NOT NULL,          -- ISO 8601
+    created_at        TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_recency_channel_published
+    ON recency_records(channel_id, published_at);
 """
 
 
@@ -507,3 +522,65 @@ def expire_old_pool_events(db_path: Path, max_hours: int = 48) -> int:
     if count > 0:
         logger.info(f"[Pool] Expired {count} pool events older than {max_hours} h")
     return count
+
+
+# ── Recency Guard (recency_records) ───────────────────────────────────────────
+
+def save_recency_record(db_path: Path, record: RecencyRecord) -> None:
+    """投稿成功時の RecencyRecord を保存する。
+
+    primary_entities / primary_topics は JSON 配列文字列として永続化する。
+    """
+    sql = """
+    INSERT INTO recency_records
+        (event_id, channel_id, primary_entities, primary_topics, published_at)
+    VALUES (?, ?, ?, ?, ?)
+    """
+    with _connect(db_path) as conn:
+        conn.execute(
+            sql,
+            (
+                record.event_id,
+                record.channel_id,
+                json.dumps(record.primary_entities, ensure_ascii=False),
+                json.dumps(record.primary_topics, ensure_ascii=False),
+                record.published_at,
+            ),
+        )
+    logger.info(
+        f"[Recency] Saved record event_id={record.event_id} channel={record.channel_id} "
+        f"entities={len(record.primary_entities)} topics={len(record.primary_topics)}"
+    )
+
+
+def get_recency_records(
+    db_path: Path,
+    channel_id: str,
+    within_hours: int = 24,
+) -> list[RecencyRecord]:
+    """指定チャンネルで直近 within_hours 時間以内の RecencyRecord を返す。"""
+    from datetime import timedelta
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=within_hours)).isoformat()
+
+    sql = """
+    SELECT event_id, channel_id, primary_entities, primary_topics, published_at
+    FROM recency_records
+    WHERE channel_id = ?
+      AND published_at >= ?
+    ORDER BY published_at DESC
+    """
+    with _connect(db_path) as conn:
+        rows = conn.execute(sql, (channel_id, cutoff)).fetchall()
+
+    records: list[RecencyRecord] = []
+    for row in rows:
+        records.append(
+            RecencyRecord(
+                event_id=row["event_id"],
+                channel_id=row["channel_id"],
+                primary_entities=json.loads(row["primary_entities"] or "[]"),
+                primary_topics=json.loads(row["primary_topics"] or "[]"),
+                published_at=row["published_at"],
+            )
+        )
+    return records

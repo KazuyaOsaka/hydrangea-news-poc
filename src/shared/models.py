@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Optional
 
+import yaml
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -162,6 +164,12 @@ class ScoredEvent(BaseModel):
     viral_filter_breakdown: dict[str, Any] = Field(default_factory=dict)  # sub-score details
     why_rejected_before_generation: Optional[str] = None  # set when viral filter drops candidate
     why_slot1_won_editorially: Optional[str] = None       # editorial rationale for slot-1 selection
+    # ── 分析レイヤー（Phase 1: geo_lens のみ） ───────────────────────────────
+    # ANALYSIS_LAYER_ENABLED=true 時のみ設定される。デフォルトは既存挙動を維持する値。
+    channel_id: str = "geo_lens"
+    analysis_result: Optional["AnalysisResult"] = None
+    recency_guard_applied: bool = False
+    recency_overlap: list[str] = Field(default_factory=list)
 
 
 # ---------- 生成モデル ----------
@@ -336,3 +344,108 @@ class JobRecord(BaseModel):
     # tz-aware で生成する。datetime.utcnow は Python 3.12 で deprecation 警告。
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     error: Optional[str] = None
+
+
+# ---------- 分析レイヤー（Phase 1: geo_lens 単独稼働） ----------
+
+class ChannelConfig(BaseModel):
+    """チャンネル単位の設定。Phase 1 は geo_lens のみ enabled。
+
+    configs/channels.yaml から `ChannelConfig.load(channel_id)` でロードする。
+    """
+
+    channel_id: str
+    display_name: str
+    enabled: bool
+    source_regions: list[str] = Field(default_factory=list)
+    perspective_axes: list[str] = Field(default_factory=list)
+    duration_profiles: list[str] = Field(default_factory=list)
+    prompt_variant: str
+    posts_per_day: int = 0
+    schedule_cron: Optional[str] = None
+    voice_id: Optional[str] = None
+    visual_style: Optional[str] = None
+
+    @classmethod
+    def load(cls, channel_id: str, config_path: Optional[Path] = None) -> "ChannelConfig":
+        """configs/channels.yaml から該当チャンネル設定をロードする。"""
+        if config_path is None:
+            config_path = Path(__file__).resolve().parents[2] / "configs" / "channels.yaml"
+        with open(config_path, "r", encoding="utf-8") as fh:
+            data = yaml.safe_load(fh) or {}
+        for entry in data.get("channels", []):
+            if entry.get("channel_id") == channel_id:
+                return cls(**entry)
+        raise ValueError(f"channel_id={channel_id!r} not found in {config_path}")
+
+    @classmethod
+    def load_all(cls, config_path: Optional[Path] = None) -> list["ChannelConfig"]:
+        """全チャンネル設定をリストで返す。"""
+        if config_path is None:
+            config_path = Path(__file__).resolve().parents[2] / "configs" / "channels.yaml"
+        with open(config_path, "r", encoding="utf-8") as fh:
+            data = yaml.safe_load(fh) or {}
+        return [cls(**entry) for entry in data.get("channels", [])]
+
+
+class PerspectiveCandidate(BaseModel):
+    """4軸（silence_gap / framing_inversion / hidden_stakes / cultural_blindspot）の観点候補。"""
+
+    axis: str
+    score: float
+    reasoning: str
+    evidence_refs: list[str] = Field(default_factory=list)
+
+
+class MultiAngleAnalysis(BaseModel):
+    """5観点（地政学・政治意図・経済影響・文化文脈・報道差異）の構造化分析。"""
+
+    geopolitical: Optional[str] = None
+    political_intent: Optional[str] = None
+    economic_impact: Optional[str] = None
+    cultural_context: Optional[str] = None
+    media_divergence: Optional[str] = None
+
+
+class Insight(BaseModel):
+    """視聴者が「人に話したくなる核心情報」の単位。"""
+
+    text: str
+    importance: float
+    evidence_refs: list[str] = Field(default_factory=list)
+
+
+class AnalysisResult(BaseModel):
+    """分析レイヤーの最終出力。{event_id}_analysis.json として保存される。"""
+
+    event_id: str
+    channel_id: str
+    selected_perspective: PerspectiveCandidate
+    rejected_perspectives: list[PerspectiveCandidate] = Field(default_factory=list)
+    perspective_verified: bool
+    verification_notes: str = ""
+    multi_angle: MultiAngleAnalysis
+    insights: list[Insight] = Field(default_factory=list)
+    selected_duration_profile: str
+    expanded_sources: list[str] = Field(default_factory=list)
+    visual_mood_tags: list[str] = Field(default_factory=list)
+    analysis_version: str = "v1.0"
+    generated_at: str
+    llm_calls_used: int = 0
+
+
+class RecencyRecord(BaseModel):
+    """投稿成功時に保存される primary_entities/topics の記録。
+
+    Recency Guard が直近 24h 内の重複を判定するために使う。
+    """
+
+    event_id: str
+    channel_id: str
+    primary_entities: list[str] = Field(default_factory=list)
+    primary_topics: list[str] = Field(default_factory=list)
+    published_at: str  # ISO 8601
+
+
+# ScoredEvent.analysis_result の forward ref を解決
+ScoredEvent.model_rebuild()
