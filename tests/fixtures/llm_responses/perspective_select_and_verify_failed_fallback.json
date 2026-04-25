@@ -1,0 +1,13 @@
+{
+  "selected_axis": "silence_gap",
+  "reasoning": "当初は silence_gap と判断したが、検証で日本ソース1件が確認された。",
+  "evidence_for_selection": [
+    "https://en.example.com/0"
+  ],
+  "verification": {
+    "actually_holds": false,
+    "notes": "日経が小さく報道済み（sources_jp=1）。silence_gap は成立しない。",
+    "confidence": 0.4
+  },
+  "fallback_axis_if_failed": "framing_inversion"
+}

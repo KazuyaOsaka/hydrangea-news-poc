@@ -1,0 +1,14 @@
+{
+  "selected_axis": "silence_gap",
+  "reasoning": "海外3社が大規模に報じている一方、記事スニペットには日本語ソースが含まれない。global_view と japan_view の差も顕著で、視聴者が初めて知る情報になる。",
+  "evidence_for_selection": [
+    "https://en.example.com/0",
+    "https://en.example.com/1"
+  ],
+  "verification": {
+    "actually_holds": true,
+    "notes": "article_snippets で日本ソースゼロを再確認。global_attention=7.0 が高位。",
+    "confidence": 0.85
+  },
+  "fallback_axis_if_failed": null
+}

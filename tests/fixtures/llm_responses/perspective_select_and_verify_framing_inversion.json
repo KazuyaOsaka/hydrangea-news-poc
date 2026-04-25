@@ -1,0 +1,14 @@
+{
+  "selected_axis": "framing_inversion",
+  "reasoning": "日本ソースは『協調』を強調する一方、海外2社は『対立』として描いている。主体・述語の差異が記事から明瞭。",
+  "evidence_for_selection": [
+    "https://en.example.com/0",
+    "https://jp.example.com/0"
+  ],
+  "verification": {
+    "actually_holds": true,
+    "notes": "主体（誰が悪者か）と述語（何をしたか）の両方が逆転している。",
+    "confidence": 0.78
+  },
+  "fallback_axis_if_failed": null
+}

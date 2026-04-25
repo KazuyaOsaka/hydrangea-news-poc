@@ -68,10 +68,19 @@ class TieredGeminiClient(LLMClient):
     Single-element tier list → same-model retry only (no fallback).
     """
 
-    def __init__(self, api_key: str, tiers: list[str]) -> None:
+    def __init__(
+        self,
+        api_key: str,
+        tiers: list[str],
+        generation_config: Optional[dict] = None,
+    ) -> None:
         self._api_key = api_key
         self._tiers = tiers
         self._last_call_time: float = 0.0
+        # Optional per-call generation config (temperature, max_output_tokens, etc.).
+        # 既存呼び出し元は None のまま — 従来挙動そのまま。
+        # 分析レイヤーのように temperature/トークン上限を明示したいクライアントだけ設定する。
+        self._generation_config: Optional[dict] = generation_config or None
 
     @property
     def _model(self) -> str:
@@ -94,9 +103,16 @@ class TieredGeminiClient(LLMClient):
 
     def generate(self, prompt: str) -> str:
         from google import genai
+        from google.genai import types as genai_types
 
         client = genai.Client(api_key=self._api_key)
         last_exc: Exception | None = None
+
+        config_obj = (
+            genai_types.GenerateContentConfig(**self._generation_config)
+            if self._generation_config
+            else None
+        )
 
         for tier_idx, model in enumerate(self._tiers, start=1):
             delay = _INITIAL_DELAY_SEC
@@ -104,10 +120,10 @@ class TieredGeminiClient(LLMClient):
                 try:
                     with _API_SEMAPHORE:
                         self._throttle()
-                        response = client.models.generate_content(
-                            model=model,
-                            contents=prompt,
-                        )
+                        gen_kwargs: dict = {"model": model, "contents": prompt}
+                        if config_obj is not None:
+                            gen_kwargs["config"] = config_obj
+                        response = client.models.generate_content(**gen_kwargs)
                     if tier_idx > 1 or attempt > 0:
                         logger.info(
                             f"[TieredGemini] Success: tier={tier_idx} model={model} "
@@ -299,6 +315,39 @@ def get_script_llm_client() -> Optional[LLMClient]:
 def get_article_llm_client() -> Optional[LLMClient]:
     """Article Writer 用クライアント — 高品質推論ルート (role=generation)。"""
     return get_llm_client("generation")
+
+
+def get_analysis_llm_client() -> Optional[LLMClient]:
+    """分析レイヤー（Step 3〜5）用クライアント — 高品質推論ルート + 事実重視設定。
+
+    観点選定+検証 / 多角的分析 / 洞察抽出 で共通利用される。
+    GENERATION_PROVIDER=gemini の場合: TIER1→TIER2→TIER3→TIER4 完全4段フォールバック
+    （TIER4 は最終フォールバックとしてのみ使用）。
+    temperature と max_output_tokens は環境変数 ANALYSIS_LLM_TEMPERATURE /
+    ANALYSIS_LLM_MAX_TOKENS で上書き可能（デフォルト 0.3 / 2000）。
+
+    Gemini 以外のプロバイダ / API キー未設定時は既存のスクリプト用クライアントに委譲し、
+    プロバイダ固有のフォールバックに任せる（現状 Groq/Ollama は temperature 制御なし）。
+    """
+    import os
+
+    if not GEMINI_API_KEY or GENERATION_PROVIDER != "gemini":
+        return _make_client(GENERATION_PROVIDER, GENERATION_MODEL, quality=True)
+
+    try:
+        temperature = float(os.getenv("ANALYSIS_LLM_TEMPERATURE", "0.3"))
+    except ValueError:
+        temperature = 0.3
+    try:
+        max_tokens = int(os.getenv("ANALYSIS_LLM_MAX_TOKENS", "2000"))
+    except ValueError:
+        max_tokens = 2000
+
+    return TieredGeminiClient(
+        GEMINI_API_KEY,
+        [GEMINI_MODEL_TIER1, GEMINI_MODEL_TIER2, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4],
+        generation_config={"temperature": temperature, "max_output_tokens": max_tokens},
+    )
 
 
 # ── Tier connectivity verification ──────────────────────────────────────────
