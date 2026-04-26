@@ -33,8 +33,9 @@ class _FakeUnavailableError(Exception):
 
 
 def _patch_throttle_and_sleep(monkeypatch):
-    """_throttle と time.sleep を no-op 化してテスト時間をゼロにする。"""
+    """_throttle / _wait_for_rpm_slot / time.sleep を no-op 化してテスト時間をゼロにする。"""
     monkeypatch.setattr(TieredGeminiClient, "_throttle", lambda self, model: None)
+    monkeypatch.setattr(TieredGeminiClient, "_wait_for_rpm_slot", lambda self, model: None)
     monkeypatch.setattr(factory.time, "sleep", lambda *_a, **_kw: None)
 
 

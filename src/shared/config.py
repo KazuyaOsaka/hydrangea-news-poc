@@ -139,6 +139,26 @@ GEMINI_INTERVAL_SEC_BY_MODEL: dict[str, float] = {
     GEMINI_MODEL_TIER4: GEMINI_CALL_INTERVAL_SEC_TIER4,
 }
 
+# モデル別の RPM 上限（無料枠基準、2026-04 時点の値）。
+# TieredGeminiClient._wait_for_rpm_slot が直近 60 秒の呼び出し履歴と突き合わせ、
+# 上限の安全率（既定 70%）を超えそうな場合に動的に待機するために参照する。
+# 静的な GEMINI_INTERVAL_SEC_BY_MODEL は「単一スレッドが連続呼び出ししても
+# RPM 上限に当たらない最低間隔」を保証するが、複数経路から並行呼び出しが
+# 入った場合にバーストして上限に当たることがあるため、動的レートリミッタを
+# 追加で被せて二重防衛する。
+GEMINI_RPM_LIMIT_BY_MODEL: dict[str, int] = {
+    GEMINI_MODEL_TIER1: 15,
+    GEMINI_MODEL_TIER2: 10,
+    GEMINI_MODEL_TIER3: 5,
+    GEMINI_MODEL_TIER4: 5,
+}
+
+# Lightweight ルート（GarbageFilter / Event Builder 等の高スループット工程）が
+# 使用する Gemini モデル。Tier 並び替えで TIER4 = gemini-2.5-flash (RPM=5) と
+# なったため、TIER4 固定だと高スループット要件に整合しなくなった。
+# 既定は RPM=10 の gemini-2.5-flash-lite。.env で明示的に上書き可能。
+GEMINI_LIGHTWEIGHT_MODEL: str = os.getenv("GEMINI_LIGHTWEIGHT_MODEL", "gemini-2.5-flash-lite")
+
 # ── Garbage Filter 設定（Gate 1: 高速スクリーニング） ────────────────────────
 # Tier 2 Lite モデルによるノイズ除去を有効にするか（false で完全スキップ）
 GARBAGE_FILTER_ENABLED: bool = os.getenv("GARBAGE_FILTER_ENABLED", "true").lower() != "false"

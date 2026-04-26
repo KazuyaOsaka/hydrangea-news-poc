@@ -2,8 +2,11 @@
 
 Routing strategy:
   Lightweight (high-throughput): garbage_filter, event_builder (cluster)
-    → TIER4 (gemini-2.5-flash-lite) fixed; same-model retry only (no upward fallback).
-    Rationale: already the cheapest tier — escalating would waste the premium quota.
+    → GEMINI_LIGHTWEIGHT_MODEL (default gemini-2.5-flash-lite, RPM=10) fixed;
+    same-model retry only (no upward fallback).
+    Rationale: high-throughput stages need the highest free-tier RPM model.
+    旧実装は TIER4 固定だったが Tier 並び替えで TIER4 = gemini-2.5-flash (RPM=5)
+    になり整合しなくなったため、専用の env var で切り出した。
 
   Quality (high-reasoning): elite_judge, script_writer, article_writer
     → TIER1 → TIER2 → TIER3 → TIER4 full 4-tier fallback.
@@ -22,8 +25,13 @@ Fallback priority (quality path) — RPM 上限の高い順に降格:
   [3] gemini-3-flash-preview         (TIER3, RPM=5)
   [4] gemini-2.5-flash               (TIER4, RPM=5)
 
-Per-tier call interval: GEMINI_CALL_INTERVAL_SEC_TIER{1..4} で各モデルの
-RPM を尊重した待機を強制する (TieredGeminiClient._throttle 参照)。
+Rate limiting (二段構え):
+  - 動的レートリミッタ (TieredGeminiClient._wait_for_rpm_slot): 直近60秒の
+    呼び出し履歴をモデル別に保持し、上限の安全率 (_RPM_SAFETY_RATIO=0.7) を
+    超えそうな場合に sleep する。並行呼び出しのバーストを抑止。
+  - 静的最低間隔 (TieredGeminiClient._throttle): GEMINI_CALL_INTERVAL_SEC_TIER{1..4}
+    で前回同一モデル呼び出しからの最低間隔を保証。単一スレッドの連続呼び出しを抑止。
+  両者は generate() 内で「動的 → 静的」の順に併用される。
 
 Per-tier policy: 429/RESOURCE_EXHAUSTED → skip same-model retries and advance
 immediately. 503/UNAVAILABLE → up to _MAX_ATTEMPTS_PER_TIER retries with
@@ -45,11 +53,13 @@ from src.shared.config import (
     GEMINI_API_KEY,
     GEMINI_CALL_INTERVAL_SEC,
     GEMINI_INTERVAL_SEC_BY_MODEL,
+    GEMINI_LIGHTWEIGHT_MODEL,
     GEMINI_MODEL_TIER1,
     GEMINI_MODEL_TIER2,
     GEMINI_MODEL_TIER3,
     GEMINI_MODEL_TIER4,
     GEMINI_MODEL_TIERS,
+    GEMINI_RPM_LIMIT_BY_MODEL,
     GENERATION_MODEL,
     GENERATION_PROVIDER,
     GROQ_API_KEY,
@@ -67,6 +77,14 @@ _MAX_DELAY_SEC = 120.0
 
 # 429対策: 最大同時API呼び出し数を3に制限 (15 RPM制限を安全に回避)
 _API_SEMAPHORE = threading.Semaphore(3)
+
+# 動的レートリミッタの安全率: RPM 上限の何割まで使うか。
+# 70% に設定: gemini-3.1-flash-lite-preview (RPM=15) の場合 60秒で 10 件まで許可。
+_RPM_SAFETY_RATIO = 0.7
+
+# RPM 不明モデル（GEMINI_RPM_LIMIT_BY_MODEL に未登録）の保守的なデフォルト。
+# 無料枠で最も低い RPM=5 を採用し、未知モデルでも上限超過しないようにする。
+_RPM_DEFAULT_LIMIT = 5
 
 
 class TieredGeminiClient(LLMClient):
@@ -97,6 +115,12 @@ class TieredGeminiClient(LLMClient):
         # インターバル制御を行う。Gemini の RPM はモデル毎に独立してカウント
         # されるため、tier_idx ではなく実モデル名で追跡する。
         self._last_call_time_by_model: dict[str, float] = {}
+        # モデル別の呼び出し履歴（直近60秒分の time.time() タイムスタンプ列）。
+        # _wait_for_rpm_slot が「過去60秒の呼び出しが上限の安全率を超えたら待つ」
+        # を判定するために使う。複数スレッドからアクセスされる可能性があるため
+        # ロックで保護する。
+        self._call_history_by_model: dict[str, list[float]] = {}
+        self._history_lock = threading.Lock()
         # Optional per-call generation config (temperature, max_output_tokens, etc.).
         # 既存呼び出し元は None のまま — 従来挙動そのまま。
         # 分析レイヤーのように temperature/トークン上限を明示したいクライアントだけ設定する。
@@ -128,6 +152,46 @@ class TieredGeminiClient(LLMClient):
             time.sleep(wait)
         self._last_call_time_by_model[model] = time.time()
 
+    def _wait_for_rpm_slot(self, model: str) -> None:
+        """Sliding-window 60秒の呼び出し履歴を見て RPM 上限近くなら待機する。
+
+        静的な _throttle (前回呼び出しからの最低間隔) は単一スレッドの連続呼び出しは
+        防げるが、複数経路から並行で短時間に呼ばれた場合のバーストには対処できない。
+        本メソッドは直近 60 秒の履歴件数が `RPM 上限 × _RPM_SAFETY_RATIO` を超える
+        場合、最古エントリから 60 秒経過するまで sleep して RPM 超過を防ぐ。
+
+        - GEMINI_RPM_LIMIT_BY_MODEL に未登録のモデルは保守的に _RPM_DEFAULT_LIMIT を採用。
+        - 履歴の管理は self._history_lock で保護し、複数スレッドからの同時更新を防ぐ。
+        - sleep は lock 解放後に実施し、待機中も他スレッドの履歴判定をブロックしない。
+        """
+        rpm_limit = GEMINI_RPM_LIMIT_BY_MODEL.get(model, _RPM_DEFAULT_LIMIT)
+        threshold = max(1, int(rpm_limit * _RPM_SAFETY_RATIO))
+
+        wait = 0.0
+        with self._history_lock:
+            now = time.time()
+            history = self._call_history_by_model.setdefault(model, [])
+            # 60 秒より古いエントリは破棄
+            history[:] = [t for t in history if now - t < 60.0]
+            if len(history) >= threshold:
+                sleep_until = history[0] + 60.0
+                wait = max(0.0, sleep_until - now)
+
+        if wait > 0:
+            logger.info(
+                f"[TieredGemini] RPM throttle: model={model} "
+                f"recent_calls>={threshold}/{rpm_limit} → wait {wait:.1f}s"
+            )
+            time.sleep(wait)
+            with self._history_lock:
+                # 待機後にもう一度ウィンドウを掃除しておく
+                now2 = time.time()
+                history = self._call_history_by_model.setdefault(model, [])
+                history[:] = [t for t in history if now2 - t < 60.0]
+
+        with self._history_lock:
+            self._call_history_by_model.setdefault(model, []).append(time.time())
+
     def generate(self, prompt: str) -> str:
         from google import genai
         from google.genai import types as genai_types
@@ -146,6 +210,10 @@ class TieredGeminiClient(LLMClient):
             for attempt in range(_MAX_ATTEMPTS_PER_TIER):
                 try:
                     with _API_SEMAPHORE:
+                        # 動的レートリミッタ（直近60秒履歴）→ 静的最低間隔の二段構え。
+                        # 並行呼び出しのバーストは前者が、単一スレッドの連続呼び出しは
+                        # 後者が抑止する。順序は「履歴で待機 → 最低間隔で待機」を維持。
+                        self._wait_for_rpm_slot(model)
                         self._throttle(model)
                         gen_kwargs: dict = {"model": model, "contents": prompt}
                         if config_obj is not None:
@@ -210,15 +278,18 @@ class TieredGeminiClient(LLMClient):
 # ── Internal factory helpers ─────────────────────────────────────────────────
 
 def _make_lightweight_client() -> Optional[LLMClient]:
-    """大量処理用クライアント: TIER4 (gemini-2.5-flash-lite) 固定。
+    """大量処理用クライアント: GEMINI_LIGHTWEIGHT_MODEL 固定（既定 gemini-2.5-flash-lite, RPM=10）。
 
     Garbage Filter / Event Builder 等の高スループット工程専用。
-    フォールバックなし — TIER4 で最大 _MAX_ATTEMPTS_PER_TIER 回リトライ後に失敗。
-    既に最廉価 Tier のため上位へのエスカレーションは不要。
+    フォールバックなし — このモデルで最大 _MAX_ATTEMPTS_PER_TIER 回リトライ後に失敗。
+
+    旧実装は TIER4 固定だったが、Tier 並び替えで TIER4 = gemini-2.5-flash (RPM=5)
+    となり高スループット要件と整合しなくなったため、明示的に lightweight 用モデル
+    を切り出した。`.env` の GEMINI_LIGHTWEIGHT_MODEL で上書き可能。
     """
     if not GEMINI_API_KEY:
         return None
-    return TieredGeminiClient(GEMINI_API_KEY, [GEMINI_MODEL_TIER4])
+    return TieredGeminiClient(GEMINI_API_KEY, [GEMINI_LIGHTWEIGHT_MODEL])
 
 
 def _make_quality_client() -> Optional[LLMClient]:
@@ -240,7 +311,7 @@ def _make_client(provider: str, model: str, quality: bool = False) -> Optional[L
 
     For Gemini, `model` is ignored — routing is determined by `quality`:
       quality=True  → _make_quality_client()  (TIER1→TIER4 full fallback)
-      quality=False → _make_lightweight_client() (TIER4 retry-only)
+      quality=False → _make_lightweight_client() (GEMINI_LIGHTWEIGHT_MODEL retry-only)
     """
     if provider == "gemini":
         return _make_quality_client() if quality else _make_lightweight_client()
@@ -289,8 +360,8 @@ def get_llm_client(role: str) -> Optional[LLMClient]:
 def get_garbage_filter_client() -> Optional[LLMClient]:
     """Gate 1 Garbage Filter 用クライアント — 大量処理ルート。
 
-    TIER4 (gemini-2.5-flash-lite) 固定、同一モデルでリトライのみ。
-    フォールバック不要（既に最廉価 Tier）。
+    GEMINI_LIGHTWEIGHT_MODEL (既定 gemini-2.5-flash-lite, RPM=10) 固定、
+    同一モデルでリトライのみ。フォールバック不要（高 RPM の専用モデル）。
     """
     return _make_lightweight_client()
 
@@ -298,7 +369,8 @@ def get_garbage_filter_client() -> Optional[LLMClient]:
 def get_cluster_llm_client() -> Optional[LLMClient]:
     """Event Builder / cluster post-merge 用クライアント — 大量処理ルート。
 
-    TIER4 (gemini-2.5-flash-lite) 固定、同一モデルでリトライのみ。
+    GEMINI_LIGHTWEIGHT_MODEL (既定 gemini-2.5-flash-lite, RPM=10) 固定、
+    同一モデルでリトライのみ。
     """
     return get_llm_client("merge_batch")
 

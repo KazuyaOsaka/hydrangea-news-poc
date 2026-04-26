@@ -375,6 +375,22 @@ _KEYWORD_MAP = {
 
 ---
 
+### 🟢 関連: RPM 制限対策（実装済み, 2026-04-26）
+
+**該当箇所**：`src/llm/factory.py`、`src/shared/config.py`、`docs/GEMINI_QUOTA_NOTES.md`
+
+無料枠の RPM/RPD 制限対策として以下を 3 バッチに分けて実装済み:
+
+- **バッチ C-1** (commit `4b318c7`): Tier 別の最低呼び出し間隔 `GEMINI_CALL_INTERVAL_SEC_TIER{1..4}` を導入。
+- **バッチ C-2** (commit `fd1e088`): 429 検出時に同一モデルへのリトライを廃止し、即フォールバック。
+- **バッチ C-3** (本コミット):
+  - `_make_lightweight_client` を `GEMINI_LIGHTWEIGHT_MODEL` 環境変数（既定 `gemini-2.5-flash-lite`, RPM=10）ベースに変更。Tier 並び替えで TIER4=`gemini-2.5-flash` (RPM=5) になっても高スループット工程が影響を受けないようにした。
+  - 動的レートリミッタ `TieredGeminiClient._wait_for_rpm_slot` を追加。直近 60 秒のモデル別履歴で `RPM × 0.7` を超えそうな場合に自動 sleep。並行呼び出しのバーストを抑止する。
+
+**詳細経緯**: `docs/GEMINI_QUOTA_NOTES.md` 参照。
+
+---
+
 ## 3. エラーハンドリングの不足
 
 ### 🟡 問題 3.1：YAML 読み込み失敗が致命的ではなくなっている（**緊急度：中**）
