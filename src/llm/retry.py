@@ -16,12 +16,25 @@ logger = get_logger(__name__)
 T = TypeVar("T")
 
 _RETRYABLE_MARKERS = ("429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE")
+_QUOTA_MARKERS = ("429", "RESOURCE_EXHAUSTED")
 
 
 def is_retryable(exc: Exception) -> bool:
     """Return True if the exception represents a transient quota/service error."""
     msg = str(exc)
     return any(marker in msg for marker in _RETRYABLE_MARKERS)
+
+
+def is_quota_error(exc: Exception) -> bool:
+    """Return True if the exception represents a 429 / RESOURCE_EXHAUSTED quota event.
+
+    Distinguished from generic retryable errors because Gemini counts failed 429
+    requests against the daily/per-minute quota — same-model retries after a 429
+    are wasted and accelerate quota exhaustion. Callers should fall back to the
+    next tier instead of retrying the same model.
+    """
+    msg = str(exc)
+    return any(marker in msg for marker in _QUOTA_MARKERS)
 
 
 def call_with_retry(

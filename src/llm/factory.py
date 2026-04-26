@@ -9,6 +9,13 @@ Routing strategy:
     → TIER1 → TIER2 → TIER3 → TIER4 full 4-tier fallback.
     Rationale: accuracy matters; escalate only after per-tier retries are exhausted.
 
+Per-tier retry policy:
+  - 429 / RESOURCE_EXHAUSTED → skip same-model retries, advance to next tier
+    immediately. Gemini counts failed 429s against quota, so retrying the same
+    model after a quota refusal just burns the daily allowance for nothing.
+  - 503 / UNAVAILABLE / other retryables → exponential backoff up to
+    _MAX_ATTEMPTS_PER_TIER attempts, then advance.
+
 Fallback priority (quality path) — RPM 上限の高い順に降格:
   [1] gemini-3.1-flash-lite-preview  (TIER1, RPM=15)
   [2] gemini-2.5-flash-lite          (TIER2, RPM=10)
@@ -18,9 +25,10 @@ Fallback priority (quality path) — RPM 上限の高い順に降格:
 Per-tier call interval: GEMINI_CALL_INTERVAL_SEC_TIER{1..4} で各モデルの
 RPM を尊重した待機を強制する (TieredGeminiClient._throttle 参照)。
 
-Per-tier policy: up to _MAX_ATTEMPTS_PER_TIER retries with exponential backoff
-(1s→2s→4s) on 429/RESOURCE_EXHAUSTED or 503/UNAVAILABLE, then next tier.
-If all tiers are exhausted, RuntimeError is raised — no silent degradation.
+Per-tier policy: 429/RESOURCE_EXHAUSTED → skip same-model retries and advance
+immediately. 503/UNAVAILABLE → up to _MAX_ATTEMPTS_PER_TIER retries with
+exponential backoff before advancing. If all tiers are exhausted, RuntimeError
+is raised — no silent degradation.
 
 Resolution path: .env → config.py → factory.py
 No hardcoded model strings in business logic.
@@ -32,7 +40,7 @@ import time
 from typing import Optional
 
 from src.llm.base import LLMClient
-from src.llm.retry import is_retryable
+from src.llm.retry import is_quota_error, is_retryable
 from src.shared.config import (
     GEMINI_API_KEY,
     GEMINI_CALL_INTERVAL_SEC,
@@ -64,12 +72,17 @@ _API_SEMAPHORE = threading.Semaphore(3)
 class TieredGeminiClient(LLMClient):
     """GeminiClient that walks through a provided tier list on quota exhaustion.
 
-    Per-tier policy: up to _MAX_ATTEMPTS_PER_TIER retries with exponential
-    backoff on 429/RESOURCE_EXHAUSTED or 503/UNAVAILABLE errors.
-    After all attempts for a tier fail, the next tier is tried.
+    Per-tier policy:
+      - 429 / RESOURCE_EXHAUSTED: skip same-model retries, advance to next tier
+        immediately. Failed 429 requests still count against Gemini quota, so
+        retrying the same model is wasted budget.
+      - 503 / UNAVAILABLE (and other retryables): up to _MAX_ATTEMPTS_PER_TIER
+        retries with exponential backoff before advancing.
     If all tiers are exhausted, RuntimeError is raised.
 
-    Single-element tier list → same-model retry only (no fallback).
+    Single-element tier list → same-model retry only (on 503), no fallback.
+    On 429 with a single-element list, the loop exits after one attempt and
+    raises RuntimeError without burning the rest of the day's quota.
     """
 
     def __init__(
@@ -148,10 +161,28 @@ class TieredGeminiClient(LLMClient):
                     if not is_retryable(exc):
                         raise
                     last_exc = exc
+
+                    # 429 (RESOURCE_EXHAUSTED) は同一モデルへのリトライがクォータを更に消費するだけなので
+                    # 即座に次の Tier へフォールバックする。Gemini は失敗した 429 リクエストもクォータ
+                    # カウントに含めるため、リトライしても回復は期待できない。
+                    if is_quota_error(exc):
+                        if tier_idx < len(self._tiers):
+                            next_model = self._tiers[tier_idx]
+                            next_label = f"tier {tier_idx + 1} ({next_model})"
+                        else:
+                            next_label = "none (all tiers exhausted)"
+                        logger.info(
+                            f"[TieredGemini] tier={tier_idx} model={model} "
+                            f"429 RESOURCE_EXHAUSTED → skip retries, advance to {next_label}. "
+                            f"Error: {str(exc)[:120]}"
+                        )
+                        break
+
+                    # 503 / UNAVAILABLE 等の一時的エラーは従来通り指数バックオフで再試行する。
                     if attempt < _MAX_ATTEMPTS_PER_TIER - 1:
                         logger.warning(
                             f"[TieredGemini] tier={tier_idx} model={model} "
-                            f"attempt={attempt + 1}/{_MAX_ATTEMPTS_PER_TIER} quota error — "
+                            f"attempt={attempt + 1}/{_MAX_ATTEMPTS_PER_TIER} transient error — "
                             f"retrying in {delay:.0f}s: {str(exc)[:120]}"
                         )
                         time.sleep(delay)
