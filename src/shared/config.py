@@ -114,7 +114,30 @@ JUDGE_CANDIDATE_LIMIT: int = int(os.getenv("JUDGE_CANDIDATE_LIMIT", "3"))
 JUDGE_ENABLED: bool = os.getenv("JUDGE_ENABLED", "true").lower() != "false"
 
 # Gemini API 呼び出し間の最小インターバル (秒) — 429 抑制のためのレート制限
+# 後方互換用の共通値。Tier 別設定が無い場合のフォールバックとしてのみ使う。
 GEMINI_CALL_INTERVAL_SEC: float = float(os.getenv("GEMINI_CALL_INTERVAL_SEC", "0.5"))
+
+# ── Tier 別呼び出しインターバル (秒) — 各モデルの RPM 上限を尊重 ──────────────
+# 安全マージン 70% を考慮した値をデフォルトに採用:
+#   TIER1 (gemini-3.1-flash-lite-preview, RPM=15): 60 / (15 * 0.7) ≈ 5.7s
+#   TIER2 (gemini-2.5-flash-lite,        RPM=10): 60 / (10 * 0.7) ≈ 8.6s
+#   TIER3 (gemini-3-flash-preview,        RPM=5):  60 / (5  * 0.7) ≈ 17.2s
+#   TIER4 (gemini-2.5-flash,              RPM=5):  60 / (5  * 0.7) ≈ 17.2s
+GEMINI_CALL_INTERVAL_SEC_TIER1: float = float(os.getenv("GEMINI_CALL_INTERVAL_SEC_TIER1", "5.7"))
+GEMINI_CALL_INTERVAL_SEC_TIER2: float = float(os.getenv("GEMINI_CALL_INTERVAL_SEC_TIER2", "8.6"))
+GEMINI_CALL_INTERVAL_SEC_TIER3: float = float(os.getenv("GEMINI_CALL_INTERVAL_SEC_TIER3", "17.2"))
+GEMINI_CALL_INTERVAL_SEC_TIER4: float = float(os.getenv("GEMINI_CALL_INTERVAL_SEC_TIER4", "17.2"))
+
+# モデル名 → インターバル（秒）の対応表。
+# TieredGeminiClient はこの表を参照して、現在呼び出している実モデルに応じた
+# 待機時間を算出する（tier_idx ではなく model で引くのは、lightweight ルートが
+# 単一 Tier (TIER4) のみを保持するため tier_idx だけでは判別できないため）。
+GEMINI_INTERVAL_SEC_BY_MODEL: dict[str, float] = {
+    GEMINI_MODEL_TIER1: GEMINI_CALL_INTERVAL_SEC_TIER1,
+    GEMINI_MODEL_TIER2: GEMINI_CALL_INTERVAL_SEC_TIER2,
+    GEMINI_MODEL_TIER3: GEMINI_CALL_INTERVAL_SEC_TIER3,
+    GEMINI_MODEL_TIER4: GEMINI_CALL_INTERVAL_SEC_TIER4,
+}
 
 # ── Garbage Filter 設定（Gate 1: 高速スクリーニング） ────────────────────────
 # Tier 2 Lite モデルによるノイズ除去を有効にするか（false で完全スキップ）

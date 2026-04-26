@@ -9,11 +9,14 @@ Routing strategy:
     → TIER1 → TIER2 → TIER3 → TIER4 full 4-tier fallback.
     Rationale: accuracy matters; escalate only after per-tier retries are exhausted.
 
-Fallback priority (quality path):
-  [1] gemini-3.1-flash-lite-preview  (TIER1)
-  [2] gemini-3-flash-preview         (TIER2)
-  [3] gemini-2.5-flash               (TIER3)
-  [4] gemini-2.5-flash-lite          (TIER4)
+Fallback priority (quality path) — RPM 上限の高い順に降格:
+  [1] gemini-3.1-flash-lite-preview  (TIER1, RPM=15)
+  [2] gemini-2.5-flash-lite          (TIER2, RPM=10)
+  [3] gemini-3-flash-preview         (TIER3, RPM=5)
+  [4] gemini-2.5-flash               (TIER4, RPM=5)
+
+Per-tier call interval: GEMINI_CALL_INTERVAL_SEC_TIER{1..4} で各モデルの
+RPM を尊重した待機を強制する (TieredGeminiClient._throttle 参照)。
 
 Per-tier policy: up to _MAX_ATTEMPTS_PER_TIER retries with exponential backoff
 (1s→2s→4s) on 429/RESOURCE_EXHAUSTED or 503/UNAVAILABLE, then next tier.
@@ -33,6 +36,7 @@ from src.llm.retry import is_retryable
 from src.shared.config import (
     GEMINI_API_KEY,
     GEMINI_CALL_INTERVAL_SEC,
+    GEMINI_INTERVAL_SEC_BY_MODEL,
     GEMINI_MODEL_TIER1,
     GEMINI_MODEL_TIER2,
     GEMINI_MODEL_TIER3,
@@ -76,7 +80,10 @@ class TieredGeminiClient(LLMClient):
     ) -> None:
         self._api_key = api_key
         self._tiers = tiers
-        self._last_call_time: float = 0.0
+        # モデル単位の最終呼び出し時刻を保持し、各モデルの RPM 上限に応じた
+        # インターバル制御を行う。Gemini の RPM はモデル毎に独立してカウント
+        # されるため、tier_idx ではなく実モデル名で追跡する。
+        self._last_call_time_by_model: dict[str, float] = {}
         # Optional per-call generation config (temperature, max_output_tokens, etc.).
         # 既存呼び出し元は None のまま — 従来挙動そのまま。
         # 分析レイヤーのように temperature/トークン上限を明示したいクライアントだけ設定する。
@@ -93,13 +100,20 @@ class TieredGeminiClient(LLMClient):
         """
         return self._tiers[0] if self._tiers else ""
 
-    def _throttle(self) -> None:
-        """Enforce GEMINI_CALL_INTERVAL_SEC between consecutive API calls."""
-        elapsed = time.time() - self._last_call_time
-        wait = GEMINI_CALL_INTERVAL_SEC - elapsed
+    def _throttle(self, model: str) -> None:
+        """Enforce per-model minimum interval between API calls.
+
+        各モデルの RPM 上限に対応した GEMINI_CALL_INTERVAL_SEC_TIER{n} を引き、
+        前回同一モデル呼び出しからの経過時間が不足する場合は差分だけ sleep する。
+        マッピングに無いモデルは後方互換用の GEMINI_CALL_INTERVAL_SEC を使用。
+        """
+        interval = GEMINI_INTERVAL_SEC_BY_MODEL.get(model, GEMINI_CALL_INTERVAL_SEC)
+        last = self._last_call_time_by_model.get(model, 0.0)
+        elapsed = time.time() - last
+        wait = interval - elapsed
         if wait > 0:
             time.sleep(wait)
-        self._last_call_time = time.time()
+        self._last_call_time_by_model[model] = time.time()
 
     def generate(self, prompt: str) -> str:
         from google import genai
@@ -119,7 +133,7 @@ class TieredGeminiClient(LLMClient):
             for attempt in range(_MAX_ATTEMPTS_PER_TIER):
                 try:
                     with _API_SEMAPHORE:
-                        self._throttle()
+                        self._throttle(model)
                         gen_kwargs: dict = {"model": model, "contents": prompt}
                         if config_obj is not None:
                             gen_kwargs["config"] = config_obj
