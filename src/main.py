@@ -1943,9 +1943,29 @@ def _generate_outputs(
         save_job(db_path, record)
         record._triage_source_counts = triage_source_counts  # type: ignore[attr-defined]
         return record
+    # ── Legacy fallback deprecation gate ──────────────────────────────────────
+    # ANALYSIS_LAYER_ENABLED=true で analysis_result が None（観点不成立 or 分析失敗）
+    # の場合、旧ルート（write_script）に落とすと扇動的台本（ホルムズ海峡問題）が
+    # 再発するためスキップする。ANALYSIS_LAYER_ENABLED=false の場合は従来通り
+    # write_script を使う（後方互換）。
+    _analysis_layer_enabled = os.getenv("ANALYSIS_LAYER_ENABLED", "false").lower() == "true"
+    if _analysis_layer_enabled and top.analysis_result is None:
+        logger.warning(
+            f"event_id={event.id}: analysis_result is None, skipping script generation. "
+            "Old legacy fallback route is deprecated to prevent inflammatory output."
+        )
+        record = JobRecord(
+            id=job_id,
+            event_id=event.id,
+            status="skipped",
+            error="analysis_layer_returned_none",
+        )
+        save_job(db_path, record)
+        record._triage_source_counts = triage_source_counts  # type: ignore[attr-defined]
+        return record
     try:
         # 分析レイヤー有効時は AnalysisResult を入力に新ルートで台本生成。
-        # analysis_result が None（フィーチャーフラグ off / 分析失敗時）は従来ルート。
+        # ANALYSIS_LAYER_ENABLED=false の場合のみ従来ルート（write_script）を使う。
         if top.analysis_result is not None:
             try:
                 from src.shared.models import ChannelConfig as _ChannelConfig

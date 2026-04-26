@@ -123,6 +123,12 @@ def _no_analysis_files(output_dir: Path) -> bool:
     return not any(p.name.endswith("_analysis.json") for p in output_dir.iterdir())
 
 
+def _no_script_files(output_dir: Path) -> bool:
+    if not output_dir.exists():
+        return True
+    return not any(p.name.endswith("_script.json") for p in output_dir.iterdir())
+
+
 def _fake_analysis_result(event_id: str) -> AnalysisResult:
     return AnalysisResult(
         event_id=event_id,
@@ -266,10 +272,15 @@ def test_flag_true_writes_analysis_json_and_records_publication(
     assert parsed["selected_perspective"]["axis"] == "silence_gap"
 
 
-def test_flag_true_falls_back_to_legacy_when_run_returns_none(
+def test_flag_true_skips_when_run_returns_none(
     tmp_dirs, tmp_path, no_llm_api, monkeypatch
 ):
-    """run_analysis_layer が None を返しても run_from_normalized は完走する。"""
+    """run_analysis_layer が None を返した場合は動画生成をスキップする。
+
+    旧 legacy fallback（write_script への分岐）は扇動的台本（ホルムズ海峡問題）
+    再発防止のため廃止された。観点不成立時は _analysis.json も _script.json も
+    出さず、JobRecord status='skipped' で記録する。
+    """
     monkeypatch.setenv("ANALYSIS_LAYER_ENABLED", "true")
     monkeypatch.setenv("DEFAULT_CHANNEL_ID", "geo_lens")
     monkeypatch.setenv("TOP_N_GENERATION", "1")
@@ -291,15 +302,23 @@ def test_flag_true_falls_back_to_legacy_when_run_returns_none(
     norm_dir = _setup_normalized_batch(tmp_path, db)
     record = run_from_normalized(norm_dir, output, db)
 
-    assert record.status == "completed"
-    # _analysis.json は作られない（None フォールバック）
+    # 観点不成立で動画生成スキップ → status=skipped, error=analysis_layer_returned_none
+    assert record.status == "skipped"
+    assert record.error == "analysis_layer_returned_none"
+    # _analysis.json も _script.json も作られないこと
     assert _no_analysis_files(output)
+    assert _no_script_files(output)
 
 
-def test_flag_true_swallows_analysis_exception_and_continues(
+def test_flag_true_swallows_analysis_exception_and_skips(
     tmp_dirs, tmp_path, no_llm_api, monkeypatch
 ):
-    """分析レイヤー全体が例外を投げても run_from_normalized は完走する。"""
+    """分析レイヤーが例外を投げても run_from_normalized 自体はクラッシュせず、
+    動画生成はスキップする。
+
+    旧 legacy fallback は廃止されたため、分析レイヤーが落ちた場合の挙動は
+    「completed via legacy」ではなく「skipped(analysis_layer_returned_none)」。
+    """
     monkeypatch.setenv("ANALYSIS_LAYER_ENABLED", "true")
     monkeypatch.setenv("DEFAULT_CHANNEL_ID", "geo_lens")
     monkeypatch.setenv("TOP_N_GENERATION", "1")
@@ -314,8 +333,10 @@ def test_flag_true_swallows_analysis_exception_and_continues(
     output, db = tmp_dirs
     norm_dir = _setup_normalized_batch(tmp_path, db)
     record = run_from_normalized(norm_dir, output, db)
-    assert record.status == "completed"
+    assert record.status == "skipped"
+    assert record.error == "analysis_layer_returned_none"
     assert _no_analysis_files(output)
+    assert _no_script_files(output)
 
 
 def test_flag_true_uses_default_channel_id_geo_lens_when_env_unset(
