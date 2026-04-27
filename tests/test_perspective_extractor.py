@@ -1,4 +1,10 @@
-"""src/analysis/perspective_extractor.py のテスト（ルールベース、LLM 不要）。"""
+"""src/analysis/perspective_extractor.py のテスト。
+
+silence_gap / hidden_stakes / cultural_blindspot の 3 軸はルールベースで
+LLM 不要だが、framing_inversion 軸のみ LLM 判定 (Tier1 軽量) に委ねるため、
+本ファイルでは `get_analysis_llm_client` を autouse fixture で常時モック化し、
+実 LLM への到達を遮断する。各テストは必要に応じてフェイクの返答を上書きする。
+"""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -6,6 +12,7 @@ from typing import Optional
 
 import pytest
 
+from src.analysis import perspective_extractor as pe
 from src.analysis.perspective_extractor import (
     _calculate_cultural_blindspot_score,
     _calculate_framing_inversion_score,
@@ -24,6 +31,58 @@ from src.shared.models import (
     ScoredEvent,
     SourceRef,
 )
+
+
+# ---------- LLM モック基盤 ----------
+#
+# framing_inversion は LLM ベースに置き換わったため、各テストの実 LLM 呼び出しを
+# 遮断するフィクスチャを autouse で適用する。デフォルトでは
+# `get_analysis_llm_client` を None 返却に差し替え、framing_inversion 判定が
+# 必ず False (フェイルセーフ) になるようにする。LLM レスポンスの中身を
+# 検証したい個別テストは `set_framing_llm` で上書きする。
+
+class _FakeLLMClient:
+    """generate(prompt) の戻り値だけ差し替えられる軽量モック。
+
+    - `response` が文字列なら `generate` でその文字列を返す。
+    - `response` が Exception インスタンスなら `generate` で raise する。
+    - `response` が callable なら呼び出して結果を返す（prompt を渡す）。
+    呼び出し履歴は self.calls に prompt 文字列で保存。
+    """
+
+    def __init__(self, response):
+        self._response = response
+        self.calls: list[str] = []
+
+    def generate(self, prompt: str) -> str:
+        self.calls.append(prompt)
+        if isinstance(self._response, BaseException):
+            raise self._response
+        if callable(self._response):
+            return self._response(prompt)
+        return self._response
+
+
+@pytest.fixture(autouse=True)
+def _reset_framing_inversion_state(monkeypatch):
+    """framing_inversion 用の internal cache を毎テスト初期化し、
+    `get_analysis_llm_client` を None 返却に差し替えて実 LLM 到達を防ぐ。
+    """
+    pe._FRAMING_RESULTS.clear()
+    monkeypatch.setattr(pe, "get_analysis_llm_client", lambda: None)
+    yield
+    pe._FRAMING_RESULTS.clear()
+
+
+def set_framing_llm(monkeypatch, response) -> _FakeLLMClient:
+    """framing_inversion 判定で使われる LLM クライアントをモック化する。
+
+    `response` の解釈は `_FakeLLMClient` 参照。返した client を後続で
+    呼び出し回数や prompt の検査に使える。
+    """
+    client = _FakeLLMClient(response)
+    monkeypatch.setattr(pe, "get_analysis_llm_client", lambda: client)
+    return client
 
 
 # ---------- helpers ----------
@@ -207,32 +266,199 @@ def test_silence_gap_score_jp_penalty_drives_below_zero_clamped_to_zero():
     assert score == 0.0
 
 
-# ---------- framing_inversion ----------
+# ---------- framing_inversion (LLM ベース) ----------
+#
+# 旧ルールベース実装 (sources_jp >= 1 AND sources_en >= 2 AND
+# perspective_gap_score >= 6.0) を撤去し、LLM 判定に置き換えた。
+# テストはすべて _FakeLLMClient を介して実 LLM に到達しないように設計する。
+# 早期リターン (jp=0 / en=0 / total<2) では LLM が呼ばれないことを別途確認。
 
-def test_framing_inversion_meets_when_jp_and_en_present_and_pg_high():
-    se = _scored(
-        sources_en=2,
-        sources_jp=1,
-        breakdown={"perspective_gap_score": 7.0},
+import json as _json
+
+
+def _framing_response_json(
+    *,
+    is_inversion: bool,
+    confidence: str,
+    jp_framing: str = "positive",
+    en_framing: str = "negative",
+    inversion_meaning: str = "視聴者は片方の論調しか知らない可能性が高い。",
+) -> str:
+    """テスト用の LLM JSON レスポンス文字列を生成する。"""
+    payload = {
+        "jp_framing": jp_framing,
+        "jp_rationale": "test rationale (jp)",
+        "en_framing": en_framing,
+        "en_rationale": "test rationale (en)",
+        "is_inversion": is_inversion,
+        "inversion_meaning": inversion_meaning if is_inversion else "",
+        "confidence": confidence,
+        "unclear_reason": "" if is_inversion else "test unclear reason",
+    }
+    return _json.dumps(payload, ensure_ascii=False)
+
+
+def test_framing_inversion_meets_when_llm_returns_inversion_high(monkeypatch):
+    """LLM が is_inversion=True / confidence=high を返せば成立。"""
+    set_framing_llm(
+        monkeypatch,
+        _framing_response_json(is_inversion=True, confidence="high"),
     )
+    se = _scored(sources_en=2, sources_jp=1, breakdown={"perspective_gap_score": 2.0})
     assert _meets_framing_inversion_conditions(se) is True
 
 
-def test_framing_inversion_fails_when_no_jp_source():
-    se = _scored(sources_en=3, sources_jp=0, breakdown={"perspective_gap_score": 8.0})
+def test_framing_inversion_meets_when_llm_returns_inversion_medium(monkeypatch):
+    """confidence=medium も成立 (low のみが弾かれる)。"""
+    set_framing_llm(
+        monkeypatch,
+        _framing_response_json(is_inversion=True, confidence="medium"),
+    )
+    se = _scored(sources_en=2, sources_jp=1, breakdown={"perspective_gap_score": 0.0})
+    assert _meets_framing_inversion_conditions(se) is True
+
+
+def test_framing_inversion_fails_when_llm_returns_low_confidence(monkeypatch):
+    """confidence=low は無理に判定しない方針 → 不成立。"""
+    set_framing_llm(
+        monkeypatch,
+        _framing_response_json(is_inversion=True, confidence="low"),
+    )
+    se = _scored(sources_en=2, sources_jp=1, breakdown={"perspective_gap_score": 8.0})
     assert _meets_framing_inversion_conditions(se) is False
 
 
-def test_framing_inversion_score_includes_en_count_bonus():
+def test_framing_inversion_fails_when_llm_returns_no_inversion(monkeypatch):
+    """is_inversion=False は不成立。"""
+    set_framing_llm(
+        monkeypatch,
+        _framing_response_json(is_inversion=False, confidence="high"),
+    )
+    se = _scored(sources_en=3, sources_jp=2, breakdown={"perspective_gap_score": 7.0})
+    assert _meets_framing_inversion_conditions(se) is False
+
+
+def test_framing_inversion_fails_when_llm_raises(monkeypatch):
+    """LLM 呼び出しが例外を投げた場合はフェイルセーフで False。"""
+    set_framing_llm(monkeypatch, RuntimeError("simulated 429 RESOURCE_EXHAUSTED"))
+    se = _scored(sources_en=2, sources_jp=1, breakdown={"perspective_gap_score": 7.0})
+    assert _meets_framing_inversion_conditions(se) is False
+
+
+def test_framing_inversion_fails_when_llm_returns_unparseable_json(monkeypatch):
+    """JSON でない応答が返ったらフェイルセーフで False。"""
+    set_framing_llm(monkeypatch, "this is not json at all -- just plain prose")
+    se = _scored(sources_en=2, sources_jp=1, breakdown={"perspective_gap_score": 7.0})
+    assert _meets_framing_inversion_conditions(se) is False
+
+
+def test_framing_inversion_handles_code_fenced_json(monkeypatch):
+    """```json ... ``` でラップされた応答も _json_utils.parse_json_response が剥がす。"""
+    payload = _framing_response_json(is_inversion=True, confidence="high")
+    fenced = f"```json\n{payload}\n```"
+    set_framing_llm(monkeypatch, fenced)
+    se = _scored(sources_en=2, sources_jp=1, breakdown={"perspective_gap_score": 0.0})
+    assert _meets_framing_inversion_conditions(se) is True
+
+
+def test_framing_inversion_does_not_call_llm_when_no_jp_sources(monkeypatch):
+    """jp_count == 0 は LLM を呼ばずに早期 False。"""
+    fake = set_framing_llm(
+        monkeypatch,
+        _framing_response_json(is_inversion=True, confidence="high"),
+    )
+    se = _scored(sources_en=3, sources_jp=0, breakdown={"perspective_gap_score": 8.0})
+    assert _meets_framing_inversion_conditions(se) is False
+    assert fake.calls == []  # LLM が呼ばれていないこと
+
+
+def test_framing_inversion_does_not_call_llm_when_no_en_sources(monkeypatch):
+    """en_count == 0 は LLM を呼ばずに早期 False。"""
+    fake = set_framing_llm(
+        monkeypatch,
+        _framing_response_json(is_inversion=True, confidence="high"),
+    )
+    se = _scored(sources_en=0, sources_jp=2, breakdown={"perspective_gap_score": 8.0})
+    assert _meets_framing_inversion_conditions(se) is False
+    assert fake.calls == []
+
+
+def test_framing_inversion_does_not_call_llm_when_total_below_two(monkeypatch):
+    """sources_total < 2 (jp+en の合計) も早期 False。
+
+    jp=1, en=0 のような片側成立かつ合計 1 のケースを救う。
+    """
+    fake = set_framing_llm(
+        monkeypatch,
+        _framing_response_json(is_inversion=True, confidence="high"),
+    )
+    se = _scored(sources_en=0, sources_jp=1, breakdown={"perspective_gap_score": 8.0})
+    assert _meets_framing_inversion_conditions(se) is False
+    assert fake.calls == []
+
+
+def test_framing_inversion_fails_when_llm_client_unavailable(monkeypatch):
+    """get_analysis_llm_client() が None を返すケース (autouse 状態) でも安全に False。"""
+    se = _scored(sources_en=2, sources_jp=1, breakdown={"perspective_gap_score": 8.0})
+    assert _meets_framing_inversion_conditions(se) is False
+
+
+def test_framing_inversion_score_uses_llm_confidence_high(monkeypatch):
+    """confidence=high は score=9.0、reasoning に jp/en の framing と meaning を含む。"""
+    set_framing_llm(
+        monkeypatch,
+        _framing_response_json(
+            is_inversion=True,
+            confidence="high",
+            jp_framing="positive",
+            en_framing="negative",
+            inversion_meaning="日本では成功と報じられた合意が海外では譲歩として懸念されている。",
+        ),
+    )
     se = _scored(
-        sources_en=4,
-        sources_jp=1,
-        breakdown={"perspective_gap_score": 6.0},
+        title="Trade deal headlines diverge",
+        sources_en=2, sources_jp=1, breakdown={"perspective_gap_score": 0.0},
     )
     score, reason = _calculate_framing_inversion_score(se)
-    # 6 + 4*0.5 = 8
-    assert score == pytest.approx(8.0)
-    assert "perspective_gap" in reason
+    assert score == pytest.approx(9.0)
+    assert "jp=positive" in reason
+    assert "en=negative" in reason
+    assert "high" in reason
+
+
+def test_framing_inversion_score_uses_llm_confidence_medium(monkeypatch):
+    """confidence=medium は score=7.0。"""
+    set_framing_llm(
+        monkeypatch,
+        _framing_response_json(is_inversion=True, confidence="medium"),
+    )
+    se = _scored(sources_en=2, sources_jp=1, breakdown={"perspective_gap_score": 0.0})
+    score, _ = _calculate_framing_inversion_score(se)
+    assert score == pytest.approx(7.0)
+
+
+def test_framing_inversion_score_zero_when_classifier_fails(monkeypatch):
+    """LLM 失敗 → score=0.0 (reasoning に「判定不能」が含まれる)。"""
+    set_framing_llm(monkeypatch, RuntimeError("simulated LLM outage"))
+    se = _scored(sources_en=2, sources_jp=1, breakdown={"perspective_gap_score": 0.0})
+    score, reason = _calculate_framing_inversion_score(se)
+    assert score == 0.0
+    assert "判定不能" in reason or "unavailable" in reason.lower()
+
+
+def test_framing_inversion_meets_and_calculate_share_single_llm_call(monkeypatch):
+    """_meets と _calculate を続けて呼んでも LLM は 1 回だけ叩かれる
+    (event.id ベースの内部キャッシュ _FRAMING_RESULTS で再利用)。
+    """
+    fake = set_framing_llm(
+        monkeypatch,
+        _framing_response_json(is_inversion=True, confidence="high"),
+    )
+    se = _scored(sources_en=2, sources_jp=1, breakdown={"perspective_gap_score": 0.0})
+    assert _meets_framing_inversion_conditions(se) is True
+    score, _ = _calculate_framing_inversion_score(se)
+    assert score == pytest.approx(9.0)
+    assert len(fake.calls) == 1, f"LLM が {len(fake.calls)} 回呼ばれた (期待: 1)"
 
 
 # ---------- hidden_stakes ----------

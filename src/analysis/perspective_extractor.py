@@ -1,23 +1,27 @@
-"""観点軸 4 種のルールベース抽出。
-
-設計書 Section 5 の仕様をベースとしつつ、Phase 1 の実 LLM 試運転で
-「観点が 1 つも成立せず分析レイヤーがスキップされる」事故が発生したため、
-silence_gap / hidden_stakes / cultural_blindspot を「失敗しない作り」に再設計する
-（framing_inversion は別バッチで LLM ベース化するため本ファイルでは旧実装のまま）。
+"""観点軸 4 種の抽出（silence_gap / hidden_stakes / cultural_blindspot は
+ルールベース、framing_inversion のみ LLM ベース）。
 
 4 軸の意味（混同注意）:
     - silence_gap         : 日本側の報道「量・露出」が薄い（情報量で判定）
-    - framing_inversion   : 同一事象に対する「論調・評価方向」の差（LLM 判定に委ねる）
+    - framing_inversion   : 同一事象に対する「論調・評価方向」の差（LLM 判定）
     - hidden_stakes       : 日本にとっての「隠れた利害」がある（直接影響は薄いが波及大）
     - cultural_blindspot  : 西側視点と非西側視点の差（地域偏向で判定）
 
-スコアと成立条件は既存の score_breakdown フィールド + sources_by_locale を参照する。
+ルールベース 3 軸は score_breakdown + sources_by_locale を参照する。
+framing_inversion は「論調・皮肉・暗喩」の文脈解釈をルールでは判定困難なため、
+configs/prompts/analysis/geo_lens/framing_inversion_classifier.md を用いた
+LLM 判定に委ねる（Tier1 軽量モデル想定 / フェイルセーフは False 返却）。
+
 ChannelConfig.perspective_axes に含まれない軸は最終フィルタで除外する。
 """
 from __future__ import annotations
 
+import json
 from typing import Optional
 
+from src.analysis._json_utils import parse_json_response
+from src.analysis.prompt_loader import load_prompt
+from src.llm.factory import get_analysis_llm_client
 from src.shared.logger import get_logger
 from src.shared.models import ChannelConfig, PerspectiveCandidate, ScoredEvent
 from src.triage.scoring import _INDIRECT_JAPAN_IMPACT_KW
@@ -197,32 +201,188 @@ def _calculate_silence_gap_score(event: ScoredEvent) -> tuple[float, str]:
     return score, reasoning
 
 
-# ---------- 軸2: Framing Inversion ----------
+# ---------- 軸2: Framing Inversion (LLM ベース) ----------
 #
-# 本軸は別バッチで LLM ベース化予定のため、既存実装をそのまま維持する。
+# 「論調・皮肉・暗喩」の解釈はルールベースでは破綻するため、
+# 上位観点候補に絞った上で LLM (Tier1 軽量モデル) に委ねる。
+# プロンプトは configs/prompts/analysis/geo_lens/framing_inversion_classifier.md。
+#
+# _meets / _calculate の二段呼び出しで LLM 二重発火しないよう、
+# event.id をキーとした内部キャッシュ _FRAMING_RESULTS で分類結果を共有する。
+
+# 1 ソースあたり title を最大何文字まで載せるか（LLM コンテキスト節約）
+_FRAMING_SOURCE_TEXT_MAX_LEN = 500
+# プロンプトに載せる片側最大ソース数（観点抽出は上位候補のみ対象なので過剰列挙は不要）
+_FRAMING_SOURCE_MAX_COUNT = 5
+# LLM 判定結果の event.id ベースキャッシュ。_meets で書き込み、_calculate で読み出す。
+# 観点抽出は event ごとに 1 回のみ走る前提（CLAUDE.md / instructions より）。
+_FRAMING_RESULTS: dict[str, Optional[dict]] = {}
+# is_inversion=True 時の信頼度に応じたスコア表（_calculate のスコア決定で使用）。
+_FRAMING_SCORE_BY_CONFIDENCE = {"high": 9.0, "medium": 7.0}
+_FRAMING_DEFAULT_SCORE = 5.0
+
+
+def _format_framing_source_block(event: ScoredEvent, japan_side: bool) -> str:
+    """日本側 / 海外側のソース群を LLM プロンプト用にテキスト整形する。
+
+    - 各ソースは title をそのまま採用（500 字でカット）し、name とともに 1 行で出力。
+    - 上位 _FRAMING_SOURCE_MAX_COUNT 件まで。
+    - 該当ソースが空の場合は "(該当なし)" を返す。
+    """
+    ev = event.event
+    sources: list = []
+    if ev.sources_by_locale:
+        for region, refs in ev.sources_by_locale.items():
+            if japan_side and region == "japan":
+                sources.extend(refs)
+            elif not japan_side and region != "japan":
+                sources.extend(refs)
+    else:
+        sources = list(ev.sources_jp if japan_side else ev.sources_en)
+
+    if not sources:
+        return "(該当なし)"
+
+    lines: list[str] = []
+    for s in sources[:_FRAMING_SOURCE_MAX_COUNT]:
+        title = (s.title or "").strip()
+        if len(title) > _FRAMING_SOURCE_TEXT_MAX_LEN:
+            title = title[:_FRAMING_SOURCE_TEXT_MAX_LEN].rstrip() + "…"
+        if not title:
+            title = "(タイトル不明)"
+        lines.append(f"- [{s.name}] {title}")
+
+    # 補助情報として日本側は japan_view、海外側は global_view を末尾に添える。
+    extra = ev.japan_view if japan_side else ev.global_view
+    if extra:
+        snippet = extra.strip()
+        if len(snippet) > _FRAMING_SOURCE_TEXT_MAX_LEN:
+            snippet = snippet[:_FRAMING_SOURCE_TEXT_MAX_LEN].rstrip() + "…"
+        lines.append(f"  ({'JP' if japan_side else 'GLOBAL'} view: {snippet})")
+
+    return "\n".join(lines)
+
+
+def _build_framing_inversion_prompt(event: ScoredEvent) -> str:
+    """framing_inversion_classifier.md を読み込み、テンプレ変数を埋める。"""
+    template = load_prompt("geo_lens", "framing_inversion_classifier")
+    jp_count = _sources_jp_count(event)
+    en_count = _sources_en_count(event)
+    return template.format(
+        jp_count=jp_count,
+        en_count=en_count,
+        jp_sources=_format_framing_source_block(event, japan_side=True),
+        en_sources=_format_framing_source_block(event, japan_side=False),
+    )
+
+
+def _run_framing_inversion_classifier(event: ScoredEvent) -> Optional[dict]:
+    """LLM を呼び出して論調逆転判定を返す。
+
+    - 早期リターン: jp_count==0 / en_count==0 / sources_total<2 → None
+    - LLM 未取得 / 例外 / JSON パース失敗 → None（フェイルセーフ）
+    - 成功時はパース済み dict を返す。
+    結果は event.id キーで _FRAMING_RESULTS にキャッシュされる
+    （_meets と _calculate での二重呼び出し防止）。
+    """
+    cache_key = event.event.id
+    if cache_key in _FRAMING_RESULTS:
+        return _FRAMING_RESULTS[cache_key]
+
+    jp_count = _sources_jp_count(event)
+    en_count = _sources_en_count(event)
+    if jp_count == 0 or en_count == 0 or (jp_count + en_count) < 2:
+        _FRAMING_RESULTS[cache_key] = None
+        return None
+
+    client = get_analysis_llm_client()
+    if client is None:
+        logger.warning(
+            "[FramingInversion] analysis LLM client unavailable for event=%s "
+            "(GEMINI_API_KEY 未設定か、provider 未対応)。判定をスキップ (False)。",
+            cache_key,
+        )
+        _FRAMING_RESULTS[cache_key] = None
+        return None
+
+    try:
+        prompt = _build_framing_inversion_prompt(event)
+        raw = client.generate(prompt)
+    except Exception as exc:
+        logger.warning(
+            "[FramingInversion] LLM 呼び出し失敗 event=%s: %s → 不成立として扱う。",
+            cache_key,
+            exc,
+        )
+        _FRAMING_RESULTS[cache_key] = None
+        return None
+
+    try:
+        parsed = parse_json_response(raw)
+    except (json.JSONDecodeError, ValueError) as exc:
+        logger.warning(
+            "[FramingInversion] LLM 応答 JSON パース失敗 event=%s: %s → 不成立。raw=%r",
+            cache_key,
+            exc,
+            raw[:200] if isinstance(raw, str) else raw,
+        )
+        _FRAMING_RESULTS[cache_key] = None
+        return None
+
+    if not isinstance(parsed, dict):
+        logger.warning(
+            "[FramingInversion] LLM 応答が dict でない event=%s: type=%s → 不成立。",
+            cache_key,
+            type(parsed).__name__,
+        )
+        _FRAMING_RESULTS[cache_key] = None
+        return None
+
+    _FRAMING_RESULTS[cache_key] = parsed
+    return parsed
+
 
 def _meets_framing_inversion_conditions(event: ScoredEvent) -> bool:
-    """成立条件: sources_jp >= 1 AND sources_en >= 2 AND perspective_gap_score >= 6.0。
-    主体・述語の差異判定は LLM の役割（Step 3）に委ねる。
+    """LLM ベース判定: is_inversion=True かつ confidence != "low" のときのみ成立。
+
+    早期リターン (LLM 呼び出し前):
+        - jp_count == 0 / en_count == 0 / sources_total < 2
+    LLM 失敗・例外・パース不能・confidence=low はすべて False（フェイルセーフ）。
     """
-    if _sources_jp_count(event) < 1:
+    result = _run_framing_inversion_classifier(event)
+    if result is None:
         return False
-    if _sources_en_count(event) < 2:
+
+    confidence = str(result.get("confidence", "")).strip().lower()
+    if confidence == "low":
         return False
-    if _axis_score(event, "perspective_gap_score") < 6.0:
-        return False
-    return True
+
+    return bool(result.get("is_inversion") is True)
 
 
 def _calculate_framing_inversion_score(event: ScoredEvent) -> tuple[float, str]:
-    """設計書 Section 5.2 軸2 の式に従う（framing_divergence_bonus は LLM 判定後の加点なので未加算）。"""
-    pg = _axis_score(event, "perspective_gap_score")
-    en = _sources_en_count(event)
-    raw = pg + (en * 0.5)
-    score = _clamp(raw)
+    """LLM 判定の confidence に応じてスコアを返す。
+
+    結果は _meets で書き込まれた _FRAMING_RESULTS を再利用する（LLM 二重呼び出し防止）。
+    キャッシュ未設定（_meets を経由せずに直接呼ばれた場合）は再度 LLM を呼ぶ。
+    """
+    result = _run_framing_inversion_classifier(event)
+    if result is None:
+        # _meets と整合（_meets が False を返した直後は基本ここに来ない）。
+        return 0.0, "framing_inversion: LLM 判定不能 → score=0.0"
+
+    confidence = str(result.get("confidence", "")).strip().lower()
+    score = _FRAMING_SCORE_BY_CONFIDENCE.get(confidence, _FRAMING_DEFAULT_SCORE)
+    score = _clamp(score)
+
+    jp_framing = result.get("jp_framing", "?")
+    en_framing = result.get("en_framing", "?")
+    meaning = (result.get("inversion_meaning") or "").strip()
+    meaning_excerpt = meaning[:60] + ("…" if len(meaning) > 60 else "")
     reasoning = (
-        f"perspective_gap={pg:.1f}, sources_en={en} → score={score:.2f} "
-        f"(LLM 判定で framing_divergence_bonus +2 が乗る可能性あり)"
+        f"LLM framing_inversion: jp={jp_framing} vs en={en_framing}, "
+        f"confidence={confidence or '?'} → score={score:.2f}"
+        + (f" / meaning: {meaning_excerpt}" if meaning_excerpt else "")
     )
     return score, reasoning
 
