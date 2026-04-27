@@ -258,8 +258,13 @@ def test_run_from_normalized_noop_when_no_batch(tmp_path):
 # run_from_normalized: archive on success
 # ─────────────────────────────────────────────────────────────────────────────
 
-def test_run_from_normalized_archives_on_success(tmp_path):
+def test_run_from_normalized_archives_on_success(tmp_path, monkeypatch):
     """job 成功後に batch ファイルが archive ディレクトリに移動される。"""
+    # Phase 1.5 batch E-1: 静的 garbage_filter (date 48h) がフィクスチャの
+    # 古い published_at を弾いてしまうので、本テストでは LLM/static filter を
+    # 無効化して archive 挙動のみを検証する。
+    monkeypatch.setattr("src.main.get_garbage_filter_client", lambda: None)
+
     norm_dir = tmp_path / "normalized"
     norm_dir.mkdir()
     norm_file = norm_dir / "nhk_20260410_120000_normalized.json"
