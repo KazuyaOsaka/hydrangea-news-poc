@@ -1144,6 +1144,7 @@ def _build_script_with_analysis_prompt(
         event_summary=(scored_event.event.summary or "").replace("\n", " "),
         perspective_axis=perspective.axis,
         perspective_reasoning=(perspective.reasoning or "").replace("\n", " "),
+        perspective_why_now=(perspective.why_now or "").replace("\n", " "),
         multi_angle_geopolitical=(multi.geopolitical or "").replace("\n", " "),
         multi_angle_political_intent=(multi.political_intent or "").replace("\n", " "),
         multi_angle_economic_impact=(multi.economic_impact or "").replace("\n", " "),
