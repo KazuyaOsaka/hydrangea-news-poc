@@ -596,6 +596,7 @@ def build_daily_schedule(
 FLAGSHIP_LINKED_JP_GLOBAL  = "flagship_linked_jp_global"
 FLAGSHIP_BLIND_SPOT_GLOBAL = "flagship_blind_spot_global"
 FLAGSHIP_MACRO_PARADIGM    = "flagship_macro_paradigm"
+FLAGSHIP_EDITORIAL_MISSION = "flagship_editorial_mission"  # F-2: EditorialMissionFilter 通過ルート (documentation 用)
 
 
 def get_flagship_class(se: ScoredEvent) -> str | None:
@@ -662,6 +663,12 @@ def _passes_flagship_gate(se: ScoredEvent) -> tuple[bool, str]:
     """
     候補が auto-generation に値する flagship 水準かを判定する。
 
+    判定順序 (Hydrangea コンセプト準拠):
+        1. 既存の flagship クラス判定 (get_flagship_class) — 後方互換
+        2. EditorialMissionFilter 通過 (editorial_mission_score >= 45.0)
+           → Hydrangea の編集ミッションに適合した候補は flagship として認定
+        3. それ以外 — 構造化された reason で blocked
+
     Returns:
         (passes: bool, reason: str)
         passes=True → auto-generation 許可
@@ -670,10 +677,21 @@ def _passes_flagship_gate(se: ScoredEvent) -> tuple[bool, str]:
     用途: main.py の _generate_outputs 呼び出し前にチェックする。
     スケジューリング（何を番組表に載せるか）とは独立。
     """
+    # 1. 既存の flagship クラス判定 (後方互換)
     flagship_class = get_flagship_class(se)
     if flagship_class is not None:
         return True, flagship_class
-    # 非 flagship — 理由を構造化して返す
+
+    # 2. EditorialMissionFilter 通過なら flagship 認定
+    # F-1 で導入された 7 軸評価 (perspective_gap, geopolitical_significance,
+    # blindspot_severity, political_intent, hidden_power_dynamics,
+    # economic_interests, discussion_potential) で 45.0 以上を獲得した候補は
+    # Hydrangea の編集ミッションに適合しているため、weak_japan / no_depth 等の
+    # 旧 ViralFilter 時代の判定を免除する。
+    if se.editorial_mission_score is not None and se.editorial_mission_score >= 45.0:
+        return True, f"flagship_editorial_mission:score={se.editorial_mission_score:.1f}"
+
+    # 3. 非 flagship — 理由を構造化して返す
     bd = se.score_breakdown
     jr   = float(bd.get("editorial:japan_relevance_score", 0.0))
     ga   = float(bd.get("editorial:global_attention_score", 0.0))

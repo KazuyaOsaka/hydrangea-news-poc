@@ -329,3 +329,24 @@ ingestion → clustering → ranking → appraisal → rolling_window
 
 `build_why_slot1_won_editorially()` 関数名は変更なし（移植のみ）。
 シグネチャは同一なので main.py 側の呼び出し変更は import + 関数名 + 変数名のみで完了する。
+
+---
+
+### F-2 で導入した FlagshipGate の Hydrangea 適合改修
+
+F-1.5 試運転で、EditorialMissionFilter で通過した候補（北朝鮮ロシア軍事同盟、中東情勢等）が
+src/triage/scheduler.py::_passes_flagship_gate() で「weak_japan」として弾かれる問題が発覚。
+
+旧 FlagshipGate は ViralFilter 時代の設計で、`japan_relevance_score` / `indirect_japan_impact_score`
+が低い候補を「日本で再生されない」として弾く設計だった。これは Hydrangea のコンセプトと矛盾する。
+
+F-2 では `_passes_flagship_gate()` に以下のロジックを追加:
+
+```python
+if se.editorial_mission_score is not None and se.editorial_mission_score >= 45.0:
+    return True, f"flagship_editorial_mission:score=..."
+```
+
+これにより EditorialMissionFilter の 7 軸で評価された候補は、weak_japan / no_depth 等の
+旧基準を免除される。既存の get_flagship_class() ロジックは後方互換のため維持。
+
