@@ -61,10 +61,10 @@ class TestPublishModeStopsExploration:
         assert b.can_afford_judge() is False
         assert b.stopped_exploration_due_to_publish_reserve is True
 
-    def test_can_afford_viral_filter_blocked_at_threshold(self):
-        """can_afford_viral_filter returns False when reserve reached."""
+    def test_can_afford_editorial_mission_filter_blocked_at_threshold(self):
+        """can_afford_editorial_mission_filter returns False when reserve reached."""
         b = _tracker(day_budget=10, day_calls_so_far=4, publish_reserve_calls=6)
-        assert b.can_afford_viral_filter() is False
+        assert b.can_afford_editorial_mission_filter() is False
         assert b.stopped_exploration_due_to_publish_reserve is True
 
     def test_can_afford_cluster_pair_blocked_at_threshold(self):
@@ -139,12 +139,12 @@ class TestResearchModeFullBudget:
         )
         assert b.can_afford_judge() is True
 
-    def test_research_mode_allows_viral_filter_below_reserve(self):
+    def test_research_mode_allows_editorial_mission_filter_below_reserve(self):
         b = _tracker(
             run_budget=12, day_budget=10, day_calls_so_far=6,
             mode="research_mode", publish_reserve_calls=6,
         )
-        assert b.can_afford_viral_filter() is True
+        assert b.can_afford_editorial_mission_filter() is True
 
     def test_research_mode_allows_cluster_pair_below_reserve(self):
         b = _tracker(
@@ -271,7 +271,7 @@ class TestObservabilityFields:
     def test_exploration_budget_used_tracks_exploration_calls(self):
         b = _tracker()
         b.record_call("judge")
-        b.record_call("viral_filter")
+        b.record_call("editorial_mission_filter")
         # 正式 feature 名は cluster_post_merge_batch
         # (src/budget.py:_EXPLORATION_FEATURES と event_builder.py の呼び出し元に一致)
         b.record_call("cluster_post_merge_batch")

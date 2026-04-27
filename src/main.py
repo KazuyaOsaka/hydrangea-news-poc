@@ -73,10 +73,10 @@ from src.shared.config import (
     ELITE_JUDGE_CANDIDATE_LIMIT,
     ELITE_JUDGE_ENABLED,
     GARBAGE_FILTER_ENABLED,
-    VIRAL_FILTER_ENABLED,
-    VIRAL_LLM_ENABLED,
-    VIRAL_PRESCORE_TOP_N,
-    VIRAL_SCORE_THRESHOLD,
+    EDITORIAL_MISSION_FILTER_ENABLED,
+    MISSION_LLM_ENABLED,
+    MISSION_PRESCORE_TOP_N,
+    MISSION_SCORE_THRESHOLD,
 )
 from src.shared.logger import get_logger
 from src.shared.models import DailySchedule, GeminiJudgeResult, JobRecord, ScoredEvent
@@ -97,7 +97,7 @@ from src.storage.db import (
     upsert_recent_event_pool,
 )
 from src.triage.appraisal import APPRAISAL_CANDIDATE_LIMIT, apply_editorial_appraisal, final_review
-from src.triage.viral_filter import apply_viral_filter, build_why_slot1_won_editorially
+from src.triage.editorial_mission_filter import apply_editorial_mission_filter, build_why_slot1_won_editorially
 from src.triage.engine import pick_top, rank_events
 from src.triage.freshness import (
     DEFAULT_WINDOW_HOURS,
@@ -123,7 +123,7 @@ def _save_run_summary(
     schedule_tracking: "dict | None" = None,
     rolling_window_stats: "dict | None" = None,
     judge_summary: "dict | None" = None,
-    viral_filter_summary: "dict | None" = None,
+    editorial_mission_summary: "dict | None" = None,
     av_render_summary: "dict | None" = None,
 ) -> None:
     """run_summary.json を output_dir に保存する。"""
@@ -324,7 +324,7 @@ def _save_run_summary(
             "upgraded_from_recent_pool_count": 0,
         },
         "judge_summary": judge_summary or {"judge_enabled": False, "judged_count": 0},
-        "viral_filter": viral_filter_summary or {"viral_filter_applied": False},
+        "editorial_mission_filter": editorial_mission_summary or {"editorial_mission_filter_applied": False},
         "av_render": av_render_summary or {
             "audio_render_enabled": AUDIO_RENDER_ENABLED,
             "video_render_enabled": VIDEO_RENDER_ENABLED,
@@ -1337,29 +1337,29 @@ def _write_latest_candidate_report(
                 "",
             ]
 
-    # ── Viral Filter summary ──────────────────────────────────────────────────
-    viral_rejected = [se for se in all_ranked if se.why_rejected_before_generation]
-    if viral_rejected:
+    # ── Editorial Mission Filter summary ──────────────────────────────────────
+    mission_rejected = [se for se in all_ranked if se.why_rejected_before_generation]
+    if mission_rejected:
         lines += [
-            "## 8. Viral Filter — Rejected Before Generation",
+            "## 8. Editorial Mission Filter — Rejected Before Generation",
             "",
-            f"**{len(viral_rejected)} candidate(s) rejected by viral filter "
+            f"**{len(mission_rejected)} candidate(s) rejected by editorial mission filter "
             f"(below threshold):**",
             "",
         ]
-        for se_v in viral_rejected[:10]:
-            vfs = se_v.viral_filter_score
-            vfs_str = f"{vfs:.1f}" if vfs is not None else "N/A"
+        for se_v in mission_rejected[:10]:
+            ems = se_v.editorial_mission_score
+            ems_str = f"{ems:.1f}" if ems is not None else "N/A"
             lines.append(
                 f"- `{se_v.event.id[:20]}` score={se_v.score:.1f} "
-                f"viral={vfs_str} — "
+                f"mission={ems_str} — "
                 f"{se_v.event.title[:60]}"
             )
             lines.append(
                 f"  *why_rejected:* `{se_v.why_rejected_before_generation}`"
             )
-        if len(viral_rejected) > 10:
-            lines.append(f"  *(and {len(viral_rejected) - 10} more)*")
+        if len(mission_rejected) > 10:
+            lines.append(f"  *(and {len(mission_rejected) - 10} more)*")
         lines.append("")
 
     # ── Slot-1 editorial rationale ───────────────────────────────────────────
@@ -1411,7 +1411,7 @@ def _write_latest_candidate_report(
                 "no_eligible" in (slot1_block_reason or "")
                 or "flagship_gate" in (slot1_block_reason or "")
                 or "no_publishable" in (slot1_block_reason or "")
-                or "viral_filter" in (slot1_block_reason or "")
+                or "editorial_mission_filter" in (slot1_block_reason or "")
             ):
                 if _reserve_ok:
                     lines.append(
@@ -1853,8 +1853,8 @@ def _generate_outputs(
                     "appraisal_cautions": top.appraisal_cautions,
                     "editorial_appraisal_score": top.editorial_appraisal_score,
                     "tags_multi": top.tags_multi,
-                    "viral_filter_score": top.viral_filter_score,
-                    "viral_filter_breakdown": top.viral_filter_breakdown or {},
+                    "editorial_mission_score": top.editorial_mission_score,
+                    "editorial_mission_breakdown": top.editorial_mission_breakdown or {},
                     "why_slot1_won_editorially": top.why_slot1_won_editorially,
                     "breakdown": top.score_breakdown,
                     "all_candidates": [
@@ -1883,9 +1883,9 @@ def _generate_outputs(
                             "freshness_decay": s.freshness_decay,
                             "from_recent_pool": s.from_recent_pool,
                             "pool_created_at": s.pool_created_at,
-                            # Pass C: Viral Filter
-                            "viral_filter_score": s.viral_filter_score,
-                            "viral_filter_breakdown": s.viral_filter_breakdown or {},
+                            # Pass C: Editorial Mission Filter
+                            "editorial_mission_score": s.editorial_mission_score,
+                            "editorial_mission_breakdown": s.editorial_mission_breakdown or {},
                             "why_rejected_before_generation": s.why_rejected_before_generation,
                             "why_slot1_won_editorially": s.why_slot1_won_editorially,
                             **(
@@ -2356,7 +2356,7 @@ def run_from_normalized(
             logger.warning("[GarbageFilter] GARBAGE_FILTER_ENABLED=true だが API キー未設定のためスキップ")
 
         run_stats: dict = {}
-        _viral_filter_summary: dict = {"viral_filter_applied": False}
+        _editorial_mission_summary: dict = {"editorial_mission_filter_applied": False}
         events = build_events_from_normalized(
             normalized_dir=normalized_dir,
             min_shared_keywords=min_shared_keywords,
@@ -2424,28 +2424,28 @@ def run_from_normalized(
 
         batch_info["rolling_window"] = rolling_window_stats
 
-        # ── Stage C2: Viral & Interest Filter (Pass C) ───────────────────────
-        # Scores all candidates on Japan-market viral potential (0-100).
+        # ── Stage C2: Editorial Mission Filter (Pass C) ──────────────────────
+        # Scores all candidates on Hydrangea editorial mission fit (0-100, 7 axes).
         # Step 1: deterministic prescore using editorial axes (free, always runs).
-        # Step 2: optional LLM scoring for top VIRAL_PRESCORE_TOP_N candidates.
-        # Candidates below VIRAL_SCORE_THRESHOLD get why_rejected_before_generation set.
-        _viral_filter_summary: dict = {"viral_filter_applied": False}
-        if VIRAL_FILTER_ENABLED:
-            _viral_llm_client = get_judge_llm_client() if VIRAL_LLM_ENABLED else None
-            all_ranked, _viral_filter_summary = apply_viral_filter(
+        # Step 2: optional LLM scoring for top MISSION_PRESCORE_TOP_N candidates.
+        # Candidates below MISSION_SCORE_THRESHOLD get why_rejected_before_generation set.
+        _editorial_mission_summary: dict = {"editorial_mission_filter_applied": False}
+        if EDITORIAL_MISSION_FILTER_ENABLED:
+            _mission_llm_client = get_judge_llm_client() if MISSION_LLM_ENABLED else None
+            all_ranked, _editorial_mission_summary = apply_editorial_mission_filter(
                 all_ranked,
                 budget,
-                llm_client=_viral_llm_client,
-                prescore_top_n=VIRAL_PRESCORE_TOP_N,
-                score_threshold=VIRAL_SCORE_THRESHOLD,
-                llm_enabled=VIRAL_LLM_ENABLED,
+                llm_client=_mission_llm_client,
+                prescore_top_n=MISSION_PRESCORE_TOP_N,
+                score_threshold=MISSION_SCORE_THRESHOLD,
+                llm_enabled=MISSION_LLM_ENABLED,
             )
             logger.info(
-                f"[ViralFilter] Applied: "
-                f"passed={_viral_filter_summary.get('passed_threshold', 0)}/"
-                f"{_viral_filter_summary.get('total_candidates', 0)}, "
-                f"rejected={_viral_filter_summary.get('rejected_before_generation', 0)}, "
-                f"llm_scored={_viral_filter_summary.get('llm_scored_count', 0)}"
+                f"[EditorialMissionFilter] Applied: "
+                f"passed={_editorial_mission_summary.get('passed_threshold', 0)}/"
+                f"{_editorial_mission_summary.get('total_candidates', 0)}, "
+                f"rejected={_editorial_mission_summary.get('rejected_before_generation', 0)}, "
+                f"llm_scored={_editorial_mission_summary.get('llm_scored_count', 0)}"
             )
 
         # ── Gate 3: Elite Judge（編集長・一点突破判定）──────────────────────────
@@ -2457,7 +2457,7 @@ def run_from_normalized(
             _elite_judge_client = get_judge_llm_client()
             if _elite_judge_client is not None:
                 _elite_adopted: list[ScoredEvent] = []
-                # ELITE_JUDGE_CANDIDATE_LIMIT 件に絞る。all_ranked は Viral Filter 通過後の
+                # ELITE_JUDGE_CANDIDATE_LIMIT 件に絞る。all_ranked は Editorial Mission Filter 通過後の
                 # effective_score 降順なので、上位から LIMIT 件を Elite Judge にかける。
                 # 残りは elite_judge 未評価のまま all_ranked からは除外（= 棄却扱い）する。
                 _elite_candidates = all_ranked[:ELITE_JUDGE_CANDIDATE_LIMIT]
@@ -2617,7 +2617,7 @@ def run_from_normalized(
                 },
                 rolling_window_stats=rolling_window_stats,
                 judge_summary=_build_judge_summary(judge_results, [], None, [], model_resolution=_judge_model_resolution),
-                viral_filter_summary=_viral_filter_summary,
+                editorial_mission_summary=_editorial_mission_summary,
             )
             budget.log_summary(
                 day_runs=stats_after["run_count"],
@@ -2784,7 +2784,7 @@ def run_from_normalized(
                             judge_results, all_ranked, None, [],
                             model_resolution=_judge_model_resolution,
                         ),
-                        viral_filter_summary=_viral_filter_summary,
+                        editorial_mission_summary=_editorial_mission_summary,
                     )
                     budget.log_summary(
                         day_runs=stats_after["run_count"],
@@ -2912,7 +2912,7 @@ def run_from_normalized(
                         judge_results, all_ranked, _candidate_to_generate, [],
                         model_resolution=_judge_model_resolution,
                     ),
-                    viral_filter_summary=_viral_filter_summary,
+                    editorial_mission_summary=_editorial_mission_summary,
                 )
                 budget.log_summary(
                     day_runs=stats_after["run_count"],
@@ -2980,7 +2980,7 @@ def run_from_normalized(
                 )
 
         # ── Top-3 台本生成ループ: Elite Judge 採用済みリスト上位3件を順次処理 ────
-        # ViralFilter による生成ブロックは廃止。Elite Judge (Gate 3) の決定を最終とする。
+        # EditorialMissionFilter による生成ブロックは廃止。Elite Judge (Gate 3) の決定を最終とする。
         # TOP_N_GENERATION で絞り込み件数を上書き可能（デフォルト 3 = 既存挙動）。
         # 分析レイヤー設計（Section 6）では 1 本フォーカスを推奨するが、ここでは
         # 既存挙動を壊さないため env 未指定時は 3 のまま。
@@ -3294,7 +3294,7 @@ def run_from_normalized(
             },
             rolling_window_stats=rolling_window_stats,
             judge_summary=_judge_summary,
-            viral_filter_summary=_viral_filter_summary,
+            editorial_mission_summary=_editorial_mission_summary,
             av_render_summary=_av_summary,
         )
 

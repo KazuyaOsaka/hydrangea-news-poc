@@ -482,7 +482,7 @@ class TestRenderExisting:
             "from src.storage",
             "run_from_normalized",
             "build_daily_schedule",
-            "apply_viral_filter",
+            "apply_editorial_mission_filter",
             "gemini_judge",
         ]:
             assert forbidden not in source, (

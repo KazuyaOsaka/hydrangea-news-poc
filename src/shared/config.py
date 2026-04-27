@@ -30,7 +30,7 @@ MAX_PUBLISHES_PER_DAY: int = int(os.getenv("MAX_PUBLISHES_PER_DAY", "5"))
 
 # ── 実行モード ────────────────────────────────────────────────────────────────
 # publish_mode (default): daily budget を exploration / publish_reserve に分割し、
-#   production ステージ (viral+judge+script+article) 用の予算を常時保護する。
+#   production ステージ (editorial_mission_filter+judge+script+article) 用の予算を常時保護する。
 # research_mode: 予算制限なしに全 LLM 呼び出しを許可（実験・デバッグ用）。
 RUN_MODE: str = os.getenv("RUN_MODE", "publish_mode")
 
@@ -169,15 +169,19 @@ ELITE_JUDGE_ENABLED: bool = os.getenv("ELITE_JUDGE_ENABLED", "true").lower() != 
 # Elite Judge を実行する上位候補の件数（budget 節約のため上限を設ける）
 ELITE_JUDGE_CANDIDATE_LIMIT: int = int(os.getenv("ELITE_JUDGE_CANDIDATE_LIMIT", "10"))
 
-# ── Viral Filter 設定（Pass C） ──────────────────────────────────────────────
+# ── Editorial Mission Filter 設定（Pass C） ──────────────────────────────────
+# Hydrangea 編集ミッション適合度（7軸: perspective_gap, geopolitical_significance,
+# blindspot_severity, political_intent, hidden_power_dynamics, economic_interests,
+# discussion_potential）でニュース候補をスコアリングし、生成前ゲートとして機能する。
 # Step-1 prescore から LLM scoring に送る上位候補数
-VIRAL_PRESCORE_TOP_N: int = int(os.getenv("VIRAL_PRESCORE_TOP_N", "20"))
-# Step-2 LLM viral scoring を実行するか（false にすると prescore のみ使用）
-VIRAL_LLM_ENABLED: bool = os.getenv("VIRAL_LLM_ENABLED", "true").lower() != "false"
-# viral_filter_score がこの値未満の候補は生成前にドロップ
-VIRAL_SCORE_THRESHOLD: float = float(os.getenv("VIRAL_SCORE_THRESHOLD", "40.0"))
-# Viral Filter を有効にするか（false で完全スキップ、スコアはセットされない）
-VIRAL_FILTER_ENABLED: bool = os.getenv("VIRAL_FILTER_ENABLED", "true").lower() != "false"
+MISSION_PRESCORE_TOP_N: int = int(os.getenv("MISSION_PRESCORE_TOP_N", "20"))
+# Step-2 LLM mission scoring を実行するか（false にすると prescore のみ使用）
+MISSION_LLM_ENABLED: bool = os.getenv("MISSION_LLM_ENABLED", "true").lower() != "false"
+# editorial_mission_score がこの値未満の候補は生成前にドロップ
+# 暫定値 45.0（FUTURE_WORK.md の「EditorialMissionFilter 閾値の調整」を参照）
+MISSION_SCORE_THRESHOLD: float = float(os.getenv("MISSION_SCORE_THRESHOLD", "45.0"))
+# Editorial Mission Filter を有効にするか（false で完全スキップ、スコアはセットされない）
+EDITORIAL_MISSION_FILTER_ENABLED: bool = os.getenv("EDITORIAL_MISSION_FILTER_ENABLED", "true").lower() != "false"
 
 # Groq設定 (LLM_PROVIDER=groq のとき使用)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")

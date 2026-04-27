@@ -16,7 +16,7 @@ Publish-mode budget partition:
   publish_mode (default):
     day_budget を exploration / publish_reserve に分割する。
     day_remaining が publish_reserve_calls 以下になると探索的 LLM 呼び出し
-    (cluster, viral_filter, judge) を停止し、production ステージ用の予算を保護する。
+    (cluster, editorial_mission_filter, judge) を停止し、production ステージ用の予算を保護する。
   research_mode:
     publish reserve チェックを無効化し、全 LLM 呼び出しを許可する（実験用）。
 """
@@ -30,7 +30,7 @@ from src.shared.logger import get_logger
 logger = get_logger(__name__)
 
 # Exploration-phase LLM call feature names (exact match; elite_judge is mandatory — not exploration)
-_EXPLORATION_FEATURES: frozenset[str] = frozenset({"cluster_post_merge_batch", "viral_filter", "judge"})
+_EXPLORATION_FEATURES: frozenset[str] = frozenset({"cluster_post_merge_batch", "editorial_mission_filter", "judge"})
 
 
 class BudgetTracker:
@@ -68,7 +68,7 @@ class BudgetTracker:
         # ── Publish-mode budget partition ─────────────────────────────────────
         self._mode: str = mode
         self._publish_reserve_calls: int = publish_reserve_calls
-        # Exploration calls in this run (cluster + viral + judge)
+        # Exploration calls in this run (cluster + editorial_mission_filter + judge)
         self._exploration_calls: int = 0
         # Set to True if exploration was halted due to publish reserve protection
         self._stopped_exploration_due_to_publish_reserve: bool = False
@@ -110,7 +110,7 @@ class BudgetTracker:
 
     @property
     def exploration_budget_used(self) -> int:
-        """このランで探索フェーズ (cluster/viral/judge) に使った LLM 呼び出し数。"""
+        """このランで探索フェーズ (cluster/editorial_mission_filter/judge) に使った LLM 呼び出し数。"""
         return self._exploration_calls
 
     @property
@@ -127,7 +127,7 @@ class BudgetTracker:
     def slot1_budget_guaranteed(self) -> bool:
         """slot-1 生成に必要な最小 day_budget (4 呼び出し) が残っているか。
 
-        最小 production = viral(1) + judge(1) + script(1) + article(1) = 4 呼び出し。
+        最小 production = editorial_mission_filter(1) + judge(1) + script(1) + article(1) = 4 呼び出し。
         """
         return self.day_remaining >= 4 and self.run_remaining >= 1
 
@@ -138,7 +138,7 @@ class BudgetTracker:
         return self.run_remaining >= cost and self.day_remaining >= cost
 
     def can_afford_exploration(self) -> bool:
-        """探索的 LLM 呼び出し (cluster/viral/judge) を1回行えるか。
+        """探索的 LLM 呼び出し (cluster/editorial_mission_filter/judge) を1回行えるか。
 
         publish_mode: day_remaining > publish_reserve_calls の場合のみ True。
           （strict greater-than により reserve は侵食されない）
@@ -173,8 +173,8 @@ class BudgetTracker:
             return False
         return self.cluster_budget_available >= 1
 
-    def can_afford_viral_filter(self) -> bool:
-        """Viral filter LLM (Step 2) を実行できるか。
+    def can_afford_editorial_mission_filter(self) -> bool:
+        """Editorial Mission Filter LLM (Step 2) を実行できるか。
 
         publish_mode では publish reserve が保護されている場合のみ True。
         """
@@ -182,7 +182,7 @@ class BudgetTracker:
             if self._mode == "publish_mode":
                 self._stopped_exploration_due_to_publish_reserve = True
                 logger.info(
-                    f"[Budget] Publish reserve reached — stopping viral filter LLM "
+                    f"[Budget] Publish reserve reached — stopping editorial mission filter LLM "
                     f"(day_remaining={self.day_remaining}, "
                     f"publish_reserve={self._publish_reserve_calls})"
                 )
@@ -267,7 +267,7 @@ class BudgetTracker:
         self._day_calls += 1
         if "cluster" in feature:
             self._cluster_calls += 1
-        # Track exploration calls (cluster/viral/judge); elite_judge is mandatory and excluded
+        # Track exploration calls (cluster/editorial_mission_filter/judge); elite_judge is mandatory and excluded
         if feature in _EXPLORATION_FEATURES:
             self._exploration_calls += 1
         logger.debug(

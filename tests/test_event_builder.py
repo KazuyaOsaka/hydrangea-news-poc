@@ -315,7 +315,7 @@ def no_llm_api(monkeypatch):
     monkeypatch.setattr("src.main.GEMINI_API_KEY", "")
     monkeypatch.setattr("src.main.JUDGE_ENABLED", False)
     monkeypatch.setattr("src.main.ELITE_JUDGE_ENABLED", False)
-    monkeypatch.setattr("src.main.VIRAL_LLM_ENABLED", False)
+    monkeypatch.setattr("src.main.MISSION_LLM_ENABLED", False)
     monkeypatch.setattr("src.main.GARBAGE_FILTER_ENABLED", False)
     # Factory 経由の client を全て None に落とす
     monkeypatch.setattr("src.main.get_cluster_llm_client", lambda: None)

@@ -159,10 +159,10 @@ class ScoredEvent(BaseModel):
     candidate_blacklist_flags: list[str] = Field(default_factory=list)  # マッチした国内ルーティンパターン
     coherence_overlap_signals: list[str] = Field(default_factory=list)  # overlap signals from coherence gate
     coherence_input_quality: dict[str, Any] = Field(default_factory=dict)  # title presence counts
-    # Pass C: Viral & Interest Filter
-    viral_filter_score: Optional[float] = None          # 0-100; None = not yet scored
-    viral_filter_breakdown: dict[str, Any] = Field(default_factory=dict)  # sub-score details
-    why_rejected_before_generation: Optional[str] = None  # set when viral filter drops candidate
+    # Pass C: Editorial Mission Filter (Hydrangea 編集ミッション適合度ゲート)
+    editorial_mission_score: Optional[float] = None          # 0-100; None = not yet scored
+    editorial_mission_breakdown: dict[str, Any] = Field(default_factory=dict)  # sub-score details
+    why_rejected_before_generation: Optional[str] = None  # set when mission filter drops candidate
     why_slot1_won_editorially: Optional[str] = None       # editorial rationale for slot-1 selection
     # ── 分析レイヤー（Phase 1: geo_lens のみ） ───────────────────────────────
     # ANALYSIS_LAYER_ENABLED=true 時のみ設定される。デフォルトは既存挙動を維持する値。
