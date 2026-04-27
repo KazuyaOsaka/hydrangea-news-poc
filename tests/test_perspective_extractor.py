@@ -628,3 +628,118 @@ def test_mexico_oil_event_extract_returns_at_least_one_candidate():
     assert "hidden_stakes" in axes
     # cultural_blindspot も region+source パターンで成立すべき
     assert "cultural_blindspot" in axes
+
+
+# ---------- フォールバック観点 + why_now ----------
+#
+# Hydrangea のコンセプト「世界視点で日本ニュースを再解釈する」を守るため、
+# 4 軸全部不成立でも最低品質ゲートを通過したイベントはフォールバック観点で
+# 動画生成パスに乗せる。並行して、全観点候補に why_now を必須化する。
+
+def _make_low_signal_but_passable_event() -> ScoredEvent:
+    """4 軸全部不成立だが sources_total >= 2 のイベント（フォールバック対象）。"""
+    sources_by_locale = {
+        "japan": _jp_sources(1),
+        "global": [
+            SourceRef(
+                name="Reuters", url="https://reuters.com/x", region="global",
+                language="en", country="US",
+            ),
+        ],
+    }
+    ev = NewsEvent(
+        id="evt-low-signal",
+        title="Tokyo metropolitan policy debate continues at city hall",
+        summary="A routine policy discussion in Tokyo on local administrative matters.",
+        category="domestic",
+        source="NHK",
+        published_at=datetime.now(timezone.utc),
+        sources_by_locale=sources_by_locale,
+    )
+    return ScoredEvent(
+        event=ev,
+        score=3.0,
+        score_breakdown={
+            "indirect_japan_impact_score": 1.0,
+            "global_attention_score": 1.0,
+            "perspective_gap_score": 0.0,
+            "geopolitics_depth_score": 0.0,
+        },
+    )
+
+
+def _make_extremely_low_quality_event() -> ScoredEvent:
+    """sources_total < 2 のイベント（フォールバックも発動しない品質ゲート未通過）。"""
+    ev = NewsEvent(
+        id="evt-extremely-low",
+        title="Bad event",
+        summary="",
+        category="other",
+        source="X",
+        published_at=datetime.now(timezone.utc),
+        sources_jp=[],
+        sources_en=[
+            SourceRef(name="X", url="https://x.example.com/x", region="global"),
+        ],
+    )
+    return ScoredEvent(event=ev, score=0.0, score_breakdown={})
+
+
+def test_fallback_perspective_triggers_when_all_axes_fail():
+    """4軸全部不成立だが品質ゲート通過のイベント → フォールバックが成立する。"""
+    se = _make_low_signal_but_passable_event()
+    # まず 4 軸が全て不成立であることを確認 (テスト前提のサニティチェック)
+    assert _meets_silence_gap_conditions(se) is False
+    assert _meets_framing_inversion_conditions(se) is False
+    assert _meets_hidden_stakes_conditions(se) is False
+    assert _meets_cultural_blindspot_conditions(se) is False
+
+    candidates = extract_perspectives(se)
+    assert len(candidates) == 1
+    assert candidates[0].axis == "hidden_stakes"  # フォールバックは hidden_stakes
+    assert candidates[0].why_now  # 必ず非空
+    assert len(candidates[0].why_now) > 20  # 単なる定型文じゃない
+
+
+def test_fallback_blocked_by_quality_gate():
+    """sources_total < 2 のイベントはフォールバックも発動せず空リスト。"""
+    se = _make_extremely_low_quality_event()
+    candidates = extract_perspectives(se)
+    assert candidates == []
+
+
+def test_why_now_present_in_all_axis_candidates():
+    """B-1 の3軸 + フォールバックすべてで why_now が生成されること。
+
+    メキシコ原油フィクスチャは hidden_stakes / cultural_blindspot が成立する想定。
+    フォールバック発動ケースは別テストで検査済み。
+    """
+    se = _make_mexico_oil_event_fixture()
+    candidates = extract_perspectives(se)
+    assert len(candidates) >= 1
+    for c in candidates:
+        assert c.why_now, f"axis={c.axis} の why_now が空"
+        assert len(c.why_now) > 10, f"axis={c.axis} の why_now が短すぎる"
+
+
+def test_why_now_reflects_event_specifics():
+    """why_now が event 固有の情報（タイトルや keyword）を反映していること。"""
+    se = _make_mexico_oil_event_fixture()
+    candidates = extract_perspectives(se)
+    # メキシコ or 原油 or エネルギー のような固有情報が why_now に含まれるはず
+    contains_specifics = any(
+        any(kw in c.why_now for kw in ["メキシコ", "原油", "エネルギー", "Mexico", "oil"])
+        for c in candidates
+    )
+    assert contains_specifics
+
+
+def test_why_now_present_in_fallback_candidate():
+    """フォールバック観点でも why_now が event 固有情報を反映すること。"""
+    se = _make_low_signal_but_passable_event()
+    candidates = extract_perspectives(se)
+    assert len(candidates) == 1
+    fallback = candidates[0]
+    assert fallback.why_now
+    # title (Tokyo) を反映していること
+    assert "Tokyo" in fallback.why_now or "metropolitan" in fallback.why_now

@@ -146,6 +146,7 @@ def _apply_framing_bonus_if_needed(candidate: PerspectiveCandidate) -> Perspecti
             f"+{_FRAMING_DIVERGENCE_BONUS:.1f} (LLM verified)]"
         ),
         evidence_refs=list(candidate.evidence_refs),
+        why_now=candidate.why_now,
     )
 
 

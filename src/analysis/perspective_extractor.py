@@ -18,8 +18,11 @@ from __future__ import annotations
 
 from typing import Optional
 
+from src.shared.logger import get_logger
 from src.shared.models import ChannelConfig, PerspectiveCandidate, ScoredEvent
 from src.triage.scoring import _INDIRECT_JAPAN_IMPACT_KW
+
+logger = get_logger(__name__)
 
 
 # ---------- 共通ヘルパ ----------
@@ -486,20 +489,205 @@ def _calculate_cultural_blindspot_score(event: ScoredEvent) -> tuple[float, str]
     return score, reasoning
 
 
-# ---------- ディスパッチ ----------
+# ---------- why_now 生成 ----------
+#
+# why_now は「なぜ今このニュースを日本人視聴者にとって重要なのか」を 1〜2 文で
+# 持つ観点候補必須フィールド。台本生成側 (Twist セクション等) が「日本人視聴者に
+# とっての意味」を構造化して引けるようにするため、軸ごとに event 固有情報
+# (title / ijai / sources 件数等) を反映させる。
+#
+# LLM 呼び出しは行わない（高速・決定的を優先）。textual specificity は
+# 「event.title / summary をそのまま why_now の中に取り込む」ことで担保する
+# (test_why_now_reflects_event_specifics は why_now にメキシコ・原油等の
+# event 固有キーワードが含まれることを検査する)。
 
-_AXIS_HANDLERS = {
-    "silence_gap": (_meets_silence_gap_conditions, _calculate_silence_gap_score),
-    "framing_inversion": (
-        _meets_framing_inversion_conditions,
-        _calculate_framing_inversion_score,
-    ),
-    "hidden_stakes": (_meets_hidden_stakes_conditions, _calculate_hidden_stakes_score),
-    "cultural_blindspot": (
-        _meets_cultural_blindspot_conditions,
-        _calculate_cultural_blindspot_score,
-    ),
-}
+_TOPIC_PHRASE_MAX_LEN = 80
+
+
+def _topic_phrase(event: ScoredEvent) -> str:
+    """why_now 文に埋め込むトピックフレーズ。
+
+    title 優先、無ければ summary の冒頭、いずれも無ければ id。
+    タイトルが長すぎる場合は文字単位で切り詰めるが、80 字程度なら
+    実データのほぼ全件を切らずに済む。
+    """
+    ev = event.event
+    base = (ev.title or "").strip()
+    if not base:
+        base = (ev.summary or "").strip().splitlines()[0] if ev.summary else ""
+    if not base:
+        base = ev.id
+    if len(base) > _TOPIC_PHRASE_MAX_LEN:
+        base = base[:_TOPIC_PHRASE_MAX_LEN].rstrip() + "…"
+    return base
+
+
+def _build_why_now(event: ScoredEvent, axis: str) -> str:
+    """軸ごとに event 固有情報を織り込んだ why_now 文を生成する。
+
+    - silence_gap: 海外/日本の報道量差をベースに認知ギャップを訴求。
+    - framing_inversion: 論調逆転を「判断が変わる転換点」として訴求。
+    - hidden_stakes: ijai を構造的影響度として明示し、見落とされやすい論点として訴求。
+    - cultural_blindspot: 西側フレームでは捉えきれない論点として訴求。
+
+    どの分岐でも `_topic_phrase(event)` を本文に取り込むため、event 固有の
+    キーワード (人名・地名・産業) が必ず why_now に含まれる。
+    """
+    topic = _topic_phrase(event)
+    ijai = _axis_score(event, "indirect_japan_impact_score")
+    ga = _axis_score(event, "global_attention_score")
+    en = _sources_en_count(event)
+    jp = _sources_jp_count(event)
+
+    if axis == "silence_gap":
+        return (
+            f"「{topic}」は海外で {en} 媒体が報じる一方、日本側の報道量は "
+            f"{jp} 媒体に留まる。視聴者の認知ギャップが大きく、"
+            f"世界では既に常識化している論点を埋める意味がある。"
+        )
+    if axis == "framing_inversion":
+        return (
+            f"「{topic}」をめぐり、日本と海外で評価軸が逆転している。"
+            f"どちらの解釈を採るかで日本人視聴者の判断が大きく変わる転換点。"
+        )
+    if axis == "hidden_stakes":
+        if ijai >= _HIDDEN_STAKES_IJAI_STRONG:
+            return (
+                f"「{topic}」は一見日本に直接関係ないように見えるが、"
+                f"日本への間接インパクト ({ijai:.1f}/10) が高く、"
+                f"エネルギー・サプライチェーン・通商経路に及ぶ構造的転換点を含む。"
+            )
+        return (
+            f"「{topic}」が日本のサプライチェーン・通商・産業に及ぼす連鎖は、"
+            f"国内では十分に議論されていない。間接インパクト {ijai:.1f}/10。"
+        )
+    if axis == "cultural_blindspot":
+        return (
+            f"「{topic}」は西側の常識からはずれた文脈で起きており、"
+            f"日本の主流メディアが採用する西側フレームでは捉えきれない論点。"
+        )
+    # 万一未知の軸が来た場合の保険
+    return (
+        f"「{topic}」を世界視点から再解釈する意味がある "
+        f"(ga={ga:.1f}, ijai={ijai:.1f})。"
+    )
+
+
+# ---------- 軸ごとの候補ビルダー ----------
+#
+# 「成立判定」と「スコア計算」と「PerspectiveCandidate への組み立て」を分離する
+# (旧 _AXIS_HANDLERS の dict-driven dispatch を、explicit builder に置き換える)。
+# why_now / evidence_refs を必ず埋める運用をビルダー側で担保する。
+
+
+def _build_silence_gap_candidate(event: ScoredEvent) -> PerspectiveCandidate:
+    score, reasoning = _calculate_silence_gap_score(event)
+    return PerspectiveCandidate(
+        axis="silence_gap",
+        score=score,
+        reasoning=reasoning,
+        evidence_refs=_collect_evidence_refs(event, "silence_gap"),
+        why_now=_build_why_now(event, "silence_gap"),
+    )
+
+
+def _build_framing_inversion_candidate(event: ScoredEvent) -> PerspectiveCandidate:
+    score, reasoning = _calculate_framing_inversion_score(event)
+    return PerspectiveCandidate(
+        axis="framing_inversion",
+        score=score,
+        reasoning=reasoning,
+        evidence_refs=_collect_evidence_refs(event, "framing_inversion"),
+        why_now=_build_why_now(event, "framing_inversion"),
+    )
+
+
+def _build_hidden_stakes_candidate(event: ScoredEvent) -> PerspectiveCandidate:
+    score, reasoning = _calculate_hidden_stakes_score(event)
+    return PerspectiveCandidate(
+        axis="hidden_stakes",
+        score=score,
+        reasoning=reasoning,
+        evidence_refs=_collect_evidence_refs(event, "hidden_stakes"),
+        why_now=_build_why_now(event, "hidden_stakes"),
+    )
+
+
+def _build_cultural_blindspot_candidate(event: ScoredEvent) -> PerspectiveCandidate:
+    score, reasoning = _calculate_cultural_blindspot_score(event)
+    return PerspectiveCandidate(
+        axis="cultural_blindspot",
+        score=score,
+        reasoning=reasoning,
+        evidence_refs=_collect_evidence_refs(event, "cultural_blindspot"),
+        why_now=_build_why_now(event, "cultural_blindspot"),
+    )
+
+
+# ---------- フォールバック観点 ----------
+#
+# 4 軸全部不成立だが「最低品質ゲート」を通過したイベントは、Hydrangea の
+# 「世界視点で日本ニュースを再解釈する」コンセプトに照らして動画生成パスに
+# 乗せたい。フォールバックは hidden_stakes 軸として登録する (最も汎用的な
+# 「日本にとっての意味」軸)。
+#
+# 最低品質ゲート:
+#   - sources_total (jp + en) >= 2: 単一ソースのイベントは検証性が低すぎる
+#   - title または summary のいずれかが非空: 観点を語るためのテキスト要件
+#
+# フォールバックの score は 0〜5 の範囲に抑える (本道の 4 軸が成立した
+# イベントより常に下位に来るよう保守的に設定)。
+
+_FALLBACK_MIN_SOURCES_TOTAL = 2
+_FALLBACK_SCORE_MAX = 5.0
+
+
+def _build_fallback_perspective(event: ScoredEvent) -> Optional[PerspectiveCandidate]:
+    """4 軸全部不成立時のフォールバック観点。
+
+    最低品質ゲート未通過の場合は None を返す。呼び出し側はその場合
+    空リストを返すことで「分析レイヤースキップ」相当の挙動になる。
+    """
+    en = _sources_en_count(event)
+    jp = _sources_jp_count(event)
+    sources_total = en + jp
+    if sources_total < _FALLBACK_MIN_SOURCES_TOTAL:
+        return None
+
+    ev = event.event
+    if not (ev.title or ev.summary):
+        return None
+
+    ijai = _axis_score(event, "indirect_japan_impact_score")
+    ga = _axis_score(event, "global_attention_score")
+
+    raw = ijai * 0.5 + ga * 0.3
+    score = _clamp(raw, lo=0.0, hi=_FALLBACK_SCORE_MAX)
+
+    topic = _topic_phrase(event)
+    metric_parts = [f"間接インパクト {ijai:.1f}/10", f"海外関心度 {ga:.1f}/10"]
+    metric_str = "、".join(metric_parts)
+    why_now = (
+        f"「{topic}」は 4 軸の典型成立条件には乗らないが、"
+        f"({metric_str}; 海外 {en} 件 / 日本 {jp} 件) の構成で日本人視聴者にとっての"
+        f"隠れた利害を世界視点から再解釈する余地がある。"
+    )
+
+    reasoning = (
+        f"fallback (4軸全部不成立だが品質ゲート通過): sources_total={sources_total}, "
+        f"ijai={ijai:.1f}, ga={ga:.1f} → score={score:.2f}"
+    )
+
+    return PerspectiveCandidate(
+        axis="hidden_stakes",
+        score=score,
+        reasoning=reasoning,
+        evidence_refs=_collect_evidence_refs(event, "hidden_stakes"),
+        why_now=why_now,
+    )
+
+
+# ---------- ディスパッチ ----------
 
 
 def extract_perspectives(
@@ -509,27 +697,46 @@ def extract_perspectives(
     """4 軸のスコアと成立条件を計算し、PerspectiveCandidate のリストを返す。
 
     channel_config が与えられた場合は perspective_axes に含まれる軸のみを返す。
-    成立条件を満たさない軸は除外する。
+    4 軸全部不成立の場合は最低品質ゲート (sources_total >= 2) を通過したイベント
+    に限ってフォールバック観点 (hidden_stakes 軸) を 1 件返す。
+    品質ゲート未通過なら空リスト。
     """
     allowed_axes: Optional[set[str]] = None
     if channel_config is not None:
         allowed_axes = set(channel_config.perspective_axes or [])
 
-    out: list[PerspectiveCandidate] = []
-    for axis, (meets_fn, score_fn) in _AXIS_HANDLERS.items():
-        if allowed_axes is not None and axis not in allowed_axes:
-            continue
-        if not meets_fn(scored_event):
-            continue
-        score, reasoning = score_fn(scored_event)
-        out.append(
-            PerspectiveCandidate(
-                axis=axis,
-                score=score,
-                reasoning=reasoning,
-                evidence_refs=_collect_evidence_refs(scored_event, axis),
-            )
-        )
-    # スコア降順に整列して返す（呼び出し側で Top3 を取る）
-    out.sort(key=lambda c: c.score, reverse=True)
-    return out
+    def _allowed(axis: str) -> bool:
+        return allowed_axes is None or axis in allowed_axes
+
+    candidates: list[PerspectiveCandidate] = []
+
+    if _allowed("silence_gap") and _meets_silence_gap_conditions(scored_event):
+        candidates.append(_build_silence_gap_candidate(scored_event))
+    if _allowed("framing_inversion") and _meets_framing_inversion_conditions(scored_event):
+        candidates.append(_build_framing_inversion_candidate(scored_event))
+    if _allowed("hidden_stakes") and _meets_hidden_stakes_conditions(scored_event):
+        candidates.append(_build_hidden_stakes_candidate(scored_event))
+    if _allowed("cultural_blindspot") and _meets_cultural_blindspot_conditions(scored_event):
+        candidates.append(_build_cultural_blindspot_candidate(scored_event))
+
+    if candidates:
+        candidates.sort(key=lambda c: c.score, reverse=True)
+        return candidates
+
+    # フォールバック観点 (hidden_stakes 軸)。
+    # チャンネル設定が hidden_stakes を許可していなければフォールバックも発動しない。
+    if not _allowed("hidden_stakes"):
+        return []
+
+    fallback = _build_fallback_perspective(scored_event)
+    if fallback is None:
+        return []
+
+    logger.info(
+        "[PerspectiveExtractor] fallback perspective triggered for "
+        "event=%s: 4軸全部不成立だが品質ゲート通過 → axis=%s, score=%.2f",
+        scored_event.event.id,
+        fallback.axis,
+        fallback.score,
+    )
+    return [fallback]

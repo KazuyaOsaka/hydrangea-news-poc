@@ -389,12 +389,20 @@ class ChannelConfig(BaseModel):
 
 
 class PerspectiveCandidate(BaseModel):
-    """4軸（silence_gap / framing_inversion / hidden_stakes / cultural_blindspot）の観点候補。"""
+    """4軸（silence_gap / framing_inversion / hidden_stakes / cultural_blindspot）の観点候補。
+
+    why_now は「なぜ今このニュースが日本人視聴者にとって意味があるのか」を 1〜2 文で
+    持つ任意フィールド。ルールベース抽出器・LLM 後段のいずれでも「観点採用の根拠」を
+    台本生成側 (script_writer / Twist セクション) で明示的に活用するために導入した。
+    モデル上は Optional[str] だが、`extract_perspectives` 配下の全ビルダーは必ず
+    非空の文字列を埋める運用 (空文字列・None で済ますことを禁止)。
+    """
 
     axis: str
     score: float
     reasoning: str
     evidence_refs: list[str] = Field(default_factory=list)
+    why_now: Optional[str] = None
 
 
 class MultiAngleAnalysis(BaseModel):
