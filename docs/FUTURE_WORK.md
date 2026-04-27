@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-04-27 (F-1.5)
+最終更新: 2026-04-28 (F-3)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -39,12 +39,6 @@
   - 対応案: `src/triage/scoring.py` の `compute_score_full()` を読み、各 axis 計算ロジックを確認。修正には scoring.py を触る必要があるため、触っちゃダメリスト見直しと一緒に対処
   - 検討時期: F-1.5 完了後の次のバッチ
   - 関連ファイル: src/triage/scoring.py（読み取り）, src/triage/editorial_mission_filter.py
-
-- **Analysis Layer の hidden_stakes axis バグ** (F-1.5 試運転で発覚)
-  - 背景: F-1.5 試運転で発覚。PerspectiveSelector が hidden_stakes を選んだが Top3 に入っていないため fallback。その fallback 経路も deprecated 化されており動画生成失敗
-  - 対応案: `src/analysis/perspective_selector.py` の axis 候補リストを確認し、hidden_stakes が Top3 に入る形に整える、または `analysis_engine.py` の fallback 経路を再有効化する
-  - 検討時期: F-1.5 完了後の次のバッチ
-  - 関連ファイル: src/analysis/perspective_selector.py, src/analysis/analysis_engine.py, src/main.py
 
 ---
 
@@ -120,4 +114,8 @@
 
 ---
 
-（まだ完了済み項目はありません）
+- **Analysis Layer の hidden_stakes axis バグ** (F-3 / 2026-04-28 完了)
+  - 発生バッチ: F-1.5 試運転で発覚 → F-3 で対応完了
+  - 対応内容: `src/analysis/perspective_selector.py::select_perspective()` を 3 段階フォールバックに強化。LLM が Top3 外の axis (`hidden_stakes` 等) を選んだ場合や、`fallback_axis_if_failed` も Top3 にない場合でも、Step 2 で Top3 内の最高スコア候補を強制採用する。candidates が 1 件以上あれば必ず `PerspectiveCandidate` を返すため、Slot-2 / Slot-3 で `analysis_result=None` となり動画化失敗していた問題を解消。
+  - 関連ドキュメント: `docs/EDITORIAL_MISSION_FILTER_DESIGN.md` の F-3 セクション
+  - 関連ファイル: `src/analysis/perspective_selector.py`, `tests/test_perspective_selector.py`, `tests/test_analysis_engine.py`

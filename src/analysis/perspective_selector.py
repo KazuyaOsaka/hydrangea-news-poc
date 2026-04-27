@@ -5,8 +5,13 @@
 Top3 観点候補を LLM に渡し、最も「視聴者が賢くなる体験」を提供できる軸を
 1 つ選ばせ、同じ呼び出しで成立を検証する（Select & Verify in one call）。
 
-検証で当該軸が成立しない場合は、LLM が提示する fallback_axis_if_failed を
-Top3 内の候補から選択し直して返す。fallback も成立しない / 候補にない場合は None。
+検証で当該軸が成立しない場合は段階的フォールバックを適用する（F-3 で強化）:
+    Step 1: LLM 提示の fallback_axis_if_failed を Top3 から探して採用
+    Step 2: ★F-3 NEW: Top3 内の最高スコア候補を採用 (fallback の fallback)
+    Step 3: candidates が空の場合のみ None を返す（最終安全網）
+
+これにより candidates が 1 件以上あれば必ず PerspectiveCandidate を返し、
+analysis_result が None になるケースを排除する。
 
 framing_inversion が成立した場合は framing_divergence_bonus +2.0 を後加算する
 （設計書 Section 5.2 軸2、Batch 2 の TODO として引き継がれた要件）。
@@ -150,6 +155,15 @@ def _apply_framing_bonus_if_needed(candidate: PerspectiveCandidate) -> Perspecti
     )
 
 
+def _top_score_candidate(
+    candidates: list[PerspectiveCandidate],
+) -> Optional[PerspectiveCandidate]:
+    """候補リスト内で最高スコアの候補を返す（同点なら最初に出現したもの）。"""
+    if not candidates:
+        return None
+    return max(candidates, key=lambda c: c.score)
+
+
 def select_perspective(
     scored_event: ScoredEvent,
     perspective_candidates: list[PerspectiveCandidate],
@@ -157,23 +171,32 @@ def select_perspective(
     *,
     client: Optional[LLMClient] = None,
 ) -> Optional[PerspectiveCandidate]:
-    """設計書 Section 5.3 のフロー。
+    """設計書 Section 5.3 のフロー (F-3 改修版)。
 
-    Top3 → LLM Select & Verify → 必要時 fallback 適用。
+    Top3 → LLM Select & Verify → 段階的 fallback 適用。
 
-    フロー:
-        1. LLM に Top3 を渡し選定+検証を 1 回で実行
-        2. selected_axis が Top3 にあり verification.actually_holds=True ならその候補を採用
-        3. actually_holds=False の場合、fallback_axis_if_failed を Top3 から探して採用
-        4. どちらも見つからない場合は None を返す（呼び出し側で None 扱い）
+    フォールバック順序:
+        Step 1: LLM 提示の fallback_axis_if_failed を Top3 から探して採用 (既存)
+        Step 2: ★F-3 NEW: Top3 内の最高スコア候補を採用 (fallback の fallback)
+        Step 3: candidates が空の場合のみ None (最終安全網)
+
+    各段階で fallback が発動した場合、警告ログを出して可視化する。
+    LLM 呼び出しが例外で失敗した場合も Step 2 にフォールバックして
+    candidates が 1 件以上あれば必ず採用する（analysis_result=None を回避）。
 
     framing_inversion が成立と判定された候補には framing_divergence_bonus +2.0 を加算。
 
     Returns:
-        採用された PerspectiveCandidate、または None（採用できる候補なし）。
+        採用された PerspectiveCandidate、または None（candidates 空のときのみ）。
     """
     if not perspective_candidates:
+        logger.error(
+            f"[PerspectiveSelector] Step3 critical: perspective_candidates is empty "
+            f"for event={scored_event.event.id[:16]}. Returning None."
+        )
         return None
+
+    event_id_short = scored_event.event.id[:16]
 
     try:
         result = llm_select_and_verify_perspective(
@@ -183,55 +206,58 @@ def select_perspective(
             client=client,
         )
     except Exception as exc:
+        # LLM 失敗時も Step 2 へフォールバック（candidates が残っているなら採用する）
+        top = _top_score_candidate(perspective_candidates)
         logger.warning(
-            f"[PerspectiveSelector] LLM select+verify failed for "
-            f"event={scored_event.event.id}: {exc}"
+            f"[PerspectiveSelector] Step2 fallback (F-3): LLM select+verify failed for "
+            f"event={event_id_short}: {exc}. "
+            f"Using highest-scoring candidate: axis={top.axis} (score={top.score:.2f})"
         )
-        return None
+        return _apply_framing_bonus_if_needed(top)
 
     selected_axis = str(result.get("selected_axis", ""))
     verification = result.get("verification") or {}
     actually_holds = bool(verification.get("actually_holds", False))
-    fallback_axis = result.get("fallback_axis_if_failed")
+    fallback_axis_raw = result.get("fallback_axis_if_failed")
+    fallback_axis = str(fallback_axis_raw) if fallback_axis_raw else None
 
-    if selected_axis not in _VALID_AXES:
-        logger.warning(
-            f"[PerspectiveSelector] LLM returned invalid axis "
-            f"{selected_axis!r} for event={scored_event.event.id}"
-        )
-        # selected_axis が無効でも fallback が有効なら使う
-        if fallback_axis in _VALID_AXES:
-            cand = _find_candidate(perspective_candidates, str(fallback_axis))
-            return _apply_framing_bonus_if_needed(cand) if cand else None
-        return None
-
-    selected = _find_candidate(perspective_candidates, selected_axis)
-    if selected is None:
-        # LLM が Top3 にない軸を返したケース
-        logger.warning(
-            f"[PerspectiveSelector] LLM selected axis {selected_axis!r} not in Top3 "
-            f"for event={scored_event.event.id}"
-        )
-        if fallback_axis in _VALID_AXES:
-            cand = _find_candidate(perspective_candidates, str(fallback_axis))
-            return _apply_framing_bonus_if_needed(cand) if cand else None
-        return None
-
-    if actually_holds:
-        return _apply_framing_bonus_if_needed(selected)
-
-    # 成立しない → fallback_axis を Top3 から採用
-    if fallback_axis and fallback_axis in _VALID_AXES and fallback_axis != selected_axis:
-        fb = _find_candidate(perspective_candidates, str(fallback_axis))
-        if fb is not None:
-            logger.info(
-                f"[PerspectiveSelector] LLM rejected {selected_axis!r} for "
-                f"event={scored_event.event.id}; falling back to {fallback_axis!r}"
-            )
-            return _apply_framing_bonus_if_needed(fb)
-
-    logger.info(
-        f"[PerspectiveSelector] No viable perspective for event={scored_event.event.id} "
-        f"(selected={selected_axis!r} verified=False, fallback={fallback_axis!r})"
+    selected_candidate = (
+        _find_candidate(perspective_candidates, selected_axis)
+        if selected_axis in _VALID_AXES
+        else None
     )
-    return None
+
+    # Step 1a: LLM 結果から selected_axis 採用 (既存)
+    if selected_candidate is not None and actually_holds:
+        logger.info(
+            f"[PerspectiveSelector] Step1 selected: axis={selected_axis} "
+            f"for event={event_id_short}"
+        )
+        return _apply_framing_bonus_if_needed(selected_candidate)
+
+    # Step 1b: LLM 提示の fallback_axis_if_failed を Top3 から探す (既存)
+    fallback_candidate = (
+        _find_candidate(perspective_candidates, fallback_axis)
+        if fallback_axis and fallback_axis in _VALID_AXES and fallback_axis != selected_axis
+        else None
+    )
+    if fallback_candidate is not None:
+        logger.warning(
+            f"[PerspectiveSelector] Step1 fallback: selected_axis={selected_axis!r} not held "
+            f"(in_top3={selected_candidate is not None}, actually_holds={actually_holds}), "
+            f"using fallback_axis_if_failed={fallback_axis!r} for event={event_id_short}"
+        )
+        return _apply_framing_bonus_if_needed(fallback_candidate)
+
+    # Step 2: ★F-3 NEW: Top3 内の最高スコア候補を採用
+    # LLM の selected_axis も fallback_axis_if_failed も Top3 にない場合の救済
+    top = _top_score_candidate(perspective_candidates)
+    logger.warning(
+        f"[PerspectiveSelector] Step2 fallback (F-3): "
+        f"LLM selected_axis={selected_axis!r} not viable "
+        f"(in_top3={selected_candidate is not None}, actually_holds={actually_holds}), "
+        f"fallback_axis_if_failed={fallback_axis!r} also missing. "
+        f"Using highest-scoring candidate: axis={top.axis} (score={top.score:.2f}) "
+        f"for event={event_id_short}"
+    )
+    return _apply_framing_bonus_if_needed(top)

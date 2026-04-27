@@ -189,17 +189,28 @@ def test_select_falls_back_when_verification_fails():
     assert "framing_divergence_bonus" in chosen.reasoning
 
 
-def test_select_returns_none_when_fallback_axis_not_in_candidates():
+def test_select_falls_back_to_top_score_when_fallback_axis_not_in_candidates():
+    """F-3 改修後: fallback_axis_if_failed が Top3 にない場合、Step2 で最高スコア候補を採用。
+
+    旧挙動 (F-2 まで): None を返していた → analysis_result=None で動画化失敗。
+    新挙動 (F-3 から): Top3 内の最高スコア候補（ここでは silence_gap）にフォールバック。
+    """
     se = _scored_with_jp()
     cands = _candidates_silence_only()  # silence のみ — fallback="framing_inversion" は不在
     ctx = build_analysis_context(se, cands)
     stub = StubLLMClient(_load_fixture("perspective_select_and_verify_failed_fallback"))
 
     chosen = select_perspective(se, cands, ctx, client=stub)
-    assert chosen is None
+    assert chosen is not None
+    assert chosen.axis == "silence_gap"
 
 
-def test_select_returns_none_on_invalid_axis_and_no_fallback():
+def test_select_falls_back_to_top_score_on_invalid_axis_and_no_fallback():
+    """F-3 改修後: selected_axis が無効 + fallback=None でも Step2 で最高スコア採用。
+
+    旧挙動 (F-2 まで): None を返していた。
+    新挙動 (F-3 から): candidates の最高スコア (silence_gap) にフォールバック。
+    """
     se = _scored()
     cands = _candidates_silence_only()
     ctx = build_analysis_context(se, cands)
@@ -210,7 +221,8 @@ def test_select_returns_none_on_invalid_axis_and_no_fallback():
     }))
 
     chosen = select_perspective(se, cands, ctx, client=stub)
-    assert chosen is None
+    assert chosen is not None
+    assert chosen.axis == "silence_gap"
 
 
 def test_select_uses_fallback_when_selected_axis_invalid():
@@ -228,7 +240,12 @@ def test_select_uses_fallback_when_selected_axis_invalid():
     assert chosen.axis == "framing_inversion"
 
 
-def test_select_returns_none_on_llm_exception():
+def test_select_falls_back_to_top_score_on_llm_exception():
+    """F-3 改修後: LLM 呼び出しが例外で失敗しても Step2 で最高スコア候補を採用。
+
+    旧挙動 (F-2 まで): None を返していた。
+    新挙動 (F-3 から): candidates が残っているなら必ず採用する（quota/transient 失敗時の救済）。
+    """
     class FailingClient(LLMClient):
         def generate(self, prompt: str) -> str:
             raise RuntimeError("transient quota issue")
@@ -237,10 +254,12 @@ def test_select_returns_none_on_llm_exception():
     cands = _candidates_silence_only()
     ctx = build_analysis_context(se, cands)
     chosen = select_perspective(se, cands, ctx, client=FailingClient())
-    assert chosen is None
+    assert chosen is not None
+    assert chosen.axis == "silence_gap"
 
 
 def test_select_returns_none_for_empty_candidates():
+    """F-3 改修後も candidates が空のときだけは None を返す（最終安全網 Step3）。"""
     se = _scored()
     ctx = AnalysisContext(event_id=se.event.id, channel_id="geo_lens")
     chosen = select_perspective(se, [], ctx, client=StubLLMClient("{}"))
@@ -273,3 +292,159 @@ def test_framing_bonus_not_applied_to_other_axes():
     same = _apply_framing_bonus_if_needed(sg)
     assert same.score == 7.0
     assert same is sg or same.score == sg.score  # 同一 or score 不変
+
+
+# ---------- F-3: 3段階フォールバックチェーンのテスト ----------
+#
+# F-2 試運転で Slot-2 / Slot-3 の analysis_result が None になり動画化失敗した問題を受け、
+# select_perspective() に Step2 フォールバック (Top3 内最高スコア候補採用) を追加した。
+# candidates が 1 件以上あれば必ず PerspectiveCandidate を返すようになる。
+
+
+def _candidates_three_axes() -> list[PerspectiveCandidate]:
+    return [
+        PerspectiveCandidate(
+            axis="framing_inversion",
+            score=8.0,  # Top1
+            reasoning="JP says cooperation; foreign says conflict.",
+            evidence_refs=["https://en.example.com/0"],
+        ),
+        PerspectiveCandidate(
+            axis="silence_gap",
+            score=6.0,
+            reasoning="JP=0, EN=3.",
+            evidence_refs=["https://en.example.com/1"],
+        ),
+        PerspectiveCandidate(
+            axis="cultural_blindspot",
+            score=4.0,
+            reasoning="cultural reading gap",
+            evidence_refs=["https://en.example.com/2"],
+        ),
+    ]
+
+
+class TestPerspectiveSelectorFallbackChain:
+    """F-3: 3段階フォールバックチェーンのテスト。"""
+
+    def test_step1_normal_selection(self):
+        """通常: LLM の selected_axis が Top3 にあり actually_holds=True なら採用。"""
+        se = _scored_with_jp()
+        cands = _candidates_three_axes()
+        ctx = build_analysis_context(se, cands)
+        stub = StubLLMClient(json.dumps({
+            "selected_axis": "framing_inversion",
+            "reasoning": "test",
+            "evidence_for_selection": ["https://en.example.com/0"],
+            "verification": {"actually_holds": True, "notes": "ok", "confidence": 0.9},
+            "fallback_axis_if_failed": "silence_gap",
+        }))
+
+        chosen = select_perspective(se, cands, ctx, client=stub)
+        assert chosen is not None
+        assert chosen.axis == "framing_inversion"
+
+    def test_step1_fallback_to_axis_if_failed(self):
+        """LLM 検証失敗時、fallback_axis_if_failed が Top3 にあれば採用。"""
+        se = _scored_with_jp()
+        cands = _candidates_three_axes()
+        ctx = build_analysis_context(se, cands)
+        stub = StubLLMClient(json.dumps({
+            "selected_axis": "framing_inversion",
+            "reasoning": "test",
+            "evidence_for_selection": ["https://en.example.com/0"],
+            "verification": {"actually_holds": False, "notes": "failed", "confidence": 0.3},
+            "fallback_axis_if_failed": "silence_gap",
+        }))
+
+        chosen = select_perspective(se, cands, ctx, client=stub)
+        assert chosen is not None
+        assert chosen.axis == "silence_gap"
+
+    def test_step2_fallback_to_top_score_when_invalid_axis(self):
+        """★F-3: LLM が Top3 外の axis (hidden_stakes) を選び、fallback_axis_if_failed も
+        Top3 にない場合、Top3 内最高スコア候補 (framing_inversion=8.0) を採用する。
+
+        試運転4 で実際に発生したケース:
+            [PerspectiveSelector] LLM selected axis 'hidden_stakes' not in Top3
+        """
+        se = _scored_with_jp()
+        cands = _candidates_three_axes()
+        ctx = build_analysis_context(se, cands)
+        stub = StubLLMClient(json.dumps({
+            "selected_axis": "hidden_stakes",  # Top3 外
+            "reasoning": "test",
+            "evidence_for_selection": ["https://en.example.com/0"],
+            "verification": {"actually_holds": True, "notes": "ok", "confidence": 0.9},
+            "fallback_axis_if_failed": "hidden_stakes",  # こちらも Top3 外
+        }))
+
+        chosen = select_perspective(se, cands, ctx, client=stub)
+
+        # F-3: Top3 内の最高スコア候補が採用される
+        assert chosen is not None
+        assert chosen.axis == "framing_inversion"  # スコア最高 (8.0)
+        # framing_divergence_bonus +2.0 が後段で加算される
+        assert chosen.score == pytest.approx(10.0)
+
+    def test_step2_fallback_when_both_axis_and_fallback_invalid(self):
+        """LLM の selected_axis も fallback_axis_if_failed も Top3 にない場合、Top1 採用。"""
+        se = _scored()
+        cands = [
+            PerspectiveCandidate(
+                axis="silence_gap", score=7.5, reasoning="r", evidence_refs=[]
+            ),
+            PerspectiveCandidate(
+                axis="framing_inversion", score=5.0, reasoning="r", evidence_refs=[]
+            ),
+        ]
+        ctx = build_analysis_context(se, cands)
+        stub = StubLLMClient(json.dumps({
+            "selected_axis": "hidden_stakes",
+            "reasoning": "test",
+            "evidence_for_selection": [],
+            "verification": {"actually_holds": False, "notes": "failed", "confidence": 0.3},
+            "fallback_axis_if_failed": "unknown_axis_2",
+        }))
+
+        chosen = select_perspective(se, cands, ctx, client=stub)
+        assert chosen is not None
+        assert chosen.axis == "silence_gap"  # スコア 7.5 で最高
+
+    def test_step2_fallback_when_fallback_axis_is_none(self):
+        """LLM の fallback_axis_if_failed が None でも Step2 で Top3 最高スコアにフォールバック。"""
+        se = _scored()
+        cands = [
+            PerspectiveCandidate(
+                axis="framing_inversion", score=6.0, reasoning="r", evidence_refs=[]
+            ),
+            PerspectiveCandidate(
+                axis="silence_gap", score=4.0, reasoning="r", evidence_refs=[]
+            ),
+        ]
+        ctx = build_analysis_context(se, cands)
+        stub = StubLLMClient(json.dumps({
+            "selected_axis": "hidden_stakes",
+            "reasoning": "test",
+            "evidence_for_selection": [],
+            "verification": {"actually_holds": False, "notes": "failed", "confidence": 0.3},
+            "fallback_axis_if_failed": None,
+        }))
+
+        chosen = select_perspective(se, cands, ctx, client=stub)
+        assert chosen is not None
+        assert chosen.axis == "framing_inversion"
+
+    def test_step3_returns_none_only_when_candidates_empty(self):
+        """★F-3: candidates が空の場合のみ None を返す（最終安全網 Step3）。
+
+        この経路では LLM 呼び出しは行われない（候補が無いと前段で判定）。
+        """
+        se = _scored()
+        ctx = AnalysisContext(event_id=se.event.id, channel_id="geo_lens")
+        stub = StubLLMClient("{}")
+
+        chosen = select_perspective(se, [], ctx, client=stub)
+        assert chosen is None
+        # LLM は呼ばれていないこと
+        assert stub.prompts == []

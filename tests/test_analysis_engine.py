@@ -231,16 +231,24 @@ def test_run_returns_none_when_step5_raises(tmp_path: Path):
 
 
 def test_run_handles_failing_llm_at_step3(tmp_path: Path):
-    """Step 3 で LLM が常に失敗するケース。select_perspective 内部の
-    例外捕捉により None を返す → run_analysis_layer は None を返す。"""
+    """Step 3 で LLM が失敗するケース (F-3 改修後)。
+
+    F-3 の Step2 フォールバックにより select_perspective は LLM 失敗時も
+    candidates が残っていれば最高スコア候補を返す（None ではない）。
+    そのため Step 3 を通過し、Step 4 (multi_angle) で再度 LLM を呼ぼうとして失敗、
+    そこで例外が伝搬し run_analysis_layer の外側 except が None を返す。
+
+    結果: result=None は維持されるが、call_count は 2 (Step3 + Step4) に増える。
+    旧挙動 (F-2 まで): Step3 で 1 回呼ばれて失敗、即 None。
+    """
     se = _silence_gap_event()
     cc = _channel_config_geo_lens()
     client = _AlwaysFailClient()
 
     result = run_analysis_layer(se, cc, tmp_path / "no.db", llm_client=client)
     assert result is None
-    # Step 3 で 1 回呼ばれて失敗、以降は呼ばれない
-    assert client.call_count == 1
+    # F-3: Step3 で fallback 採用後 Step4 でも LLM 失敗 → call_count==2
+    assert client.call_count == 2
 
 
 # ── duration_profile 選定の引継ぎ事項検証 ─────────────────────────────────

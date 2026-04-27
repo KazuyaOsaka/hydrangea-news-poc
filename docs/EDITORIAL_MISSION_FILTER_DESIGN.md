@@ -350,3 +350,64 @@ if se.editorial_mission_score is not None and se.editorial_mission_score >= 45.0
 これにより EditorialMissionFilter の 7 軸で評価された候補は、weak_japan / no_depth 等の
 旧基準を免除される。既存の get_flagship_class() ロジックは後方互換のため維持。
 
+---
+
+### F-3 で修正した PerspectiveSelector のフォールバック強化
+
+F-2 試運転で、Slot-2 / Slot-3 の `analysis_result` が None になり動画化失敗する問題が発覚。
+
+ログ証拠 (試運転6):
+```
+[Slot-2] Iran offers deal to US to reopen Strait of Hormuz...
+event_id=cls-b574fcfd8cb3: analysis_result is None, skipping script generation. ★
+
+[Slot-3] Russian superyacht crosses blockaded Strait of Hormuz
+event_id=cls-74974ee82dbd: analysis_result is None, skipping script generation. ★
+```
+
+#### 真因
+
+`src/analysis/perspective_selector.py::select_perspective()` で、LLM が Top3 外の axis
+（典型的には `hidden_stakes`）を選び、かつ `fallback_axis_if_failed` も Top3 にない場合、
+None を返す設計だった（試運転4 ログ参照）:
+
+```
+[PerspectiveSelector] LLM selected axis 'hidden_stakes' not in Top3 for event=cls-05572b4977f4
+[AnalysisEngine] event=cls-05572b4977f4: perspective selection failed; falling back to legacy route.
+[AnalysisLayer] Returned None for event=cls-05572b4977f4; falling back to legacy generation route.
+```
+
+つまり LLM の二重 fallback 失敗パターンで、Top3 に有効な候補が残っていても採用されず
+動画化フローに到達できなかった。これは「1日5本（最低3本）の継続生成」体制構築の最大ブロッカーだった。
+
+#### F-3 改修内容: 3 段階フォールバック
+
+`select_perspective()` を以下のフォールバックチェーンに強化:
+
+| Step | 条件 | 採用候補 |
+|---|---|---|
+| Step 1a | LLM `selected_axis` が Top3 にあり `actually_holds=True` | selected_axis 候補 (既存) |
+| Step 1b | Step1a 不成立 + `fallback_axis_if_failed` が Top3 にある | fallback_axis_if_failed 候補 (既存) |
+| Step 2 ★NEW | Step1a/1b いずれも不成立 | **Top3 内の最高スコア候補** |
+| Step 3 ★NEW | candidates リスト自体が空 | None (最終安全網) |
+
+加えて、LLM 呼び出しが例外で失敗した場合も Step 2 にフォールバックする（quota / transient 失敗時の救済）。
+
+#### 効果
+
+candidates が 1 件以上あれば必ず `PerspectiveCandidate` を返すため、Slot-2 / Slot-3 でも
+`analysis_result` が None になることはなくなり、動画化が継続される。
+
+各段階で fallback が発動した場合は WARNING ログを出して可視化する:
+```
+[PerspectiveSelector] Step2 fallback (F-3): LLM selected_axis='hidden_stakes' not viable
+(in_top3=False, actually_holds=True), fallback_axis_if_failed='unknown_axis' also missing.
+Using highest-scoring candidate: axis=framing_inversion (score=8.00) for event=cls-b574fcfd8c
+```
+
+#### 設計上の判断
+
+- LLM が `hidden_stakes` 等を選ぶ事自体を抑止するのではなく、選ばれても Top3 に含まれていれば
+  採用する形にした（プロンプトで Top3 内 axis を強制するより、運用で実害を防ぐ方が堅牢）。
+- `framing_divergence_bonus` は Step 2 で採用された候補にも従来通り後加算される。
+
