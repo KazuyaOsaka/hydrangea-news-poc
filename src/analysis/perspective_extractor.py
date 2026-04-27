@@ -1,26 +1,25 @@
 """観点軸 4 種のルールベース抽出。
 
-設計書 Section 5 の仕様に従う。LLM 呼び出しは行わない（Step 3 で別途 LLM が選定+検証する）。
+設計書 Section 5 の仕様をベースとしつつ、Phase 1 の実 LLM 試運転で
+「観点が 1 つも成立せず分析レイヤーがスキップされる」事故が発生したため、
+silence_gap / hidden_stakes / cultural_blindspot を「失敗しない作り」に再設計する
+（framing_inversion は別バッチで LLM ベース化するため本ファイルでは旧実装のまま）。
 
-4 軸:
-    - silence_gap         : 海外で大ニュース、日本未報道
-    - framing_inversion   : 日本と海外で「誰が悪者か」が真逆
-    - hidden_stakes       : 日本の生活・経済に直結するが、報道で繋げられていない
-    - cultural_blindspot  : 日本の常識では理解できない海外の論理
+4 軸の意味（混同注意）:
+    - silence_gap         : 日本側の報道「量・露出」が薄い（情報量で判定）
+    - framing_inversion   : 同一事象に対する「論調・評価方向」の差（LLM 判定に委ねる）
+    - hidden_stakes       : 日本にとっての「隠れた利害」がある（直接影響は薄いが波及大）
+    - cultural_blindspot  : 西側視点と非西側視点の差（地域偏向で判定）
 
-スコアと成立条件は既存の score_breakdown フィールド + sources_jp/sources_en を参照する。
+スコアと成立条件は既存の score_breakdown フィールド + sources_by_locale を参照する。
 ChannelConfig.perspective_axes に含まれない軸は最終フィルタで除外する。
-
-設計上の判断:
-    - cultural_uniqueness_score は既存のスコアリングに存在しない。
-      設計書 Section 5.2 軸4 に「既存になければ仮実装、後で改善」とあるため、
-      cultural_blindspot のスコアはトピック・タグの軽量シグナルから推定する仮実装とする。
 """
 from __future__ import annotations
 
 from typing import Optional
 
 from src.shared.models import ChannelConfig, PerspectiveCandidate, ScoredEvent
+from src.triage.scoring import _INDIRECT_JAPAN_IMPACT_KW
 
 
 # ---------- 共通ヘルパ ----------
@@ -83,39 +82,121 @@ def _collect_evidence_refs(event: ScoredEvent, axis: str) -> list[str]:
     return refs
 
 
+def _jp_text_volume(event: ScoredEvent) -> int:
+    """日本側の情報量プロキシ: japan_view 文字数 + 日本ソースの title 文字数合計。
+
+    SourceRef は本文を保持しないため、各ソースに紐付く title 長を加算する。
+    日本語は 1 文字で 2 バイト程度の情報量を持つが、桁オーダー比較には
+    生の文字数で十分（厳密な対称性は不要）。
+    """
+    ev = event.event
+    total = len(ev.japan_view or "")
+    if ev.sources_by_locale and "japan" in ev.sources_by_locale:
+        for s in ev.sources_by_locale["japan"]:
+            total += len(s.title or "")
+    else:
+        for s in ev.sources_jp:
+            total += len(s.title or "")
+    return total
+
+
+def _en_text_volume(event: ScoredEvent) -> int:
+    """海外側の情報量プロキシ: global_view 文字数 + 海外ソースの title 文字数合計。"""
+    ev = event.event
+    total = len(ev.global_view or "")
+    if ev.sources_by_locale:
+        for region, refs in ev.sources_by_locale.items():
+            if region == "japan":
+                continue
+            for s in refs:
+                total += len(s.title or "")
+    else:
+        for s in ev.sources_en:
+            total += len(s.title or "")
+    return total
+
+
 # ---------- 軸1: Silence Gap ----------
 
-def _meets_silence_gap_conditions(event: ScoredEvent) -> bool:
-    """成立条件: sources_en >= 3 AND sources_jp == 0 かつ
-    global_attention >= 6.0 かつ indirect_japan_impact >= 4.0。
+# 「日本側の報道量・露出が薄い」の数値判定で使う閾値群。
+# 設計書 v1.1 の絶対条件 (en >= 3 AND jp == 0 AND ga >= 6.0 AND ijai >= 4.0) は
+# 厳しすぎて jp >= 1 の事例を全滅させていたため、複数条件の OR で柔軟化する。
+_SILENCE_GAP_MIN_EN_SOURCES = 2          # 海外ソースの最小件数（旧 3 → 2 に緩和）
+_SILENCE_GAP_INTEREST_GA_THRESHOLD = 4.0  # global_attention の関心度フィルタ
+_SILENCE_GAP_INTEREST_IJAI_THRESHOLD = 4.0  # indirect_japan_impact の関心度フィルタ
+_SILENCE_GAP_RATIO_DENOMINATOR = 2       # jp:en 比 1:2 以上の差で「量的差」とみなす
+_SILENCE_GAP_TEXT_RATIO_DENOMINATOR = 2  # jp_wc:en_wc 比 1:2 以上の差で「情報量差」
+
+
+def _silence_gap_is_topic_interesting(event: ScoredEvent) -> bool:
+    """global_attention OR indirect_japan_impact が一定以上 → 注目価値ありと判定。
+
+    OR にする理由: 海外で大注目 (ga 高) でも ijai が低いケース、逆に ga が
+    そこまでなくても日本影響大 (ijai 高) のケース、どちらも silence_gap として
+    意味があるため。AND だと両方高い珍しい組み合わせしか拾えない。
     """
-    if _sources_en_count(event) < 3:
+    ga = _axis_score(event, "global_attention_score")
+    ijai = _axis_score(event, "indirect_japan_impact_score")
+    return ga >= _SILENCE_GAP_INTEREST_GA_THRESHOLD or ijai >= _SILENCE_GAP_INTEREST_IJAI_THRESHOLD
+
+
+def _meets_silence_gap_conditions(event: ScoredEvent) -> bool:
+    """成立条件: 以下のいずれか (OR) を満たし、かつ注目価値フィルタを通過。
+
+    1) 日本ソース不在パターン:
+       sources_jp == 0 AND sources_en >= 2
+    2) 件数比パターン:
+       sources_en >= 2 AND sources_jp が海外件数の半分以下 (jp*2 <= en)
+    3) 情報量比パターン:
+       sources_en >= 2 AND jp_text_volume*2 <= en_text_volume （日本側テキスト量が半分未満）
+    """
+    if not _silence_gap_is_topic_interesting(event):
         return False
-    if _sources_jp_count(event) != 0:
+
+    en = _sources_en_count(event)
+    jp = _sources_jp_count(event)
+
+    if en < _SILENCE_GAP_MIN_EN_SOURCES:
         return False
-    if _axis_score(event, "global_attention_score") < 6.0:
-        return False
-    if _axis_score(event, "indirect_japan_impact_score") < 4.0:
-        return False
-    return True
+
+    # 1) 日本ソース不在
+    if jp == 0:
+        return True
+
+    # 2) 件数比が極端
+    if jp * _SILENCE_GAP_RATIO_DENOMINATOR <= en:
+        return True
+
+    # 3) 情報量比が極端
+    jp_wc = _jp_text_volume(event)
+    en_wc = _en_text_volume(event)
+    if en_wc > 0 and jp_wc * _SILENCE_GAP_TEXT_RATIO_DENOMINATOR <= en_wc:
+        return True
+
+    return False
 
 
 def _calculate_silence_gap_score(event: ScoredEvent) -> tuple[float, str]:
-    """設計書 Section 5.2 軸1 の式に従う。"""
+    """設計書 Section 5.2 軸1 の式に従う（jp_count ペナルティは既存テスト互換のため維持）。"""
     en = _sources_en_count(event)
     jp = _sources_jp_count(event)
     ga = _axis_score(event, "global_attention_score")
     ijai = _axis_score(event, "indirect_japan_impact_score")
     raw = (en * 1.5) + ga - (jp * 5.0) + ijai
     score = _clamp(raw)
+    jp_wc = _jp_text_volume(event)
+    en_wc = _en_text_volume(event)
     reasoning = (
         f"sources_en={en}, sources_jp={jp}, "
-        f"global_attention={ga:.1f}, indirect_japan_impact={ijai:.1f} → score={score:.2f}"
+        f"global_attention={ga:.1f}, indirect_japan_impact={ijai:.1f}, "
+        f"jp_text_volume={jp_wc}, en_text_volume={en_wc} → score={score:.2f}"
     )
     return score, reasoning
 
 
 # ---------- 軸2: Framing Inversion ----------
+#
+# 本軸は別バッチで LLM ベース化予定のため、既存実装をそのまま維持する。
 
 def _meets_framing_inversion_conditions(event: ScoredEvent) -> bool:
     """成立条件: sources_jp >= 1 AND sources_en >= 2 AND perspective_gap_score >= 6.0。
@@ -158,6 +239,17 @@ _JAPAN_INDUSTRY_KEYWORDS = [
     "yen", "円安", "円高",
 ]
 
+# hidden_stakes の数値判定で使う閾値群。
+# 旧実装は ijai >= 5.0 AND japan_industry_kw >= 1 の AND だったため、
+# ijai が極めて高い (例: メキシコ原油 ijai=9.0) ケースでも企業名キーワードが
+# なければ落ちる構造的欠陥があった。本実装は段階的閾値に置き換える:
+#   - ijai が顕著 (>= STRONG): 単独で成立
+#   - ijai が中程度 (>= MID): 企業キーワード or 間接影響キーワードのいずれかと合わせて成立
+#   - ijai が低い (< MIN): 問答無用で不成立
+_HIDDEN_STAKES_IJAI_STRONG = 7.0  # この値以上は ijai 単独で成立
+_HIDDEN_STAKES_IJAI_MID = 4.0     # この値以上 + 補助シグナルで成立
+_HIDDEN_STAKES_IJAI_MIN = 3.0     # この値未満は問答無用で不成立
+
 
 def _japan_industry_keyword_count(event: ScoredEvent) -> int:
     """title/summary/tags 等から日本企業・産業キーワードの出現数を数える。"""
@@ -193,6 +285,28 @@ def _japan_industry_keyword_count(event: ScoredEvent) -> int:
     return count
 
 
+def _has_indirect_japan_impact_keyword(event: ScoredEvent) -> bool:
+    """scoring.py の _INDIRECT_JAPAN_IMPACT_KW のいずれかが title/summary/global_view に
+    出現するか。日本影響を示す間接キーワード（エネルギー・サプライチェーン・為替等）
+    の存在を補助シグナルとして使う。
+    """
+    ev = event.event
+    parts: list[str] = []
+    if ev.title:
+        parts.append(ev.title.lower())
+    if ev.summary:
+        parts.append(ev.summary.lower())
+    if ev.global_view:
+        parts.append(ev.global_view.lower())
+    haystack = " ".join(parts)
+    if not haystack:
+        return False
+    for kw, _ in _INDIRECT_JAPAN_IMPACT_KW:
+        if kw in haystack:
+            return True
+    return False
+
+
 def _impact_unmentioned_in_jp(event: ScoredEvent) -> bool:
     """日本ソースが存在し、かつ impact_on_japan / japan_view が未記入なら True。
 
@@ -205,12 +319,27 @@ def _impact_unmentioned_in_jp(event: ScoredEvent) -> bool:
 
 
 def _meets_hidden_stakes_conditions(event: ScoredEvent) -> bool:
-    """成立条件: indirect_japan_impact_score >= 5.0 AND 日本企業/業界キーワードあり。"""
-    if _axis_score(event, "indirect_japan_impact_score") < 5.0:
+    """成立条件 (段階的):
+
+    1) ijai >= 7.0 (STRONG): 単独で成立。間接影響スコアが顕著であれば、
+       企業名キーワードがなくても日本にとっての利害は成立する。
+       メキシコ → 日本原油輸出 (ijai=9.0) のような事例を救済する。
+    2) ijai >= 4.0 (MID) AND (japan_industry_kw >= 1 OR indirect_jp_kw 一致):
+       中程度の ijai に補助シグナル（企業名 or エネルギー/サプライチェーン語彙）が
+       揃えば成立。
+    3) ijai < 3.0 (MIN): 問答無用で不成立（騒音抑制）。
+    """
+    ijai = _axis_score(event, "indirect_japan_impact_score")
+    if ijai < _HIDDEN_STAKES_IJAI_MIN:
         return False
-    if _japan_industry_keyword_count(event) < 1:
-        return False
-    return True
+    if ijai >= _HIDDEN_STAKES_IJAI_STRONG:
+        return True
+    if ijai >= _HIDDEN_STAKES_IJAI_MID:
+        if _japan_industry_keyword_count(event) >= 1:
+            return True
+        if _has_indirect_japan_impact_keyword(event):
+            return True
+    return False
 
 
 def _calculate_hidden_stakes_score(event: ScoredEvent) -> tuple[float, str]:
@@ -237,6 +366,58 @@ _CULTURAL_SIGNAL_KEYWORDS = [
     "宗教", "伝統", "王室", "王族", "民族", "カースト", "ジェンダー",
     "難民", "イスラム", "ヒンドゥー", "仏教", "儒教",
 ]
+
+# 「西側視点と非西側視点の差」を判定するための region/source ホワイトリスト。
+# scoring.py の _NON_WESTERN_REGIONS と整合させる:
+#   middle_east / east_asia / global_south
+# global_south には latin_america / africa / south_asia 系媒体が入る
+# (configs/source_profiles.yaml の region 設定に準拠)。
+_NON_WESTERN_REGIONS = frozenset({
+    "middle_east", "east_asia", "global_south",
+})
+
+# 上記 region に属する非西側媒体の白リスト (source_profiles.yaml ベース)。
+# region メタデータが正しく載っていれば region 判定で十分だが、
+# 古いデータや region 未設定の SourceRef を救済するために名前ベース判定を併用する。
+_NON_WESTERN_SOURCE_NAMES = frozenset({
+    # middle_east
+    "AlJazeera", "ArabNews",
+    # east_asia (非日本)
+    "SCMP", "GlobalTimes", "Yonhap", "StraitsTimes", "CNA",
+    # global_south
+    "TimesOfIndia", "FolhaDeSPaulo", "BuenosAiresTimes", "News24",
+})
+
+# cultural_blindspot のキーワード経路の閾値（既存挙動維持のため 3.0）
+_CULTURAL_UNIQUENESS_KEYWORD_THRESHOLD = 3.0
+# region+source 経路成立時に uniqueness に加える bonus
+_CULTURAL_NON_WESTERN_BONUS = 2.0
+
+
+def _has_non_western_region(event: ScoredEvent) -> bool:
+    """event の sources_by_locale に非西側 region が含まれるか。"""
+    ev = event.event
+    if not ev.sources_by_locale:
+        return False
+    return bool(set(ev.sources_by_locale.keys()) & _NON_WESTERN_REGIONS)
+
+
+def _has_non_western_source(event: ScoredEvent) -> bool:
+    """ソース群に非西側媒体（region or 名前ベース）が 1 つ以上含まれるか。"""
+    ev = event.event
+    sources = []
+    if ev.sources_by_locale:
+        for refs in ev.sources_by_locale.values():
+            sources.extend(refs)
+    else:
+        sources.extend(ev.sources_jp)
+        sources.extend(ev.sources_en)
+    for s in sources:
+        if s.region in _NON_WESTERN_REGIONS:
+            return True
+        if s.name in _NON_WESTERN_SOURCE_NAMES:
+            return True
+    return False
 
 
 def _cultural_uniqueness_score(event: ScoredEvent) -> float:
@@ -275,19 +456,32 @@ def _cultural_uniqueness_score(event: ScoredEvent) -> float:
 
 
 def _meets_cultural_blindspot_conditions(event: ScoredEvent) -> bool:
-    """成立条件（仮実装）: 文化系シグナルが 1 つ以上 AND uniqueness >= 3.0。"""
-    if _cultural_uniqueness_score(event) < 3.0:
-        return False
-    return True
+    """成立条件 (OR):
+
+    1) 地域パターン: event regions に non_western 系を含む AND
+       sources に非西側媒体 (region or 名前) が 1 つ以上ある。
+       → 例: メキシコ原油 (regions={japan, global_south}, sources に
+         BuenosAiresTimes / FolhaDeSPaulo) → 成立。
+    2) キーワードパターン: 文化系シグナル経路の uniqueness >= 3.0。
+       → 後方互換: 旧テスト (Saudi religious tradition 等) を維持する経路。
+    """
+    if _has_non_western_region(event) and _has_non_western_source(event):
+        return True
+    if _cultural_uniqueness_score(event) >= _CULTURAL_UNIQUENESS_KEYWORD_THRESHOLD:
+        return True
+    return False
 
 
 def _calculate_cultural_blindspot_score(event: ScoredEvent) -> tuple[float, str]:
-    """設計書 Section 5.2 軸4 の式に従う（uniqueness のみで近似）。"""
+    """設計書 Section 5.2 軸4 の式に従う（uniqueness + non-western bonus で近似）。"""
     cu = _cultural_uniqueness_score(event)
-    score = _clamp(cu)
+    bonus = _CULTURAL_NON_WESTERN_BONUS if (
+        _has_non_western_region(event) and _has_non_western_source(event)
+    ) else 0.0
+    score = _clamp(cu + bonus)
     reasoning = (
-        f"cultural_uniqueness(仮)={cu:.2f} → score={score:.2f} "
-        f"(LLM 判定で違和感度の加点が乗る可能性あり)"
+        f"cultural_uniqueness(仮)={cu:.2f}, non_western_bonus={bonus:.1f} "
+        f"→ score={score:.2f} (LLM 判定で違和感度の加点が乗る可能性あり)"
     )
     return score, reasoning
 
