@@ -91,7 +91,7 @@ GEMINI_JUDGE_FALLBACK_MODELS: list[str] = [
 # factory.py resolves provider + model from these vars.
 # .env → config.py → factory.py is the only allowed resolution path.
 
-# merge_batch role: cluster post-merge LLM (lightweight model preferred)
+# merge_batch role: cluster post-merge / garbage filter (Gemini 経由は統一 Tier 階層を共有)
 MERGE_BATCH_PROVIDER: str = os.getenv("MERGE_BATCH_PROVIDER", LLM_PROVIDER)
 MERGE_BATCH_MODEL: str = os.getenv("MERGE_BATCH_MODEL", GEMINI_CLUSTER_MODEL)
 
@@ -130,8 +130,9 @@ GEMINI_CALL_INTERVAL_SEC_TIER4: float = float(os.getenv("GEMINI_CALL_INTERVAL_SE
 
 # モデル名 → インターバル（秒）の対応表。
 # TieredGeminiClient はこの表を参照して、現在呼び出している実モデルに応じた
-# 待機時間を算出する（tier_idx ではなく model で引くのは、lightweight ルートが
-# 単一 Tier (TIER4) のみを保持するため tier_idx だけでは判別できないため）。
+# 待機時間を算出する（tier_idx ではなく model で引くのは、judge ルートのように
+# resolved_model を primary に置き直す経路があるため tier_idx だけでは
+# 待機時間を引き当てられないため）。
 GEMINI_INTERVAL_SEC_BY_MODEL: dict[str, float] = {
     GEMINI_MODEL_TIER1: GEMINI_CALL_INTERVAL_SEC_TIER1,
     GEMINI_MODEL_TIER2: GEMINI_CALL_INTERVAL_SEC_TIER2,
@@ -153,11 +154,10 @@ GEMINI_RPM_LIMIT_BY_MODEL: dict[str, int] = {
     GEMINI_MODEL_TIER4: 5,
 }
 
-# Lightweight ルート（GarbageFilter / Event Builder 等の高スループット工程）が
-# 使用する Gemini モデル。Tier 並び替えで TIER4 = gemini-2.5-flash (RPM=5) と
-# なったため、TIER4 固定だと高スループット要件に整合しなくなった。
-# 既定は RPM=10 の gemini-2.5-flash-lite。.env で明示的に上書き可能。
-GEMINI_LIGHTWEIGHT_MODEL: str = os.getenv("GEMINI_LIGHTWEIGHT_MODEL", "gemini-2.5-flash-lite")
+# NOTE: 旧 lightweight 経路の固定モデル env var は Phase 1.5 batch E-2 で廃止された。
+# garbage_filter / cluster_merge を専用モデル固定で流す経路は無料枠 RPD=20 を超過する
+# 事故が発生したため、全 Gemini 呼び出しを統一 Tier 階層 (TIER1→TIER4) に統合し、
+# 高 RPD の TIER1 を主軸に流すように変更している。
 
 # ── Garbage Filter 設定（Gate 1: 高速スクリーニング） ────────────────────────
 # Tier 2 Lite モデルによるノイズ除去を有効にするか（false で完全スキップ）

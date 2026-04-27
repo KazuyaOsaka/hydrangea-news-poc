@@ -1,16 +1,15 @@
-"""factory.py — Role-based LLM client factory with purpose-driven routing.
+"""factory.py — Role-based LLM client factory with unified Tier hierarchy.
 
-Routing strategy:
-  Lightweight (high-throughput): garbage_filter, event_builder (cluster)
-    → GEMINI_LIGHTWEIGHT_MODEL (default gemini-2.5-flash-lite, RPM=10) fixed;
-    same-model retry only (no upward fallback).
-    Rationale: high-throughput stages need the highest free-tier RPM model.
-    旧実装は TIER4 固定だったが Tier 並び替えで TIER4 = gemini-2.5-flash (RPM=5)
-    になり整合しなくなったため、専用の env var で切り出した。
+Routing strategy (Phase 1.5 batch E-2 以降):
+  全 Gemini 経由の LLM 呼び出しは、TIER1 → TIER2 → TIER3 → TIER4 の統一
+  4 段フォールバックに乗る。役割（garbage_filter / cluster_merge / judge /
+  generation / analysis）による経路分岐はなく、すべて TieredGeminiClient で
+  同一の Tier 階層を共有する。
 
-  Quality (high-reasoning): elite_judge, script_writer, article_writer
-    → TIER1 → TIER2 → TIER3 → TIER4 full 4-tier fallback.
-    Rationale: accuracy matters; escalate only after per-tier retries are exhausted.
+  旧 lightweight 経路（専用モデル env 固定、フォールバックなし）は E-2 で廃止された。
+  背景は実 LLM 試運転 (2026-04-27) で gemini-2.5-flash-lite が無料枠 RPD=20 を
+  超過した一方、TIER1 の gemini-3.1-flash-lite-preview (RPD=500) には大きな
+  余裕があったこと。全呼び出しを統一階層に乗せて RPD=500 を主軸として使う。
 
 Per-tier retry policy:
   - 429 / RESOURCE_EXHAUSTED → skip same-model retries, advance to next tier
@@ -19,11 +18,11 @@ Per-tier retry policy:
   - 503 / UNAVAILABLE / other retryables → exponential backoff up to
     _MAX_ATTEMPTS_PER_TIER attempts, then advance.
 
-Fallback priority (quality path) — RPM 上限の高い順に降格:
-  [1] gemini-3.1-flash-lite-preview  (TIER1, RPM=15)
-  [2] gemini-2.5-flash-lite          (TIER2, RPM=10)
-  [3] gemini-3-flash-preview         (TIER3, RPM=5)
-  [4] gemini-2.5-flash               (TIER4, RPM=5)
+Fallback priority — RPM 上限の高い順に降格:
+  [1] gemini-3.1-flash-lite-preview  (TIER1, RPM=15, RPD=500)
+  [2] gemini-2.5-flash-lite          (TIER2, RPM=10, RPD=20)
+  [3] gemini-3-flash-preview         (TIER3, RPM=5,  RPD=20)
+  [4] gemini-2.5-flash               (TIER4, RPM=5,  RPD=20)
 
 Rate limiting (二段構え):
   - 動的レートリミッタ (TieredGeminiClient._wait_for_rpm_slot): 直近60秒の
@@ -32,11 +31,6 @@ Rate limiting (二段構え):
   - 静的最低間隔 (TieredGeminiClient._throttle): GEMINI_CALL_INTERVAL_SEC_TIER{1..4}
     で前回同一モデル呼び出しからの最低間隔を保証。単一スレッドの連続呼び出しを抑止。
   両者は generate() 内で「動的 → 静的」の順に併用される。
-
-Per-tier policy: 429/RESOURCE_EXHAUSTED → skip same-model retries and advance
-immediately. 503/UNAVAILABLE → up to _MAX_ATTEMPTS_PER_TIER retries with
-exponential backoff before advancing. If all tiers are exhausted, RuntimeError
-is raised — no silent degradation.
 
 Resolution path: .env → config.py → factory.py
 No hardcoded model strings in business logic.
@@ -53,7 +47,6 @@ from src.shared.config import (
     GEMINI_API_KEY,
     GEMINI_CALL_INTERVAL_SEC,
     GEMINI_INTERVAL_SEC_BY_MODEL,
-    GEMINI_LIGHTWEIGHT_MODEL,
     GEMINI_MODEL_TIER1,
     GEMINI_MODEL_TIER2,
     GEMINI_MODEL_TIER3,
@@ -277,26 +270,12 @@ class TieredGeminiClient(LLMClient):
 
 # ── Internal factory helpers ─────────────────────────────────────────────────
 
-def _make_lightweight_client() -> Optional[LLMClient]:
-    """大量処理用クライアント: GEMINI_LIGHTWEIGHT_MODEL 固定（既定 gemini-2.5-flash-lite, RPM=10）。
+def _make_tiered_gemini_client() -> Optional[LLMClient]:
+    """統一 Tier 階層クライアント: TIER1→TIER2→TIER3→TIER4 完全4段フォールバック。
 
-    Garbage Filter / Event Builder 等の高スループット工程専用。
-    フォールバックなし — このモデルで最大 _MAX_ATTEMPTS_PER_TIER 回リトライ後に失敗。
-
-    旧実装は TIER4 固定だったが、Tier 並び替えで TIER4 = gemini-2.5-flash (RPM=5)
-    となり高スループット要件と整合しなくなったため、明示的に lightweight 用モデル
-    を切り出した。`.env` の GEMINI_LIGHTWEIGHT_MODEL で上書き可能。
-    """
-    if not GEMINI_API_KEY:
-        return None
-    return TieredGeminiClient(GEMINI_API_KEY, [GEMINI_LIGHTWEIGHT_MODEL])
-
-
-def _make_quality_client() -> Optional[LLMClient]:
-    """高品質推論用クライアント: TIER1→TIER2→TIER3→TIER4 完全4段フォールバック。
-
-    Elite Judge / Script Writer / Article Writer 等の高精度工程専用。
-    TIER1 から順に試行し、429/503 が規定回数を超えた段階で次の Tier へ降格。
+    Phase 1.5 batch E-2 以降、garbage_filter / cluster_merge / judge / generation /
+    analysis すべてのロールがこの統一階層を共有する。専用 lightweight ルート
+    （単一モデル固定 env による経路）は廃止された。
     """
     if not GEMINI_API_KEY:
         return None
@@ -306,15 +285,15 @@ def _make_quality_client() -> Optional[LLMClient]:
     )
 
 
-def _make_client(provider: str, model: str, quality: bool = False) -> Optional[LLMClient]:
+def _make_client(provider: str, model: str) -> Optional[LLMClient]:
     """Construct an LLMClient for the given provider + model pair.
 
-    For Gemini, `model` is ignored — routing is determined by `quality`:
-      quality=True  → _make_quality_client()  (TIER1→TIER4 full fallback)
-      quality=False → _make_lightweight_client() (GEMINI_LIGHTWEIGHT_MODEL retry-only)
+    For Gemini, `model` is ignored — all roles share the unified Tier hierarchy
+    (TIER1→TIER4). The previous `quality` flag was removed in batch E-2 along
+    with the lightweight bypass.
     """
     if provider == "gemini":
-        return _make_quality_client() if quality else _make_lightweight_client()
+        return _make_tiered_gemini_client()
 
     if provider == "groq":
         from src.llm.groq import GroqClient
@@ -330,6 +309,9 @@ def _make_client(provider: str, model: str, quality: bool = False) -> Optional[L
 def get_llm_client(role: str) -> Optional[LLMClient]:
     """Get an LLM client by role name.
 
+    All Gemini roles share the unified Tier hierarchy (TIER1→TIER4); the role
+    only switches provider/model resolution for non-Gemini providers.
+
     Args:
         role: One of "merge_batch", "judge", or "generation".
 
@@ -340,15 +322,13 @@ def get_llm_client(role: str) -> Optional[LLMClient]:
         ValueError: If role is not recognised.
     """
     if role == "merge_batch":
-        # Event Builder / cluster: lightweight (TIER4 retry-only)
-        return _make_client(MERGE_BATCH_PROVIDER, MERGE_BATCH_MODEL, quality=False)
+        return _make_client(MERGE_BATCH_PROVIDER, MERGE_BATCH_MODEL)
 
     if role == "judge":
         return get_judge_llm_client()
 
     if role == "generation":
-        # Script / Article Writer: quality (TIER1→TIER4 full fallback)
-        return _make_client(GENERATION_PROVIDER, GENERATION_MODEL, quality=True)
+        return _make_client(GENERATION_PROVIDER, GENERATION_MODEL)
 
     raise ValueError(
         f"Unknown LLM role: {role!r}. Must be 'merge_batch', 'judge', or 'generation'."
@@ -358,25 +338,26 @@ def get_llm_client(role: str) -> Optional[LLMClient]:
 # ── Named client accessors (called by business logic) ───────────────────────
 
 def get_garbage_filter_client() -> Optional[LLMClient]:
-    """Gate 1 Garbage Filter 用クライアント — 大量処理ルート。
+    """Gate 1 Garbage Filter 用クライアント — 統一 Tier 階層 (TIER1→TIER4)。
 
-    GEMINI_LIGHTWEIGHT_MODEL (既定 gemini-2.5-flash-lite, RPM=10) 固定、
-    同一モデルでリトライのみ。フォールバック不要（高 RPM の専用モデル）。
+    E-2 までは専用モデル固定で同一モデル retry-only だったが、無料枠 RPD=20 を
+    超過する事故が発生したため統一 Tier 階層に統合した。高 RPD (=500) の
+    TIER1 を主軸に走り、quota 切れ時は TIER2→4 へフォールバック。
     """
-    return _make_lightweight_client()
+    return get_llm_client("merge_batch")
 
 
 def get_cluster_llm_client() -> Optional[LLMClient]:
-    """Event Builder / cluster post-merge 用クライアント — 大量処理ルート。
+    """Event Builder / cluster post-merge 用クライアント — 統一 Tier 階層。
 
-    GEMINI_LIGHTWEIGHT_MODEL (既定 gemini-2.5-flash-lite, RPM=10) 固定、
-    同一モデルでリトライのみ。
+    挙動は get_garbage_filter_client と同一。role="merge_batch" 経由で
+    TIER1→TIER4 完全フォールバックを使う。
     """
     return get_llm_client("merge_batch")
 
 
 def get_judge_llm_client() -> Optional[LLMClient]:
-    """Elite Judge / Gemini Judge 用クライアント — 高品質推論ルート。
+    """Elite Judge / Gemini Judge 用クライアント — 統一 Tier 階層。
 
     model_registry.get_judge_model_resolution() が models.list で解決した
     resolved_model を primary tier として採用し、残りの TIER2〜TIER4 を
@@ -420,7 +401,7 @@ def get_judge_llm_client() -> Optional[LLMClient]:
 
 
 def get_script_llm_client() -> Optional[LLMClient]:
-    """Script Writer 用クライアント — 高品質推論ルート (role=generation)。
+    """Script Writer 用クライアント — 統一 Tier 階層 (role=generation)。
 
     GENERATION_PROVIDER=gemini の場合: TIER1→TIER4 完全4段フォールバック。
     GENERATION_PROVIDER=groq/ollama の場合: 該当プロバイダの単一クライアント。
@@ -430,12 +411,12 @@ def get_script_llm_client() -> Optional[LLMClient]:
 
 
 def get_article_llm_client() -> Optional[LLMClient]:
-    """Article Writer 用クライアント — 高品質推論ルート (role=generation)。"""
+    """Article Writer 用クライアント — 統一 Tier 階層 (role=generation)。"""
     return get_llm_client("generation")
 
 
 def get_analysis_llm_client() -> Optional[LLMClient]:
-    """分析レイヤー（Step 3〜5）用クライアント — 高品質推論ルート + 事実重視設定。
+    """分析レイヤー（Step 3〜5）用クライアント — 統一 Tier 階層 + 事実重視設定。
 
     観点選定+検証 / 多角的分析 / 洞察抽出 で共通利用される。
     GENERATION_PROVIDER=gemini の場合: TIER1→TIER2→TIER3→TIER4 完全4段フォールバック
@@ -449,7 +430,7 @@ def get_analysis_llm_client() -> Optional[LLMClient]:
     import os
 
     if not GEMINI_API_KEY or GENERATION_PROVIDER != "gemini":
-        return _make_client(GENERATION_PROVIDER, GENERATION_MODEL, quality=True)
+        return _make_client(GENERATION_PROVIDER, GENERATION_MODEL)
 
     try:
         temperature = float(os.getenv("ANALYSIS_LLM_TEMPERATURE", "0.3"))
