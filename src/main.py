@@ -2457,14 +2457,26 @@ def run_from_normalized(
             _elite_judge_client = get_judge_llm_client()
             if _elite_judge_client is not None:
                 _elite_adopted: list[ScoredEvent] = []
-                # ELITE_JUDGE_CANDIDATE_LIMIT 件に絞る。all_ranked は Editorial Mission Filter 通過後の
+                # EditorialMissionFilter で却下された候補を除外。
+                # apply_editorial_mission_filter() は why_rejected_before_generation をセットするだけで
+                # all_ranked から除外しない設計。Elite Judge には通過候補のみを流す必要がある。
+                _passed_candidates = [
+                    se for se in all_ranked
+                    if not se.why_rejected_before_generation
+                ]
+                logger.info(
+                    f"[EliteJudge] Filtered all_ranked: {len(all_ranked)} → {len(_passed_candidates)} "
+                    f"(removed {len(all_ranked) - len(_passed_candidates)} rejected by EditorialMissionFilter)"
+                )
+
+                # ELITE_JUDGE_CANDIDATE_LIMIT 件に絞る。_passed_candidates は Editorial Mission Filter 通過後の
                 # effective_score 降順なので、上位から LIMIT 件を Elite Judge にかける。
-                # 残りは elite_judge 未評価のまま all_ranked からは除外（= 棄却扱い）する。
-                _elite_candidates = all_ranked[:ELITE_JUDGE_CANDIDATE_LIMIT]
-                if len(all_ranked) > ELITE_JUDGE_CANDIDATE_LIMIT:
+                # 残りは elite_judge 未評価のまま除外（= 棄却扱い）する。
+                _elite_candidates = _passed_candidates[:ELITE_JUDGE_CANDIDATE_LIMIT]
+                if len(_passed_candidates) > ELITE_JUDGE_CANDIDATE_LIMIT:
                     logger.info(
                         f"[EliteJudge] Capping candidates to top {ELITE_JUDGE_CANDIDATE_LIMIT} "
-                        f"of {len(all_ranked)} (ELITE_JUDGE_CANDIDATE_LIMIT)"
+                        f"of {len(_passed_candidates)} (ELITE_JUDGE_CANDIDATE_LIMIT)"
                     )
 
                 for _se in _elite_candidates:

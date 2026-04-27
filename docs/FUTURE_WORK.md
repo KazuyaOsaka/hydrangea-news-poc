@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-04-27 (FW-1)
+最終更新: 2026-04-27 (F-1.5)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -33,6 +33,18 @@
   - 背景: ハイブリッド版になって event_builder.py の garbage_filter 周辺は触ってOK。scoring.py も新 axis 追加が必要になる可能性
   - 対応案: 各ファイルの「なぜ触ってはいけないか」を明示し、状況依存で触ってよい範囲を定義
   - 検討時期: Phase 1.5 全完了後
+
+- **EditorialMissionFilter Step1 prescore の軸スコアゼロ問題** (F-1.5 試運転で発覚)
+  - 背景: F-1.5 試運転で発覚。軍事費・ゼレンスキー等の地政学記事で `editorial:geopolitics_depth_score` / `editorial:breaking_shock_score` / `editorial:mass_appeal_score` が 0.0 になっていた。本来高得点になるはずの記事が低 prescore で却下される/低位置に置かれる懸念
+  - 対応案: `src/triage/scoring.py` の `compute_score_full()` を読み、各 axis 計算ロジックを確認。修正には scoring.py を触る必要があるため、触っちゃダメリスト見直しと一緒に対処
+  - 検討時期: F-1.5 完了後の次のバッチ
+  - 関連ファイル: src/triage/scoring.py（読み取り）, src/triage/editorial_mission_filter.py
+
+- **Analysis Layer の hidden_stakes axis バグ** (F-1.5 試運転で発覚)
+  - 背景: F-1.5 試運転で発覚。PerspectiveSelector が hidden_stakes を選んだが Top3 に入っていないため fallback。その fallback 経路も deprecated 化されており動画生成失敗
+  - 対応案: `src/analysis/perspective_selector.py` の axis 候補リストを確認し、hidden_stakes が Top3 に入る形に整える、または `analysis_engine.py` の fallback 経路を再有効化する
+  - 検討時期: F-1.5 完了後の次のバッチ
+  - 関連ファイル: src/analysis/perspective_selector.py, src/analysis/analysis_engine.py, src/main.py
 
 ---
 

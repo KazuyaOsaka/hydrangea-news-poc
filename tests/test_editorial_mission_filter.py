@@ -330,6 +330,36 @@ class TestThresholdGate:
         """暫定 threshold が 45.0 であることをロックする。"""
         assert MISSION_SCORE_THRESHOLD == 45.0
 
+    def test_rejected_candidates_excluded_from_elite_judge_input(self):
+        """EditorialMissionFilter で why_rejected_before_generation がセットされた候補は
+        Elite Judge への入力から除外されることを検証する (F-1.5 ゲート修正)。
+
+        apply_editorial_mission_filter() は why_rejected_before_generation をセットするのみで
+        all_ranked から除外しない設計のため、main.py 側で除外する責務を負う。
+        本テストは main.py の修正後ロジック（リスト内包による除外）を再現して挙動を確定する。
+        """
+        se1 = _make_scored_event(_make_event(id="evt-passed-1", title="Passed 1"))
+        se1.why_rejected_before_generation = None
+
+        se2 = _make_scored_event(_make_event(id="evt-rejected", title="Rejected"))
+        se2.why_rejected_before_generation = "editorial_mission_score 12.3 below threshold 45.0"
+
+        se3 = _make_scored_event(_make_event(id="evt-passed-2", title="Passed 2"))
+        se3.why_rejected_before_generation = None
+
+        all_ranked = [se1, se2, se3]
+
+        # main.py の修正後ロジック (Elite Judge 入力フィルタリング) を再現
+        passed_candidates = [
+            se for se in all_ranked
+            if not se.why_rejected_before_generation
+        ]
+
+        assert len(passed_candidates) == 2
+        assert se2 not in passed_candidates
+        assert se1 in passed_candidates
+        assert se3 in passed_candidates
+
 
 # ── Tests: LLM mission scoring ────────────────────────────────────────────────
 
