@@ -186,6 +186,20 @@ _ENTITY_JP: dict[str, str] = {
     "モディ": "modi",
     "スターマー": "starmer",
     "ショルツ": "scholz",
+    # F-8-1-A: 新媒体名の日英対訳追加
+    "シドニー・モーニング・ヘラルド": "sydneymorningherald",
+    "ガーディアン豪州版": "guardianaustralia",
+    "ヒンドゥスタン・タイムズ": "hindustantimes",
+    "ミドル・イースト・アイ": "middleeasteye",
+    "端傳媒": "initium",
+    "イニシアム": "initium",
+    "メドゥーザ": "meduza",
+    "イル・ソーレ24オーレ": "ilsole24ore",
+    "アトランティック": "theatlantic",
+    "ポリティコ": "politico",
+    "ユーラシアネット": "eurasianet",
+    "テレスール": "telesur",
+    "マダ・マスル": "madamasr",
 }
 
 # EN表記 → 正規トークン (小文字でマッチング)
@@ -263,6 +277,19 @@ _ENTITY_EN: dict[str, str] = {
     "narendra modi": "modi",
     "starmer": "starmer",
     "scholz": "scholz",
+    # F-8-1-A: 新媒体名の日英対訳追加
+    "sydney morning herald": "sydneymorningherald",
+    "guardian australia": "guardianaustralia",
+    "hindustan times": "hindustantimes",
+    "middle east eye": "middleeasteye",
+    "the initium": "initium",
+    "meduza": "meduza",
+    "il sole 24 ore": "ilsole24ore",
+    "the atlantic": "theatlantic",
+    "politico": "politico",
+    "eurasianet": "eurasianet",
+    "telesur": "telesur",
+    "mada masr": "madamasr",
 }
 
 # ── キーワード対訳辞書 ─────────────────────────────────────────────────────────

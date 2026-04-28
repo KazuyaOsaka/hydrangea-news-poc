@@ -377,6 +377,129 @@ sources:
     bridge_source: true
     licensing_notes: "Buenos Aires Times公式RSS。研究目的は許容範囲。商用利用・転載は別途確認要。"
 
+  # === Phase A.5-1 (F-8-1-A): Direct RSS 11媒体追加 ===
+
+  - country: au
+    name: Sydney_Morning_Herald
+    rss_url: https://www.smh.com.au/rss/feed.xml
+    enabled: true
+    priority: medium
+    language: en
+    region: oceania
+    source_type: standard
+    licensing_notes: 豪有力紙、Direct RSS
+
+  - country: au
+    name: Guardian_Australia
+    rss_url: https://www.theguardian.com/australia-news/rss
+    enabled: true
+    priority: medium
+    language: en
+    region: oceania
+    source_type: standard
+    licensing_notes: 英Guardian豪州版、Direct RSS
+
+  - country: in
+    name: The_Hindustan_Times
+    rss_url: https://www.hindustantimes.com/feeds/rss/world-news/rssfeed.xml
+    enabled: true
+    priority: medium
+    language: en
+    region: south_asia
+    source_type: standard
+    licensing_notes: インド大手リベラル紙、Direct RSS
+
+  - country: gb
+    name: Middle_East_Eye
+    rss_url: https://www.middleeasteye.net/rss
+    enabled: true
+    priority: high
+    language: en
+    region: middle_east
+    source_type: standard
+    licensing_notes: 中東独立メディア(親パレスチナ)、Direct RSS
+
+  - country: hk
+    name: The_Initium
+    rss_url: https://theinitium.com/rss/
+    enabled: true
+    priority: medium
+    language: zh
+    region: east_asia
+    source_type: standard
+    licensing_notes: 香港独立メディア、Direct RSS
+
+  - country: lv
+    name: Meduza
+    rss_url: https://meduza.io/rss/en/all
+    enabled: true
+    priority: high
+    language: en
+    region: russia_cis
+    source_type: standard
+    licensing_notes: ロシア独立メディア(ラトビア拠点)、Direct RSS
+
+  - country: it
+    name: Il_Sole_24_Ore
+    rss_url: https://www.ilsole24ore.com/rss/mondo.xml
+    enabled: true
+    priority: medium
+    language: it
+    region: europe
+    source_type: standard
+    licensing_notes: 伊経済紙、Direct RSS
+
+  - country: us
+    name: The_Atlantic
+    rss_url: https://www.theatlantic.com/feed/all/
+    enabled: true
+    priority: medium
+    language: en
+    region: north_america
+    source_type: standard
+    licensing_notes: 米高級論考誌、Direct RSS
+
+  - country: us
+    name: Politico
+    rss_url: https://rss.politico.com/politics-news.xml
+    enabled: true
+    priority: medium
+    language: en
+    region: north_america
+    source_type: standard
+    licensing_notes: 米政治専門メディア、Direct RSS
+
+  - country: us
+    name: Eurasianet
+    rss_url: https://eurasianet.org/rss.xml
+    enabled: true
+    priority: low
+    language: en
+    region: central_asia
+    source_type: standard
+    licensing_notes: 中央アジア専門メディア、Direct RSS
+
+  # Tier 3 警告付き
+  - country: ve
+    name: TeleSUR
+    rss_url: https://www.telesurenglish.net/rss/
+    enabled: true
+    priority: low
+    language: en
+    region: latin_america
+    source_type: state_aligned
+    licensing_notes: ベネズエラ政府系の国際メディア、Tier 3 (政治的警告必須、Tier1並置推奨)
+
+  - country: eg
+    name: Mada_Masr
+    rss_url: https://www.madamasr.com/en/feed/
+    enabled: true
+    priority: medium
+    language: en
+    region: middle_east
+    source_type: independent
+    licensing_notes: エジプト独立メディア(政府弾圧下)、TIME 100/Knight Award 受賞
+
   # ── Candidate Sources (disabled / proposal stage) ─────────────────────
   # 以下は将来の有効化候補。利用条件・取得安定性の確認が必要。
 

@@ -2,18 +2,30 @@
 # 出典権威プロファイル — スクリプト内での媒体名言及に使用
 #
 # フィールド説明:
-#   source_name          : sources.yaml の name と一致させること
-#   display_name_ja      : 日本語表示名
-#   country              : ISO 3166-1 alpha-2 または "Global"
-#   region               : sources.yaml の region と一致
-#   language             : ja / en
-#   authority_tier       : top / major / standard
+#   source_name              : sources.yaml の name と一致させること
+#   display_name_ja          : 日本語表示名 (旧フィールド、後方互換)
+#   country                  : ISO 3166-1 alpha-2 または "Global"
+#   region                   : sources.yaml の region と一致
+#   language                 : ja / en / it / zh
+#   authority_tier           : top / major / standard
 #     top      — 世界的プレステージ、高い名前認知度 (Reuters, FT, Bloomberg, Nikkei)
 #     major    — 強い地域・分野権威 (BBC, AlJazeera, France24, CNA, NHK)
 #     standard — 信頼できる地域メディア (Asahi, APNews)
-#   mention_style_short  : 短い言及形 (スクリプト内で使用)
-#   mention_style_long   : 長い文脈形 (arbitrage_gap / fact セクション向け)
-#   can_authority_mention: true → スクリプトで媒体名を明示してよい
+#   mention_style_short      : 短い言及形 (DEPRECATED: F-8-1-A 以降は display_name_speech を使う。後方互換のため残す。F-12 完了後に削除予定)
+#   mention_style_long       : 長い文脈形 (arbitrage_gap / fact セクション向け)
+#   can_authority_mention    : true → スクリプトで媒体名を明示してよい
+#
+# F-8-1-A で追加された 3層表示名:
+#   display_name_speech      : 台本発話用 (例: "独高級ニュース誌のシュピーゲル")
+#   display_name_article     : 記事用 (例: "独高級誌・Der Spiegel(シュピーゲル)")
+#   display_name_subtitle    : 字幕・テロップ用 (原語ベース、例: "Der Spiegel")
+#   requires_political_warning : Tier 3 媒体は true。台本生成時に政治的立場を強調する
+#
+# Tier 3 警告補強フィールド (任意、Tier 3 媒体のみ設定):
+#   state_aligned    : 政府系メディアか
+#   parent_company   : 親会社・運営組織
+#   funding_sources  : 主要資金源リスト
+#   warning_note     : 政治的警告の詳細注記
 #
 # 重要: evidence.json に存在するソースのみ言及すること。
 #        このファイルは言及「許可」リストであり、言及「根拠」ではない。
@@ -31,6 +43,10 @@ source_profiles:
     mention_style_short: NHK
     mention_style_long: NHK
     can_authority_mention: true
+    display_name_speech: NHK
+    display_name_article: NHK
+    display_name_subtitle: NHK
+    requires_political_warning: false
 
   - source_name: NHK_Politics
     display_name_ja: NHK
@@ -41,6 +57,10 @@ source_profiles:
     mention_style_short: NHK
     mention_style_long: NHK（政治）
     can_authority_mention: true
+    display_name_speech: NHK政治部
+    display_name_article: NHK政治部
+    display_name_subtitle: NHK政治部
+    requires_political_warning: false
 
   - source_name: NHK_Economy
     display_name_ja: NHK
@@ -51,6 +71,10 @@ source_profiles:
     mention_style_short: NHK
     mention_style_long: NHK（経済）
     can_authority_mention: true
+    display_name_speech: NHK経済部
+    display_name_article: NHK経済部
+    display_name_subtitle: NHK経済部
+    requires_political_warning: false
 
   - source_name: Nikkei
     display_name_ja: 日経
@@ -61,6 +85,10 @@ source_profiles:
     mention_style_short: 日経
     mention_style_long: 日本経済新聞
     can_authority_mention: true
+    display_name_speech: 日本経済新聞
+    display_name_article: 日本経済新聞
+    display_name_subtitle: 日経
+    requires_political_warning: false
 
   - source_name: Asahi
     display_name_ja: 朝日新聞
@@ -71,6 +99,10 @@ source_profiles:
     mention_style_short: 朝日新聞
     mention_style_long: 朝日新聞
     can_authority_mention: true
+    display_name_speech: 朝日新聞
+    display_name_article: 朝日新聞
+    display_name_subtitle: 朝日新聞
+    requires_political_warning: false
 
   - source_name: Kyodo47
     display_name_ja: 共同通信
@@ -81,6 +113,10 @@ source_profiles:
     mention_style_short: 共同通信
     mention_style_long: 共同通信
     can_authority_mention: true
+    display_name_speech: 共同通信
+    display_name_article: 共同通信
+    display_name_subtitle: 共同通信
+    requires_political_warning: false
 
   # ── グローバル ───────────────────────────────────────────────────────────────
 
@@ -93,6 +129,10 @@ source_profiles:
     mention_style_short: ロイター
     mention_style_long: 国際通信社ロイター
     can_authority_mention: true
+    display_name_speech: 国際通信社のロイター
+    display_name_article: 国際通信社・Reuters(ロイター)
+    display_name_subtitle: Reuters
+    requires_political_warning: false
 
   - source_name: APNews
     display_name_ja: AP通信
@@ -103,6 +143,10 @@ source_profiles:
     mention_style_short: AP通信
     mention_style_long: 米AP通信
     can_authority_mention: true
+    display_name_speech: 米通信社のAP通信
+    display_name_article: 米通信社・AP(Associated Press)
+    display_name_subtitle: AP
+    requires_political_warning: false
 
   - source_name: BBC
     display_name_ja: 英BBC
@@ -113,6 +157,10 @@ source_profiles:
     mention_style_short: 英BBC
     mention_style_long: 英公共放送BBC
     can_authority_mention: true
+    display_name_speech: 英公共放送のBBC
+    display_name_article: 英公共放送・BBC
+    display_name_subtitle: BBC
+    requires_political_warning: false
 
   - source_name: Bloomberg
     display_name_ja: ブルームバーグ
@@ -123,6 +171,10 @@ source_profiles:
     mention_style_short: ブルームバーグ
     mention_style_long: 米金融メディアのブルームバーグ
     can_authority_mention: true
+    display_name_speech: 米経済通信のブルームバーグ
+    display_name_article: 米経済通信・Bloomberg
+    display_name_subtitle: Bloomberg
+    requires_political_warning: false
 
   - source_name: FinancialTimes
     display_name_ja: 英Financial Times
@@ -133,6 +185,10 @@ source_profiles:
     mention_style_short: 英FT
     mention_style_long: 英Financial Times
     can_authority_mention: true
+    display_name_speech: 英経済紙のフィナンシャル・タイムズ
+    display_name_article: 英経済紙・Financial Times(FT)
+    display_name_subtitle: FT
+    requires_political_warning: false
 
   # ── 中東 ────────────────────────────────────────────────────────────────────
 
@@ -145,6 +201,10 @@ source_profiles:
     mention_style_short: Al Jazeera
     mention_style_long: 中東のAl Jazeera
     can_authority_mention: true
+    display_name_speech: カタール拠点のアルジャジーラ
+    display_name_article: カタール拠点・Al Jazeera English
+    display_name_subtitle: Al Jazeera
+    requires_political_warning: false
 
   # ── 欧州 ────────────────────────────────────────────────────────────────────
 
@@ -157,6 +217,10 @@ source_profiles:
     mention_style_short: France 24
     mention_style_long: フランスのFrance 24
     can_authority_mention: true
+    display_name_speech: 仏国営放送のフランス24
+    display_name_article: 仏国営放送・France 24
+    display_name_subtitle: France 24
+    requires_political_warning: false
 
   - source_name: DeutscheWelle
     display_name_ja: ドイツのDW
@@ -167,6 +231,10 @@ source_profiles:
     mention_style_short: DW
     mention_style_long: ドイツのDW（ドイチェ・ヴェレ）
     can_authority_mention: true
+    display_name_speech: ドイツのDW
+    display_name_article: 独国際放送・Deutsche Welle(DW)
+    display_name_subtitle: DW
+    requires_political_warning: false
 
   # ── 東アジア ─────────────────────────────────────────────────────────────────
 
@@ -179,6 +247,10 @@ source_profiles:
     mention_style_short: CNA
     mention_style_long: シンガポールのCNA
     can_authority_mention: true
+    display_name_speech: シンガポール公共放送のチャンネル・ニュース・アジア
+    display_name_article: シンガポール公共放送・Channel News Asia
+    display_name_subtitle: CNA
+    requires_political_warning: false
 
   - source_name: SCMP
     display_name_ja: 香港のSCMP
@@ -189,6 +261,10 @@ source_profiles:
     mention_style_short: SCMP
     mention_style_long: 香港のサウスチャイナ・モーニング・ポスト
     can_authority_mention: true
+    display_name_speech: 香港のサウスチャイナ・モーニング・ポスト
+    display_name_article: 香港・South China Morning Post(SCMP)
+    display_name_subtitle: SCMP
+    requires_political_warning: false
 
   # ── 中東（その他） ───────────────────────────────────────────────────────────
 
@@ -201,6 +277,10 @@ source_profiles:
     mention_style_short: アラブニュース
     mention_style_long: サウジアラビアのアラブニュース
     can_authority_mention: false
+    display_name_speech: サウジアラビアのアラブニュース
+    display_name_article: サウジアラビア・Arab News
+    display_name_subtitle: Arab News
+    requires_political_warning: false
 
   - source_name: GlobalTimes
     display_name_ja: 中国のGlobal Times
@@ -211,6 +291,10 @@ source_profiles:
     mention_style_short: Global Times
     mention_style_long: 中国国営メディアのGlobal Times
     can_authority_mention: false
+    display_name_speech: 中国国営メディアのGlobal Times
+    display_name_article: 中国国営・Global Times(環球時報)
+    display_name_subtitle: Global Times
+    requires_political_warning: false
 
   # ── G20 / グローバルサウス拡張（sources.yaml と整合） ────────────────────────
 
@@ -223,6 +307,10 @@ source_profiles:
     mention_style_short: 英ガーディアン
     mention_style_long: 英ガーディアン紙
     can_authority_mention: true
+    display_name_speech: 英リベラル紙のガーディアン
+    display_name_article: 英リベラル紙・The Guardian
+    display_name_subtitle: The Guardian
+    requires_political_warning: false
 
   - source_name: LeMonde
     display_name_ja: 仏ルモンド
@@ -233,6 +321,10 @@ source_profiles:
     mention_style_short: 仏ルモンド
     mention_style_long: 仏ルモンド紙（英語版）
     can_authority_mention: true
+    display_name_speech: 仏中道紙のル・モンド
+    display_name_article: 仏中道紙・Le Monde
+    display_name_subtitle: Le Monde
+    requires_political_warning: false
 
   - source_name: DerSpiegel
     display_name_ja: 独シュピーゲル
@@ -243,6 +335,10 @@ source_profiles:
     mention_style_short: 独シュピーゲル
     mention_style_long: 独誌シュピーゲル（英語版）
     can_authority_mention: true
+    display_name_speech: 独高級ニュース誌のシュピーゲル
+    display_name_article: 独高級誌・Der Spiegel(シュピーゲル)
+    display_name_subtitle: Der Spiegel
+    requires_political_warning: false
 
   - source_name: ElPais
     display_name_ja: 西エルパイス
@@ -253,6 +349,10 @@ source_profiles:
     mention_style_short: 西エルパイス
     mention_style_long: スペインのエルパイス（英語版）
     can_authority_mention: true
+    display_name_speech: 西スペイン主要紙のエル・パイス
+    display_name_article: 西スペイン主要紙・El País
+    display_name_subtitle: El País
+    requires_political_warning: false
 
   - source_name: Yonhap
     display_name_ja: 韓国の聯合ニュース
@@ -263,6 +363,10 @@ source_profiles:
     mention_style_short: 聯合ニュース
     mention_style_long: 韓国の聯合ニュース
     can_authority_mention: true
+    display_name_speech: 韓国通信社の聯合ニュース
+    display_name_article: 韓国通信社・聯合ニュース(Yonhap)
+    display_name_subtitle: 聯合ニュース
+    requires_political_warning: false
 
   - source_name: StraitsTimes
     display_name_ja: シンガポールのストレーツ・タイムズ
@@ -273,6 +377,10 @@ source_profiles:
     mention_style_short: ストレーツ・タイムズ
     mention_style_long: シンガポールのストレーツ・タイムズ
     can_authority_mention: true
+    display_name_speech: シンガポール最大手英字紙のストレーツ・タイムズ
+    display_name_article: シンガポール最大手英字紙・The Straits Times
+    display_name_subtitle: Straits Times
+    requires_political_warning: false
 
   - source_name: TimesOfIndia
     display_name_ja: タイムズ・オブ・インディア
@@ -283,6 +391,10 @@ source_profiles:
     mention_style_short: タイムズ・オブ・インディア
     mention_style_long: インドのタイムズ・オブ・インディア
     can_authority_mention: true
+    display_name_speech: インド最大手英字日刊紙のタイムズ・オブ・インディア
+    display_name_article: インド最大手英字紙・Times of India
+    display_name_subtitle: TOI
+    requires_political_warning: false
 
   - source_name: ABCNewsAU
     display_name_ja: 豪ABC
@@ -293,6 +405,10 @@ source_profiles:
     mention_style_short: 豪ABC
     mention_style_long: オーストラリア公共放送ABC
     can_authority_mention: true
+    display_name_speech: 豪公共放送のABCニュース
+    display_name_article: 豪公共放送・ABC News Australia
+    display_name_subtitle: ABC News (Aus)
+    requires_political_warning: false
 
   - source_name: News24
     display_name_ja: 南アフリカのNews24
@@ -303,6 +419,10 @@ source_profiles:
     mention_style_short: News24
     mention_style_long: 南アフリカのNews24
     can_authority_mention: true
+    display_name_speech: 南アフリカ大手のニュース24
+    display_name_article: 南アフリカ大手・News24
+    display_name_subtitle: News24
+    requires_political_warning: false
 
   - source_name: NYTWorld
     display_name_ja: 米ニューヨーク・タイムズ
@@ -313,6 +433,10 @@ source_profiles:
     mention_style_short: 米NYT
     mention_style_long: 米ニューヨーク・タイムズ
     can_authority_mention: true
+    display_name_speech: 米リベラル紙のニューヨーク・タイムズ
+    display_name_article: 米リベラル紙・The New York Times
+    display_name_subtitle: NYT
+    requires_political_warning: false
 
   - source_name: FolhaDeSPaulo
     display_name_ja: ブラジルのフォーリャ
@@ -323,6 +447,10 @@ source_profiles:
     mention_style_short: フォーリャ
     mention_style_long: ブラジルのフォーリャ・デ・サンパウロ（英語版）
     can_authority_mention: true
+    display_name_speech: ブラジル主要紙のフォーリャ・デ・サンパウロ
+    display_name_article: ブラジル主要紙・Folha de S.Paulo
+    display_name_subtitle: Folha
+    requires_political_warning: false
 
   - source_name: BuenosAiresTimes
     display_name_ja: アルゼンチンのBuenos Aires Times
@@ -333,3 +461,174 @@ source_profiles:
     mention_style_short: Buenos Aires Times
     mention_style_long: アルゼンチンのBuenos Aires Times
     can_authority_mention: true
+    display_name_speech: アルゼンチン英字紙のブエノスアイレス・タイムズ
+    display_name_article: アルゼンチン英字紙・Buenos Aires Times
+    display_name_subtitle: BA Times
+    requires_political_warning: false
+
+  # === Phase A.5-1 (F-8-1-A): Direct RSS 11媒体追加 ===
+
+  - source_name: Sydney_Morning_Herald
+    tier: standard
+    language: en
+    region: oceania
+    country: au
+    political_lean: liberal_centrist
+    mention_style_short: 豪SMH
+    display_name_speech: 豪有力紙のシドニー・モーニング・ヘラルド
+    display_name_article: 豪有力紙・Sydney Morning Herald
+    display_name_subtitle: SMH
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: Guardian_Australia
+    tier: standard
+    language: en
+    region: oceania
+    country: au
+    political_lean: liberal
+    mention_style_short: 豪ガーディアン
+    display_name_speech: 豪ガーディアン (リベラル系)
+    display_name_article: 豪リベラル紙・Guardian Australia
+    display_name_subtitle: Guardian (Aus)
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: The_Hindustan_Times
+    tier: standard
+    language: en
+    region: south_asia
+    country: in
+    political_lean: liberal
+    mention_style_short: 印HT
+    display_name_speech: インド大手リベラル紙のヒンドゥスタン・タイムズ
+    display_name_article: インド大手リベラル紙・Hindustan Times
+    display_name_subtitle: Hindustan Times
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: Middle_East_Eye
+    tier: standard
+    language: en
+    region: middle_east
+    country: gb
+    political_lean: pro_palestinian
+    mention_style_short: MEE
+    display_name_speech: 中東独立メディアのミドル・イースト・アイ (親パレスチナ)
+    display_name_article: 中東独立メディア・Middle East Eye
+    display_name_subtitle: MEE
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: The_Initium
+    tier: standard
+    language: zh
+    region: east_asia
+    country: hk
+    political_lean: independent
+    mention_style_short: 端傳媒
+    display_name_speech: 香港独立メディアの端傳媒(イニシアム)
+    display_name_article: 香港独立メディア・The Initium(端傳媒)
+    display_name_subtitle: The Initium
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: Meduza
+    tier: standard
+    language: en
+    region: russia_cis
+    country: lv
+    political_lean: independent_anti_kremlin
+    mention_style_short: メドゥーザ
+    display_name_speech: ロシアの独立系メディア、メドゥーザ
+    display_name_article: ロシアの独立系メディア・Meduza(メドゥーザ、ラトビア・リガ拠点)
+    display_name_subtitle: Meduza (ロシア独立系)
+    can_authority_mention: true
+    requires_political_warning: false
+    parent_company: "SIA Medusa Project (Latvia)"
+    funding_sources: ["reader_donations", "european_grants"]
+    warning_note: "ロシア政府により『望ましくない組織』指定。創業者 Galina Timchenko に2025年12月欠席判決(禁錮5年)。プーチン政権関連トピックでは Tass/RIA との対比が望ましい。"
+
+  - source_name: Il_Sole_24_Ore
+    tier: standard
+    language: it
+    region: europe
+    country: it
+    political_lean: liberal_centrist
+    mention_style_short: 伊ソーレ24
+    display_name_speech: 伊経済紙のイル・ソーレ24オーレ
+    display_name_article: 伊経済紙・Il Sole 24 Ore
+    display_name_subtitle: Il Sole 24 Ore
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: The_Atlantic
+    tier: standard
+    language: en
+    region: north_america
+    country: us
+    political_lean: liberal_intellectual
+    mention_style_short: 米アトランティック
+    display_name_speech: 米高級論考誌のアトランティック
+    display_name_article: 米高級論考誌・The Atlantic
+    display_name_subtitle: The Atlantic
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: Politico
+    tier: standard
+    language: en
+    region: north_america
+    country: us
+    political_lean: centrist
+    mention_style_short: 米ポリティコ
+    display_name_speech: 米政治専門メディアのポリティコ
+    display_name_article: 米政治専門・Politico
+    display_name_subtitle: Politico
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: Eurasianet
+    tier: standard
+    language: en
+    region: central_asia
+    country: us
+    political_lean: independent
+    mention_style_short: ユーラシアネット
+    display_name_speech: 中央アジア専門メディアのユーラシアネット
+    display_name_article: 中央アジア専門・Eurasianet
+    display_name_subtitle: Eurasianet
+    can_authority_mention: true
+    requires_political_warning: false
+
+  # Tier 3 警告付き ★ Web調査反映
+  - source_name: TeleSUR
+    tier: standard
+    language: en
+    region: latin_america
+    country: ve
+    political_lean: state_aligned_anti_us
+    state_aligned: true
+    mention_style_short: テレスール
+    display_name_speech: ベネズエラ政府系の国際テレビ局テレスール
+    display_name_article: ベネズエラ・キューバ・ニカラグア政府が出資する国際メディア・TeleSUR
+    display_name_subtitle: TeleSUR (ベネズエラ国営系)
+    can_authority_mention: true
+    requires_political_warning: true
+    parent_company: "Bolivarian Communication and Information System (SiBCI)"
+    funding_sources: ["venezuela_government", "cuba_government", "nicaragua_government"]
+    warning_note: "ベネズエラ政府主導の多国間公営メディア。GMF/Media Bias Fact Check が情報ロンダリング前線基地と分類。RT/Sputnik/Xinhua のコンテンツ再配信が指摘されている。引用時は出所と立場を明示し、Tier 1 メディアとの並置必須。"
+
+  - source_name: Mada_Masr
+    tier: standard
+    language: en
+    region: middle_east
+    country: eg
+    political_lean: independent_critical
+    mention_style_short: マダ・マスル
+    display_name_speech: エジプトの独立系調査報道メディア、マダ・マスル
+    display_name_article: エジプトに残る数少ない独立系メディア・Mada Masr(マダ・マスル)
+    display_name_subtitle: Mada Masr (エジプト独立)
+    can_authority_mention: true
+    requires_political_warning: true
+    warning_note: "シシ政権から弾圧を受け続ける独立メディア。2017年以来エジプト国内でサイトブロック中。編集長 Lina Attalah は2025年8月に5回目の起訴。TIME 100/Knight Award/Canada-UK Media Freedom Award 等を受賞。シシ政権関連トピックではエジプト政府公式見解との並置が望ましい。"
