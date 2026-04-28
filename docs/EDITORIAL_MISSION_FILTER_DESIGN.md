@@ -411,3 +411,43 @@ Using highest-scoring candidate: axis=framing_inversion (score=8.00) for event=c
   採用する形にした（プロンプトで Top3 内 axis を強制するより、運用で実害を防ぐ方が堅牢）。
 - `framing_divergence_bonus` は Step 2 で採用された候補にも従来通り後加算される。
 
+---
+
+### F-4 で対応した AnalysisLayer の実行範囲拡張
+
+F-3 で 3 段階フォールバックを実装後、試運転7-A で別の問題が発覚:
+
+```
+試運転7-A:
+- Slot-1 (Australia green energy): analysis_result is None → skip
+- Slot-2 (Iran ホルムズ): analysis_result 存在 → 動画化成功 ✅
+- Slot-3 (Russian superyacht): analysis_result is None → skip
+```
+
+#### 真因
+
+src/main.py の AnalysisLayer ブロックが Recency Guard 後の `all_ranked[0]` (slot-1) に対してのみ `run_analysis_layer()` を呼び、`override_top.analysis_result` にセットしていた。Slot-2 / Slot-3 の `analysis_result` は None のまま、後続の台本生成ループで skip されていた。
+
+これは「1 日 5 本（最低 3 本）の継続生成」体制の最大ブロッカーだった。
+
+#### F-4 改修内容
+
+| 項目 | 旧 | 新 (F-4) |
+|---|---|---|
+| AnalysisLayer 実行範囲 | Slot-1 のみ | Top-N 全 Slot (default N=3) |
+| 制御変数 | なし (固定) | `TOP_N_GENERATION` 環境変数 |
+| 1 Slot 失敗時 | 全体 fallback | 当該 Slot のみ skip、他は続行 |
+
+#### 効果
+
+- Top-N 候補すべてで `analysis_result` が生成され、Slot-2 / Slot-3 でも台本生成可能に。
+- 1 Slot あたり LLM 約 5 ~ 8 回の追加呼び出しが発生する想定 (Step 3 perspective_select_and_verify, Step 4 multi_angle, Step 5 insights, Step 6 duration_profile)。N=3 時は約 15 ~ 24 回の増加。
+- `TOP_N_GENERATION=1` で F-3 以前の挙動（Slot-1 のみ実行）に戻せる。
+
+#### 設計上の判断
+
+- **Slot 間の独立性**: 1 Slot の AnalysisLayer 失敗は他 Slot に影響しない。各 Slot ループ内に try/except を配置。
+- **Recency Guard は 1 回**: 全候補に対して一括で適用後、`all_ranked[:N]` を抽出する。重複適用は避ける。
+- **`override_top` (= slot-1 確定)**: 既存挙動維持のため `all_ranked[0]` で設定する流れは変えない。
+- **legacy fallback**: AnalysisLayer 全体の import エラー等は依然として既存の最外側 try/except で legacy ルートにフォールバック (現状維持)。
+

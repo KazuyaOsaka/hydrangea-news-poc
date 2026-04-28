@@ -2966,24 +2966,53 @@ def run_from_normalized(
                             f"{_prev_slot1_id} → {_new_slot1.event.id}"
                         )
                     override_top = _new_slot1
-                    override_top.channel_id = _analysis_channel_id
 
-                    _analysis_result = run_analysis_layer(
-                        override_top, _channel_config, db_path
+                    # ── F-4: AnalysisLayer を Top-N 全 Slot で実行 ──────────────
+                    # 旧実装は all_ranked[0] (= slot-1) のみで run_analysis_layer
+                    # を呼び、Slot-2 / Slot-3 の analysis_result は None のまま
+                    # 後続の台本生成ループで skip されていた。試運転7-A で
+                    # 「3 本中 1 本しか動画化できない」問題が発覚。
+                    # F-4 では TOP_N_GENERATION (default 3) で指定された全候補で
+                    # AnalysisLayer を実行する。1 Slot の失敗は当該 Slot に閉じ込め、
+                    # 他 Slot は処理を継続する (per-slot try/except)。
+                    _top_n_for_analysis = max(
+                        1, int(os.getenv("TOP_N_GENERATION", "3"))
                     )
-                    if _analysis_result is not None:
-                        override_top.analysis_result = _analysis_result
-                        save_analysis_json(_analysis_result, output_dir)
-                        logger.info(
-                            f"[AnalysisLayer] Completed for event={_analysis_result.event_id} "
-                            f"(perspective={_analysis_result.selected_perspective.axis}, "
-                            f"insights={len(_analysis_result.insights)})"
-                        )
-                    else:
-                        logger.warning(
-                            f"[AnalysisLayer] Returned None for event={override_top.event.id}; "
-                            f"falling back to legacy generation route."
-                        )
+                    _analysis_targets = all_ranked[:_top_n_for_analysis]
+
+                    logger.info(
+                        f"[AnalysisLayer] Running for top {len(_analysis_targets)} "
+                        f"candidates (F-4: extended from slot-1 only)"
+                    )
+
+                    for _idx, _target in enumerate(_analysis_targets):
+                        try:
+                            _target.channel_id = _analysis_channel_id
+                            _analysis_result = run_analysis_layer(
+                                _target, _channel_config, db_path
+                            )
+                            if _analysis_result is not None:
+                                _target.analysis_result = _analysis_result
+                                save_analysis_json(_analysis_result, output_dir)
+                                logger.info(
+                                    f"[AnalysisLayer] Slot-{_idx+1} completed for "
+                                    f"event={_analysis_result.event_id} "
+                                    f"(perspective={_analysis_result.selected_perspective.axis}, "
+                                    f"insights={len(_analysis_result.insights)})"
+                                )
+                            else:
+                                logger.warning(
+                                    f"[AnalysisLayer] Slot-{_idx+1} returned None for "
+                                    f"event={_target.event.id}; this slot will be "
+                                    f"skipped during script generation."
+                                )
+                        except Exception as _slot_exc:
+                            logger.error(
+                                f"[AnalysisLayer] Slot-{_idx+1} integration failed for "
+                                f"event={_target.event.id}; this slot will be skipped: "
+                                f"{type(_slot_exc).__name__}: {_slot_exc}",
+                                exc_info=True,
+                            )
             except Exception as _al_exc:
                 logger.error(
                     f"[AnalysisLayer] Integration failed; falling back to legacy: "
