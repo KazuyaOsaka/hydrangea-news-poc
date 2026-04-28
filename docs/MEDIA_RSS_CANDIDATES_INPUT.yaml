@@ -1,0 +1,199 @@
+# F-8-PRE 検証対象の RSS 候補リスト
+# このファイルは scripts/verify_rss_candidates.py の入力です。
+
+tier_1_essential:
+  - name: Yomiuri
+    region: japan
+    language: ja
+    political_lean: conservative
+    notes: 発行部数日本最大、保守系視点
+    candidates:
+      - https://www.yomiuri.co.jp/rss/feed/index.xml
+
+  - name: Sankei
+    region: japan
+    language: ja
+    political_lean: right
+    notes: 右派視点、保守的論調
+    candidates:
+      - https://www.sankei.com/rss/news.xml
+
+  - name: Tokyo_Shimbun
+    region: japan
+    language: ja
+    political_lean: liberal
+    notes: リベラル独自報道
+    candidates:
+      - https://www.tokyo-np.co.jp/feed
+
+  - name: Sydney_Morning_Herald
+    region: oceania
+    language: en
+    country: au
+    notes: 豪州最大級
+    candidates:
+      - https://www.smh.com.au/rss/feed.xml
+      - https://www.smh.com.au/rss/world.xml
+
+  - name: Guardian_Australia
+    region: oceania
+    language: en
+    country: au
+    notes: 英 Guardian 豪州版
+    candidates:
+      - https://www.theguardian.com/australia-news/rss
+
+  - name: WION
+    region: south_asia
+    language: en
+    country: in
+    political_lean: indian_nationalist
+    notes: インドのグローバル向け、西側批判視点
+    priority: critical
+    candidates:
+      - https://www.wionews.com/rss
+      - https://www.wionews.com/feed
+
+  - name: The_Hindustan_Times
+    region: south_asia
+    language: en
+    country: in
+    notes: インド大手、リベラル寄り
+    candidates:
+      - https://www.hindustantimes.com/feeds/rss/world-news/rssfeed.xml
+
+  - name: Middle_East_Eye
+    region: middle_east
+    language: en
+    political_lean: pro_palestinian
+    notes: 英国拠点、独立系、親パレスチナ寄り
+    priority: critical
+    candidates:
+      - https://www.middleeasteye.net/rss
+
+  - name: Al_Jazeera_Arabic
+    region: middle_east
+    language: ar
+    notes: 英語版とは論調違う、アラビア語圏視点
+    candidates:
+      - https://www.aljazeera.net/rss/all.xml
+
+  - name: Caixin_Global
+    region: east_asia
+    language: en
+    country: cn
+    notes: 中国国内で比較的独立性高い経済メディア
+    candidates:
+      - https://www.caixinglobal.com/rss/all.xml
+
+  - name: The_Initium
+    region: east_asia
+    language: zh
+    country: hk
+    notes: 香港系独立メディア (中国内で検閲対象)
+    candidates:
+      - https://theinitium.com/rss/
+
+  - name: Meduza
+    region: russia_cis
+    language: en
+    country: lv
+    notes: ラトビア拠点ロシア語独立メディア (英語版あり)
+    candidates:
+      - https://meduza.io/rss/en/all
+
+  - name: Le_Figaro
+    region: europe
+    language: fr
+    country: fr
+    notes: フランス中道右派
+    candidates:
+      - https://www.lefigaro.fr/rss/figaro_actualites.xml
+
+  - name: Il_Sole_24_Ore
+    region: europe
+    language: it
+    country: it
+    notes: イタリア経済紙、FT/Nikkei 相当
+    candidates:
+      - https://www.ilsole24ore.com/rss/mondo.xml
+
+  - name: The_Atlantic
+    region: north_america
+    language: en
+    country: us
+    political_lean: liberal_intellectual
+    notes: リベラル知識人向け、論考
+    candidates:
+      - https://www.theatlantic.com/feed/all/
+
+  - name: Politico
+    region: north_america
+    language: en
+    country: us
+    notes: ワシントン政治専門
+    candidates:
+      - https://www.politico.com/rss/politicopicks.xml
+      - https://rss.politico.com/politics-news.xml
+
+  - name: Eurasianet
+    region: central_asia
+    language: en
+    country: us
+    notes: 中央アジア地域カバーする独立メディア
+    candidates:
+      - https://eurasianet.org/rss.xml
+
+tier_3_with_warning:
+  - name: TeleSUR
+    region: latin_america
+    language: en
+    country: ve
+    state_aligned: true
+    warning: "ベネズエラ・キューバ系反米メディア"
+    notes: 反米左派視点、Tier 1 と必ず対比
+    priority: high
+    candidates:
+      - https://www.telesurenglish.net/rss/
+      - https://www.telesurenglish.net/RSS/News.html
+
+  - name: TRT_World
+    region: middle_east
+    language: en
+    country: tr
+    state_owned: true
+    warning: "トルコ国営英語放送"
+    notes: エルドアン政権立場、対イスラエル批判
+    candidates:
+      - https://www.trtworld.com/rss
+
+  - name: Iran_International
+    region: middle_east
+    language: en
+    country: gb
+    political_lean: anti_iran_government
+    warning: "反イラン政府メディア (亡命者系)"
+    notes: 反政府イラン人によるメディア
+    candidates:
+      - https://www.iranintl.com/en/rss.xml
+
+  - name: Saudi_Gazette
+    region: middle_east
+    language: en
+    country: sa
+    state_aligned: true
+    warning: "サウジ国家系メディア"
+    notes: サウジ政府寄り視点
+    candidates:
+      - https://saudigazette.com.sa/rssfeed/0
+
+  - name: Mada_Masr
+    region: middle_east
+    language: en
+    country: eg
+    political_lean: independent_critical
+    warning: "エジプト独立メディア (政府批判可能)"
+    notes: エジプトの数少ない独立メディア
+    priority: high
+    candidates:
+      - https://www.madamasr.com/en/feed/
