@@ -75,6 +75,30 @@ _JP_CHARS_PER_SEC: float = 4.5
 _TARGET_CHARS = {k: round(v * _JP_CHARS_PER_SEC) for k, v in _DURATIONS.items()}
 
 
+# ── F-12-A: アーティクル先行生成 — 参考記事プロンプトセクション ──────────────
+# article_text が None の場合は本セクション全体をプロンプトに含めない。
+# プロンプト全面刷新は F-12-B で実施するため、本バッチでは最小限の追記に留める。
+_REFERENCE_ARTICLE_HEADER = "【参考: 関連記事】"
+
+
+def _build_reference_article_section(article_text: Optional[str]) -> str:
+    """F-12-A: アーティクル先行生成で得た記事本文を台本プロンプト末尾に添付する。
+
+    article_text が None または空文字の場合は空文字を返す（セクションを含めない）。
+    """
+    if article_text is None or not article_text.strip():
+        return ""
+    return (
+        "\n\n---\n\n"
+        f"## {_REFERENCE_ARTICLE_HEADER}\n\n"
+        "以下は同じイベントについて先に生成された解説記事です。"
+        "記事の独自言語化フレーズや構造を、可能であれば台本にも活かしてください。"
+        "ただし、台本は記事のサマリではなく、4 ブロック (hook/setup/twist/punchline) "
+        "の制約を守ってください。\n\n"
+        f"{article_text}\n\n---\n"
+    )
+
+
 # ── LLM出力パース用スキーマ ───────────────────────────────────────────────────
 
 class ScriptDraft(BaseModel):
@@ -702,6 +726,7 @@ def _build_script_from_llm(
     event: NewsEvent,
     triage_result: Optional[ScoredEvent] = None,
     authority_pair: list[str] | None = None,
+    article_text: Optional[str] = None,
 ) -> tuple[VideoScript, int]:
     """Build script via LLM with char-count hard-validation and retry.
 
@@ -728,6 +753,7 @@ def _build_script_from_llm(
         .replace("{{AUTHORITY_MENTION_INSTRUCTION}}", authority_instruction)
         .replace("{{PATTERN_RESTRICTIONS}}", pattern_restrictions)
     )
+    base_prompt = base_prompt + _build_reference_article_section(article_text)
 
     current_prompt = base_prompt
     total_api_retries = 0
@@ -908,6 +934,7 @@ def write_script(
     triage_result: Optional[ScoredEvent] = None,
     budget: "BudgetTracker | None" = None,
     authority_pair: list[str] | None = None,
+    article_text: Optional[str] = None,
 ) -> VideoScript:
     """動画台本を生成する。
 
@@ -917,6 +944,8 @@ def write_script(
 
     Args:
         authority_pair: evidence.json に実在が確認済みの媒体名リスト（最大2件）。
+        article_text: F-12-A 以降、先に生成された記事本文（Markdown）を参考素材として
+            プロンプト末尾に添付する。None の場合は従来通り（参考記事セクションなし）。
     """
     if triage_result is not None:
         cautions = triage_result.appraisal_cautions or ""
@@ -951,7 +980,7 @@ def write_script(
         else:
             try:
                 script, _retry_count = _build_script_from_llm(
-                    client, event, triage_result, authority_pair
+                    client, event, triage_result, authority_pair, article_text
                 )
                 if budget is not None:
                     budget.record_call("script")
@@ -1114,6 +1143,7 @@ def _build_script_with_analysis_prompt(
     scored_event: ScoredEvent,
     analysis_result: AnalysisResult,
     channel_config: Optional[ChannelConfig],
+    article_text: Optional[str] = None,
 ) -> tuple[str, str, dict[str, int]]:
     """LLM プロンプトと、(profile_id, profile_config) を返す。
 
@@ -1155,6 +1185,7 @@ def _build_script_with_analysis_prompt(
         target_total_chars=target_total_chars,
         selected_pattern_hint=pattern_hint,
     )
+    prompt = prompt + _build_reference_article_section(article_text)
     return prompt, profile_id, profile_config
 
 
@@ -1264,6 +1295,7 @@ def _build_script_with_analysis_from_llm(
     scored_event: ScoredEvent,
     analysis_result: AnalysisResult,
     channel_config: Optional[ChannelConfig],
+    article_text: Optional[str] = None,
 ) -> tuple[VideoScript, int, str]:
     """新ルート LLM 呼び出し本体（リトライ・文字数バリデーション込み）。
 
@@ -1272,7 +1304,7 @@ def _build_script_with_analysis_from_llm(
     from src.llm.retry import call_with_retry
 
     base_prompt, profile_id, profile_config = _build_script_with_analysis_prompt(
-        scored_event, analysis_result, channel_config
+        scored_event, analysis_result, channel_config, article_text
     )
     current_prompt = base_prompt
     total_api_retries = 0
@@ -1376,6 +1408,7 @@ def generate_script_with_analysis(
     *,
     budget: "BudgetTracker | None" = None,
     authority_pair: list[str] | None = None,
+    article_text: Optional[str] = None,
 ) -> VideoScript:
     """分析レイヤー連携ルートのエントリポイント（Batch 5）。
 
@@ -1392,6 +1425,8 @@ def generate_script_with_analysis(
         channel_config: 任意。channel_id とプロンプトディレクトリ解決に使用。
         budget: 任意。LLM 呼び出し予算管理。
         authority_pair: 任意。新ルートでは現状未使用（legacy フォールバック時のみ伝播）。
+        article_text: F-12-A 以降、先に生成された記事本文（Markdown）を参考素材として
+            プロンプト末尾に添付する。None の場合は従来通り（参考記事セクションなし）。
 
     Returns:
         VideoScript: title_layer 付き。
@@ -1421,7 +1456,7 @@ def generate_script_with_analysis(
         else:
             try:
                 script, _retry_count, _profile_id = _build_script_with_analysis_from_llm(
-                    client, scored_event, analysis_result, channel_config
+                    client, scored_event, analysis_result, channel_config, article_text
                 )
                 if budget is not None:
                     budget.record_call("script")
@@ -1449,6 +1484,7 @@ def generate_script_with_analysis(
             triage_result=scored_event,
             budget=budget,
             authority_pair=authority_pair,
+            article_text=article_text,
         )
 
     if not _validate_script(script):

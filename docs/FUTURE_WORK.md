@@ -56,14 +56,16 @@
   - 対応案: 触っちゃダメリスト見直し後、editorial:political_intent_score 等の新 axis を追加して Step1 prescore に組み込む
   - 検討時期: 触っちゃダメリスト見直し後
 
-- **台本品質のアーティクル品質への引き上げ (F-12 候補)** (試運転7-D 発生)
+- **台本品質のアーティクル品質への引き上げ (F-12 候補)** (試運転7-D 発生 / **進行中: F-12-A 完了 / F-12-B 残**)
   - 背景: アーティクル (article.md) は Foreign Affairs 級の名フレーズと深い分析が出るが、台本 (script.json) は文字数制約とブロック分割で表現が硬くなりがち。アーティクルが「移動する主権領土」のような独自言語化を含むのに対し、台本は「物理的限界に達している構造的変化を象徴」のような平凡な表現になる。
   - 対応案:
-    - 案A: アーティクル先行生成 → 台本に圧縮 (順序変更)
-    - 案B: アーティクルから「金フレーズ」抽出ループ (台本生成時に必ず使う制約)
-    - 案C: 台本のターゲット視聴者明確化 (ReHacQ・PIVOT 視聴層を想定)
-  - 検討時期: Phase A.5 (多言語化) 完了後
-  - 関連ファイル: src/generation/script_writer.py, src/generation/article_writer.py
+    - 案A: アーティクル先行生成 → 台本に圧縮 (順序変更) **← F-12-A で実施済み (2026-04-29)**
+    - 案B: アーティクルから「金フレーズ」抽出ループ (台本生成時に必ず使う制約) **← F-12-B で実施予定**
+    - 案C: 台本のターゲット視聴者明確化 (ReHacQ・PIVOT 視聴層を想定) **← F-12-B で script_writer プロンプト全面刷新時に統合**
+  - F-12-A 完了内容: src/main.py の生成順序を `script → article` から `article → script` に逆転。article.markdown を script_writer に `article_text` 引数で参照素材として渡す基盤を整備。article_writer.py は不変（プロンプト・シグネチャ・入力素材いずれも touch していない）。
+  - F-12-B 残作業: script_writer プロンプト全面刷新（サマリ型台本 / AI 構文排除リスト / アーティクル独自言語化フレーズの強制使用）。
+  - 検討時期: F-12-B は試運転 7-F でアーティクル品質維持を確認後に着手
+  - 関連ファイル: src/generation/script_writer.py, src/generation/article_writer.py, src/main.py
 
 - **LLM 結果キャッシュ（E-4）** (Phase 1.5 計画)
   - 背景: 同じ event を2回評価しないようにキャッシュ。デバッグ高速化

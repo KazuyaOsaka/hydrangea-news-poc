@@ -1996,8 +1996,13 @@ def _generate_outputs(
         record._triage_source_counts = triage_source_counts  # type: ignore[attr-defined]
         return record
 
-    # 3. 動画台本生成
-    budget.record_phase("before_script")
+    # 3. 生成フェーズ前バジェットチェック
+    # F-12-A: 生成順序を逆転（article → script）。article_writer は完成記事を
+    # script_writer の参考素材として渡すため先に走らせる。
+    # article_writer.py 自体は touch しない（不変原則 1）。
+    # script.json を article_writer に渡さない（不変原則 2）— 順序逆転後は
+    # script.json はまだ存在しない。
+    budget.record_phase("before_article")
     # ── Final Editor Gate: explicit budget reservation check ──────────────────
     # Verify budget before entering the expensive generation stage.
     # If insufficient, return a clean skipped record — no broken output files.
@@ -2024,7 +2029,7 @@ def _generate_outputs(
     _analysis_layer_enabled = os.getenv("ANALYSIS_LAYER_ENABLED", "false").lower() == "true"
     if _analysis_layer_enabled and top.analysis_result is None:
         logger.warning(
-            f"event_id={event.id}: analysis_result is None, skipping script generation. "
+            f"event_id={event.id}: analysis_result is None, skipping generation. "
             "Old legacy fallback route is deprecated to prevent inflammatory output."
         )
         record = JobRecord(
@@ -2036,6 +2041,27 @@ def _generate_outputs(
         save_job(db_path, record)
         record._triage_source_counts = triage_source_counts  # type: ignore[attr-defined]
         return record
+
+    # 4. Web記事生成（F-12-A: 台本より先に生成）
+    try:
+        article = write_article(event, triage_result=top, budget=budget)
+    except Exception as _article_err:
+        logger.error(f"event_id={event.id}: Article generation failed — {type(_article_err).__name__}: {_article_err}")
+        record = JobRecord(
+            id=job_id,
+            event_id=event.id,
+            status="failed",
+            error=str(_article_err),
+        )
+        save_job(db_path, record)
+        record._triage_source_counts = triage_source_counts  # type: ignore[attr-defined]
+        return record
+    article_path = output_dir / f"{event.id}_article.md"
+    article_path.write_text(article.markdown, encoding="utf-8")
+    logger.info(f"Article saved: {article_path}")
+
+    # 5. 動画台本生成（F-12-A: 完成済み article.markdown を参考素材として渡す）
+    budget.record_phase("before_script")
     try:
         # 分析レイヤー有効時は AnalysisResult を入力に新ルートで台本生成。
         # ANALYSIS_LAYER_ENABLED=false の場合のみ従来ルート（write_script）を使う。
@@ -2055,9 +2081,16 @@ def _generate_outputs(
                 _cc,
                 budget=budget,
                 authority_pair=authority_pair,
+                article_text=article.markdown,
             )
         else:
-            script = write_script(event, triage_result=top, budget=budget, authority_pair=authority_pair)
+            script = write_script(
+                event,
+                triage_result=top,
+                budget=budget,
+                authority_pair=authority_pair,
+                article_text=article.markdown,
+            )
     except Exception as _script_err:
         logger.error(f"event_id={event.id}: Script generation failed — {type(_script_err).__name__}: {_script_err}")
         record = JobRecord(
@@ -2073,26 +2106,7 @@ def _generate_outputs(
     script_path.write_text(script.model_dump_json(indent=2), encoding="utf-8")
     logger.info(f"Script saved: {script_path}")
 
-    # 4. Web記事生成
-    budget.record_phase("before_article")
-    try:
-        article = write_article(event, triage_result=top, video_script=script, budget=budget)
-    except Exception as _article_err:
-        logger.error(f"event_id={event.id}: Article generation failed — {type(_article_err).__name__}: {_article_err}")
-        record = JobRecord(
-            id=job_id,
-            event_id=event.id,
-            status="failed",
-            error=str(_article_err),
-        )
-        save_job(db_path, record)
-        record._triage_source_counts = triage_source_counts  # type: ignore[attr-defined]
-        return record
-    article_path = output_dir / f"{event.id}_article.md"
-    article_path.write_text(article.markdown, encoding="utf-8")
-    logger.info(f"Article saved: {article_path}")
-
-    # 5. 動画制作用JSON生成
+    # 6. 動画制作用JSON生成
     try:
         payload = write_video_payload(event, script, analysis_result=top.analysis_result)
         payload_path = output_dir / f"{event.id}_video_payload.json"
@@ -2110,13 +2124,13 @@ def _generate_outputs(
         record._triage_source_counts = triage_source_counts  # type: ignore[attr-defined]
         return record
 
-    # 6. 根拠ファイル保存
+    # 7. 根拠ファイル保存
     try:
         write_evidence(event, top, script, article, output_dir)
     except Exception as _evidence_err:
         logger.warning(f"event_id={event.id}: Evidence saving failed (non-fatal) — {type(_evidence_err).__name__}: {_evidence_err}")
 
-    # 7. DB保存 & 公開カウント加算
+    # 8. DB保存 & 公開カウント加算
     record = JobRecord(
         id=job_id,
         event_id=event.id,
