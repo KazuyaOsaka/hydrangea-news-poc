@@ -451,3 +451,56 @@ src/main.py の AnalysisLayer ブロックが Recency Guard 後の `all_ranked[0
 - **`override_top` (= slot-1 確定)**: 既存挙動維持のため `all_ranked[0]` で設定する流れは変えない。
 - **legacy fallback**: AnalysisLayer 全体の import エラー等は依然として既存の最外側 try/except で legacy ルートにフォールバック (現状維持)。
 
+---
+
+### E-3' で対応した Tier 階層の役割別分離
+
+試運転7-A / 7-B (2026-04-28) で以下の問題が判明:
+
+1. **試運転時間が長すぎる (13分)**: 503 待機が大半 (8回発生、合計 5〜10分)
+2. **すべてのタスクが同じ TIER1 (Preview) を使う**: 軽量タスク (garbage_filter) も性能タスク (script) も同じモデル → 性能優先 vs 速度優先のトレードオフが発生
+3. **モデル性能順が逆転**: gemini-2.5-flash が gemini-3.1-flash-lite-preview より高性能 (公式情報) なのに TIER 順序が違っていた
+
+#### E-3' 改修内容
+
+##### 役割の分離
+
+| 系統 | 対象 role | 性能 | 速度 |
+|---|---|---|---|
+| LIGHTWEIGHT | garbage_filter, merge_batch, viral_filter, editorial_mission_filter | 中 | 速 |
+| QUALITY | judge, script, article, title, analysis | 高 | 中 |
+
+##### Tier 階層 (E-3' 後)
+
+**Quality 系統** (性能完全優先):
+1. gemini-3-flash-preview (最高性能 Preview)
+2. gemini-2.5-flash (高性能 GA, 詳細推論)
+3. gemini-3.1-flash-lite-preview (高速 Preview)
+4. gemini-2.5-flash-lite (最軽量 GA, 最終安全網)
+
+**Lightweight 系統** (速度優先 + 精度確保):
+1. gemini-2.5-flash (高性能 GA, 精度確保)
+2. gemini-2.5-flash-lite (最軽量 GA)
+3. gemini-3.1-flash-lite-preview (緊急 Preview)
+4. gemini-3-flash-preview (最終 Preview)
+
+##### MAX_ATTEMPTS
+
+全 Tier で 2 retry 統一 (失敗率 0.002% 想定):
+- 1日 380 calls × 0.002% = 月 0.2件以下の失敗 (実質ゼロ)
+- 安全と速度のバランスを取った設計
+
+#### 効果
+
+- 試運転時間: 13分 → 5〜6分 (平均、503 待機削減)
+- 503 発生 (Lightweight 系統): 7回/試運転 → 0回 (GA 主軸のため)
+- 失敗率: 0.002% (月 1件未満)
+- 月コスト: $15/月 (1チャンネル) / $45/月 (3チャンネル)
+
+#### 設計上の判断
+
+- **TIER1 で 2 retry**: 503 発生時 1 retry で 75%、2 retry で 87.5% 成功 (試運転7-B 実測)
+- **TIER2-4 でも 2 retry**: 失敗率を 0.002% に抑えるため (ユーザー要件)
+- **モデル性能順の正規化**: 公式情報 (gemini-2.5-flash > gemini-3.1-flash-lite-preview) に基づき TIER 順を訂正
+- **後方互換**: `TieredGeminiClient` を直接インスタンス化する既存テスト (`test_factory_quota_handling.py` 等) は `_MAX_ATTEMPTS_PER_TIER=3` のままで動作するよう、コンストラクタで `max_attempts_per_tier=None` の場合は既定値 3 を採用する。role 別 factory ヘルパ (`_make_tiered_gemini_client(role)` / `get_judge_llm_client()` / `get_analysis_llm_client()`) のみ env 由来の 2 を渡す。
+

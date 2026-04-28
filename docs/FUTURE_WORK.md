@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-04-28 (F-3)
+最終更新: 2026-04-28 (E-3')
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -16,12 +16,6 @@
   - 関連ファイル: 影響を受けるファイル
 
 ---
-
-- **_MAX_ATTEMPTS_PER_TIER = 1（503 リトライ削減）** (E-1 で見送り)
-  - 背景: E-1 ハイブリッド版投入時、テスト3件（test_503_retries_three_times_within_same_tier 等）が =3 前提で書かれているため変更を見送った
-  - 対応案: 専用バッチで _MAX_ATTEMPTS_PER_TIER=1 に変更し、test_factory_quota_handling.py の3テストを書き換え
-  - 検討時期: F-1 後の試運転で 503 待機時間が許容範囲を超えたら即対応
-  - 関連ファイル: src/llm/factory.py, tests/test_factory_quota_handling.py
 
 - **event_builder.py のガード変更** (E-1 で見送り)
   - 背景: 現状 `if garbage_filter_client is not None:` でガードしているため、API キー未設定時に静的ルールが走らない
@@ -55,12 +49,6 @@
   - 背景: F-1 で political_intent / hidden_power_dynamics / economic_interests を Step1 で精密計算したいが、scoring.py が触っちゃダメリストにあるため Step2 LLM のみで判定
   - 対応案: 触っちゃダメリスト見直し後、editorial:political_intent_score 等の新 axis を追加して Step1 prescore に組み込む
   - 検討時期: 触っちゃダメリスト見直し後
-
-- **Tier 階層の役割分け（E-3'）** (Phase 1.5 計画)
-  - 背景: 軽量タスク（garbage_filter / cluster_merge 等）と重要タスク（script_writer / 分析レイヤー等）で Tier 階層を分ける。Lightweight 系統は GA 版主軸（503 回避）、Quality 系統は Preview 版主軸（性能重視）
-  - 対応案: src/llm/factory.py に _make_lightweight_client / _make_quality_client を新設、role 別にルーティング
-  - 検討時期: F-1 試運転後
-  - 関連ファイル: src/llm/factory.py, src/shared/config.py, .env
 
 - **LLM 結果キャッシュ（E-4）** (Phase 1.5 計画)
   - 背景: 同じ event を2回評価しないようにキャッシュ。デバッグ高速化
@@ -119,3 +107,15 @@
   - 対応内容: `src/analysis/perspective_selector.py::select_perspective()` を 3 段階フォールバックに強化。LLM が Top3 外の axis (`hidden_stakes` 等) を選んだ場合や、`fallback_axis_if_failed` も Top3 にない場合でも、Step 2 で Top3 内の最高スコア候補を強制採用する。candidates が 1 件以上あれば必ず `PerspectiveCandidate` を返すため、Slot-2 / Slot-3 で `analysis_result=None` となり動画化失敗していた問題を解消。
   - 関連ドキュメント: `docs/EDITORIAL_MISSION_FILTER_DESIGN.md` の F-3 セクション
   - 関連ファイル: `src/analysis/perspective_selector.py`, `tests/test_perspective_selector.py`, `tests/test_analysis_engine.py`
+
+- **Tier 階層の役割分け（E-3'）** (E-3' / 2026-04-28 完了)
+  - 発生バッチ: 試運転7-A / 7-B で 503 待機 (5〜10分) が試運転時間 (13分) の大半を占めることが判明
+  - 対応内容: `src/llm/factory.py` に `LIGHTWEIGHT_ROLES` / `QUALITY_ROLES` を定義し、`_get_tier_models_for_role(role)` / `_get_max_attempts_for_role(role)` で役割別に Tier 階層と MAX_ATTEMPTS を切り替えるよう改修。Lightweight 系統は GA 主軸 (gemini-2.5-flash → flash-lite → preview-lite → flash-preview) で 503 回避、Quality 系統は Preview 主軸 (gemini-3-flash-preview → 2.5-flash → preview-lite → flash-lite) で性能優先。env 由来のデフォルトを公式の性能順に正規化。
+  - 関連ドキュメント: `docs/EDITORIAL_MISSION_FILTER_DESIGN.md` の E-3' セクション
+  - 関連ファイル: `src/llm/factory.py`, `.env.example`, `tests/test_factory_role_tier_separation.py`
+
+- **_MAX_ATTEMPTS_PER_TIER = 1（503 リトライ削減）** (E-3' / 2026-04-28 完了)
+  - 発生バッチ: E-1 で見送り → E-3' で役割別 MAX_ATTEMPTS として実装
+  - 対応内容: 当初は `_MAX_ATTEMPTS_PER_TIER=1` への一括変更を計画していたが、E-3' でより安全な役割別 MAX_ATTEMPTS に切り替え。`GEMINI_LIGHTWEIGHT_MAX_ATTEMPTS=2` / `GEMINI_QUALITY_MAX_ATTEMPTS=2` に統一 (失敗率約 0.002%)。`TieredGeminiClient` のコンストラクタに `max_attempts_per_tier` 引数を追加し、未指定時は既定値 3 を維持することで、`test_factory_quota_handling.py` の3テストを書き換えずに後方互換を保った。
+  - 関連ドキュメント: `docs/EDITORIAL_MISSION_FILTER_DESIGN.md` の E-3' セクション
+  - 関連ファイル: `src/llm/factory.py`, `.env.example`, `tests/test_factory_quota_handling.py` (変更なし)

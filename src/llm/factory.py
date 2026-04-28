@@ -1,28 +1,31 @@
-"""factory.py — Role-based LLM client factory with unified Tier hierarchy.
+"""factory.py — Role-based LLM client factory with role-aware Tier hierarchy.
 
-Routing strategy (Phase 1.5 batch E-2 以降):
-  全 Gemini 経由の LLM 呼び出しは、TIER1 → TIER2 → TIER3 → TIER4 の統一
-  4 段フォールバックに乗る。役割（garbage_filter / cluster_merge / judge /
-  generation / analysis）による経路分岐はなく、すべて TieredGeminiClient で
-  同一の Tier 階層を共有する。
+Routing strategy (Phase 1.5 batch E-3' 以降):
+  Gemini 経由の LLM 呼び出しは、役割 (LIGHTWEIGHT vs QUALITY) ごとに
+  異なる Tier 階層を選択する。`_get_tier_models_for_role(role)` が role 別の
+  4 段モデルリストを返し、`_get_max_attempts_for_role(role)` が同 role 用の
+  MAX_ATTEMPTS を返す。
 
-  旧 lightweight 経路（専用モデル env 固定、フォールバックなし）は E-2 で廃止された。
-  背景は実 LLM 試運転 (2026-04-27) で gemini-2.5-flash-lite が無料枠 RPD=20 を
-  超過した一方、TIER1 の gemini-3.1-flash-lite-preview (RPD=500) には大きな
-  余裕があったこと。全呼び出しを統一階層に乗せて RPD=500 を主軸として使う。
+  - LIGHTWEIGHT_ROLES (garbage_filter / merge_batch / viral_filter /
+    editorial_mission_filter): GA 主軸 (gemini-2.5-flash → flash-lite →
+    preview-lite → flash-preview)。Preview モデルの 503 を回避し試運転速度を稼ぐ。
+  - QUALITY_ROLES (judge / script / article / title / analysis): Preview 主軸
+    (gemini-3-flash-preview → 2.5-flash → preview-lite → flash-lite)。公式の
+    性能順 (gemini-3-flash-preview > gemini-2.5-flash > gemini-3.1-flash-lite-
+    preview > gemini-2.5-flash-lite) に沿って性能を優先する。
+  - 未分類 role は QUALITY_ROLES と同じ階層 (後方互換)。
+
+  E-3' 以前は単一の TIER1→TIER4 統一階層を全 role が共有していた。E-3' で
+  役割を分離し、軽量タスクの 503 待機による試運転時間悪化 (13 分) を抑える
+  (期待値: 5〜6 分)。背景は試運転7-A/7-B (2026-04-28)。
 
 Per-tier retry policy:
   - 429 / RESOURCE_EXHAUSTED → skip same-model retries, advance to next tier
     immediately. Gemini counts failed 429s against quota, so retrying the same
     model after a quota refusal just burns the daily allowance for nothing.
   - 503 / UNAVAILABLE / other retryables → exponential backoff up to
-    _MAX_ATTEMPTS_PER_TIER attempts, then advance.
-
-Fallback priority — RPM 上限の高い順に降格:
-  [1] gemini-3.1-flash-lite-preview  (TIER1, RPM=15, RPD=500)
-  [2] gemini-2.5-flash-lite          (TIER2, RPM=10, RPD=20)
-  [3] gemini-3-flash-preview         (TIER3, RPM=5,  RPD=20)
-  [4] gemini-2.5-flash               (TIER4, RPM=5,  RPD=20)
+    self._max_attempts_per_tier attempts, then advance. デフォルトは
+    `_MAX_ATTEMPTS_PER_TIER` (=3, 後方互換)、role 別 factory ヘルパでは 2。
 
 Rate limiting (二段構え):
   - 動的レートリミッタ (TieredGeminiClient._wait_for_rpm_slot): 直近60秒の
@@ -37,6 +40,7 @@ No hardcoded model strings in business logic.
 """
 from __future__ import annotations
 
+import os
 import threading
 import time
 from typing import Optional
@@ -47,10 +51,6 @@ from src.shared.config import (
     GEMINI_API_KEY,
     GEMINI_CALL_INTERVAL_SEC,
     GEMINI_INTERVAL_SEC_BY_MODEL,
-    GEMINI_MODEL_TIER1,
-    GEMINI_MODEL_TIER2,
-    GEMINI_MODEL_TIER3,
-    GEMINI_MODEL_TIER4,
     GEMINI_MODEL_TIERS,
     GEMINI_RPM_LIMIT_BY_MODEL,
     GENERATION_MODEL,
@@ -67,6 +67,27 @@ logger = get_logger(__name__)
 _MAX_ATTEMPTS_PER_TIER = 3
 _INITIAL_DELAY_SEC = 15.0
 _MAX_DELAY_SEC = 120.0
+
+# ── E-3': 役割別 Tier 階層 ──────────────────────────────
+# 軽量タスク (大量バッチ、速度優先) → GA 主軸
+# Preview モデルは 503 が頻発するため、軽量タスクは GA 版で 503 回避を優先する。
+LIGHTWEIGHT_ROLES: set[str] = {
+    "garbage_filter",
+    "merge_batch",
+    "viral_filter",
+    "editorial_mission_filter",
+}
+
+# 性能タスク (思考力重視、低頻度) → Preview 主軸
+# 公式の性能順 (gemini-3-flash-preview > gemini-2.5-flash > gemini-3.1-flash-lite-preview > gemini-2.5-flash-lite)
+# に沿って Tier1 を最高性能に配置する。
+QUALITY_ROLES: set[str] = {
+    "judge",
+    "script",
+    "article",
+    "title",
+    "analysis",
+}
 
 # 429対策: 最大同時API呼び出し数を3に制限 (15 RPM制限を安全に回避)
 _API_SEMAPHORE = threading.Semaphore(3)
@@ -101,9 +122,15 @@ class TieredGeminiClient(LLMClient):
         api_key: str,
         tiers: list[str],
         generation_config: Optional[dict] = None,
+        max_attempts_per_tier: Optional[int] = None,
     ) -> None:
         self._api_key = api_key
         self._tiers = tiers
+        # E-3': per-role MAX_ATTEMPTS。未指定時は後方互換のため既定値（_MAX_ATTEMPTS_PER_TIER=3）。
+        # role 別 factory ヘルパは _get_max_attempts_for_role() で 2 を渡してくる。
+        self._max_attempts_per_tier = (
+            max_attempts_per_tier if max_attempts_per_tier is not None else _MAX_ATTEMPTS_PER_TIER
+        )
         # モデル単位の最終呼び出し時刻を保持し、各モデルの RPM 上限に応じた
         # インターバル制御を行う。Gemini の RPM はモデル毎に独立してカウント
         # されるため、tier_idx ではなく実モデル名で追跡する。
@@ -198,9 +225,10 @@ class TieredGeminiClient(LLMClient):
             else None
         )
 
+        max_attempts = self._max_attempts_per_tier
         for tier_idx, model in enumerate(self._tiers, start=1):
             delay = _INITIAL_DELAY_SEC
-            for attempt in range(_MAX_ATTEMPTS_PER_TIER):
+            for attempt in range(max_attempts):
                 try:
                     with _API_SEMAPHORE:
                         # 動的レートリミッタ（直近60秒履歴）→ 静的最低間隔の二段構え。
@@ -215,7 +243,7 @@ class TieredGeminiClient(LLMClient):
                     if tier_idx > 1 or attempt > 0:
                         logger.info(
                             f"[TieredGemini] Success: tier={tier_idx} model={model} "
-                            f"attempt={attempt + 1}/{_MAX_ATTEMPTS_PER_TIER}"
+                            f"attempt={attempt + 1}/{max_attempts}"
                         )
                     return response.text.strip()
                 except Exception as exc:
@@ -240,10 +268,10 @@ class TieredGeminiClient(LLMClient):
                         break
 
                     # 503 / UNAVAILABLE 等の一時的エラーは従来通り指数バックオフで再試行する。
-                    if attempt < _MAX_ATTEMPTS_PER_TIER - 1:
+                    if attempt < max_attempts - 1:
                         logger.warning(
                             f"[TieredGemini] tier={tier_idx} model={model} "
-                            f"attempt={attempt + 1}/{_MAX_ATTEMPTS_PER_TIER} transient error — "
+                            f"attempt={attempt + 1}/{max_attempts} transient error — "
                             f"retrying in {delay:.0f}s: {str(exc)[:120]}"
                         )
                         time.sleep(delay)
@@ -256,7 +284,7 @@ class TieredGeminiClient(LLMClient):
                             next_label = "none (all tiers exhausted)"
                         logger.warning(
                             f"[TieredGemini] FAIL tier={tier_idx} model={model} — "
-                            f"all {_MAX_ATTEMPTS_PER_TIER} attempts exhausted. "
+                            f"all {max_attempts} attempts exhausted. "
                             f"Next: {next_label}. Error: {str(exc)[:120]}"
                         )
 
@@ -270,30 +298,72 @@ class TieredGeminiClient(LLMClient):
 
 # ── Internal factory helpers ─────────────────────────────────────────────────
 
-def _make_tiered_gemini_client() -> Optional[LLMClient]:
-    """統一 Tier 階層クライアント: TIER1→TIER2→TIER3→TIER4 完全4段フォールバック。
+def _get_tier_models_for_role(role: str) -> list[str]:
+    """役割別に Tier 階層のモデルリストを返す (E-3')。
 
-    Phase 1.5 batch E-2 以降、garbage_filter / cluster_merge / judge / generation /
-    analysis すべてのロールがこの統一階層を共有する。専用 lightweight ルート
-    （単一モデル固定 env による経路）は廃止された。
+    LIGHTWEIGHT_ROLES → GA 主軸 (速度優先、精度確保)
+    QUALITY_ROLES → Preview 主軸 (性能優先、確実性確保)
+    その他 → QUALITY_ROLES と同じ階層 (後方互換)
+
+    env 変数で各 Tier モデルを上書き可能。デフォルトは公式の性能順に基づく:
+      Quality:  gemini-3-flash-preview > gemini-2.5-flash > gemini-3.1-flash-lite-preview > gemini-2.5-flash-lite
+      Lightweight: gemini-2.5-flash > gemini-2.5-flash-lite > gemini-3.1-flash-lite-preview > gemini-3-flash-preview
+    """
+    if role in LIGHTWEIGHT_ROLES:
+        return [
+            os.getenv("GEMINI_LIGHTWEIGHT_TIER1", "gemini-2.5-flash"),
+            os.getenv("GEMINI_LIGHTWEIGHT_TIER2", "gemini-2.5-flash-lite"),
+            os.getenv("GEMINI_LIGHTWEIGHT_TIER3", "gemini-3.1-flash-lite-preview"),
+            os.getenv("GEMINI_LIGHTWEIGHT_TIER4", "gemini-3-flash-preview"),
+        ]
+    else:
+        # QUALITY_ROLES または未分類 (後方互換)
+        return [
+            os.getenv("GEMINI_MODEL_TIER1", "gemini-3-flash-preview"),
+            os.getenv("GEMINI_MODEL_TIER2", "gemini-2.5-flash"),
+            os.getenv("GEMINI_MODEL_TIER3", "gemini-3.1-flash-lite-preview"),
+            os.getenv("GEMINI_MODEL_TIER4", "gemini-2.5-flash-lite"),
+        ]
+
+
+def _get_max_attempts_for_role(role: str) -> int:
+    """役割別の MAX_ATTEMPTS_PER_TIER を返す (E-3')。
+
+    全 Tier で 2 retry 統一 (失敗率 0.002% 想定)。
+    必要に応じて env で上書き可能。
+    """
+    if role in LIGHTWEIGHT_ROLES:
+        return int(os.getenv("GEMINI_LIGHTWEIGHT_MAX_ATTEMPTS", "2"))
+    else:
+        return int(os.getenv("GEMINI_QUALITY_MAX_ATTEMPTS", "2"))
+
+
+def _make_tiered_gemini_client(role: str = "generation") -> Optional[LLMClient]:
+    """役割別 Tier 階層クライアント: TIER1→TIER2→TIER3→TIER4 完全4段フォールバック。
+
+    E-3' 以降、role 別に異なる Tier 階層 / MAX_ATTEMPTS が選択される:
+      - LIGHTWEIGHT (garbage_filter / merge_batch / viral_filter / editorial_mission_filter)
+        → GA 主軸 (gemini-2.5-flash → flash-lite → preview-lite → flash-preview)
+      - QUALITY (judge / script / article / title / analysis) または未分類
+        → Preview 主軸 (gemini-3-flash-preview → 2.5-flash → preview-lite → flash-lite)
     """
     if not GEMINI_API_KEY:
         return None
     return TieredGeminiClient(
         GEMINI_API_KEY,
-        [GEMINI_MODEL_TIER1, GEMINI_MODEL_TIER2, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4],
+        _get_tier_models_for_role(role),
+        max_attempts_per_tier=_get_max_attempts_for_role(role),
     )
 
 
-def _make_client(provider: str, model: str) -> Optional[LLMClient]:
+def _make_client(provider: str, model: str, role: str = "generation") -> Optional[LLMClient]:
     """Construct an LLMClient for the given provider + model pair.
 
-    For Gemini, `model` is ignored — all roles share the unified Tier hierarchy
-    (TIER1→TIER4). The previous `quality` flag was removed in batch E-2 along
-    with the lightweight bypass.
+    For Gemini, `model` is ignored — the role determines the Tier hierarchy
+    via `_get_tier_models_for_role(role)` (E-3').
     """
     if provider == "gemini":
-        return _make_tiered_gemini_client()
+        return _make_tiered_gemini_client(role)
 
     if provider == "groq":
         from src.llm.groq import GroqClient
@@ -309,8 +379,9 @@ def _make_client(provider: str, model: str) -> Optional[LLMClient]:
 def get_llm_client(role: str) -> Optional[LLMClient]:
     """Get an LLM client by role name.
 
-    All Gemini roles share the unified Tier hierarchy (TIER1→TIER4); the role
-    only switches provider/model resolution for non-Gemini providers.
+    For Gemini providers, the role determines which Tier hierarchy applies
+    (LIGHTWEIGHT vs QUALITY) via `_get_tier_models_for_role(role)`. For other
+    providers, the role only switches provider/model resolution.
 
     Args:
         role: One of "merge_batch", "judge", or "generation".
@@ -322,13 +393,13 @@ def get_llm_client(role: str) -> Optional[LLMClient]:
         ValueError: If role is not recognised.
     """
     if role == "merge_batch":
-        return _make_client(MERGE_BATCH_PROVIDER, MERGE_BATCH_MODEL)
+        return _make_client(MERGE_BATCH_PROVIDER, MERGE_BATCH_MODEL, role="merge_batch")
 
     if role == "judge":
         return get_judge_llm_client()
 
     if role == "generation":
-        return _make_client(GENERATION_PROVIDER, GENERATION_MODEL)
+        return _make_client(GENERATION_PROVIDER, GENERATION_MODEL, role="generation")
 
     raise ValueError(
         f"Unknown LLM role: {role!r}. Must be 'merge_batch', 'judge', or 'generation'."
@@ -386,18 +457,25 @@ def get_judge_llm_client() -> Optional[LLMClient]:
         )
         resolved = ""
 
+    # E-3': judge は QUALITY 系統 (Preview 主軸)。role="judge" で Tier 階層を解決する。
+    quality_tiers = _get_tier_models_for_role("judge")
+    judge_max_attempts = _get_max_attempts_for_role("judge")
+
     if not resolved:
         return TieredGeminiClient(
             GEMINI_API_KEY,
-            [GEMINI_MODEL_TIER1, GEMINI_MODEL_TIER2, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4],
+            quality_tiers,
+            max_attempts_per_tier=judge_max_attempts,
         )
 
     # resolved を primary に置き、残り Tier を重複除去して後続に連結する。
     # dict.fromkeys で順序を保ったまま重複除去。
-    tiers = list(dict.fromkeys(
-        [resolved, GEMINI_MODEL_TIER1, GEMINI_MODEL_TIER2, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4]
-    ))
-    return TieredGeminiClient(GEMINI_API_KEY, tiers)
+    tiers = list(dict.fromkeys([resolved, *quality_tiers]))
+    return TieredGeminiClient(
+        GEMINI_API_KEY,
+        tiers,
+        max_attempts_per_tier=judge_max_attempts,
+    )
 
 
 def get_script_llm_client() -> Optional[LLMClient]:
@@ -427,10 +505,8 @@ def get_analysis_llm_client() -> Optional[LLMClient]:
     Gemini 以外のプロバイダ / API キー未設定時は既存のスクリプト用クライアントに委譲し、
     プロバイダ固有のフォールバックに任せる（現状 Groq/Ollama は temperature 制御なし）。
     """
-    import os
-
     if not GEMINI_API_KEY or GENERATION_PROVIDER != "gemini":
-        return _make_client(GENERATION_PROVIDER, GENERATION_MODEL)
+        return _make_client(GENERATION_PROVIDER, GENERATION_MODEL, role="analysis")
 
     try:
         temperature = float(os.getenv("ANALYSIS_LLM_TEMPERATURE", "0.3"))
@@ -441,10 +517,12 @@ def get_analysis_llm_client() -> Optional[LLMClient]:
     except ValueError:
         max_tokens = 2000
 
+    # E-3': analysis は QUALITY 系統 (Preview 主軸)。role="analysis" で Tier 階層を解決する。
     return TieredGeminiClient(
         GEMINI_API_KEY,
-        [GEMINI_MODEL_TIER1, GEMINI_MODEL_TIER2, GEMINI_MODEL_TIER3, GEMINI_MODEL_TIER4],
+        _get_tier_models_for_role("analysis"),
         generation_config={"temperature": temperature, "max_output_tokens": max_tokens},
+        max_attempts_per_tier=_get_max_attempts_for_role("analysis"),
     )
 
 
