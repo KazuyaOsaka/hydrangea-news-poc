@@ -826,6 +826,18 @@ _FINAL_SELECTION_INDIRECT_JAPAN_THRESHOLD: float = 5.0
 # Valid publishability classes that may occupy slot-1
 _ELIGIBLE_PUBLISHABILITY = frozenset({"linked_jp_global", "blind_spot_global"})
 
+# F-5: Hydrangea コンセプト整合の救済経路（FinalSelection フォールバック）
+# publishability_class=investigate_more / insufficient_evidence でも、
+# blind_spot / ijai が高ければ flagship 認定する。
+# 試運転7-C (2026-04-28) で blind_spot=7.0 / ijai=9.0 にも関わらず
+# investigate_more のため reject された案件への対処。
+# Hydrangea コンセプト「日本で報じられない海外ニュースを届ける」を
+# FinalSelection まで貫徹するため、F-2 (FlagshipGate 緩和) と整合させる。
+F5_FLAGSHIP_FALLBACK_CLASSES = frozenset({"investigate_more", "insufficient_evidence"})
+F5_BLIND_SPOT_THRESHOLD: float = 5.0
+F5_IJAI_THRESHOLD: float = 5.0
+F5_MIN_EDITORIAL_MISSION_SCORE: float = 45.0  # F-1 の Editorial Mission Filter 通過済みであること
+
 # Appraisal types that are eligible for quota fallback pre-judge selection
 _QUOTA_FALLBACK_ELIGIBLE_APPRAISALS = frozenset({
     "Structural Why",
@@ -846,6 +858,35 @@ _QUOTA_FALLBACK_ERROR_TYPES = frozenset({
 })
 
 
+def _is_f5_flagship_eligible(se: "ScoredEvent") -> bool:
+    """F-5 フォールバック: Hydrangea コンセプトに基づく flagship 認定。
+
+    publishability_class=investigate_more / insufficient_evidence でも、
+    blind_spot_global_score または indirect_japan_impact_score_judge が
+    閾値以上であれば flagship 認定する。
+
+    前提: editorial_mission_score >= F5_MIN_EDITORIAL_MISSION_SCORE
+          (F-1 の EditorialMissionFilter 通過済みでないと救済しない)。
+    """
+    jr = se.judge_result
+    if jr is None or jr.judge_error is not None:
+        return False
+
+    # editorial_mission_filter を通過していること（低品質候補の救済を防ぐ）
+    if (se.editorial_mission_score or 0.0) < F5_MIN_EDITORIAL_MISSION_SCORE:
+        return False
+
+    # publishability_class が F-5 の救済対象であること
+    if jr.publishability_class not in F5_FLAGSHIP_FALLBACK_CLASSES:
+        return False
+
+    # blind_spot または ijai (indirect_japan_impact) が閾値以上であること
+    return (
+        jr.blind_spot_global_score >= F5_BLIND_SPOT_THRESHOLD
+        or jr.indirect_japan_impact_score_judge >= F5_IJAI_THRESHOLD
+    )
+
+
 def _find_eligible_judged_slot1(
     all_ranked: "list[ScoredEvent]",
     judge_results: "dict[str, GeminiJudgeResult]",
@@ -857,10 +898,17 @@ def _find_eligible_judged_slot1(
     judge_results が空の場合は (None, "judge_not_run") を返す（呼び出し元で分岐する）。
 
     Eligibility conditions:
-      1. se.judge_result is not None (judged by Gemini judge)
-      2. publishability_class in {linked_jp_global, blind_spot_global}
-      3. If JP sources == 0 (EN-only): must be blind_spot_global
-         AND indirect_japan_impact_score_judge >= indirect_japan_threshold
+      Primary path (publishability_class ベース):
+        1. se.judge_result is not None (judged by Gemini judge)
+        2. publishability_class in {linked_jp_global, blind_spot_global}
+        3. If JP sources == 0 (EN-only): must be blind_spot_global
+           AND indirect_japan_impact_score_judge >= indirect_japan_threshold
+
+      F-5 fallback path (Hydrangea コンセプト整合の救済):
+        publishability_class が investigate_more / insufficient_evidence でも、
+        blind_spot_global_score または indirect_japan_impact_score_judge が
+        閾値以上、かつ editorial_mission_score >= 45.0 ならば flagship 認定。
+        (詳細: _is_f5_flagship_eligible)
 
     Returns:
         (best_eligible_se, reason_str)  — reason_str explains why it was chosen.
@@ -872,22 +920,34 @@ def _find_eligible_judged_slot1(
     from src.triage.coherence_gate import apply_coherence_gate
 
     eligible: list[ScoredEvent] = []
+    f5_fallback_event_ids: set[str] = set()
     for se in all_ranked:
         jr = se.judge_result
         if jr is None or jr.judge_error is not None:
             continue
         cls = jr.publishability_class
-        if cls not in _ELIGIBLE_PUBLISHABILITY:
+
+        # Primary path: publishability_class ∈ {linked_jp_global, blind_spot_global}
+        flagship_eligible = cls in _ELIGIBLE_PUBLISHABILITY
+        if flagship_eligible:
+            jp_count = len(se.event.sources_jp)
+            if jp_count == 0:
+                # EN-only: only blind_spot_global with strong indirect impact qualifies
+                if cls != "blind_spot_global":
+                    flagship_eligible = False
+                elif jr.indirect_japan_impact_score_judge < indirect_japan_threshold:
+                    flagship_eligible = False
+
+        # F-5 fallback path: Hydrangea コンセプト整合の救済
+        flagship_eligible_by_f5 = (
+            (not flagship_eligible) and _is_f5_flagship_eligible(se)
+        )
+
+        if not (flagship_eligible or flagship_eligible_by_f5):
             continue
-        jp_count = len(se.event.sources_jp)
-        if jp_count == 0:
-            # EN-only candidate: only blind_spot_global with strong indirect impact qualifies
-            if cls != "blind_spot_global":
-                continue
-            if jr.indirect_japan_impact_score_judge < indirect_japan_threshold:
-                continue
 
         # Coherence gate: ensure JP↔overseas sources are about the same story
+        # (適用クラスは判定時点の publishability_class を使う)
         _coh_passed, _coh_block = apply_coherence_gate(se, cls)
         if not _coh_passed:
             logger.warning(
@@ -895,6 +955,18 @@ def _find_eligible_judged_slot1(
                 f"(class={cls}): {_coh_block}"
             )
             continue
+
+        # F-5 経路で eligible になった場合は WARNING ログで可視化
+        if flagship_eligible_by_f5:
+            logger.warning(
+                f"[FinalSelection] F-5 fallback applied: event={se.event.id[:16]} "
+                f"class={cls} "
+                f"blind_spot={jr.blind_spot_global_score:.1f} "
+                f"ijai={jr.indirect_japan_impact_score_judge:.1f} "
+                f"editorial_mission={(se.editorial_mission_score or 0.0):.1f} "
+                f"→ flagship 認定 (Hydrangea concept alignment)"
+            )
+            f5_fallback_event_ids.add(se.event.id)
 
         eligible.append(se)
 
@@ -905,8 +977,9 @@ def _find_eligible_judged_slot1(
     # so the first eligible candidate is the best.
     best = eligible[0]
     jr_best = best.judge_result  # guaranteed non-None by loop above
+    via_f5 = best.event.id in f5_fallback_event_ids
     reason = (
-        f"judged_flagship:{jr_best.publishability_class}"  # type: ignore[union-attr]
+        f"judged_flagship{'_f5' if via_f5 else ''}:{jr_best.publishability_class}"  # type: ignore[union-attr]
         f":score={best.score:.1f}"
         f":divergence={jr_best.divergence_score:.1f}"  # type: ignore[union-attr]
     )

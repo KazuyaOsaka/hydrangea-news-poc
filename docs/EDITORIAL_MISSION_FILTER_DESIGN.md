@@ -504,3 +504,45 @@ src/main.py の AnalysisLayer ブロックが Recency Guard 後の `all_ranked[0
 - **モデル性能順の正規化**: 公式情報 (gemini-2.5-flash > gemini-3.1-flash-lite-preview) に基づき TIER 順を訂正
 - **後方互換**: `TieredGeminiClient` を直接インスタンス化する既存テスト (`test_factory_quota_handling.py` 等) は `_MAX_ATTEMPTS_PER_TIER=3` のままで動作するよう、コンストラクタで `max_attempts_per_tier=None` の場合は既定値 3 を採用する。role 別 factory ヘルパ (`_make_tiered_gemini_client(role)` / `get_judge_llm_client()` / `get_analysis_llm_client()`) のみ env 由来の 2 を渡す。
 
+### F-5 で対応した動画化ゼロ問題（FinalSelection の Hydrangea コンセプト整合）
+
+試運転7-C (2026-04-28) で動画化ゼロが発生。原因は GeminiJudge の publishability_class=investigate_more で flagship 認定されなかったこと。
+
+#### 真因
+
+GeminiJudge は3件評価したが:
+
+```
+cls-3165c4e2: class=investigate_more, blind_spot=7.0, ijai=9.0  ★
+cls-651b292a: class=insufficient_evidence, blind_spot=0.0, ijai=4.0
+cls-13ef2b35: class=investigate_more, blind_spot=0.0, ijai=1.0
+```
+
+cls-3165c4e2 は「日本では報じられてない (blind_spot=7.0)、日本にとって重要 (ijai=9.0)」を強く示しているが、publishability_class=investigate_more のため reject された。
+
+これは Hydrangea のコンセプト「日本で報じられない海外ニュースを届ける」と矛盾する設計バグ。F-2 で FlagshipGate を緩和したが、その上流の FinalSelection で publishability_class ベースの判定が貫徹されていた。
+
+#### F-5 改修内容
+
+`src/main.py` に F-5 フォールバック経路を追加:
+
+| 判定軸 | 旧 (publishability_class ベース) | 新 (F-5 で追加) |
+|---|---|---|
+| 主判定 | class in {linked_jp_global, blind_spot_global} | (旧と同じ) |
+| F-5 フォールバック | (なし、reject) | class in {investigate_more, insufficient_evidence} かつ blind_spot >= 5.0 OR ijai >= 5.0 かつ editorial_mission_score >= 45.0 → flagship 認定 |
+
+これにより F-2 の FlagshipGate 改修が FinalSelection まで貫徹される。
+
+#### 効果
+
+- 動画化ゼロ問題解消
+- 「日本では報じられてない」記事を確実に救済
+- F-1 (EditorialMissionFilter) → F-2 (FlagshipGate) → F-5 (FinalSelection) の3層で Hydrangea コンセプトを貫徹
+
+#### 設計上の判断
+
+- publishability_class ベースの判定は残す（linked_jp_global / blind_spot_global は引き続き優先）
+- F-5 フォールバックは editorial_mission_score >= 45.0 を必須条件にすることで、低品質記事の救済を防ぐ
+- WARNING ログで F-5 フォールバック発動を可視化
+- jp_only は F-5 対象外（日本で報じられているため、Hydrangea コンセプトに合致しない）
+
