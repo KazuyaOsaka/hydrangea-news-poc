@@ -378,127 +378,214 @@ sources:
     licensing_notes: "Buenos Aires Times公式RSS。研究目的は許容範囲。商用利用・転載は別途確認要。"
 
   # === Phase A.5-1 (F-8-1-A): Direct RSS 11媒体追加 ===
+  # F-8-1-B: 既存25媒体とフィールド順序を統一 (category / bridge_source 追加、priority 数値化、country 大文字化)
 
-  - country: au
+  - country: AU
     name: Sydney_Morning_Herald
+    category: general
     rss_url: https://www.smh.com.au/rss/feed.xml
+    priority: 2
     enabled: true
-    priority: medium
     language: en
     region: oceania
     source_type: standard
+    bridge_source: false
     licensing_notes: 豪有力紙、Direct RSS
 
-  - country: au
+  - country: AU
     name: Guardian_Australia
+    category: general
     rss_url: https://www.theguardian.com/australia-news/rss
+    priority: 2
     enabled: true
-    priority: medium
     language: en
     region: oceania
     source_type: standard
+    bridge_source: false
     licensing_notes: 英Guardian豪州版、Direct RSS
 
-  - country: in
+  - country: IN
     name: The_Hindustan_Times
+    category: general
     rss_url: https://www.hindustantimes.com/feeds/rss/world-news/rssfeed.xml
+    priority: 2
     enabled: true
-    priority: medium
     language: en
     region: south_asia
     source_type: standard
+    bridge_source: false
     licensing_notes: インド大手リベラル紙、Direct RSS
 
-  - country: gb
+  - country: GB
     name: Middle_East_Eye
+    category: politics
     rss_url: https://www.middleeasteye.net/rss
+    priority: 1
     enabled: true
-    priority: high
     language: en
     region: middle_east
     source_type: standard
+    bridge_source: true
     licensing_notes: 中東独立メディア(親パレスチナ)、Direct RSS
 
-  - country: hk
+  - country: HK
     name: The_Initium
+    category: politics
     rss_url: https://theinitium.com/rss/
+    priority: 2
     enabled: true
-    priority: medium
     language: zh
     region: east_asia
     source_type: standard
+    bridge_source: false
     licensing_notes: 香港独立メディア、Direct RSS
 
-  - country: lv
+  - country: LV
     name: Meduza
+    category: politics
     rss_url: https://meduza.io/rss/en/all
+    priority: 1
     enabled: true
-    priority: high
     language: en
     region: russia_cis
     source_type: standard
+    bridge_source: true
     licensing_notes: ロシア独立メディア(ラトビア拠点)、Direct RSS
 
-  - country: it
+  - country: IT
     name: Il_Sole_24_Ore
+    category: economy
     rss_url: https://www.ilsole24ore.com/rss/mondo.xml
+    priority: 2
     enabled: true
-    priority: medium
     language: it
     region: europe
     source_type: standard
+    bridge_source: false
     licensing_notes: 伊経済紙、Direct RSS
 
-  - country: us
+  - country: US
     name: The_Atlantic
+    category: politics
     rss_url: https://www.theatlantic.com/feed/all/
+    priority: 2
     enabled: true
-    priority: medium
     language: en
     region: north_america
     source_type: standard
+    bridge_source: false
     licensing_notes: 米高級論考誌、Direct RSS
 
-  - country: us
+  - country: US
     name: Politico
+    category: politics
     rss_url: https://rss.politico.com/politics-news.xml
+    priority: 2
     enabled: true
-    priority: medium
     language: en
     region: north_america
     source_type: standard
+    bridge_source: false
     licensing_notes: 米政治専門メディア、Direct RSS
 
-  - country: us
+  - country: US
     name: Eurasianet
+    category: politics
     rss_url: https://eurasianet.org/rss.xml
+    priority: 3
     enabled: true
-    priority: low
     language: en
     region: central_asia
     source_type: standard
+    bridge_source: true
     licensing_notes: 中央アジア専門メディア、Direct RSS
 
   # Tier 3 警告付き
-  - country: ve
+  - country: VE
     name: TeleSUR
+    category: politics
     rss_url: https://www.telesurenglish.net/rss/
+    priority: 3
     enabled: true
-    priority: low
     language: en
     region: latin_america
     source_type: state_aligned
+    bridge_source: false
     licensing_notes: ベネズエラ政府系の国際メディア、Tier 3 (政治的警告必須、Tier1並置推奨)
 
-  - country: eg
+  - country: EG
     name: Mada_Masr
+    category: politics
     rss_url: https://www.madamasr.com/en/feed/
+    priority: 2
     enabled: true
-    priority: medium
     language: en
     region: middle_east
     source_type: independent
+    bridge_source: false
     licensing_notes: エジプト独立メディア(政府弾圧下)、TIME 100/Knight Award 受賞
+
+  # === Phase A.5-1 (F-8-1-B): Google News 経由 5媒体追加 ===
+
+  - country: JP
+    name: Yomiuri
+    category: general
+    rss_url: https://news.google.com/rss/search?q=site%3Ayomiuri.co.jp&hl=ja&gl=JP&ceid=JP%3Aja
+    priority: 1
+    enabled: true
+    language: ja
+    region: japan
+    source_type: standard
+    bridge_source: false
+    licensing_notes: 読売新聞 (日本最大手保守系)、Google News 経由
+
+  - country: JP
+    name: Sankei
+    category: general
+    rss_url: https://news.google.com/rss/search?q=site%3Asankei.com&hl=ja&gl=JP&ceid=JP%3Aja
+    priority: 2
+    enabled: true
+    language: ja
+    region: japan
+    source_type: standard
+    bridge_source: false
+    licensing_notes: 産経新聞 (保守系)、Google News 経由
+
+  - country: JP
+    name: Tokyo_Shimbun
+    category: general
+    rss_url: https://news.google.com/rss/search?q=site%3Atokyo-np.co.jp&hl=ja&gl=JP&ceid=JP%3Aja
+    priority: 2
+    enabled: true
+    language: ja
+    region: japan
+    source_type: standard
+    bridge_source: false
+    licensing_notes: 東京新聞 (リベラル系・批判精神)、Google News 経由
+
+  - country: IN
+    name: WION
+    category: general
+    rss_url: https://news.google.com/rss/search?q=site%3Awionews.com&hl=en-IN&gl=IN&ceid=IN%3Aen
+    priority: 2
+    enabled: true
+    language: en
+    region: south_asia
+    source_type: standard
+    bridge_source: true
+    licensing_notes: WION (Zee Media 傘下、BJP寄りインド民間メディア)、Google News 経由、要警告
+
+  - country: CN
+    name: Caixin_Global
+    category: economy
+    rss_url: https://news.google.com/rss/search?q=site%3Acaixinglobal.com&hl=en&gl=US&ceid=US%3Aen
+    priority: 2
+    enabled: true
+    language: en
+    region: east_asia
+    source_type: standard
+    bridge_source: true
+    licensing_notes: Caixin Global (中国経済紙、相対的に独立系)、Google News 経由
 
   # ── Candidate Sources (disabled / proposal stage) ─────────────────────
   # 以下は将来の有効化候補。利用条件・取得安定性の確認が必要。

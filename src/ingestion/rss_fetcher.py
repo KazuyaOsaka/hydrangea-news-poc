@@ -75,7 +75,7 @@ def fetch_source(source: dict) -> dict:
     return {
         "source_name": source["name"],
         "country": source["country"],
-        "category": source["category"],
+        "category": source.get("category", "general"),
         "language": source.get("language", "en"),
         "region": source.get("region", "global"),
         "source_type": source.get("source_type", "news"),

@@ -3206,13 +3206,17 @@ def run_from_normalized(
                     for raw_name in _cj.strongest_authority_pair[:2]:
                         p = find_profile(_profiles, raw_name)
                         if p and p.get("can_authority_mention", False):
-                            converted.append(p.get("mention_style_short", raw_name))
+                            speech = p.get("display_name_speech", "") or p.get("mention_style_short", raw_name)
+                            converted.append(speech or raw_name)
                         else:
                             converted.append(raw_name)
                     _slot_authority_pair = converted
                     logger.info(f"[AuthorityMention] Slot-{_slot_num} judge pair: {_slot_authority_pair}")
                 else:
-                    _slot_authority_pair = select_authority_pair(ev.sources_jp, overseas, _profiles)
+                    _slot_authority_pair = select_authority_pair(
+                        ev.sources_jp, overseas, _profiles,
+                        name_field="display_name_speech",
+                    )
                     if _slot_authority_pair:
                         logger.info(f"[AuthorityMention] Slot-{_slot_num} computed pair: {_slot_authority_pair}")
             except Exception as ap_err:

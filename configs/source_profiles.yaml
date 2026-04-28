@@ -632,3 +632,72 @@ source_profiles:
     can_authority_mention: true
     requires_political_warning: true
     warning_note: "シシ政権から弾圧を受け続ける独立メディア。2017年以来エジプト国内でサイトブロック中。編集長 Lina Attalah は2025年8月に5回目の起訴。TIME 100/Knight Award/Canada-UK Media Freedom Award 等を受賞。シシ政権関連トピックではエジプト政府公式見解との並置が望ましい。"
+
+  # === Phase A.5-1 (F-8-1-B): Google News 経由 5媒体追加 ===
+
+  - source_name: Yomiuri
+    tier: top
+    language: ja
+    region: japan
+    country: jp
+    political_lean: conservative
+    mention_style_short: 読売
+    display_name_speech: 日本最大手の保守系紙、読売新聞
+    display_name_article: 日本最大手の保守系紙・読売新聞
+    display_name_subtitle: 読売新聞
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: Sankei
+    tier: standard
+    language: ja
+    region: japan
+    country: jp
+    political_lean: conservative
+    mention_style_short: 産経
+    display_name_speech: 日本の保守系全国紙、産経新聞
+    display_name_article: 日本の保守系全国紙・産経新聞
+    display_name_subtitle: 産経新聞
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: Tokyo_Shimbun
+    tier: standard
+    language: ja
+    region: japan
+    country: jp
+    political_lean: liberal
+    mention_style_short: 東京新聞
+    display_name_speech: 日本のリベラル系全国紙、東京新聞
+    display_name_article: 日本のリベラル系全国紙・東京新聞
+    display_name_subtitle: 東京新聞
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: WION
+    tier: standard
+    language: en
+    region: south_asia
+    country: in
+    political_lean: bjp_aligned_private
+    parent_company: "Zee Media Corporation (ZMCL) / Essel Group"
+    mention_style_short: WION
+    display_name_speech: インドの民間英語ニュース局WION
+    display_name_article: インド民間英語国際ニュース局・WION (Zee Media 傘下、BJP寄り)
+    display_name_subtitle: WION (インド民間)
+    can_authority_mention: true
+    requires_political_warning: true
+    warning_note: "民間メディアだがオーナー Subhash Chandra が BJP/RSS と緊密。カナダ政府 RRM が2024年9月に Modi-aligned outlets と認定。中印・中パ・印加関係などインド政府の利害が絡むトピックでは Tier 1 メディアとの並置必須。"
+
+  - source_name: Caixin_Global
+    tier: standard
+    language: en
+    region: east_asia
+    country: cn
+    political_lean: independent_chinese
+    mention_style_short: 財新
+    display_name_speech: 中国の経済専門メディア、財新グローバル
+    display_name_article: 中国経済専門メディア・Caixin Global (財新)
+    display_name_subtitle: Caixin
+    can_authority_mention: true
+    requires_political_warning: false

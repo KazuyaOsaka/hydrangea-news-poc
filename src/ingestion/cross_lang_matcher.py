@@ -200,6 +200,15 @@ _ENTITY_JP: dict[str, str] = {
     "ユーラシアネット": "eurasianet",
     "テレスール": "telesur",
     "マダ・マスル": "madamasr",
+    # F-8-1-B: Google News 経由 5媒体の対訳追加
+    "読売新聞": "yomiuri",
+    "読売": "yomiuri",
+    "産経新聞": "sankei",
+    "産経": "sankei",
+    "東京新聞": "tokyoshimbun",
+    "WION": "wion",
+    "財新": "caixin",
+    "財新グローバル": "caixin",
 }
 
 # EN表記 → 正規トークン (小文字でマッチング)
@@ -290,6 +299,15 @@ _ENTITY_EN: dict[str, str] = {
     "eurasianet": "eurasianet",
     "telesur": "telesur",
     "mada masr": "madamasr",
+    # F-8-1-B: Google News 経由 5媒体の対訳追加
+    "yomiuri shimbun": "yomiuri",
+    "yomiuri": "yomiuri",
+    "sankei shimbun": "sankei",
+    "sankei": "sankei",
+    "tokyo shimbun": "tokyoshimbun",
+    "wion": "wion",
+    "caixin": "caixin",
+    "caixin global": "caixin",
 }
 
 # ── キーワード対訳辞書 ─────────────────────────────────────────────────────────
