@@ -1,0 +1,72 @@
+[
+  {
+    "name": "Yomiuri",
+    "status": "RESCUED",
+    "successful_url": "https://news.google.com/rss/search?q=when:24h+site:yomiuri.co.jp&ceid=JP:ja&hl=ja&gl=JP",
+    "is_google_news_proxy": true,
+    "entry_count": 100,
+    "latest_entry_date": "Tue, 28 Apr 2026 00:16:00 GMT",
+    "feed_title": "\"when:24h site:yomiuri.co.jp\" - Google ニュース",
+    "notes": "発行部数日本最大、保守系視点",
+    "original_url": "https://www.yomiuri.co.jp/rss/feed/index.xml",
+    "failure_reason": "XML パースエラー (RSS 廃止 or 形式変更の可能性)",
+    "error": null,
+    "elapsed_sec": 1.01
+  },
+  {
+    "name": "Sankei",
+    "status": "RESCUED",
+    "successful_url": "https://news.google.com/rss/search?q=when:24h+site:sankei.com&ceid=JP:ja&hl=ja&gl=JP",
+    "is_google_news_proxy": true,
+    "entry_count": 100,
+    "latest_entry_date": "Tue, 28 Apr 2026 02:19:34 GMT",
+    "feed_title": "\"when:24h site:sankei.com\" - Google ニュース",
+    "notes": "右派視点、保守的論調",
+    "original_url": "https://www.sankei.com/rss/news.xml",
+    "failure_reason": "XML パースエラー or HTML 返却",
+    "error": null,
+    "elapsed_sec": 1.41
+  },
+  {
+    "name": "Tokyo_Shimbun",
+    "status": "RESCUED",
+    "successful_url": "https://news.google.com/rss/search?q=when:24h+site:tokyo-np.co.jp&ceid=JP:ja&hl=ja&gl=JP",
+    "is_google_news_proxy": true,
+    "entry_count": 100,
+    "latest_entry_date": "Tue, 28 Apr 2026 03:00:00 GMT",
+    "feed_title": "\"when:24h site:tokyo-np.co.jp\" - Google ニュース",
+    "notes": "リベラル独自報道",
+    "original_url": "https://www.tokyo-np.co.jp/feed",
+    "failure_reason": "失敗",
+    "error": null,
+    "elapsed_sec": 0.89
+  },
+  {
+    "name": "WION",
+    "status": "RESCUED",
+    "successful_url": "https://news.google.com/rss/search?q=when:24h+site:wionews.com&ceid=US:en&hl=en-US&gl=US",
+    "is_google_news_proxy": true,
+    "entry_count": 100,
+    "latest_entry_date": "Mon, 27 Apr 2026 14:04:00 GMT",
+    "feed_title": "\"when:24h site:wionews.com\" - Google News",
+    "notes": "インドのグローバル向け、西側批判視点 (Gemini 強推奨)",
+    "original_url": "https://www.wionews.com/rss",
+    "failure_reason": "両 URL ともパースエラー",
+    "error": null,
+    "elapsed_sec": 0.89
+  },
+  {
+    "name": "Caixin_Global",
+    "status": "RESCUED",
+    "successful_url": "https://news.google.com/rss/search?q=when:24h+site:caixinglobal.com&ceid=US:en&hl=en-US&gl=US",
+    "is_google_news_proxy": true,
+    "entry_count": 27,
+    "latest_entry_date": "Mon, 27 Apr 2026 17:26:00 GMT",
+    "feed_title": "\"when:24h site:caixinglobal.com\" - Google News",
+    "notes": "中国国内で比較的独立性高い経済メディア",
+    "original_url": "https://www.caixinglobal.com/rss/all.xml",
+    "failure_reason": "syntax error",
+    "error": null,
+    "elapsed_sec": 0.59
+  }
+]

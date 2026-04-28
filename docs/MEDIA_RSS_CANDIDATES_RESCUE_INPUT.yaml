@@ -1,0 +1,65 @@
+# F-8-PRE-2: F-8-PRE で FAILED した媒体の代替 URL 検証
+# Google News RSS 経由を中心に再検証する。
+
+rescue_candidates:
+  - name: Yomiuri
+    region: japan
+    language: ja
+    political_lean: conservative
+    notes: 発行部数日本最大、保守系視点
+    original_url: https://www.yomiuri.co.jp/rss/feed/index.xml
+    failure_reason: "XML パースエラー (RSS 廃止 or 形式変更の可能性)"
+    candidates:
+      - https://news.google.com/rss/search?q=when:24h+site:yomiuri.co.jp&ceid=JP:ja&hl=ja&gl=JP
+      - https://www.yomiuri.co.jp/feed/index.xml
+      - https://www.yomiuri.co.jp/rss/news.xml
+
+  - name: Sankei
+    region: japan
+    language: ja
+    political_lean: right
+    notes: 右派視点、保守的論調
+    original_url: https://www.sankei.com/rss/news.xml
+    failure_reason: "XML パースエラー or HTML 返却"
+    candidates:
+      - https://news.google.com/rss/search?q=when:24h+site:sankei.com&ceid=JP:ja&hl=ja&gl=JP
+      - https://www.sankei.com/feed/
+      - https://www.sankei.com/news/feed.xml
+
+  - name: Tokyo_Shimbun
+    region: japan
+    language: ja
+    political_lean: liberal
+    notes: リベラル独自報道
+    original_url: https://www.tokyo-np.co.jp/feed
+    failure_reason: "失敗"
+    candidates:
+      - https://news.google.com/rss/search?q=when:24h+site:tokyo-np.co.jp&ceid=JP:ja&hl=ja&gl=JP
+      - https://www.tokyo-np.co.jp/rss
+      - https://www.tokyo-np.co.jp/feed/index.xml
+
+  - name: WION
+    region: south_asia
+    language: en
+    country: in
+    political_lean: indian_nationalist
+    notes: インドのグローバル向け、西側批判視点 (Gemini 強推奨)
+    priority: critical
+    original_url: https://www.wionews.com/rss
+    failure_reason: "両 URL ともパースエラー"
+    candidates:
+      - https://news.google.com/rss/search?q=when:24h+site:wionews.com&ceid=US:en&hl=en-US&gl=US
+      - https://www.wionews.com/feeds/rss.xml
+      - https://www.wionews.com/rss/world
+
+  - name: Caixin_Global
+    region: east_asia
+    language: en
+    country: cn
+    notes: 中国国内で比較的独立性高い経済メディア
+    original_url: https://www.caixinglobal.com/rss/all.xml
+    failure_reason: "syntax error"
+    candidates:
+      - https://news.google.com/rss/search?q=when:24h+site:caixinglobal.com&ceid=US:en&hl=en-US&gl=US
+      - https://www.caixinglobal.com/rss/
+      - https://www.caixin.com/rss
