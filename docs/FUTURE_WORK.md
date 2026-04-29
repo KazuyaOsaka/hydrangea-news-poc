@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-04-29 (F-14 完了)
+最終更新: 2026-04-29 (F-15 完了)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -130,6 +130,13 @@
   - 何を対応したか
 
 ---
+
+- **Slot-event_id 同期問題（AnalysisLayer 対象 vs Top-3 台本生成対象の不整合）** (F-15 / 2026-04-29 完了)
+  - 発生バッチ: 試運転 7-H' (2026-04-29 21:20) で動画化率 1/3 (33%) で頭打ちが発覚
+  - 対応内容: `src/main.py` の AnalysisLayer 対象選定を `all_ranked[:_top_n_for_analysis]`（Tier 1 score 降順）から、Top-3 台本生成ループと同じ `sorted(all_ranked, key=lambda se: _elite_judge_results[...].total_score, reverse=True)[:_top_n_for_analysis]`（Elite Judge total_score 降順）に変更。これにより両ループが必ず同じ event_id 列を対象とするようになり、Slot-event_id ズレで「analysis_result is None, skipping」になっていた構造的問題を解消。
+  - 関連ドキュメント: `docs/EDITORIAL_MISSION_FILTER_DESIGN.md` の F-15 セクション (該当があれば)
+  - 関連ファイル: `src/main.py`, `tests/test_main_f15_slot_event_sync.py`
+  - 試運転 7-I で動画化率の改善 (期待値 67-100%) を確認後にカズヤがマージ判断
 
 - **Analysis Layer の hidden_stakes axis バグ** (F-3 / 2026-04-28 完了)
   - 発生バッチ: F-1.5 試運転で発覚 → F-3 で対応完了

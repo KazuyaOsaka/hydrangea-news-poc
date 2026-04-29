@@ -3065,11 +3065,24 @@ def run_from_normalized(
                     _top_n_for_analysis = max(
                         1, int(os.getenv("TOP_N_GENERATION", "3"))
                     )
-                    _analysis_targets = all_ranked[:_top_n_for_analysis]
+                    # F-15: AnalysisLayer の対象選定を Top-3 台本生成ループ (下方の
+                    # _top_3_candidates) と完全一致させる。これにより all_ranked の
+                    # スコア順 vs Elite Judge total_score 順の不整合 (Slot-event_id
+                    # ズレ問題) を構造的に解決する。試運転 7-H' (2026-04-29) で
+                    # 動画化率 33% で頭打ちになっていた。
+                    _analysis_targets = sorted(
+                        all_ranked,
+                        key=lambda se: (
+                            _elite_judge_results[se.event.id].total_score
+                            if se.event.id in _elite_judge_results else 0
+                        ),
+                        reverse=True,
+                    )[:_top_n_for_analysis]
 
                     logger.info(
                         f"[AnalysisLayer] Running for top {len(_analysis_targets)} "
-                        f"candidates (F-4: extended from slot-1 only)"
+                        f"candidates (F-15: aligned with Top-3 generation loop via "
+                        f"Elite Judge total_score)"
                     )
 
                     for _idx, _target in enumerate(_analysis_targets):
