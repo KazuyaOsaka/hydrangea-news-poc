@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-04-28 (F-8-1-B / Phase A.5-1 完了)
+最終更新: 2026-04-29 (F-14 完了)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -27,6 +27,18 @@
   - 背景: ハイブリッド版になって event_builder.py の garbage_filter 周辺は触ってOK。scoring.py も新 axis 追加が必要になる可能性
   - 対応案: 各ファイルの「なぜ触ってはいけないか」を明示し、状況依存で触ってよい範囲を定義
   - 検討時期: Phase 1.5 全完了後
+
+- **perspective_extractor 改善 (F-7-α 候補)** (試運転 7-G で発覚 / F-14 で関連事象を観測)
+  - 背景: Slot-1 (cls-8bbec722d420 Venezuela) で `no perspective candidates met conditions → analysis_result=None` が再発。`extract_perspectives()` のルールベース判定が厳しすぎ、政治系イベントでも候補ゼロになるケースがある。F-14 は JSON parser を堅牢化したが、そもそも候補が抽出されないケースは救えない。
+  - 対応案: `src/analysis/perspective_extractor.py` の各 axis 判定条件を緩和、または最低 1 件の候補を必ず返す保険ロジック (lowest-bar fallback) を追加。
+  - 検討時期: F-12-B (script_writer プロンプト全面刷新) 完了後
+  - 関連ファイル: src/analysis/perspective_extractor.py, tests/test_perspective_extractor.py
+
+- **AnalysisLayer LLM の max_tokens / 切れ防止 (F-14 で workaround 済)** (F-14 / 試運転 7-G で発覚)
+  - 背景: F-14 で JSON parser の修復ロジックを実装し、出力が途中で切れた場合でも可能な限り救済できるようになった。ただし根本原因は LLM 出力の途中切断 (max_tokens 制限 / Tier フォールバック中の長い応答) であり、F-14 は対症療法。
+  - 対応案: (a) AnalysisLayer の `multi_angle_analyzer` / `insight_extractor` に `max_output_tokens` の明示指定を追加し、十分な余裕を確保する。(b) Tier 別に max_output_tokens を調整。(c) 出力長を抑えるプロンプト改修 (短く・JSON だけ生成させる)。
+  - 検討時期: 試運転 7-H で F-14 修復ログ ([F-14] JSON repaired) の発動頻度を確認後。発動が多発するなら根本対応に着手。
+  - 関連ファイル: src/llm/factory.py, src/analysis/multi_angle_analyzer.py, src/analysis/insight_extractor.py, configs/prompts/analysis/
 
 - **EditorialMissionFilter Step1 prescore の軸スコアゼロ問題** (F-1.5 試運転で発覚)
   - 背景: F-1.5 試運転で発覚。軍事費・ゼレンスキー等の地政学記事で `editorial:geopolitics_depth_score` / `editorial:breaking_shock_score` / `editorial:mass_appeal_score` が 0.0 になっていた。本来高得点になるはずの記事が低 prescore で却下される/低位置に置かれる懸念
