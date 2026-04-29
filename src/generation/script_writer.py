@@ -20,6 +20,7 @@ from src.shared.models import (
     ScriptSection,
     VideoScript,
 )
+from src.triage.editorial_mission_filter import MISSION_SCORE_THRESHOLD
 
 if TYPE_CHECKING:
     from src.budget import BudgetTracker
@@ -949,17 +950,39 @@ def write_script(
     """
     if triage_result is not None:
         cautions = triage_result.appraisal_cautions or ""
-        if (
+        suppressed = (
             cautions.startswith("[抑制]")
             and triage_result.appraisal_type is None
             and triage_result.editorial_appraisal_score == 0.0
-        ):
-            raise ValueError(
-                f"[ScriptWriter] quality_floor_miss: evidence-weak candidate blocked at script generation "
-                f"— event_id={event.id}, cautions={cautions[:80]!r}. "
-                "This candidate should have been held_back by the scheduler. "
-                "Use an explicit override to bypass this guard."
+        )
+        if suppressed:
+            # F-13: Hydrangea コンセプト準拠ガード。Filter/Judge/Analysis のいずれかが
+            # 本領記事と認めた候補は appraisal の [抑制] を上書きして通過させる。
+            ems = triage_result.editorial_mission_score or 0.0
+            jc: Optional[str] = (
+                triage_result.judge_result.publishability_class
+                if triage_result.judge_result is not None
+                else None
             )
+            ar = triage_result.analysis_result
+            hydrangea_legitimate = (
+                ems >= MISSION_SCORE_THRESHOLD
+                or jc in {"blind_spot_global", "linked_jp_global"}
+                or ar is not None
+            )
+            if hydrangea_legitimate:
+                logger.warning(
+                    f"[F-13] quality_floor_miss bypass: event_id={event.id}, "
+                    f"editorial_mission_score={ems}, judge_class={jc}, "
+                    f"analysis_result={'present' if ar is not None else 'none'}"
+                )
+            else:
+                raise ValueError(
+                    f"[ScriptWriter] quality_floor_miss: evidence-weak candidate blocked at script generation "
+                    f"— event_id={event.id}, cautions={cautions[:80]!r}. "
+                    "This candidate should have been held_back by the scheduler. "
+                    "Use an explicit override to bypass this guard."
+                )
 
     logger.info(f"Generating script for event [{event.id}] via provider={LLM_PROVIDER}")
 
