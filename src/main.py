@@ -1869,6 +1869,7 @@ def _generate_outputs(
     all_ranked: "list[ScoredEvent] | None" = None,
     authority_pair: "list[str] | None" = None,
     write_triage_scores: bool = True,
+    generate_video_track: bool = True,
 ) -> JobRecord:
     """トリアージ〜生成〜保存の共通処理。
 
@@ -1877,6 +1878,10 @@ def _generate_outputs(
 
     write_triage_scores=False の場合は triage_scores.json を書き出さない。
     top-3 ループの slot-2/3 で渡すと、slot-1 が書いた選定根拠を上書きしない。
+
+    generate_video_track=False の場合は article のみ生成し、script / video_payload /
+    evidence の生成をスキップする (F-16-A: per-run 上限分離)。Web 記事専用 Slot
+    (Slot-2 / Slot-3) で使う。AnalysisLayer は呼び出し元で実行済みである前提。
     """
 
     # 1. トリアージ（スコアリング & 選択）: publish スキップ時も常に実行・保存
@@ -2059,6 +2064,26 @@ def _generate_outputs(
     article_path = output_dir / f"{event.id}_article.md"
     article_path.write_text(article.markdown, encoding="utf-8")
     logger.info(f"Article saved: {article_path}")
+
+    # ── F-16-A: per-run 上限分離 ────────────────────────────────────────────
+    # generate_video_track=False (Web 記事専用 Slot) ではここで早期 return する。
+    # script / video_payload / evidence の生成と publish_count インクリメントを
+    # スキップし、article のみを成果物として残す。
+    # AnalysisLayer は呼び出し元 (Top-3 ループ) で全 Slot に対し実行済み。
+    if not generate_video_track:
+        logger.info(
+            f"[F-16-A] Article-only mode for event_id={event.id}: "
+            "skipping script / video_payload / evidence generation."
+        )
+        record = JobRecord(
+            id=job_id,
+            event_id=event.id,
+            status="completed",
+            article_path=str(article_path),
+        )
+        save_job(db_path, record)
+        record._triage_source_counts = triage_source_counts  # type: ignore[attr-defined]
+        return record
 
     # 5. 動画台本生成（F-12-A: 完成済み article.markdown を参考素材として渡す）
     budget.record_phase("before_script")
@@ -3062,8 +3087,16 @@ def run_from_normalized(
                     # F-4 では TOP_N_GENERATION (default 3) で指定された全候補で
                     # AnalysisLayer を実行する。1 Slot の失敗は当該 Slot に閉じ込め、
                     # 他 Slot は処理を継続する (per-slot try/except)。
+                    # F-16-A: TOP_N_GENERATION は TOP_N_ARTICLES_PER_RUN にリネーム。
+                    # 既存テストが env を runtime に書き換えて挙動を変える前提のため、
+                    # 値は import 時固定ではなく runtime で読み直す。新変数優先、
+                    # legacy TOP_N_GENERATION を fallback default に使う。
                     _top_n_for_analysis = max(
-                        1, int(os.getenv("TOP_N_GENERATION", "3"))
+                        1,
+                        int(os.getenv(
+                            "TOP_N_ARTICLES_PER_RUN",
+                            os.getenv("TOP_N_GENERATION", "3"),
+                        )),
                     )
                     # F-15: AnalysisLayer の対象選定を Top-3 台本生成ループ (下方の
                     # _top_3_candidates) と完全一致させる。これにより all_ranked の
@@ -3120,12 +3153,31 @@ def run_from_normalized(
                     exc_info=True,
                 )
 
-        # ── Top-3 台本生成ループ: Elite Judge 採用済みリスト上位3件を順次処理 ────
+        # ── Top-3 ループ: Elite Judge 採用済みリスト上位 N 件を順次処理 ────────
         # EditorialMissionFilter による生成ブロックは廃止。Elite Judge (Gate 3) の決定を最終とする。
-        # TOP_N_GENERATION で絞り込み件数を上書き可能（デフォルト 3 = 既存挙動）。
-        # 分析レイヤー設計（Section 6）では 1 本フォーカスを推奨するが、ここでは
-        # 既存挙動を壊さないため env 未指定時は 3 のまま。
-        _top_n = max(1, int(os.getenv("TOP_N_GENERATION", "3")))
+        # F-16-A: per-run 上限を分離。
+        #   _top_n_articles  — article まで生成する候補数 (TOP_N_ARTICLES_PER_RUN)
+        #   _top_n_videos    — script + video まで生成する候補数 (TOP_N_VIDEOS_PER_RUN)
+        # 設計上 video ⊆ article。video > article は無効なので _top_n_videos を
+        # _top_n_articles にクランプする。
+        # 既存テスト互換のため値は runtime で読み直す (legacy TOP_N_GENERATION も
+        # fallback default として尊重する)。
+        _raw_top_n_articles = int(os.getenv(
+            "TOP_N_ARTICLES_PER_RUN",
+            os.getenv("TOP_N_GENERATION", "3"),
+        ))
+        _raw_top_n_videos = int(os.getenv("TOP_N_VIDEOS_PER_RUN", "1"))
+        _top_n_articles = max(1, _raw_top_n_articles)
+        _top_n_videos = max(1, _raw_top_n_videos)
+        if _top_n_videos > _top_n_articles:
+            logger.warning(
+                f"[F-16-A] TOP_N_VIDEOS_PER_RUN ({_raw_top_n_videos}) > "
+                f"TOP_N_ARTICLES_PER_RUN ({_raw_top_n_articles}) は無効です "
+                f"(video ⊆ article 設計)。TOP_N_VIDEOS_PER_RUN を "
+                f"{_top_n_articles} にクランプします。"
+            )
+            _top_n_videos = _top_n_articles
+        _top_n = _top_n_articles
         _top_3_candidates: list[ScoredEvent] = sorted(
             all_ranked,
             key=lambda se: (
@@ -3259,6 +3311,9 @@ def run_from_normalized(
             _live_publishes = get_daily_stats(db_path)["publish_count"]
             # slot-1 のみが triage_scores.json を書き出す。後続スロットでは
             # slot-1 の選定根拠ファイルを上書きしないよう抑制する。
+            # F-16-A: per-run 上限分離。Slot index < TOP_N_VIDEOS_PER_RUN なら
+            # script + video まで生成、それ以降は article のみ生成 (Web 記事専用)。
+            _generate_video_track = _slot_idx < _top_n_videos
             _slot_record = _generate_outputs(
                 events, output_dir, db_path, _slot_job_id,
                 budget=budget,
@@ -3268,7 +3323,14 @@ def run_from_normalized(
                 all_ranked=all_ranked,
                 authority_pair=_slot_authority_pair,
                 write_triage_scores=(_slot_idx == 0),
+                generate_video_track=_generate_video_track,
             )
+            if not _generate_video_track:
+                logger.info(
+                    f"[F-16-A] Slot-{_slot_num} article-only mode "
+                    f"(slot_idx={_slot_idx} >= TOP_N_VIDEOS_PER_RUN="
+                    f"{_top_n_videos}); script + video skipped."
+                )
             _slot_records.append(_slot_record)
 
             # ── 配信済みマーク ────────────────────────────────────────────────
@@ -3302,10 +3364,29 @@ def run_from_normalized(
                         )
 
                 # ── AV レンダリング (per-slot) ─────────────────────────────
-                # slot-1〜3 すべて WAV / review MP4 を作成する。
+                # F-16-A: video track 対象 Slot のみ AV レンダリングを実行する。
+                # article-only Slot は script_path 未設定のため _render_av_outputs
+                # 内部で no_script_path エラーになる。明示的にスキップして
+                # ノイズログを避ける。
                 # AUDIO_RENDER_ENABLED=False の場合 _render_av_outputs は no-op
                 # （summary に audio_generated=False を返す）。
-                _slot_av = _render_av_outputs(_slot_record, output_dir)
+                if not _generate_video_track:
+                    _slot_av = {
+                        "audio_render_enabled": AUDIO_RENDER_ENABLED,
+                        "video_render_enabled": VIDEO_RENDER_ENABLED,
+                        "audio_generated": False,
+                        "video_generated": False,
+                        "voiceover_path": None,
+                        "review_mp4_path": None,
+                        "render_manifest_path": None,
+                        "placeholder_count": 0,
+                        "total_duration_sec": None,
+                        "timing_mismatches": [],
+                        "error": None,
+                        "skipped_reason": "article_only_slot",
+                    }
+                else:
+                    _slot_av = _render_av_outputs(_slot_record, output_dir)
                 _slot_av["slot"] = _slot_num
                 _slot_av["event_id"] = _ev_id
                 _slot_av_summaries.append(_slot_av)

@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-04-29 (F-15 完了)
+最終更新: 2026-04-30 (F-16-A 完了)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -45,6 +45,18 @@
   - 対応案: `src/triage/scoring.py` の `compute_score_full()` を読み、各 axis 計算ロジックを確認。修正には scoring.py を触る必要があるため、触っちゃダメリスト見直しと一緒に対処
   - 検討時期: F-1.5 完了後の次のバッチ
   - 関連ファイル: src/triage/scoring.py（読み取り）, src/triage/editorial_mission_filter.py
+
+- **cron 6 時間おき自動実行の整備 (F-16-B)** (F-16-A で per-run 上限分離後の本番リリース要件)
+  - 背景: F-16-A で per-run 上限を `TOP_N_VIDEOS_PER_RUN` / `TOP_N_ARTICLES_PER_RUN` に分離した。本番運用は cron 6 時間おき × per-run 上限で公開頻度を制御する設計だが、cron 設定自体は未実装。
+  - 対応案: GitHub Actions / launchd / VPS のいずれかで `python -m src.main --mode normalized` を 6 時間おきに実行。失敗時通知、ログローテーション、batch ロックの整備も同時。本番想定値: 4 run/日 × 1 動画/run = 4 動画/日 + 4 run × 3 記事 = 12 記事/日。
+  - 検討時期: F-16-A 試運転 7-J で動画化率 100% を確認後、本番リリース判断時
+  - 関連ファイル: 新規 `.github/workflows/run-pipeline.yml` または `launchd/*.plist` または systemd unit, src/main.py (CLI 引数追加の可能性)
+
+- **ChannelConfig.publishing_limits 統合 (Phase 1-A)** (F-16-A で per-run 上限を環境変数化)
+  - 背景: F-16-A は `TOP_N_VIDEOS_PER_RUN` / `TOP_N_ARTICLES_PER_RUN` をグローバル env で持つ暫定実装。Phase B で TikTok / Shorts / Web 別チャンネルや `japan_athletes` / `k_pulse` を稼働させる際は、チャンネル単位で上限を変えられる必要がある。
+  - 対応案: `ChannelConfig` (src/shared/models.py) に `publishing_limits: PublishingLimits` を追加し、`videos_per_run` / `articles_per_run` を持たせる。main.py 側で env 読み込みからチャンネル設定読み込みに移行。env は deprecation 期間を経て撤廃。
+  - 検討時期: Phase 1-A (REFACTORING_PLAN.md 段階 2) 着手時
+  - 関連ファイル: src/shared/models.py, configs/channels.yaml, src/main.py, .env.example
 
 ---
 
@@ -130,6 +142,12 @@
   - 何を対応したか
 
 ---
+
+- **MAX_PUBLISHES_PER_DAY ハードコード上限による Slot skip 問題** (F-16-A / 2026-04-30 完了)
+  - 発生バッチ: 試運転 7-I (2026-04-29) で動画化率 67% (2/3) で頭打ち。Slot-3 (UAE OPEC) は AnalysisLayer 完了済みだったが MAX_PUBLISHES_PER_DAY=5 のハードコード制限で skip された
+  - 対応内容: per-run 上限を `TOP_N_VIDEOS_PER_RUN` (default 1) / `TOP_N_ARTICLES_PER_RUN` (default 3) に分離。`_generate_outputs()` に `generate_video_track: bool = True` パラメータを追加し、Slot index >= TOP_N_VIDEOS_PER_RUN は article のみ生成。`MAX_PUBLISHES_PER_DAY` は default 999 に変更し実質撤廃 (後方互換のため env / コードからは読み続ける)。video > article は min クランプして警告。AnalysisLayer Top 3 対象 (F-15) と publish_count インクリメント (後方互換) は維持。
+  - cron 自動実行 (F-16-B) と組み合わせて公開頻度を制御する設計に移行。本番運用想定: 4 run/日 × 1 動画 = 4 動画/日 + 4 run × 3 記事 = 12 記事/日
+  - 関連ファイル: `src/shared/config.py`, `src/main.py`, `.env.example`, `tests/test_f16a_per_run_limits.py` (26 テスト追加)
 
 - **Slot-event_id 同期問題（AnalysisLayer 対象 vs Top-3 台本生成対象の不整合）** (F-15 / 2026-04-29 完了)
   - 発生バッチ: 試運転 7-H' (2026-04-29 21:20) で動画化率 1/3 (33%) で頭打ちが発覚

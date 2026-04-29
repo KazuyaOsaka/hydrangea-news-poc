@@ -21,8 +21,28 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
 
 # ── 運用スケジュール ──────────────────────────────────────────────────────────
-# 1日の最大公開件数 (これを超えると publish をスキップする)
-MAX_PUBLISHES_PER_DAY: int = int(os.getenv("MAX_PUBLISHES_PER_DAY", "5"))
+# F-16-A: per-run 上限の分離 (公開チャネル概念の分離)。
+# cron 6 時間おき自動実行 (本番リリース時の F-16-B で実装) × per-run 上限で
+# 実質的な公開頻度を制御する。
+#   TOP_N_VIDEOS_PER_RUN   — 1 run あたり script + video まで生成する候補数 (動画化対象)
+#   TOP_N_ARTICLES_PER_RUN — 1 run あたり article まで生成する候補数 (Web 記事対象)
+# 設計上 video ⊆ article。TOP_N_VIDEOS_PER_RUN > TOP_N_ARTICLES_PER_RUN は無効で、
+# main.py 側で min(video, article) にクランプして警告する。
+# Phase 1-A で ChannelConfig.publishing_limits に統合される予定。
+TOP_N_VIDEOS_PER_RUN: int = int(os.getenv("TOP_N_VIDEOS_PER_RUN", "1"))
+# 旧 TOP_N_GENERATION (F-4 で導入、Top-3 ループ + AnalysisLayer の対象件数)
+# は概念的に「1 run あたりの記事生成数」と同じ。明示的に設定されていれば
+# TOP_N_ARTICLES_PER_RUN の default 値として後方互換を保つ。
+_LEGACY_TOP_N_GENERATION = os.getenv("TOP_N_GENERATION", "3")
+TOP_N_ARTICLES_PER_RUN: int = int(os.getenv("TOP_N_ARTICLES_PER_RUN", _LEGACY_TOP_N_GENERATION))
+
+# DEPRECATED (F-16-A): MAX_PUBLISHES_PER_DAY は per-day という単一概念で公開を
+# ゲートしていたため、Slot-3 で AnalysisLayer 完了済み候補が 5 件上限で
+# skip される事故 (試運転 7-I) が発生した。
+# 後方互換のため env / コードからは読み続けるが、default を 999 に変更し
+# 実質撤廃する。新コードは TOP_N_VIDEOS_PER_RUN / TOP_N_ARTICLES_PER_RUN を使うこと。
+# cron 6 時間おき実行 × per-run 上限で実質的な公開頻度を制御する。
+MAX_PUBLISHES_PER_DAY: int = int(os.getenv("MAX_PUBLISHES_PER_DAY", "999"))
 
 # NOTE: 旧 RUNS_PER_DAY はコード上で参照されない dead constant だったため削除。
 # 実行回数上限を設けたい場合は main.py で get_daily_stats()["run_count"] を
