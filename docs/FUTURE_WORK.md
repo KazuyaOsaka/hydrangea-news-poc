@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-04-30 (F-16-A 完了)
+最終更新: 2026-05-01 (F-13-A 完了)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -16,6 +16,12 @@
   - 関連ファイル: 影響を受けるファイル
 
 ---
+
+- **F-13-B: rescue path 廃止 + Web 検証導入** (F-13-A 完了後の本筋対処)
+  - 背景: 試運転 7-J (2026-04-30) で動画化率 0%。Slot-1 候補 (Gaza 電力危機) が日本ソース 0 件で `divergence=0.0 / requires_more_evidence=True` → rescue path 発動 → script skip。F-13-A で日本ソースを 8 → 13 媒体に拡張したが、ニッチな海外ニュースは依然 JP ソース 0 件のケースが残る (試運転で再確認: cls-204a683f73ee は 13 媒体に拡張後も該当 JP 報道なし)。rescue path は「JP 0 件 = 日本未報道 = blind_spot 確定」と扱う設計だが、実際には JP 13 媒体の RSS 取得漏れ (Hydrangea 取り込み失敗) なのか、本当に JP メディアが報じていないのか区別できない。
+  - 対応案: rescue path を廃止し、JP ソース 0 件のケースで「Web 検索 API による日本メディア報道有無の検証工程」を挿入する。検索 API は Google Custom Search または Brave Search、対象媒体は Yahoo!ニュース・主要日本紙 + 拡張 13 媒体を含むホワイトリスト。検証結果が「報道あり」なら blind_spot 否定、「報道なし」なら blind_spot 確定として動画化を許可。
+  - 検討時期: F-13-A の試運転データで「日本ソース拡張後も blind_spot 候補が残るか」を観測 (F-13-A 完了直後の試運転で残存を確認済み) → F-13-B 着手
+  - 関連ファイル: src/triage/gemini_judge.py, src/main.py (rescue path 削除), 新規 src/triage/web_verification.py 等
 
 - **event_builder.py のガード変更** (E-1 で見送り)
   - 背景: 現状 `if garbage_filter_client is not None:` でガードしているため、API キー未設定時に静的ルールが走らない
@@ -142,6 +148,12 @@
   - 何を対応したか
 
 ---
+
+- **日本ソース基盤の弱さ (一部対処)** (F-13-A / 2026-05-01 部分完了)
+  - 発生バッチ: 試運転 7-J (2026-04-30) で動画化率 0% を観測。日本ソース 8 媒体のみで主要海外ニュースを拾えず、「日本未報道」誤判定が多発。
+  - 対応内容: `configs/sources.yaml` に Mainichi / Kyodo (47news.jp 経由) / JIJI / Bloomberg_JP / Reuters_JP の 5 媒体を追加 (8 → 13 enabled JP sources)。`configs/source_profiles.yaml` に対応する authority profile を追加 (tier=top: Mainichi/Kyodo/JIJI、tier=major: Bloomberg_JP/Reuters_JP)。各 RSS は 2026-05-01 疎通確認済み (status=200, entries 50 件取得確認)。src/ tests/ には変更なし (不変原則 5 つ遵守)。
+  - 残課題: 13 媒体に拡張してもニッチ海外ニュース (Gaza 電力危機等) は依然 JP ソース 0 件のケースが残る → F-13-B (Web 検証 + rescue 廃止) で根本対処
+  - 関連ファイル: `configs/sources.yaml`, `configs/source_profiles.yaml`
 
 - **MAX_PUBLISHES_PER_DAY ハードコード上限による Slot skip 問題** (F-16-A / 2026-04-30 完了)
   - 発生バッチ: 試運転 7-I (2026-04-29) で動画化率 67% (2/3) で頭打ち。Slot-3 (UAE OPEC) は AnalysisLayer 完了済みだったが MAX_PUBLISHES_PER_DAY=5 のハードコード制限で skip された

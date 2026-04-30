@@ -701,3 +701,70 @@ source_profiles:
     display_name_subtitle: Caixin
     can_authority_mention: true
     requires_political_warning: false
+
+  # === F-13-A: 日本ソース拡張 5媒体追加 ===
+
+  - source_name: Mainichi
+    tier: top
+    language: ja
+    region: japan
+    country: jp
+    political_lean: liberal_centrist
+    mention_style_short: 毎日新聞
+    display_name_speech: 日本の主要全国紙、毎日新聞
+    display_name_article: 日本のリベラル中道系全国紙・毎日新聞
+    display_name_subtitle: 毎日新聞
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: Kyodo
+    tier: top
+    language: ja
+    region: japan
+    country: jp
+    political_lean: neutral
+    mention_style_short: 共同通信
+    display_name_speech: 日本の通信社、共同通信
+    display_name_article: 日本の通信社・共同通信 (47news.jp 経由配信)
+    display_name_subtitle: 共同通信
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: JIJI
+    tier: top
+    language: ja
+    region: japan
+    country: jp
+    political_lean: neutral
+    mention_style_short: 時事通信
+    display_name_speech: 日本の通信社、時事通信
+    display_name_article: 日本の通信社・時事通信 (政治経済に強い)
+    display_name_subtitle: 時事通信
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: Bloomberg_JP
+    tier: major
+    language: ja
+    region: japan
+    country: jp
+    political_lean: neutral
+    mention_style_short: ブルームバーグ
+    display_name_speech: 米経済通信ブルームバーグの日本版
+    display_name_article: 米経済通信・Bloomberg 日本版
+    display_name_subtitle: Bloomberg (日本版)
+    can_authority_mention: true
+    requires_political_warning: false
+
+  - source_name: Reuters_JP
+    tier: major
+    language: ja
+    region: japan
+    country: jp
+    political_lean: neutral
+    mention_style_short: ロイター
+    display_name_speech: 国際通信社ロイターの日本版
+    display_name_article: 国際通信社・Reuters 日本版
+    display_name_subtitle: Reuters (日本版)
+    can_authority_mention: true
+    requires_political_warning: false

@@ -587,6 +587,76 @@ sources:
     bridge_source: true
     licensing_notes: Caixin Global (中国経済紙、相対的に独立系)、Google News 経由
 
+  # === F-13-A: 日本ソース拡張 5媒体追加 (Google News 経由) ===
+  # 「日本未報道」誤判定の構造的対処として、主要通信社・全国紙を追加。
+  # 既存 8 媒体 (NHK系 / Nikkei / Asahi / Yomiuri / Sankei / Tokyo_Shimbun) の不足を補い、
+  # 主要海外ニュースが日本ソースに引っかかる確率を引き上げる。
+  # 各 RSS は 2026-05-01 疎通確認済み (status=200, entries≥35)。
+
+  - country: JP
+    name: Mainichi
+    category: general
+    rss_url: https://news.google.com/rss/search?q=site%3Amainichi.jp&hl=ja&gl=JP&ceid=JP%3Aja
+    priority: 2
+    enabled: true
+    language: ja
+    region: japan
+    source_type: newspaper
+    bridge_source: false
+    licensing_notes: 毎日新聞 (日本の主要全国紙、リベラル中道系)、Google News 経由
+
+  - country: JP
+    name: Kyodo
+    category: general
+    # 共同通信は独自 RSS を提供していない。47news.jp は共同通信が運営する地方紙連合
+    # ニュース配信プラットフォームで、共同配信記事が主体。Google News 経由の site:47news.jp で
+    # 速報性の高いラインアップが取得可能 (2026-05-01 疎通確認: 100 entries)。
+    # 既存 Kyodo47 (enabled=false, 直接 RSS は 404) とは別エントリとして並存させる。
+    rss_url: https://news.google.com/rss/search?q=site%3A47news.jp&hl=ja&gl=JP&ceid=JP%3Aja
+    priority: 2
+    enabled: true
+    language: ja
+    region: japan
+    source_type: wire_service
+    bridge_source: false
+    licensing_notes: 共同通信配信 (47news.jp 経由)、Google News 経由。商用利用は要確認。
+
+  - country: JP
+    name: JIJI
+    category: general
+    rss_url: https://news.google.com/rss/search?q=site%3Ajiji.com&hl=ja&gl=JP&ceid=JP%3Aja
+    priority: 2
+    enabled: true
+    language: ja
+    region: japan
+    source_type: wire_service
+    bridge_source: false
+    licensing_notes: 時事通信 (日本の主要通信社、政治経済に強い)、Google News 経由
+
+  - country: JP
+    name: Bloomberg_JP
+    category: economy
+    rss_url: https://news.google.com/rss/search?q=site%3Abloomberg.co.jp&hl=ja&gl=JP&ceid=JP%3Aja
+    priority: 3
+    enabled: true
+    language: ja
+    region: japan
+    source_type: newspaper
+    bridge_source: false
+    licensing_notes: ブルームバーグ日本版 (経済・金融専門、有料サービス)、Google News 経由・研究目的は許容範囲
+
+  - country: JP
+    name: Reuters_JP
+    category: general
+    rss_url: https://news.google.com/rss/search?q=site%3Ajp.reuters.com&hl=ja&gl=JP&ceid=JP%3Aja
+    priority: 3
+    enabled: true
+    language: ja
+    region: japan
+    source_type: wire_service
+    bridge_source: false
+    licensing_notes: ロイター日本版 (国際通信社の日本語版)、Google News 経由・商用利用は要ライセンス契約
+
   # ── Candidate Sources (disabled / proposal stage) ─────────────────────
   # 以下は将来の有効化候補。利用条件・取得安定性の確認が必要。
 
