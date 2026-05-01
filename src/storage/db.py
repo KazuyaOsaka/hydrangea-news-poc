@@ -91,6 +91,25 @@ CREATE TABLE IF NOT EXISTS recency_records (
 
 CREATE INDEX IF NOT EXISTS idx_recency_channel_published
     ON recency_records(channel_id, published_at);
+
+-- F-13.B: 日本の大手メディアでの報道有無 Web 検証結果のキャッシュテーブル。
+-- JP ソース 0 件の候補に対して Gemini Grounding (Google Search) を呼び、
+-- ホワイトリスト (新聞・テレビ・通信社・主要ビジネスメディア 27 ドメイン) と
+-- 除外リスト (Yahoo!ニュース・SNS・個人ブログ等) で照合する。
+-- has_jp_coverage = True  → 大手メディア報道あり (divergence パターンで生成)
+-- has_jp_coverage = False → 真の blind_spot_global (Hydrangea ミッション本丸)
+-- 24h キャッシュで重複検証を抑制する。
+CREATE TABLE IF NOT EXISTS jp_coverage_cache (
+    event_id         TEXT PRIMARY KEY,
+    has_jp_coverage  INTEGER NOT NULL,
+    matched_tier     TEXT,
+    matched_urls     TEXT,           -- JSON 配列
+    matched_domains  TEXT,           -- JSON 配列
+    excluded_urls    TEXT,           -- JSON 配列
+    search_query     TEXT,
+    cached_at        TEXT NOT NULL,  -- ISO 8601
+    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 

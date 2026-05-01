@@ -203,6 +203,22 @@ MISSION_SCORE_THRESHOLD: float = float(os.getenv("MISSION_SCORE_THRESHOLD", "45.
 # Editorial Mission Filter を有効にするか（false で完全スキップ、スコアはセットされない）
 EDITORIAL_MISSION_FILTER_ENABLED: bool = os.getenv("EDITORIAL_MISSION_FILTER_ENABLED", "true").lower() != "false"
 
+# ── F-13.B: JP 大手メディア Web 検証 (Gemini Grounding) ───────────────────────
+# JP ソース 0 件の候補に対して Web 検索で日本の大手メディアの報道有無を確認する。
+# 大手メディア報道あり → Hydrangea 取り込み漏れケースとして divergence 生成へ。
+# 大手メディア報道なし → 真の blind_spot_global として動画化 (ミッション本丸)。
+# 検証対象: 全国紙、通信社、大手テレビ局、主要ビジネスメディア (27 ドメイン)。
+# 除外: Yahoo!ニュース、個人ブログ、SNS、タブロイド誌等。
+JP_COVERAGE_VERIFIER_ENABLED: bool = os.getenv(
+    "JP_COVERAGE_VERIFIER_ENABLED", "true"
+).lower() == "true"
+# キャッシュ有効時間 (時間)。同一 event_id への再検証を抑制する。
+JP_COVERAGE_CACHE_HOURS: int = int(os.getenv("JP_COVERAGE_CACHE_HOURS", "24"))
+# Grounding に使うモデル名。
+JP_COVERAGE_GROUNDING_MODEL: str = os.getenv(
+    "JP_COVERAGE_GROUNDING_MODEL", "gemini-2.5-flash"
+)
+
 # Groq設定 (LLM_PROVIDER=groq のとき使用)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_SCRIPT_MODEL = os.getenv("GROQ_SCRIPT_MODEL", "llama-3.3-70b-versatile")

@@ -77,6 +77,9 @@ from src.shared.config import (
     MISSION_LLM_ENABLED,
     MISSION_PRESCORE_TOP_N,
     MISSION_SCORE_THRESHOLD,
+    JP_COVERAGE_VERIFIER_ENABLED,
+    JP_COVERAGE_CACHE_HOURS,
+    JP_COVERAGE_GROUNDING_MODEL,
 )
 from src.shared.logger import get_logger
 from src.shared.models import DailySchedule, GeminiJudgeResult, JobRecord, ScoredEvent
@@ -715,107 +718,11 @@ def _apply_judge_reranking(
     return reranked
 
 
-def _write_judge_rescue(
-    candidate: "ScoredEvent",
-    judge_result: "GeminiJudgeResult",
-    output_dir: Path,
-) -> None:
-    """judge が investigate_more と判定した候補のレスキューファイルを出力する。
-
-    出力ファイル:
-      data/output/judge_report.json     — 候補の詳細 + ジャッジ理由
-      data/output/followup_queries.json — 追加調査クエリリスト
-      data/output/followup_queries.md   — 人間可読の追加調査ガイド
-    """
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    # judge_report.json
-    report = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "rescue_trigger": "requires_more_evidence + high_potential",
-        "candidate": {
-            "event_id": candidate.event.id,
-            "title": candidate.event.title,
-            "score": round(candidate.score, 2),
-            "primary_bucket": candidate.primary_bucket,
-            "appraisal_type": candidate.appraisal_type,
-            "sources_jp_count": len(candidate.event.sources_jp),
-            "sources_en_count": len(candidate.event.sources_en),
-        },
-        "judge": {
-            "publishability_class": judge_result.publishability_class,
-            "divergence_score": judge_result.divergence_score,
-            "blind_spot_global_score": judge_result.blind_spot_global_score,
-            "indirect_japan_impact_score_judge": judge_result.indirect_japan_impact_score_judge,
-            "authority_signal_score": judge_result.authority_signal_score,
-            "why_this_matters_to_japan": judge_result.why_this_matters_to_japan,
-            "strongest_perspective_gap": judge_result.strongest_perspective_gap,
-            "confidence": judge_result.confidence,
-            "hard_claims_supported": judge_result.hard_claims_supported,
-            "requires_more_evidence": judge_result.requires_more_evidence,
-        },
-    }
-    report_path = output_dir / "judge_report.json"
-    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    # followup_queries.json
-    followup = {
-        "generated_at": report["generated_at"],
-        "event_id": candidate.event.id,
-        "event_title": candidate.event.title,
-        "recommended_followup_queries": judge_result.recommended_followup_queries,
-        "recommended_followup_source_types": judge_result.recommended_followup_source_types,
-        "judge_why_this_matters": judge_result.why_this_matters_to_japan,
-        "judge_perspective_gap": judge_result.strongest_perspective_gap,
-    }
-    fq_path = output_dir / "followup_queries.json"
-    fq_path.write_text(json.dumps(followup, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    # followup_queries.md
-    lines = [
-        "# Hydrangea News — 追加調査ガイド",
-        "",
-        f"**候補:** {candidate.event.title}",
-        f"**イベントID:** `{candidate.event.id}`",
-        f"**生成日時:** {report['generated_at']}",
-        "",
-        "## なぜ Hydrangea ストーリーかもしれないか",
-        f"> {judge_result.why_this_matters_to_japan}",
-        "",
-        "## 最も鮮明な視点差",
-        f"> {judge_result.strongest_perspective_gap}",
-        "",
-        f"## ジャッジスコア",
-        f"- divergence_score: {judge_result.divergence_score:.1f}/10",
-        f"- blind_spot_global_score: {judge_result.blind_spot_global_score:.1f}/10",
-        f"- indirect_japan_impact: {judge_result.indirect_japan_impact_score_judge:.1f}/10",
-        f"- confidence: {judge_result.confidence:.2f}",
-        "",
-        "## 追加調査クエリ（推奨）",
-    ]
-    for i, q in enumerate(judge_result.recommended_followup_queries, 1):
-        lines.append(f"{i}. {q}")
-    lines += [
-        "",
-        "## 追加取得を推奨するソース種別",
-    ]
-    for t in judge_result.recommended_followup_source_types:
-        lines.append(f"- {t}")
-    lines += [
-        "",
-        "---",
-        "*このファイルは Hydrangea Judge パスが自動生成しました。*",
-        "*hard_claims_supported=false のため、自動スクリプト生成はスキップされました。*",
-    ]
-    md_path = output_dir / "followup_queries.md"
-    md_path.write_text("\n".join(lines), encoding="utf-8")
-
-    logger.info(
-        f"[GeminiJudge] Rescue files written: "
-        f"judge_report.json, followup_queries.json, followup_queries.md "
-        f"(candidate={candidate.event.id[:20]}, "
-        f"class={judge_result.publishability_class})"
-    )
+# F-13.B: rescue path 完全廃止。
+# 旧 _write_judge_rescue() (judge_report.json / followup_queries.json /
+# followup_queries.md の書き出し) は撤去された。
+# 「日本未報道」の判定は src/triage/jp_coverage_verifier.py の Web 検証に
+# 一本化され、JP ソース 0 件の候補も必ず動画化される (Hydrangea ミッション本丸)。
 
 
 # ── Final Selection constants ──────────────────────────────────────────────────
@@ -3238,35 +3145,71 @@ def run_from_normalized(
                 build_why_slot1_won_editorially(_slot_candidate)
             )
 
-            # ── Judge Rescue Path ─────────────────────────────────────────────
+            # ── F-13.B: rescue path 完全廃止 + JP 大手メディア Web 検証 ───
+            # 旧 rescue path (judge_report.json / followup_queries.* 書き出し +
+            # script スキップ) は撤去。requires_more_evidence は記録のみで、
+            # 必ず動画化に進む (Hydrangea ミッション本丸: 大手メディアの空白を
+            # 埋めることが差別化)。
+            #
+            # JP ソース 0 件の候補に対しては Gemini Grounding (Google Search) で
+            # 日本の大手メディアでの報道有無を検証する:
+            #   has_jp_coverage = True  → Hydrangea 取り込み漏れ (divergence)
+            #   has_jp_coverage = False → 真の blind_spot_global (動画化必須)
+            # どちらの場合も既存の生成フローを呼ぶ (新フレームは F-12-B-3)。
             _slot_judge = _slot_candidate.judge_result
-            if _slot_judge is not None:
-                from src.triage.gemini_judge import is_rescue_candidate
-                if is_rescue_candidate(_slot_judge):
+            if _slot_judge is not None and _slot_judge.requires_more_evidence:
+                logger.info(
+                    f"[F-13.B] Slot-{_slot_num} judge requires_more_evidence=True "
+                    f"(blind_spot={_slot_judge.blind_spot_global_score:.1f}, "
+                    f"divergence={_slot_judge.divergence_score:.1f}). "
+                    "Proceeding with generation (rescue path abolished)."
+                )
+
+            _jp_coverage_result = None
+            _jp_source_count = len(_slot_candidate.event.sources_jp)
+            if _jp_source_count == 0 and JP_COVERAGE_VERIFIER_ENABLED:
+                logger.info(
+                    f"[F-13.B] Slot-{_slot_num} has 0 JP sources, "
+                    f"verifying via Web search (major media only)"
+                )
+                try:
+                    from src.triage.jp_coverage_verifier import JpCoverageVerifier
+                    _grounding_client = None
+                    if GEMINI_API_KEY:
+                        from google import genai as _genai
+                        _grounding_client = _genai.Client(api_key=GEMINI_API_KEY)
+                    _verifier = JpCoverageVerifier(
+                        gemini_client=_grounding_client,
+                        db_path=db_path,
+                        cache_ttl_hours=JP_COVERAGE_CACHE_HOURS,
+                        model=JP_COVERAGE_GROUNDING_MODEL,
+                    )
+                    _jp_coverage_result = _verifier.verify(
+                        _slot_candidate.event.id,
+                        _slot_candidate.event.title,
+                        getattr(_slot_candidate.event, "summary", "") or "",
+                    )
+                    if _jp_coverage_result.has_jp_coverage:
+                        logger.info(
+                            f"[F-13.B] Slot-{_slot_num} major media coverage found "
+                            f"for {_slot_candidate.event.id}: "
+                            f"tier={_jp_coverage_result.matched_tier}, "
+                            f"domains={_jp_coverage_result.matched_domains}. "
+                            f"Continuing with divergence pattern."
+                        )
+                    else:
+                        logger.info(
+                            f"[F-13.B] Slot-{_slot_num} no major media coverage "
+                            f"for {_slot_candidate.event.id}. "
+                            f"Confirmed blind_spot_global, proceeding with video "
+                            f"generation. (excluded "
+                            f"{len(_jp_coverage_result.excluded_urls)} non-major URLs)"
+                        )
+                except Exception as _vexc:
                     logger.warning(
-                        f"[GeminiJudge] Slot-{_slot_num} rescue path triggered for "
-                        f"'{_slot_candidate.event.title[:50]}': "
-                        f"requires_more_evidence=True, "
-                        f"blind_spot={_slot_judge.blind_spot_global_score:.1f}, "
-                        f"divergence={_slot_judge.divergence_score:.1f}. "
-                        "Skipping script generation."
+                        f"[F-13.B] JpCoverageVerifier failed for Slot-{_slot_num}: "
+                        f"{type(_vexc).__name__}: {_vexc}. Proceeding to generation."
                     )
-                    if _slot_idx == 0:
-                        _write_judge_rescue(_slot_candidate, _slot_judge, output_dir)
-                        _rescue_triggered = True
-                    _rescue_record = JobRecord(
-                        id=_slot_job_id,
-                        event_id="none",
-                        status="skipped",
-                        error=(
-                            f"judge_rescue:requires_more_evidence "
-                            f"blind_spot={_slot_judge.blind_spot_global_score:.1f} "
-                            f"divergence={_slot_judge.divergence_score:.1f}"
-                        ),
-                    )
-                    save_job(db_path, _rescue_record)
-                    _slot_records.append(_rescue_record)
-                    continue
 
             # ── Authority Pair ────────────────────────────────────────────────
             _slot_authority_pair: list[str] = []

@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-01 (F-13-A 完了)
+最終更新: 2026-05-01 (F-13-B 完了)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -17,11 +17,16 @@
 
 ---
 
-- **F-13-B: rescue path 廃止 + Web 検証導入** (F-13-A 完了後の本筋対処)
-  - 背景: 試運転 7-J (2026-04-30) で動画化率 0%。Slot-1 候補 (Gaza 電力危機) が日本ソース 0 件で `divergence=0.0 / requires_more_evidence=True` → rescue path 発動 → script skip。F-13-A で日本ソースを 8 → 13 媒体に拡張したが、ニッチな海外ニュースは依然 JP ソース 0 件のケースが残る (試運転で再確認: cls-204a683f73ee は 13 媒体に拡張後も該当 JP 報道なし)。rescue path は「JP 0 件 = 日本未報道 = blind_spot 確定」と扱う設計だが、実際には JP 13 媒体の RSS 取得漏れ (Hydrangea 取り込み失敗) なのか、本当に JP メディアが報じていないのか区別できない。
-  - 対応案: rescue path を廃止し、JP ソース 0 件のケースで「Web 検索 API による日本メディア報道有無の検証工程」を挿入する。検索 API は Google Custom Search または Brave Search、対象媒体は Yahoo!ニュース・主要日本紙 + 拡張 13 媒体を含むホワイトリスト。検証結果が「報道あり」なら blind_spot 否定、「報道なし」なら blind_spot 確定として動画化を許可。
-  - 検討時期: F-13-A の試運転データで「日本ソース拡張後も blind_spot 候補が残るか」を観測 (F-13-A 完了直後の試運転で残存を確認済み) → F-13-B 着手
-  - 関連ファイル: src/triage/gemini_judge.py, src/main.py (rescue path 削除), 新規 src/triage/web_verification.py 等
+- **F-12-B-1: script_writer プロンプトの blind_spot_global 用フレーム追加** (F-13-B 完了後)
+  - 背景: F-13-B で blind_spot_global の動画化が実現された (Slot-1〜3 すべて article 生成完了、Slot-1 は video まで生成)。しかし script_writer のプロンプトは divergence パターン前提で書かれており、「日本未報道の事実をどう日本人に届けるか」のフレーミングが弱い。
+  - 対応案: `configs/prompts/script/` (該当 dir) に blind_spot_global 用プロンプトを追加し、generate_script_with_analysis() に分岐を入れる。jp_coverage_result (F-13-B で導入) が has_jp_coverage=False なら blind_spot 用フレームを使う。
+  - 検討時期: F-13-B 試運転 7-K で blind_spot 動画の品質を確認後 → 改善余地が大きければ F-12-B-1 着手
+  - 関連ファイル: configs/prompts/script/, src/generation/script_writer.py (※ 不変原則対象なので慎重に)
+
+- **F-12-B-2: perspective_extractor の axis 多様化** (F-13-B 完了後)
+  - 背景: F-13-B 試運転で AnalysisLayer の selected_perspective が "cultural_blindspot" 等の限定的 axis に集中しがち。blind_spot_global 候補に適した axis (例: power_dynamics_blindspot, structural_silence) の不足が観察される。
+  - 対応案: `src/analysis/perspective_extractor.py` の axis 定義を拡張し、Hydrangea ミッション本丸に対応する新 axis を追加。
+  - 検討時期: F-12-B-1 完了後
 
 - **event_builder.py のガード変更** (E-1 で見送り)
   - 背景: 現状 `if garbage_filter_client is not None:` でガードしているため、API キー未設定時に静的ルールが走らない
@@ -148,6 +153,16 @@
   - 何を対応したか
 
 ---
+
+- **rescue path の Hydrangea ミッション本丸との矛盾 (F-13-B で完全廃止)** (F-13-B / 2026-05-01 完了)
+  - 発生バッチ: 試運転 7-J (2026-04-30) で動画化率 0%。Slot-1 候補が JP=0 件で `requires_more_evidence=True` → rescue 発動 → script skip。これは Hydrangea ミッション「日本で封殺されている海外ニュース」(blind_spot_global) を skip する本末転倒な設計だった。
+  - 対応内容: `_write_judge_rescue()` 関数と main.py 内の rescue 分岐を完全撤去。判定ロジック (`is_rescue_candidate`) は src/triage/gemini_judge.py 側に残置 (不変原則 3 遵守) しつつ、main.py からは呼ばれない。requires_more_evidence=True でも必ず動画化フローへ進む。試運転 7-K で 3/3 Slot 完了 (article 生成 100%、Slot-1 video まで生成) を確認。judge_report.json / followup_queries.* の新規出力が無いことも確認 (既存ファイルは履歴として残置)。
+  - 関連ファイル: `src/main.py`
+
+- **日本未報道判定のための Web 検証導入 (F-13-B 完了)** (F-13-B / 2026-05-01 完了)
+  - 発生バッチ: F-13-A で JP RSS を 13 媒体に拡張後もニッチ海外ニュースは JP=0 件のケースが残ることを確認。RSS 取得漏れと「真の日本未報道」を区別できないままだった。
+  - 対応内容: `src/triage/jp_coverage_verifier.py` に `JpCoverageVerifier` を新規実装。Gemini Grounding (Google Search) で日本語検索を実行し、ホワイトリスト (新聞・テレビ・通信社・主要ビジネスメディア計 27+ ドメイン) と除外リスト (Yahoo!ニュース・SNS・個人ブログ等) で照合する。判定基準は「大手メディアの報道有無のみ」(個人投稿は判定材料にしない、Hydrangea のミッション本丸: 大手の空白を埋める)。24h SQLite キャッシュ (`jp_coverage_cache` テーブル新設) で重複検証を抑制、月コスト約 $4.2 想定。Grounding API エラー時は `has_jp_coverage=True` で安全側に倒す。環境変数: `JP_COVERAGE_VERIFIER_ENABLED` / `JP_COVERAGE_CACHE_HOURS` / `JP_COVERAGE_GROUNDING_MODEL`。試運転 7-K で Slot-2 (cls-33b4f4960bf9) と Slot-3 (cls-204a683f73ee) の両方で `has_jp_coverage=False` を確認、blind_spot_global として動画化フローへ進めた。
+  - 関連ファイル: `src/triage/jp_coverage_verifier.py` (新規), `src/storage/db.py` (jp_coverage_cache テーブル), `src/main.py` (Web 検証統合), `src/shared/config.py`, `.env.example`, `tests/test_f13b_rescue_abolition.py` (36 テスト)
 
 - **日本ソース基盤の弱さ (一部対処)** (F-13-A / 2026-05-01 部分完了)
   - 発生バッチ: 試運転 7-J (2026-04-30) で動画化率 0% を観測。日本ソース 8 媒体のみで主要海外ニュースを拾えず、「日本未報道」誤判定が多発。
