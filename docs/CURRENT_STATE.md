@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-01 (F-state-protocol 完了時点)
+最終更新: 2026-05-02 (F-state-protocol-supplement 完了時点)
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -24,12 +24,15 @@
 
 ## 2. 現在のフェーズ
 
-- **Phase**: Phase A.5-3a 完了 → A.5-3a-verify 着手前
-- **進行中バッチ**: なし (F-state-protocol 完了後)
+- **Phase**: Phase A.5-3a 完了 → A.5-3a-verify 着手中
+- **進行中バッチ**: なし (F-state-protocol-supplement 完了直後)
 - **次バッチ候補と推奨**:
-  - 1st: Phase A.5-3a-verify (F-verify-jp-coverage 最優先) — JpCoverageVerifier の実運用観察
-  - 2nd: F-12-B-1.5 時間制約緩和判断 — `_CHAR_BOUNDS` 調整 (リトライ率集計後)
-  - 3rd: F-12-B-2 perspective_extractor axis 多様化 — blind_spot_global 用 axis 追加
+  - 1st: **F-verify-jp-coverage** (★最優先、ゴールデンセット 20 件、2-3 時間)
+  - 2nd: F-verify-e2e (5 日連続稼働、毎日 30 分手動運用)
+  - 3rd: F-verify-rss (47+ sources 疎通、1 時間)
+  - 4th: F-verify-perspective (4 軸バランス検証、F-12-B-2 着手判断材料)
+  - 5th: F-verify-script-quality (NG パターン頻度、F-12-B-1.5 着手判断材料)
+  - Phase A.5-3a-verify 全通過後 → Phase A.5-3b (手動 PoC、golden_master_spec 作成)
 
 ## 3. 直近の試運転結果サマリー
 
@@ -113,4 +116,6 @@
 ---
 
 *このドキュメントは F-state-protocol (2026-05-01) で導入。
- Claude Code がバッチ完了時に全置換更新する運用 (BATCH_PROTOCOL.md Task 5 参照)。*
+ Claude Code がバッチ完了時に全置換更新する運用 (BATCH_PROTOCOL.md Task 5 参照)。
+ F-state-protocol-supplement (2026-05-02) で「次バッチ候補」セクションを最小更新し、
+ Phase A.5-3a-verify ロードマップを反映。*

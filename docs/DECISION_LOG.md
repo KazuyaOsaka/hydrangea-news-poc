@@ -1,6 +1,6 @@
 # Hydrangea — 意思決定ログ (DECISION_LOG)
 
-最終更新: 2026-05-01 (F-state-protocol 完了)
+最終更新: 2026-05-02 (F-state-protocol-supplement 完了)
 
 このドキュメントは Hydrangea プロジェクトにおける重要な意思決定の履歴を記録する。
 コードや設定の「結果」ではなく、「なぜそうなったか」の判断プロセスを残すことが目的。
@@ -1009,3 +1009,72 @@ Phase A.5-3a で 11 連続 main マージ成功 (F-12-A → F-12-B-1-extension) 
   - `CLAUDE.md` (必読ドキュメントリスト刷新)
   - `docs/DECISION_LOG.md` (本エントリ)
   - `docs/FUTURE_WORK.md` (本エントリを完了済みに追加)
+
+---
+
+## 2026-05-02: F-state-protocol-supplement — Phase A.5-3a-verify / A.5-3b ロードマップ確定
+
+### 背景
+
+F-state-protocol で CURRENT_STATE.md / DISCUSSION_NOTES.md / BATCH_PROTOCOL Task 4/5 が
+確立した直後、次フェーズの詳細仕様を FUTURE_WORK.md に正式登録する必要があった。
+
+CURRENT_STATE.md 初版の「次バッチ候補」セクションは `Phase A.5-3a-verify
+(F-verify-jp-coverage 最優先)` と総称的な記載のみで、各 verify エントリの
+具体的内容 (想定工数 / 関連ファイル / 判断材料) が定義されていなかった。
+このままでは次バッチ着手時に「何を verify すれば良いのか」を再考する必要があり、
+F-state-protocol で目指した「CURRENT_STATE を読めば次の手が即座に判明する」
+状態に到達していなかった。
+
+### 議論
+
+- **Phase A.5-3a-verify を 5 カテゴリで構成**: jp-coverage / e2e / rss /
+  perspective / script-quality。Hydrangea コンセプト防衛機構 (jp-coverage)、
+  パイプライン安定性 (e2e / rss)、品質判定材料 (perspective / script-quality)
+  の 3 系統に整理した
+- **F-verify-jp-coverage を最優先**: F-13.B 防衛機構の実 precision/recall
+  未測定が最大のリスク (rescue 完全廃止後の唯一の JP 報道判定経路)
+- **F-verify-perspective と F-verify-script-quality は判断材料を兼ねる**:
+  それぞれ F-12-B-2 (axis 多様化) / F-12-B-1.5 (文字数制約緩和) の着手判断
+  材料となる。「測定先行 → 判断後着手」の原則に沿って、verify を判断ゲート
+  として設計
+- **Phase A.5-3b 手動 PoC は Phase A.5-3a-verify 全通過後**: 「自動化前に
+  最高傑作を 1 本」哲学 (DISCUSSION_NOTES #1) を実装する位置付け。
+  品質保証の積み上げ順 (verify 全通過 → ゴールドスタンダード作成) で配置
+
+### 決定
+
+1. `docs/FUTURE_WORK.md` 緊急度 高に Phase A.5-3a-verify 5 エントリを追加
+   (各エントリに想定工数 / 関連ファイル / 判断材料を明記)
+2. `docs/FUTURE_WORK.md` 緊急度 中に Phase A.5-3b 手動 PoC を追加
+   (golden_master_spec.md 仕様付き)
+3. `docs/CURRENT_STATE.md` の「次バッチ候補」を F-verify-jp-coverage 最優先で
+   更新 (1st-5th + Phase A.5-3b への分岐を明記)
+4. CURRENT_STATE.md の他セクション (リポジトリ状態 / 試運転結果 / 防衛機構等)
+   は F-state-protocol で投入された値が前日のまま有効なため変更しない
+   (最小改変原則)
+5. 既存 FUTURE_WORK.md エントリは末尾追加のみで一切変更しない
+
+### 結果
+
+- 次バッチ着手時に CURRENT_STATE.md の「次バッチ候補」を読めば次の手が
+  即座に判明する状態を確立
+- 各 verify エントリに想定工数を付記したことで、カズヤが時間配分を判断しやすく
+  なった (jp-coverage 2-3h / e2e 5d×30min / rss 1h / perspective+script-quality
+  各 1h)
+- F-12-B-2 / F-12-B-1.5 の着手タイミングが verify-perspective /
+  verify-script-quality の結果に紐付けられたため、「いつ着手すべきか」が
+  データドリブンに判定できる構造に
+- F-state-protocol の仕組み (CURRENT_STATE.md / DISCUSSION_NOTES.md /
+  Task 1-5) が想定通り機能することを実地テストで確認 (本バッチが初回適用)
+- リグレッション影響なし (docs/ 3 ファイルのみ変更、src/ tests/ configs/ は
+  0 行変更、baseline 1315 passed 維持)
+
+### 関連ファイル・コミット
+
+- コミット: (push 後に追記)
+- 変更:
+  - `docs/FUTURE_WORK.md` (緊急度 高に 5 エントリ追加 + 緊急度 中に 1 エントリ追加)
+  - `docs/CURRENT_STATE.md` (Phase 行 + 次バッチ候補セクション + 末尾注記の最小更新)
+  - `docs/DECISION_LOG.md` (本エントリ)
+- 関連: F-state-protocol (CURRENT_STATE / DISCUSSION_NOTES 仕組み確立)

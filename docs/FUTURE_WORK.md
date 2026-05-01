@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-01 (F-state-protocol 完了)
+最終更新: 2026-05-02 (F-state-protocol-supplement 完了)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -63,6 +63,42 @@
   - 検討時期: Phase 1-A (REFACTORING_PLAN.md 段階 2) 着手時
   - 関連ファイル: src/shared/models.py, configs/channels.yaml, src/main.py, .env.example
 
+### Phase A.5-3a-verify (F-state-protocol-supplement / 2026-05-02 登録)
+
+- **F-verify-jp-coverage** ★最優先 (F-state-protocol-supplement / 2026-05-02 登録)
+  - 背景: F-13.B JpCoverageVerifier の精度を実データで検証する。Phase A.5-3a 完了時点では理論動作のみ確認、実 precision/recall は未測定。Hydrangea コンセプト防衛機構の中核 (rescue 完全廃止後の唯一の JP 報道判定経路) であり、ここの精度がコンセプト整合性を決める。
+  - 対応案: ゴールデンセット 20 件作成 (日本未報道 10 件 / 報道済み 10 件) で precision / recall を測定。閾値調整の判断材料にする。Grounding API 失敗時の安全側倒し (`has_jp_coverage=True`) の発動率も同時計測。
+  - 検討時期: F-state-protocol-supplement 完了直後 (Phase A.5-3a-verify 開始の最優先)
+  - 想定工数: 2-3 時間
+  - 関連ファイル: src/triage/jp_coverage_verifier.py, tests/golden/jp_coverage/ (新規)
+
+- **F-verify-e2e** (F-state-protocol-supplement / 2026-05-02 登録)
+  - 背景: 5 日連続稼働で本番品質の安定性を検証。1 run の成功は確認済みだが、cron 6 時間おき (F-16-B) を意識した連続運用での挙動 (キャッシュ効果 / Tier フォールバック頻度 / 予算消費トレンド) は未検証。
+  - 対応案: 毎日 30 分手動運用、`docs/verify_log.md` (新規) に観察記録 (動画化率 / NG パターン / 予算消費 / エラー発生)。F-16-B (cron 自動化) 着手判断材料を兼ねる。
+  - 検討時期: F-verify-jp-coverage 完了後
+  - 想定工数: 5 日 × 30 分
+
+- **F-verify-rss** (F-state-protocol-supplement / 2026-05-02 登録)
+  - 背景: 47+ sources の疎通を確認。F-8-1-B 直後 (2026-04-28) の確認以降、まとまった疎通検査は未実施。媒体側の RSS 廃止・URL 変更で silently fail している可能性。
+  - 対応案: src/ingestion/rss_fetcher.py の全 sources で HTTP status / parse 成功率を集計、廃止候補があれば configs/sources.yaml から除外提案。
+  - 検討時期: F-verify-e2e と並行可
+  - 想定工数: 1 時間
+  - 関連ファイル: src/ingestion/rss_fetcher.py (読み取りのみ), configs/sources.yaml
+
+- **F-verify-perspective** (F-state-protocol-supplement / 2026-05-02 登録)
+  - 背景: 4 軸 (cultural_blindspot / silence_gap / hidden_stakes / framing_inversion) のバランスを検証。DISCUSSION_NOTES #6 (F-12-B-2 axis 多様化) の着手判断材料となる。cultural_blindspot 偏重が確認されれば F-12-B-2 起動。
+  - 対応案: 直近 50 イベントで axis 分布を集計、cultural_blindspot 偏重があれば F-12-B-2 起動判断。
+  - 検討時期: F-verify-e2e の 5 日間並行
+  - 想定工数: 集計 1 時間 + 判断議論
+  - 関連ファイル: src/analysis/perspective_extractor.py (読み取りのみ), data/output/ の AnalysisLayer 出力
+
+- **F-verify-script-quality** (F-state-protocol-supplement / 2026-05-02 登録)
+  - 背景: 新ルート (`generate_script_with_analysis`) の NG パターン出現頻度 / char validation リトライ率を測定。F-12-B-1.5 (文字数制約緩和) 着手判断材料を兼ねる。F-12-B-1 投入後 1 run の試運転では setup 1/1 でリトライ発動だが標本不足。
+  - 対応案: 直近 30 件で NG 語彙頻度 / リトライ回数集計、`_CHAR_BOUNDS` 調整可否を判断。
+  - 検討時期: F-verify-e2e の 5 日間並行
+  - 想定工数: 集計 1 時間 + 判断議論
+  - 関連ファイル: src/generation/script_writer.py (読み取りのみ), data/output/ の script.json
+
 ---
 
 ## 緊急度 中（実運用データ収集後に判断）
@@ -122,6 +158,15 @@
     - 1週間以上 FUTURE_WORK.md が参照されていないと気づいた時
   - 関連ファイル: docs/FUTURE_WORK.md, CLAUDE.md
   - 補足: このレビュー自体も FUTURE_WORK.md の項目として登録されている（自己参照型管理）
+
+### Phase A.5-3b (F-state-protocol-supplement / 2026-05-02 登録)
+
+- **手動最高傑作の作成 (golden_master_spec.md)** (F-state-protocol-supplement / 2026-05-02 登録)
+  - 背景: 「自動化の前に最高傑作を 1 本人間が手作りする」哲学 (DISCUSSION_NOTES #1「手動 PoC 推奨の軌道修正経緯」参照)。完全自動化前にゴールドスタンダードを確立し、自動生成出力の評価基準とする。クラウド誤り 5 例目 (自動化先行提案 → カズヤが手動 PoC 優先で軌道修正) の成果を実装に反映する位置付け。
+  - 対応案: ElevenLabs (音声) / Nano Banana Pro / Flux (画像) / CapCut (合成) で手動制作 → `docs/golden_master_spec.md` (新規) に全パラメータ (声 ID / プロンプト / Ken Burns / 字幕タイミング等) を記録。完成物は `data/output/golden_master/` に格納。
+  - 検討時期: Phase A.5-3a-verify 全通過後 (5 カテゴリ全部 OK 判定)
+  - 想定工数: 3-4 時間 (制作) + 判断議論
+  - 関連ファイル: docs/golden_master_spec.md (新規), data/output/golden_master/ (新規)
 
 ---
 
