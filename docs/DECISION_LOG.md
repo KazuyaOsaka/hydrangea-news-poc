@@ -913,7 +913,7 @@ STEP 2 punchline 定義のみを修正 (他ブロック hook / setup / twist は
 
 ### 関連ファイル・コミット
 
-- コミット: (push 時に追記)
+- コミット: 4db3335 (feature/F-12-B-1-extension)
 - 変更:
   - `configs/prompts/analysis/geo_lens/script_with_analysis.md` (STEP 2 punchline 定義のみ修正、+10 行 / -2 行)
   - `docs/DECISION_LOG.md` (本エントリ)
