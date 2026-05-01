@@ -86,8 +86,8 @@
   - 想定工数: 集計 1 時間 + 判断議論
   - 関連ファイル: src/generation/script_writer.py (読み取りのみ), data/output/ の script.json
 
-- **F-image-prompt-spec** (F-doc-backfill / 2026-05-02 登録)
-  - 背景: Phase A.5-3b 手動 PoC で「自動生成された台本 + 画像プロンプト」を使って Nano Banana Pro / ChatGPT / Flux に画像生成依頼する想定だが、現状 video_payload_writer.py がシーンごとの画像プロンプトを十分な品質で出力しているか未確認。Phase A.5-3b 着手前に仕様確認 + 必要なら改修。
+- **F-image-prompt-spec** (F-doc-backfill / 2026-05-02 登録、F-doc-backfill-supplement / 2026-05-02 改訂)
+  - 背景: Phase A.5-3b 手動 PoC で「自動生成された台本 + 画像プロンプト」を使って Nano Banana Pro / ChatGPT Images 2.0 (gpt-image-2) / Flux 1.1 Pro に画像生成依頼する想定だが、現状 video_payload_writer.py がシーンごとの画像プロンプトを十分な品質で出力しているか未確認。Phase A.5-3b 着手前に仕様確認 + 必要なら改修。
   - 対応案: (1) src/generation/video_payload_writer.py の現状調査 (シーンごとに画像プロンプトを出してるか / 統一末尾「cinematic, hyper-realistic, dark geopolitical thriller style, high contrast, dramatic lighting, vertical composition, 9:16 aspect ratio」が含まれてるか) (2) 不十分なら configs/prompts/ 配下のプロンプトファイルを改修 (3) 試運転で画像プロンプト品質を確認
   - 検討時期: F-verify-jp-coverage / F-verify-perspective / F-verify-script-quality と並行
   - 想定工数: 2-3 時間
@@ -110,8 +110,8 @@
   - 不変原則整合: audio_renderer.py は不変原則 1-4 の対象外、改修可能
   - 補足: TECH_DEBT 2.5 (macOS say 依存) は本エントリで解消
 
-- **F-image-gen-integration** (F-doc-backfill / 2026-05-02 登録)
-  - 背景: Phase A.5-3b で選定した画像生成ツール (Nano Banana Pro / DALL-E 3 / Flux 1.1 Pro のいずれか) を Hydrangea パイプラインに統合。
+- **F-image-gen-integration** (F-doc-backfill / 2026-05-02 登録、F-doc-backfill-supplement / 2026-05-02 改訂)
+  - 背景: Phase A.5-3b で選定した画像生成ツール (Nano Banana Pro / ChatGPT Images 2.0 (gpt-image-2) / Flux 1.1 Pro のいずれか) を Hydrangea パイプラインに統合。
   - 対応案:
     (1) ImageGenerator 抽象クラス化 (src/generation/ に新規作成)
     (2) 選定ツールの API クライアント実装
@@ -149,19 +149,25 @@
   - 関連ファイル: .github/workflows/hydrangea-pipeline.yml (新規)
   - 不変原則整合: .github/ 配下は src/ 外、既存テスト破壊なし
 
-### Phase A.5-3d 投稿前ゲート + 自動投稿 (F-doc-backfill / 2026-05-02 登録)
+### Phase A.5-3d 投稿前ゲート + 自動投稿 (F-doc-backfill / 2026-05-02 登録、F-doc-backfill-supplement / 2026-05-02 改訂)
 
-- **Phase A.5-3d 投稿前ゲート + 自動投稿** (F-doc-backfill / 2026-05-02 登録)
+- **Phase A.5-3d 投稿前ゲート + 自動投稿** (F-doc-backfill / 2026-05-02 登録、F-doc-backfill-supplement / 2026-05-02 改訂)
   - 背景: F-cron 完了で「動画自動生成」が動くが、品質保証ゲートと投稿自動化が未実装。
   - 対応案:
     (1) F-publish-gate: 投稿前ゲート実装
         - LLM 自己採点 7 軸 (Hook 強度 / 情報密度 / 価値観揺さぶり / 具体性 / 感情ドライブ / 共有動機 / ループ性、各 3.5 点以上で通過)
         - 文字化け検知 (字幕に不正文字)
         - 無音検知 (音声ファイルの音量ゼロ区間)
-        - 不通過はレビューキューに退避、カズヤが手動確認
+        - 不通過はレビューキューに退避、カズヤが定期的に確認
     (2) F-tiktok-api: TikTok Content Posting API 統合 (審査 1-3 週間、早めに申請)
     (3) F-youtube-api: YouTube Data API v3 統合 (即対応可)
     (4) 投稿開始
+  - 投稿対象: geo_lens (政治・経済) のみ。japan_athletes / k_pulse は Phase B 以降に判断 (運用結果次第、DISCUSSION_NOTES「Phase B 以降の方向性未確定」参照)
+  - 投稿先: TikTok と YouTube Shorts の両方同時 (TikTok は審査 1-3 週間あるので早めに申請、YouTube Data API v3 は即対応可で先行リリース可)
+  - 投稿モード: 完全自動投稿 (cron 6 時間おき、人手介入ゼロ)
+    - 投稿前ゲート (LLM 自己採点 7 軸 + 文字化け検知 + 無音検知) で品質保証
+    - 不通過はレビューキューに退避、定期的にカズヤが確認
+  - 拡張性確保: Phase A.5-3c の合成パート自動化実装時、将来の多チャンネル対応 / 別形式展開 (動画以外、独自メディア等) を阻害しない設計とする (configs/channels/{channel_id}.yaml で投稿先 / 形式 / カテゴリを切替可能に。DECISION_LOG「拡張性原則の明文化」参照)
   - 検討時期: F-cron 完了 + 1 週間の自動実行安定確認後
   - 想定工数: 2-3 週間 (TikTok 審査含む)
   - 関連ファイル: src/publishing/ (新規)
@@ -227,13 +233,16 @@
   - 関連ファイル: docs/FUTURE_WORK.md, CLAUDE.md
   - 補足: このレビュー自体も FUTURE_WORK.md の項目として登録されている（自己参照型管理）
 
-### Phase A.5-3b 手動 PoC: Remotion + ElevenLabs + 画像生成 (F-doc-backfill / 2026-05-02 改訂)
+### Phase A.5-3b 手動 PoC: Remotion + ElevenLabs + 画像生成 (F-doc-backfill / 2026-05-02 改訂、F-doc-backfill-supplement / 2026-05-02 再改訂)
 
-- **Phase A.5-3b 手動 PoC: Remotion + ElevenLabs + 画像生成** (F-doc-backfill / 2026-05-02 改訂)
-  - 背景: 「自動化の前に最高傑作を 1 本人間が手作りする」哲学 (DISCUSSION_NOTES #1 参照)。Phase A.5-3a-verify 全通過後、自動化前にゴールドスタンダードを確立。Remotion / ElevenLabs / 画像生成ツール選定を実地で確定する位置付け。当初 F-state-protocol-supplement では CapCut 仮組みも視野に入っていたが、F-doc-backfill (2026-05-02) で「Phase A.5-3b からいきなり Remotion」を採用 (二度手間回避、DECISION_LOG「動画合成ツール Remotion 採用確定」参照)。
+- **Phase A.5-3b 手動 PoC: Remotion + ElevenLabs + 画像生成** (F-doc-backfill / 2026-05-02 改訂、F-doc-backfill-supplement / 2026-05-02 再改訂)
+  - 背景: 「自動化の前に最高傑作を 1 本人間が手作りする」哲学 (DISCUSSION_NOTES #1 参照)。Phase A.5-3a-verify 全通過後、自動化前にゴールドスタンダードを確立。Remotion / ElevenLabs / 画像生成ツール選定を実地で確定する位置付け。当初 F-state-protocol-supplement では CapCut 仮組みも視野に入っていたが、F-doc-backfill (2026-05-02) で「Phase A.5-3b からいきなり Remotion」を採用 (二度手間回避、DECISION_LOG「動画合成ツール Remotion 採用確定」参照)。F-doc-backfill-supplement (2026-05-02) で画像生成候補の DALL-E 3 を ChatGPT Images 2.0 (gpt-image-2) に差し替え (DECISION_LOG「ChatGPT Images 2.0 (gpt-image-2) を画像生成候補に正式追加」参照)。
   - 対応案:
     (1) ElevenLabs アカウント取得 + API キー設定、声選定 (geo_lens 用は低音ダンディ男性、ブランド資産化のため 1 声に固定)
-    (2) Nano Banana Pro / ChatGPT (DALL-E 3) / Flux 1.1 Pro で画像生成比較 (シーンごとの画像プロンプトを使って最低 12-15 枚生成、品質とシネマティック表現を比較してツール確定)
+    (2) Nano Banana Pro / ChatGPT Images 2.0 (gpt-image-2) / Flux 1.1 Pro で画像生成比較 (シーンごとの画像プロンプトを使って最低 12-15 枚生成、品質とシネマティック表現を比較してツール確定)
+        - ChatGPT Images 2.0 (gpt-image-2) は 2026-04-21 リリースの OpenAI 最新モデル。Image Arena #1、O-series reasoning (Thinking モード) 搭載、日本語の文字レベル精度向上、Web 検索統合でリアルタイムファクトチェック可能。Hydrangea のシネマティック表現とテキスト含む画像 (タイトルカード等) に強み。
+        - 価格: 高品質 (1024x1024) 約 $0.21/image、4K $0.41/image、低品質 $0.006/image
+        - 比較観点: シネマティック表現 / 日本語テキスト精度 / プロンプト追従性 / 価格 / API 安定性
     (3) Remotion プロジェクトセットアップ (Claude Code に書かせる)
         - 字幕コンポーネント (動的タイミング、Noto Sans JP Black、基本 72pt 強調 96pt、白/金/赤の 3 段階強調)
         - Ken Burns 効果 (ズームイン基本 1.0 → 1.15、強ズーム 1.25)
@@ -403,6 +412,11 @@
   - 何を対応したか
 
 ---
+
+- **画像生成候補確定 + 自動投稿フェーズ方針 + 拡張性原則の明文化 (F-doc-backfill-supplement)** (F-doc-backfill-supplement / 2026-05-02 完了)
+  - 発生バッチ: F-doc-backfill (2026-05-02) 直後にカズヤとの議論で 3 つの追加判断が確定: (1) ChatGPT Images 2.0 (gpt-image-2) を画像生成候補に正式追加 (DALL-E 3 から差し替え、2026-04-21 リリースの OpenAI 最新モデル、Image Arena #1)、(2) 自動投稿フェーズ方針確定 (Phase A.5-3d は geo_lens のみ単独本番、TikTok と YouTube Shorts 両方同時、完全自動投稿)、(3) 拡張性原則の明文化 (Phase A.5-3c 合成パート自動化実装時に「将来の多チャンネル対応 / 別形式展開を阻害しない最小限の抽象化」を設計原則として遵守)。Phase B 以降の方向性 (japan_athletes / k_pulse 追加 / 動画継続 / 独自メディア化 / カテゴリ細分化等) は Phase A.5-3d 安定稼働後に判断保留。
+  - 対応内容: (1) `docs/FUTURE_WORK.md` の F-image-prompt-spec / Phase A.5-3b / F-image-gen-integration の画像生成ツール候補を ChatGPT Images 2.0 (gpt-image-2) に差し替え (DALL-E 3 削除、価格・特徴・比較観点の補足追記)。(2) `docs/FUTURE_WORK.md` の Phase A.5-3d エントリに「投稿対象: geo_lens のみ」「投稿先: TikTok + YouTube Shorts 同時」「投稿モード: 完全自動 (cron 6 時間おき、人手介入ゼロ)」「拡張性確保: configs/channels/{channel_id}.yaml で投稿先 / 形式 / カテゴリを切替可能に」を明記。(3) `docs/DECISION_LOG.md` に 4 エントリ追加 (本バッチ概要 + ChatGPT Images 2.0 採用 + 自動投稿フェーズ方針確定 + 拡張性原則の明文化)。(4) `docs/DISCUSSION_NOTES.md` に「Phase B 以降の方向性未確定」エントリ追加 (シナリオ A〜E の整理、Phase A.5-3d 安定稼働後に再評価)。(5) `docs/CURRENT_STATE.md` に「Phase A.5-3d 投稿対象の補足」セクションを追加 (geo_lens のみ / TikTok + YouTube 同時 / 完全自動 + Phase A.5-3c 拡張性原則遵守)。(6) BATCH_PROTOCOL Task 1-5 を本バッチ自身に適用 (ドッグフーディング)。リグレッション影響なし (docs/ のみ変更、src/ tests/ configs/ は 0 行変更、baseline 1315 passed 維持)。
+  - 関連ファイル: `docs/FUTURE_WORK.md` (F-image-prompt-spec / Phase A.5-3b / F-image-gen-integration / Phase A.5-3d 改訂 + 本エントリ), `docs/DECISION_LOG.md` (4 エントリ追加), `docs/DISCUSSION_NOTES.md` (1 エントリ追加 = 17 Active), `docs/CURRENT_STATE.md` (Phase A.5-3d 投稿対象の補足セクション追加)
 
 - **過去 19 セッション分の積み残し登録 + ロードマップ大幅改訂 (F-doc-backfill)** (F-doc-backfill / 2026-05-02 完了)
   - 発生バッチ: F-state-protocol / F-state-protocol-supplement で CURRENT_STATE.md / DISCUSSION_NOTES.md / Phase A.5-3a-verify ロードマップを整備した直後、2026-05-02 のカズヤとの議論で「F-verify-e2e / F-verify-rss は過剰防衛」「ElevenLabs 採用なら macOS say の Linux 対応 (F-16-B-pre) は無意味」「動画合成は Remotion で確定 (Phase A.5-3b から使う)」「画像プロンプト出力仕様の確認が必要」「過去 19 セッション分の積み残し (Phase 1 / Phase B / Phase C / クラウド誤り 1-4 / 三角測量未対応 / 3 ソース対比未実装 等) が未登録」が判明。ロードマップを 4 段階 (3a-verify → 3b → 3c → 3d) に再構成する必要があった。
