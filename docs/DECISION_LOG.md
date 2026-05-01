@@ -1384,3 +1384,182 @@ punchline 定義 (シニカル × 具体着地の両立) に置き換え。F-12-
 
 - コミット: (F-doc-backfill 一括コミットに統合 — 議論自体は Apr 25-27)
 - 変更: `docs/DECISION_LOG.md` 本エントリ (遡及記録)
+
+---
+
+## 2026-05-02: F-doc-backfill-supplement — 画像生成候補確定 + 自動投稿フェーズ方針 + 拡張性原則
+
+### 背景
+
+F-doc-backfill (2026-05-02) で過去 19 セッション分の積み残しを正式登録した
+直後、カズヤとの議論で以下の追加判断が確定:
+
+1. ChatGPT Images 2.0 (gpt-image-2) を画像生成候補に正式追加
+   (2026-04-21 リリースの OpenAI 最新モデル、Image Arena #1、F-doc-backfill で
+   登録した「DALL-E 3」は旧モデルのため差し替え)
+2. 自動投稿フェーズ方針の確定 (geo_lens のみ単独本番、TikTok + YouTube Shorts
+   両方同時、完全自動投稿、cron 6 時間おき、人手介入ゼロ)
+3. 拡張性原則の明文化 (Phase A.5-3c 実装時に「将来の多チャンネル対応 /
+   別形式展開を阻害しない最小限の抽象化」を設計原則として遵守)
+
+詳細は本バッチで追加した 3 つの個別エントリ (本エントリ直下) を参照。
+
+### 議論
+
+- 案 A: F-doc-backfill のままで放置 (画像生成候補は DALL-E 3、Phase A.5-3d は
+  詳細未定、拡張性原則は暗黙)
+  → 不採用 (DALL-E 3 は旧モデル、Phase A.5-3d 実装時の判断軸が曖昧、Phase 1-A の
+  ChannelConfig 統合まで「ハードコード」発生リスクあり)
+- 案 B: 補足バッチで 3 判断を文書化、Phase A.5-3c 着手前に設計原則を確定
+  → 採用
+
+### 決定
+
+1. 画像生成候補を「Nano Banana Pro / ChatGPT Images 2.0 (gpt-image-2) /
+   Flux 1.1 Pro」の 3 つに確定 (DALL-E 3 を削除)
+2. Phase A.5-3d は geo_lens のみ単独本番、TikTok + YouTube Shorts 両方同時、
+   完全自動投稿
+3. Phase A.5-3c 実装時から拡張性原則 (configs/channels/{channel_id}.yaml で
+   投稿先 / 形式 / カテゴリを切替可能) を遵守
+4. Phase B 以降の方向性 (japan_athletes / k_pulse 追加 / 動画継続 / 独自メディア化 /
+   カテゴリ細分化等) は Phase A.5-3d 安定稼働後に判断 (DISCUSSION_NOTES に保留)
+
+### 結果
+
+Phase A.5-3a-verify → A.5-3b → A.5-3c → A.5-3d のロードマップが 2026-05-02 時点の
+最新ラインナップに更新され、Phase A.5-3c 実装時の設計原則も明確化。Phase B 以降の
+柔軟性も確保。
+
+### 関連ファイル・コミット
+
+- コミット: (F-doc-backfill-supplement で本エントリ + 個別 3 エントリを一括コミット)
+- 変更: `docs/FUTURE_WORK.md` (F-image-prompt-spec / Phase A.5-3b /
+  F-image-gen-integration / Phase A.5-3d 改訂 + 本バッチ完了済みエントリ),
+  `docs/DECISION_LOG.md` (本エントリ + 個別 3 エントリ),
+  `docs/DISCUSSION_NOTES.md` (Phase B 以降の方向性未確定エントリ),
+  `docs/CURRENT_STATE.md` (Phase A.5-3d 投稿対象の補足セクション)
+
+---
+
+## 2026-05-02: F-doc-backfill-supplement — ChatGPT Images 2.0 (gpt-image-2) を画像生成候補に正式追加
+
+### 背景
+
+F-doc-backfill で画像生成候補を「Nano Banana Pro / DALL-E 3 / Flux 1.1 Pro」と
+記載したが、DALL-E 3 は旧モデル。OpenAI が 2026-04-21 にリリースした
+ChatGPT Images 2.0 (API 名 gpt-image-2) が最新版で、Image Arena リーダーボードで
+全カテゴリ #1 (+242 ポイントリード)、業界初の Agentic 画像生成。
+カズヤが実物を試して「今までとは次元が違う」と評価。
+
+### 議論
+
+- 案 A: F-doc-backfill のまま DALL-E 3 で進める
+  → 不採用 (旧モデル、品質劣る)
+- 案 B: ChatGPT Images 2.0 (gpt-image-2) に差し替え
+  → 採用
+
+### 決定
+
+1. 画像生成候補を「Nano Banana Pro / ChatGPT Images 2.0 (gpt-image-2) /
+   Flux 1.1 Pro」の 3 つに確定
+2. Phase A.5-3b 手動 PoC で 3 つを実地比較し、シネマティック表現 / 日本語テキスト
+   精度 / プロンプト追従性 / 価格 / API 安定性で総合判断
+3. F-doc-backfill 該当エントリ (F-image-prompt-spec / Phase A.5-3b /
+   F-image-gen-integration) を本バッチで修正
+
+### 結果
+
+画像生成候補が 2026-05-02 時点の最新ラインナップに更新
+
+### 関連ファイル・コミット
+
+- docs/FUTURE_WORK.md (F-image-prompt-spec / Phase A.5-3b / F-image-gen-integration
+  の画像生成ツール候補修正)
+- 関連: F-doc-backfill (画像生成候補の初期登録)
+
+---
+
+## 2026-05-02: F-doc-backfill-supplement — 自動投稿フェーズ方針確定
+
+### 背景
+
+F-doc-backfill で Phase A.5-3d (本番リリース + 自動投稿) を登録したが、
+投稿対象 / 投稿先 / 投稿モードの詳細が曖昧だった。カズヤとの議論で確定。
+
+### 議論
+
+- **投稿対象**:
+  - 案 A: 3 チャンネル (geo_lens / japan_athletes / k_pulse) 同時自動投稿
+    → 不採用 (japan_athletes / k_pulse は Phase B 案件、現時点で実装なし)
+  - 案 B: geo_lens (政治・経済) のみ単独本番、その他は運用見ながら
+    → 採用 (動くものを壊さない、品質保証の積み上げ順)
+- **投稿先**:
+  - 案 A: YouTube から先行、TikTok は審査通過後
+  - 案 B: TikTok と YouTube 両方同時 (TikTok 申請しながら YouTube 先行も可)
+    → 採用 (リーチ最大化、両方ブランド資産化)
+- **投稿モード**:
+  - 案 A: 手動投稿 → 半自動 → 完全自動の段階移行
+  - 案 B: 完全自動投稿 (cron 6 時間おき、人手介入ゼロ) を Phase A.5-3d で目指す
+    → 採用 (投稿前ゲートで品質保証、人手介入はレビューキューでの定期確認のみ)
+
+### 決定
+
+1. Phase A.5-3d の投稿対象は geo_lens のみ
+2. japan_athletes / k_pulse / その他カテゴリ追加 / 独自メディア化等は Phase B 以降に
+   判断 (DISCUSSION_NOTES「Phase B 以降の方向性未確定」参照)
+3. 投稿先は TikTok と YouTube Shorts の両方同時
+4. 投稿モードは完全自動 (cron 6 時間おき、人手介入ゼロ、投稿前ゲートで品質保証)
+
+### 結果
+
+Phase A.5-3d の実装スコープが明確化、Phase B 以降の柔軟性も確保
+
+### 関連ファイル・コミット
+
+- docs/FUTURE_WORK.md (Phase A.5-3d エントリの対応案明確化)
+- docs/DISCUSSION_NOTES.md (Phase B 以降の方向性未確定エントリ追加)
+- 関連: F-doc-backfill (Phase A.5-3d 初期登録)
+
+---
+
+## 2026-05-02: F-doc-backfill-supplement — 拡張性原則の明文化
+
+### 背景
+
+カズヤ「japan_athletes / k_pulse のタイミングは未定だが、見通した拡張性は持たせた
+実装をしたい」。Phase A.5-3c (合成パート自動化) の実装時に「将来の多チャンネル対応 /
+別形式展開 (動画以外、独自メディア等) を阻害しない」を設計原則として明示する必要。
+
+### 議論
+
+- 案 A: 現状の geo_lens 専用設計を維持、多チャンネル対応は Phase 1-A で対応
+  → 不採用 (Phase A.5-3c で「ハードコード」が発生すると Phase 1-A での改修コスト増)
+- 案 B: Phase A.5-3c 実装時から「拡張性確保」を設計原則として持ち込む
+  → 採用 (将来コスト削減、カズヤ哲学「負の遺産残さない」と整合)
+
+### 決定
+
+拡張性原則 (Phase A.5-3c 以降の実装時に遵守):
+
+1. **チャンネル別設定の YAML 化**: 投稿先 / 形式 / 声 / 画風等は configs/channels/
+   {channel_id}.yaml で切替可能とする (geo_lens.yaml が最初、後で他チャンネル追加)
+2. **形式の抽象化**: 「動画」を前提にハードコードせず、「コンテンツ形式」として
+   抽象化 (将来の独自メディア / 静止画ポスト / 記事配信等への展開を阻害しない)
+3. **投稿先の抽象化**: TikTok / YouTube に限定せず、Publisher 抽象クラスで
+   将来の Instagram / X / 独自メディア等への展開を許容
+4. **カテゴリの拡張性**: 政治・経済以外への展開 (細分化 / スポーツ / エンタメ等) を
+   configs/channels/ レベルで対応可能とする
+
+ただし「過剰設計しない」原則も併記: Phase 1-A (ChannelConfig 統合) で本格対応する
+ため、Phase A.5-3c では「将来阻害しない最小限の抽象化」に留める。
+
+### 結果
+
+Phase A.5-3c 実装時の設計指針が明確化、Phase 1-A 着手時の改修コストが軽減される
+構造に
+
+### 関連ファイル・コミット
+
+- docs/DECISION_LOG.md (本エントリ)
+- 関連: Phase A.5-3c の各エントリ (F-elevenlabs-integration /
+  F-image-gen-integration / F-video-compose-integration / F-cron) で本原則を遵守

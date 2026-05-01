@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-02 (F-doc-backfill 完了時点)
+最終更新: 2026-05-02 (F-doc-backfill-supplement 完了時点)
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -25,16 +25,29 @@
 ## 2. 現在のフェーズ
 
 - **Phase**: Phase A.5-3a 完了 → A.5-3a-verify 着手中
-- **進行中バッチ**: なし (F-doc-backfill 完了直後)
+- **進行中バッチ**: なし (F-doc-backfill-supplement 完了直後)
 - **次バッチ候補と推奨**:
   - 1st: **F-verify-jp-coverage** (★最優先、ゴールデンセット 20 件、2-3 時間)
   - 2nd: F-verify-perspective (4 軸バランス検証、F-12-B-2 着手判断材料)
   - 3rd: F-verify-script-quality (NG パターン頻度、F-12-B-1.5 着手判断材料)
   - 4th: F-image-prompt-spec (画像プロンプト仕様確認、Phase A.5-3b 前提)
-  - Phase A.5-3a-verify 全通過後 → Phase A.5-3b 手動 PoC (Remotion + ElevenLabs + 画像生成)
+  - Phase A.5-3a-verify 全通過後 → Phase A.5-3b 手動 PoC (Remotion + ElevenLabs +
+    画像生成 [Nano Banana Pro / ChatGPT Images 2.0 (gpt-image-2) / Flux 1.1 Pro 比較])
   - Phase A.5-3c で自動化 (F-elevenlabs-integration / F-image-gen-integration /
     F-video-compose-integration / F-cron)
   - Phase A.5-3d で投稿前ゲート + 自動投稿
+
+### Phase A.5-3d 投稿対象の補足
+
+Phase A.5-3d で本番リリースする対象は **geo_lens (政治・経済) のみ**。
+japan_athletes / k_pulse / カテゴリ細分化 / 独自メディア化等の方向性は
+Phase A.5-3d 安定稼働後に判断 (DISCUSSION_NOTES「Phase B 以降の方向性未確定」参照)。
+
+投稿先は TikTok と YouTube Shorts の両方同時、完全自動投稿 (cron 6 時間おき、
+人手介入ゼロ、投稿前ゲートで品質保証)。
+
+Phase A.5-3c 実装時は「拡張性原則」(DECISION_LOG 同日エントリ) を遵守し、
+将来の多チャンネル対応 / 別形式展開を阻害しない最小限の抽象化を確保する。
 
 ## 3. 直近の試運転結果サマリー
 
@@ -123,4 +136,7 @@
  Phase A.5-3a-verify ロードマップを反映。
  F-doc-backfill (2026-05-02) で過去 19 セッション分の積み残しを正式登録、
  Phase A.5-3a-verify を 5→4 カテゴリに縮小、ElevenLabs 前倒しと Remotion 採用を
- DECISION_LOG に記録、ロードマップを 4 段階 (3a-verify → 3b → 3c → 3d) に再構成。*
+ DECISION_LOG に記録、ロードマップを 4 段階 (3a-verify → 3b → 3c → 3d) に再構成。
+ F-doc-backfill-supplement (2026-05-02) で画像生成候補を ChatGPT Images 2.0
+ (gpt-image-2) に確定、Phase A.5-3d 投稿対象を geo_lens 単独 + TikTok/YouTube
+ 同時 + 完全自動に明確化、拡張性原則 (Phase A.5-3c 設計時) を DECISION_LOG に追加。*
