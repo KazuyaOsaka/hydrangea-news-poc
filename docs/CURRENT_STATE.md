@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-02 (F-doc-backfill-supplement 完了時点)
+最終更新: 2026-05-02 (F-cleanup-merge-streak 完了時点)
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -10,17 +10,16 @@
 
 ## 1. リポジトリ状態
 
-- **main HEAD コミット**: `1e4a932`
+- **main HEAD コミット**: `c736dc2`
 - **直近 5 件のコミットログ**:
   ```
-  1e4a932 docs: record commit hash for F-12-B-1-extension entry
-  4db3335 feat: refine punchline definition for cynical+grounded balance (F-12-B-1-extension)
-  972ec04 docs: record commit hash for F-12-B-1 entry
-  535f8e0 feat: add viewer-first editorial stance to script prompt (F-12-B-1)
-  e70594e docs: establish batch protocol for forced doc updates (F-doc-protocol)
+  c736dc2 Merge branch 'feature/F-doc-backfill-supplement'
+  a618803 feat: confirm image gen candidates + auto-publishing policy + extensibility (F-doc-backfill-supplement)
+  fd1a41b Merge branch 'feature/F-doc-backfill'
+  70afc58 feat: backfill 19 sessions of pending tasks + roadmap overhaul (F-doc-backfill)
+  e7f99c1 Merge branch 'feature/F-state-protocol-supplement'
   ```
-- **baseline テスト数**: `1315 passed` (2026-05-01 F-state-protocol 着手時点で確認)
-- **連続 main マージ成功カウント**: `11 連続` (F-12-A → F-12-B-1-extension)
+- **baseline テスト数**: `1315 passed` (2026-05-02 F-cleanup-merge-streak 着手時点で確認)
 
 ## 2. 現在のフェーズ
 
@@ -139,4 +138,7 @@ Phase A.5-3c 実装時は「拡張性原則」(DECISION_LOG 同日エントリ) 
  DECISION_LOG に記録、ロードマップを 4 段階 (3a-verify → 3b → 3c → 3d) に再構成。
  F-doc-backfill-supplement (2026-05-02) で画像生成候補を ChatGPT Images 2.0
  (gpt-image-2) に確定、Phase A.5-3d 投稿対象を geo_lens 単独 + TikTok/YouTube
- 同時 + 完全自動に明確化、拡張性原則 (Phase A.5-3c 設計時) を DECISION_LOG に追加。*
+ 同時 + 完全自動に明確化、拡張性原則 (Phase A.5-3c 設計時) を DECISION_LOG に追加。
+ F-cleanup-merge-streak (2026-05-02) で「連続 main マージ成功カウント」を
+ 削除 (情報ノイズ・悪いインセンティブ排除)、main HEAD と直近 5 件ログを
+ 最新値に更新 (3 連続バッチでの Task 5 数値更新漏れを回収)。*

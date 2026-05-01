@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-02 (F-doc-backfill 完了)
+最終更新: 2026-05-02 (F-cleanup-merge-streak 完了)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -412,6 +412,11 @@
   - 何を対応したか
 
 ---
+
+- **「連続 main マージ成功カウント」廃止 (F-cleanup-merge-streak)** (F-cleanup-merge-streak / 2026-05-02 完了)
+  - 発生バッチ: F-state-protocol (2026-05-01) で CURRENT_STATE.md / BATCH_PROTOCOL.md に「連続 main マージ成功カウント」を導入したが、F-state-protocol-supplement / F-doc-backfill / F-doc-backfill-supplement の 3 連続バッチで Claude Code が Task 5 でこの数値を更新し忘れる事象が発生 (CURRENT_STATE.md は 11 連続のまま、実際は 15 連続)。カズヤとの議論 (2026-05-02) で指標自体の意味を再検討した結果、(1) 何の意思決定にも使えない (12 連続と 100 連続で何が違うのか?)、(2) 品質保証は別の指標 (baseline 1315 passed / 試運転動画化率) で担保されている、(3) 「カウントを途切れさせたくない」という悪いインセンティブを生む、(4) 重要数値 (main HEAD / baseline / Phase) と並べると情報ノイズになる、と判明。カズヤ哲学「対症療法じゃなくて根本治療」「負の遺産残さないように」に照らし、形骸化リスクのある指標を早期削除。
+  - 対応内容: (1) `docs/CURRENT_STATE.md` の「連続 main マージ成功カウント」項目を完全削除 + main HEAD コミット (1e4a932 → c736dc2) と直近 5 件コミットログを実測値で更新 (3 連続バッチでの Task 5 数値更新漏れを回収)。(2) `docs/BATCH_PROTOCOL.md` の Task 5 仕様から「連続 main マージ成功カウント」言及を完全削除し、「main HEAD ハッシュは `git log -1 --format=%H` で実測値を取得、直近 5 件ログは `git log --oneline -5` で取得」の明示注記を追加 (機械的踏襲・更新漏れの再発防止)。(3) `docs/DECISION_LOG.md` に「F-cleanup-merge-streak — 連続 main マージ成功カウント廃止」エントリ追加 (廃止理由 4 点 + 悪いインセンティブの位置付け)。(4) `docs/DISCUSSION_NOTES.md` に「仕組み導入時の機械的踏襲リスク」エントリ追加 (将来の F-state-protocol-v2 等で「指標導入チェックリスト」として運用ルール化検討の学習材料)。(5) BATCH_PROTOCOL Task 1-5 を本バッチ自身に適用 (ドッグフーディング)。リグレッション影響なし (docs/ のみ変更、src/ tests/ configs/ は 0 行変更、baseline 1315 passed 維持)。
+  - 関連ファイル: `docs/CURRENT_STATE.md` (連続成功カウント削除 + main HEAD / 直近 5 件ログ更新), `docs/BATCH_PROTOCOL.md` (Task 5 仕様修正 + git log 実測値取得の明示), `docs/DECISION_LOG.md` (本廃止エントリ追加), `docs/DISCUSSION_NOTES.md` (機械的踏襲リスクエントリ = 18 Active), `docs/FUTURE_WORK.md` (本エントリ)
 
 - **画像生成候補確定 + 自動投稿フェーズ方針 + 拡張性原則の明文化 (F-doc-backfill-supplement)** (F-doc-backfill-supplement / 2026-05-02 完了)
   - 発生バッチ: F-doc-backfill (2026-05-02) 直後にカズヤとの議論で 3 つの追加判断が確定: (1) ChatGPT Images 2.0 (gpt-image-2) を画像生成候補に正式追加 (DALL-E 3 から差し替え、2026-04-21 リリースの OpenAI 最新モデル、Image Arena #1)、(2) 自動投稿フェーズ方針確定 (Phase A.5-3d は geo_lens のみ単独本番、TikTok と YouTube Shorts 両方同時、完全自動投稿)、(3) 拡張性原則の明文化 (Phase A.5-3c 合成パート自動化実装時に「将来の多チャンネル対応 / 別形式展開を阻害しない最小限の抽象化」を設計原則として遵守)。Phase B 以降の方向性 (japan_athletes / k_pulse 追加 / 動画継続 / 独自メディア化 / カテゴリ細分化等) は Phase A.5-3d 安定稼働後に判断保留。

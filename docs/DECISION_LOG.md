@@ -1563,3 +1563,66 @@ Phase A.5-3c 実装時の設計指針が明確化、Phase 1-A 着手時の改修
 - docs/DECISION_LOG.md (本エントリ)
 - 関連: Phase A.5-3c の各エントリ (F-elevenlabs-integration /
   F-image-gen-integration / F-video-compose-integration / F-cron) で本原則を遵守
+
+---
+
+## 2026-05-02: F-cleanup-merge-streak — 「連続 main マージ成功カウント」廃止
+
+### 背景
+
+F-state-protocol (2026-05-01) で CURRENT_STATE.md と BATCH_PROTOCOL.md に
+「連続 main マージ成功カウント」を導入したが、F-state-protocol-supplement /
+F-doc-backfill / F-doc-backfill-supplement の 3 連続バッチで Claude Code が
+この数値を Task 5 で更新し忘れる事象が発生 (CURRENT_STATE.md は 11 連続のまま、
+実際は 15 連続に達していた)。
+
+カズヤとの議論 (2026-05-02) で指標自体の意味を再検討した結果、無意味と判定。
+
+### 議論
+
+- **指標の意義**:
+  - 案 A: 「N 連続成功」は進捗の可視化として価値がある → 不採用
+    - 反論: 12 連続と 100 連続で何が違うのか? どんな行動を取るべきかの
+      判断材料にならない
+  - 案 B: 品質保証は別の指標で担保されているため、連続カウントは情報ノイズ → 採用
+    - baseline 1315 passed と試運転動画化率が真の品質指標
+    - マージ成功 = 品質保証ではない (動画品質が低くても、コンセプトが崩れても、
+      マージ自体は成立する)
+
+- **悪いインセンティブのリスク**:
+  - 「カウントを途切れさせたくない」という無意識の動機が、本来やるべき
+    大胆な変更や思い切ったロールバックを避けさせる方向に作用する可能性
+  - これはカズヤ哲学「動くものを壊さない」とは別の話 (動くものを壊さない
+    のは「機能する既存挙動の保護」、連続カウント維持は「数値の保護」で
+    本質的に意味が違う)
+
+- **形骸化の予兆**:
+  - 3 連続バッチで Claude Code が更新し忘れた事実は、この指標が
+    「重要だが見落とされやすい」のではなく「重要じゃないから見落とされる」
+    可能性を示唆
+
+### 決定
+
+1. CURRENT_STATE.md から「連続 main マージ成功カウント」項目を完全削除
+2. BATCH_PROTOCOL.md の Task 5 仕様から該当言及を完全削除
+3. 同時に main HEAD と直近 5 件ログを最新値に更新 (Task 5 実施漏れの回収)
+4. DISCUSSION_NOTES.md に「仕組み導入時の機械的踏襲リスク」エントリを追加
+   (将来同種の問題を回避する学習材料)
+
+### 結果
+
+- CURRENT_STATE.md がよりシンプルに、重要数値 (main HEAD / baseline /
+  Phase / 試運転結果) の視認性が向上
+- 悪いインセンティブ (カウント維持のための過度な保守化) が排除
+- 「仕組み導入時に既存指標を機械的踏襲する」リスクへの認識が
+  DISCUSSION_NOTES に蓄積、将来の F-state-protocol-v2 等で活用可能
+
+### 関連ファイル・コミット
+
+- コミット: (push 後に追記)
+- 変更:
+  - `docs/CURRENT_STATE.md` (連続成功カウント削除 + main HEAD / 直近 5 件ログ更新)
+  - `docs/BATCH_PROTOCOL.md` (Task 5 仕様修正)
+  - `docs/DECISION_LOG.md` (本エントリ)
+  - `docs/DISCUSSION_NOTES.md` (機械的踏襲リスクエントリ追加)
+- 関連: F-state-protocol (連続成功カウント導入元)

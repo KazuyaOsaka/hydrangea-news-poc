@@ -1,6 +1,6 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-02 (F-doc-backfill-supplement 完了時点)
+最終更新: 2026-05-02 (F-cleanup-merge-streak 完了時点)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -192,6 +192,31 @@
 - **拡張性確保**: DECISION_LOG「拡張性原則の明文化」(同日) で Phase A.5-3c 実装時の
   設計原則を確定済。本判断保留はあくまで「方針判断」であり、実装は将来の選択肢を
   阻害しない構造になっている
+
+### 2026-05-02: 仕組み導入時の機械的踏襲リスク
+
+- **内容**: F-state-protocol で CURRENT_STATE.md / DISCUSSION_NOTES.md /
+  BATCH_PROTOCOL Task 4/5 を導入した際、当時の引き継ぎプロンプトに記載されていた
+  「連続 main マージ成功カウント」を意義を再検討せず機械的に転記した。
+  結果、後日カズヤの「なんの意味があるの?」という問いで指標自体が無意味と判明、
+  F-cleanup-merge-streak で削除した (DECISION_LOG 参照)。
+
+  教訓:
+  - 仕組み導入時、既存の数値・指標を「これまで使われていたから」で機械的に
+    踏襲しない
+  - 各指標について「これは何の意思決定に使うか?」を必ず問う
+  - 答えられない指標は導入しない (or 既にあれば削除する)
+  - F-state-protocol 自体の根幹 (CURRENT_STATE / DISCUSSION_NOTES /
+    Task 4/5) は機能しているが、その中の個別項目は定期的に見直し対象
+
+  類似リスク: 今後 F-state-protocol-v2 / 別の仕組み導入時に、再度
+  「指標の機械的踏襲」が発生する可能性。バッチ着手時のチェックリストに
+  「導入する各指標は意思決定に使えるか?」を加える運用ルール化を検討。
+
+- **出典**: カズヤとの議論 (2026-05-02、F-cleanup-merge-streak 直前)
+- **ステータス**: `昇格候補(DECISION_LOG)` または `昇格候補(FUTURE_WORK)`
+  (将来の F-state-protocol-v2 着手時に「指標導入チェックリスト」として
+  運用ルール化、その時点で DECISION_LOG / FUTURE_WORK に昇格)
 
 ---
 
