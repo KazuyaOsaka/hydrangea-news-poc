@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-01 (F-doc-protocol 完了)
+最終更新: 2026-05-01 (F-12-B-1 完了)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -17,16 +17,10 @@
 
 ---
 
-- **F-12-B-1: script_writer プロンプトの blind_spot_global 用フレーム追加** (F-13-B 完了後)
-  - 背景: F-13-B で blind_spot_global の動画化が実現された (Slot-1〜3 すべて article 生成完了、Slot-1 は video まで生成)。しかし script_writer のプロンプトは divergence パターン前提で書かれており、「日本未報道の事実をどう日本人に届けるか」のフレーミングが弱い。
-  - 対応案: `configs/prompts/script/` (該当 dir) に blind_spot_global 用プロンプトを追加し、generate_script_with_analysis() に分岐を入れる。jp_coverage_result (F-13-B で導入) が has_jp_coverage=False なら blind_spot 用フレームを使う。
-  - 検討時期: F-13-B 試運転 7-K で blind_spot 動画の品質を確認後 → 改善余地が大きければ F-12-B-1 着手
-  - 関連ファイル: configs/prompts/script/, src/generation/script_writer.py (※ 不変原則対象なので慎重に)
-
 - **F-12-B-2: perspective_extractor の axis 多様化** (F-13-B 完了後)
   - 背景: F-13-B 試運転で AnalysisLayer の selected_perspective が "cultural_blindspot" 等の限定的 axis に集中しがち。blind_spot_global 候補に適した axis (例: power_dynamics_blindspot, structural_silence) の不足が観察される。
   - 対応案: `src/analysis/perspective_extractor.py` の axis 定義を拡張し、Hydrangea ミッション本丸に対応する新 axis を追加。
-  - 検討時期: F-12-B-1 完了後
+  - 検討時期: F-12-B-1 完了後 (= 2026-05-01 完了済) → 次バッチで着手判断
 
 - **event_builder.py のガード変更** (E-1 で見送り)
   - 背景: 現状 `if garbage_filter_client is not None:` でガードしているため、API キー未設定時に静的ルールが走らない
@@ -74,6 +68,12 @@
 ## 緊急度 中（実運用データ収集後に判断）
 
 ---
+
+- **F-12-B-1.5: 台本 4 ブロック文字数制約の緩和判断** (F-12-B-1 / 2026-05-01 発生)
+  - 背景: F-12-B-1 (視聴者ファースト原則追加) により「聞き慣れない固有名詞には最小限の補足を添える」原則が導入された結果、setup ブロックの char validation で 1 リトライが発生 (94 字 → 82 字)。LLM が補足を入れようとして既存制約 (setup 60〜90 字 / twist 150〜220 字 / punchline 70〜110 字) の上限に当たりやすくなる傾向が試運転で確認された。
+  - 対応案: (a) リトライ発動頻度を継続観察し、頻発するなら setup 上限を 100 字、twist 上限を 240 字、punchline 上限を 120 字程度に緩和。(b) `src/generation/script_writer.py` の char validation 範囲定数を調整 (script_writer.py 自体は不変原則 2 の対象だが、定数調整は最小改変で許容範囲)。(c) または estimated_duration_sec の許容幅を広げて 80→90 秒運用に移行。
+  - 検討時期: F-12-B-1 投入後 5〜10 run の動画化で char validation リトライ率を集計。全 Slot の 30% 以上でリトライが発動するなら緩和着手。現状 (試運転 1 run) は 1/1 で発動したが標本不足のため判断保留。
+  - 関連ファイル: src/generation/script_writer.py, configs/prompts/analysis/geo_lens/script_with_analysis.md (文字数指示部)
 
 - **Reality Check Layer (F-10 候補): 「日本で本当に報じられていないか」の検証工程** (F-5 発生)
   - 背景: 現状の blind_spot_global_score は LLM の主観判断であり、実際に日本のメディアをチェックする工程が無い。Hydrangea のコンセプト「日本で報じられない海外ニュースを届ける」の信頼性に直結する。
@@ -153,6 +153,12 @@
   - 何を対応したか
 
 ---
+
+- **台本プロンプトの「視聴者ファースト」原則追加 (F-12-B-1)** (F-12-B-1 / 2026-05-01 完了)
+  - 発生バッチ: 試運転 7-K (2026-05-01) の baseline 台本 (cls-7bd1406438b6 FIFA 提訴 / cls-579833967531 フーシ派) で、カズヤから 6 個の問題が指摘された (略しすぎ「イスラエル入植地クラブ」/補足なし「スポーツ仲裁裁判所」/不明「ロシア侵攻時の即時排除」/直訳「公然たる支持」/抽象比喩「地政学的断層」「直撃弾」/硬い文語「発動」「ツール」)。`configs/prompts/analysis/geo_lens/script_with_analysis.md` を分析した結果、「扇動・陰謀論の禁止」(STEP 3) は強力だが「視聴者へのわかりやすさ」への配慮が皆無で、LLM が「教科書っぽい硬い分析調」に寄っていたことが根本原因。
+  - 対応内容: 同プロンプトの【ターゲット】直後・【入力データ】の前に「【視聴者ファーストの編集姿勢】」セクションを追加 (3 原則: 聞いてわかる / 抽象より具体 / 読み上げて自然 + 合格基準「TikTok/Shorts で違和感なく聞けるか」)。NG リストではなく姿勢として記述し、判断は LLM の知性に委ねる設計。既存セクションは一切変更せず追加のみ。あわせて `docs/BATCH_PROTOCOL.md` 不変原則 2 の例外条項を `configs/prompts/script/` → `configs/prompts/` に拡大し、現状の主戦場が `configs/prompts/analysis/geo_lens/` であることを注記。試運転 (cls-56c4197b6fd2 米イスラエル隠密作戦) で「中東独立メディアのミドル・イースト・アイ」のような固有名詞補足、「動かしたんです」「ある日突然」のような話し言葉的接続を確認。char validation で 1 リトライ発生 (setup=94→82 字)、許容範囲だが継続観察項目として F-12-B-1.5 を緊急度中に新設。
+  - 旧 F-12-B-1 (blind_spot_global 用フレーム追加) は試運転 7-K の結果を受けて視聴者ファースト原則の方が優先と判断され、本エントリにスコープを再定義した。
+  - 関連ファイル: `configs/prompts/analysis/geo_lens/script_with_analysis.md`, `docs/BATCH_PROTOCOL.md`, `docs/DECISION_LOG.md` (F-12-B-1 エントリ), `docs/FUTURE_WORK.md` (本エントリ)
 
 - **文書自動更新プロトコルの確立 (F-doc-protocol)** (F-doc-protocol / 2026-05-01 完了)
   - 発生バッチ: Phase A.5-2 の 7 連続バッチで DECISION_LOG.md / FUTURE_WORK.md の更新が散逸し、「台本の日本語改善」「document 更新」「手動 PoC」等の重要事項が忘却される問題が発生。月次レビュー (FW-1) だけでは速度が追いつかないと判明。
