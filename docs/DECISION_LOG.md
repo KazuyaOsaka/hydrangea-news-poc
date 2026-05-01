@@ -1,6 +1,6 @@
 # Hydrangea — 意思決定ログ (DECISION_LOG)
 
-最終更新: 2026-05-01 (F-doc-protocol 完了)
+最終更新: 2026-05-01 (F-state-protocol 完了)
 
 このドキュメントは Hydrangea プロジェクトにおける重要な意思決定の履歴を記録する。
 コードや設定の「結果」ではなく、「なぜそうなったか」の判断プロセスを残すことが目的。
@@ -916,5 +916,96 @@ STEP 2 punchline 定義のみを修正 (他ブロック hook / setup / twist は
 - コミット: 4db3335 (feature/F-12-B-1-extension)
 - 変更:
   - `configs/prompts/analysis/geo_lens/script_with_analysis.md` (STEP 2 punchline 定義のみ修正、+10 行 / -2 行)
+  - `docs/DECISION_LOG.md` (本エントリ)
+  - `docs/FUTURE_WORK.md` (本エントリを完了済みに追加)
+
+---
+
+## 2026-05-01: F-state-protocol — CURRENT_STATE / DISCUSSION_NOTES 導入と不変原則 2 の正確化
+
+### 背景
+
+Phase A.5-3a で 11 連続 main マージ成功 (F-12-A → F-12-B-1-extension) を達成
+したが、チャット移行のたびに 2806 行の引き継ぎプロンプトを手作業で再構築する
+運用が持続不可能になった。具体的には:
+
+- 引き継ぎプロンプトが毎回ゼロから手作業で再構築されている
+- 過去の決定事項 (C-1/C-2/C-3 RPM 対策、F-13 隠れ層、F-7-α 部分実装等) が
+  バッチ歴史リストから消える事故が発生
+- 不変原則 2「`script_writer.py` 一切変更不可」が実装と乖離
+  (F-12-A / F-12-B / Batch 5 で大改修済み、新ルート
+  `generate_script_with_analysis` 系が稼働中)
+- DECISION_LOG / FUTURE_WORK は時系列ログとして機能するが、「今この瞬間の
+  プロジェクトのスナップショット」を提供する仕組みがない
+- 議論中の未確定メモを蓄積する場所がない
+
+カズヤの哲学:「対症療法じゃなくて根本治療」「負の遺産残さないように」
+「月 1 棚卸しじゃ間に合わない」「カズヤの手作業はバッチプロンプトのコピペ
+1 回のみ」を、F-doc-protocol (DECISION_LOG / FUTURE_WORK 強制更新) の上に
+「生きたサナリー」と「議論メモ蓄積」のレイヤーとして実装する必要があった。
+
+### 議論
+
+- **案A (CURRENT_STATE.md のみ追加)**: 議論メモの蓄積先がないため、
+  バッチ完了時に「これ DECISION_LOG にするほどでもないが残したい」項目が
+  散逸する問題が解消しない → 不採用
+- **案B (DISCUSSION_NOTES.md のみ追加)**: 「今この瞬間のスナップショット」が
+  ないままだと、引き継ぎプロンプトの手作業再構築は解消しない → 不採用
+- **案C (両方追加 + BATCH_PROTOCOL に Task 4/5 追加 + 不変原則 2 是正)**:
+  採用。CURRENT_STATE.md (全置換更新型) で「現在地」を提供し、
+  DISCUSSION_NOTES.md (蓄積型) で「議論中メモ」を吸収する。
+  バッチ完了時の必須タスクを Task 1-3 から Task 1-5 に拡張する。
+  あわせて、長く乖離していた不変原則 2 を「既存ルート不可、新ルート可」に
+  是正する。
+
+### 決定
+
+案C 採用。以下を一括投入:
+
+1. **`docs/CURRENT_STATE.md` を新規作成**:
+   - 8 セクション構成 (リポジトリ状態 / 現在のフェーズ / 直近試運転 /
+     防衛機構の現状 4+1 層 / 触ってよい・ダメ領域マップ / 不変原則 5 つ /
+     カズヤの直近フィードバック / 関連ドキュメント導線)
+   - 初回値: main HEAD `1e4a932`、baseline `1315 passed`、11 連続成功、
+     試運転 7-K 動画化率 100%、Phase A.5-3a 完了 → A.5-3a-verify 着手前
+   - バッチ完了時に「全置換更新」する運用 (追記ではない)
+2. **`docs/DISCUSSION_NOTES.md` を新規作成**:
+   - 「未分類 (Active)」と「アーカイブ」の 2 セクション構成
+   - 各エントリは「日付 / トピック / 内容 / 出典 / ステータス」の 5 項目
+   - 初期エントリ 10 件投入 (本タスクで集約された未記録の議論を一気に
+     書き起こし)
+3. **`docs/BATCH_PROTOCOL.md` を拡張**:
+   - 不変原則 5 つを A.5-3a 時点版に差し替え
+     (特に不変原則 2 を「既存ルート不可、新ルート可、`_CHAR_BOUNDS` 等の
+     定数調整は最小改変なら許容」に正確化)
+   - Task 4 (DISCUSSION_NOTES 整理: 4-A 新規追加 + 4-B 既存再評価) 追加
+   - Task 5 (CURRENT_STATE 全置換更新) 追加
+   - バッチプロンプトテンプレートを Task 1-5 に更新
+4. **`CLAUDE.md` を更新**:
+   - 必読ドキュメントリストの最上位に CURRENT_STATE.md を配置
+   - DISCUSSION_NOTES.md を 5 番目に追加
+   - 順序を「実装作業の前に必ず以下を確認」から
+     「新規バッチ着手時は以下を **この順序で** 必ず参照」に変更
+5. **本バッチ自身に Task 1-5 を適用** (ドッグフーディング)
+
+### 結果
+
+- 引き継ぎプロンプトの手作業再構築が CURRENT_STATE.md の参照で代替可能に
+- 議論中メモの蓄積先が DISCUSSION_NOTES.md として確保され、バッチ完了時の
+  再評価で DECISION_LOG / FUTURE_WORK へ昇格させる運用が確立
+- 不変原則 2 の実装乖離が解消され、F-12-B-1.5 (`_CHAR_BOUNDS` 調整) や
+  今後の新ルート改修が「不変原則 2 違反」と読まれない仕組みに
+- リグレッション影響なし (docs/ + CLAUDE.md のみ変更、
+  src/ tests/ configs/ は 0 行変更、baseline 1315 passed 維持)
+
+### 関連ファイル・コミット
+
+- コミット: (push 後に追記)
+- 変更:
+  - `docs/CURRENT_STATE.md` (新規)
+  - `docs/DISCUSSION_NOTES.md` (新規 + 初期エントリ 10 件)
+  - `docs/BATCH_PROTOCOL.md` (不変原則差し替え + Task 4/5 追加 +
+    テンプレート更新 + 関連ドキュメント追記)
+  - `CLAUDE.md` (必読ドキュメントリスト刷新)
   - `docs/DECISION_LOG.md` (本エントリ)
   - `docs/FUTURE_WORK.md` (本エントリを完了済みに追加)
