@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-02 (F-state-protocol-supplement 完了)
+最終更新: 2026-05-02 (F-doc-backfill 完了)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -72,32 +72,100 @@
   - 想定工数: 2-3 時間
   - 関連ファイル: src/triage/jp_coverage_verifier.py, tests/golden/jp_coverage/ (新規)
 
-- **F-verify-e2e** (F-state-protocol-supplement / 2026-05-02 登録)
-  - 背景: 5 日連続稼働で本番品質の安定性を検証。1 run の成功は確認済みだが、cron 6 時間おき (F-16-B) を意識した連続運用での挙動 (キャッシュ効果 / Tier フォールバック頻度 / 予算消費トレンド) は未検証。
-  - 対応案: 毎日 30 分手動運用、`docs/verify_log.md` (新規) に観察記録 (動画化率 / NG パターン / 予算消費 / エラー発生)。F-16-B (cron 自動化) 着手判断材料を兼ねる。
-  - 検討時期: F-verify-jp-coverage 完了後
-  - 想定工数: 5 日 × 30 分
-
-- **F-verify-rss** (F-state-protocol-supplement / 2026-05-02 登録)
-  - 背景: 47+ sources の疎通を確認。F-8-1-B 直後 (2026-04-28) の確認以降、まとまった疎通検査は未実施。媒体側の RSS 廃止・URL 変更で silently fail している可能性。
-  - 対応案: src/ingestion/rss_fetcher.py の全 sources で HTTP status / parse 成功率を集計、廃止候補があれば configs/sources.yaml から除外提案。
-  - 検討時期: F-verify-e2e と並行可
-  - 想定工数: 1 時間
-  - 関連ファイル: src/ingestion/rss_fetcher.py (読み取りのみ), configs/sources.yaml
-
 - **F-verify-perspective** (F-state-protocol-supplement / 2026-05-02 登録)
   - 背景: 4 軸 (cultural_blindspot / silence_gap / hidden_stakes / framing_inversion) のバランスを検証。DISCUSSION_NOTES #6 (F-12-B-2 axis 多様化) の着手判断材料となる。cultural_blindspot 偏重が確認されれば F-12-B-2 起動。
   - 対応案: 直近 50 イベントで axis 分布を集計、cultural_blindspot 偏重があれば F-12-B-2 起動判断。
-  - 検討時期: F-verify-e2e の 5 日間並行
+  - 検討時期: F-verify-jp-coverage と並行可
   - 想定工数: 集計 1 時間 + 判断議論
   - 関連ファイル: src/analysis/perspective_extractor.py (読み取りのみ), data/output/ の AnalysisLayer 出力
 
 - **F-verify-script-quality** (F-state-protocol-supplement / 2026-05-02 登録)
   - 背景: 新ルート (`generate_script_with_analysis`) の NG パターン出現頻度 / char validation リトライ率を測定。F-12-B-1.5 (文字数制約緩和) 着手判断材料を兼ねる。F-12-B-1 投入後 1 run の試運転では setup 1/1 でリトライ発動だが標本不足。
   - 対応案: 直近 30 件で NG 語彙頻度 / リトライ回数集計、`_CHAR_BOUNDS` 調整可否を判断。
-  - 検討時期: F-verify-e2e の 5 日間並行
+  - 検討時期: F-verify-jp-coverage と並行可
   - 想定工数: 集計 1 時間 + 判断議論
   - 関連ファイル: src/generation/script_writer.py (読み取りのみ), data/output/ の script.json
+
+- **F-image-prompt-spec** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: Phase A.5-3b 手動 PoC で「自動生成された台本 + 画像プロンプト」を使って Nano Banana Pro / ChatGPT / Flux に画像生成依頼する想定だが、現状 video_payload_writer.py がシーンごとの画像プロンプトを十分な品質で出力しているか未確認。Phase A.5-3b 着手前に仕様確認 + 必要なら改修。
+  - 対応案: (1) src/generation/video_payload_writer.py の現状調査 (シーンごとに画像プロンプトを出してるか / 統一末尾「cinematic, hyper-realistic, dark geopolitical thriller style, high contrast, dramatic lighting, vertical composition, 9:16 aspect ratio」が含まれてるか) (2) 不十分なら configs/prompts/ 配下のプロンプトファイルを改修 (3) 試運転で画像プロンプト品質を確認
+  - 検討時期: F-verify-jp-coverage / F-verify-perspective / F-verify-script-quality と並行
+  - 想定工数: 2-3 時間
+  - 関連ファイル: src/generation/video_payload_writer.py (調査のみ), configs/prompts/ (必要なら改修)
+  - 不変原則整合: video_payload_writer.py は不変原則 1-4 の対象外、必要なら configs/prompts/ 経由で改修可能
+
+### Phase A.5-3c 合成パート自動化 (F-doc-backfill / 2026-05-02 登録)
+
+- **F-elevenlabs-integration** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: Phase A.5-3b 手動 PoC で確定した ElevenLabs 声選定を、Hydrangea 自動パイプラインに統合する。macOS say は廃止 (品質低い、Linux 対応の意義なし)。
+  - 対応案:
+    (1) AudioRenderer 抽象クラス化 (src/generation/audio_renderer.py 改修)
+    (2) ElevenLabsRenderer 実装 (API キー + voice_id 設定 + character_alignment 取得)
+    (3) configs/audio.yaml で声選定 (geo_lens / japan_athletes / k_pulse 別)
+    (4) 既存 say 呼び出し部分を ElevenLabsRenderer に切り替え
+    (5) フィーチャーフラグで段階移行 (AUDIO_RENDERER=elevenlabs|say)
+  - 検討時期: Phase A.5-3b 完了直後 (声選定確定後)
+  - 想定工数: 1 週間
+  - 関連ファイル: src/generation/audio_renderer.py, configs/audio.yaml (新規)
+  - 不変原則整合: audio_renderer.py は不変原則 1-4 の対象外、改修可能
+  - 補足: TECH_DEBT 2.5 (macOS say 依存) は本エントリで解消
+
+- **F-image-gen-integration** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: Phase A.5-3b で選定した画像生成ツール (Nano Banana Pro / DALL-E 3 / Flux 1.1 Pro のいずれか) を Hydrangea パイプラインに統合。
+  - 対応案:
+    (1) ImageGenerator 抽象クラス化 (src/generation/ に新規作成)
+    (2) 選定ツールの API クライアント実装
+    (3) シーンごとの画像生成ロジック (12-15 枚 / 80 秒動画)
+    (4) configs/image_gen.yaml で統一プロンプト末尾 + チャンネル別設定
+    (5) 著作権配慮 (Wikimedia Commons + 政府公開画像 + Pexels + AI 生成の組み合わせ、通信社画像は使わない)
+  - 検討時期: F-elevenlabs-integration と並行可
+  - 想定工数: 1 週間
+  - 関連ファイル: src/generation/image_generator.py (新規), configs/image_gen.yaml (新規)
+  - 不変原則整合: 新規ファイル追加で既存に影響なし
+
+- **F-video-compose-integration** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: Phase A.5-3b で確立した Remotion テンプレートを自動化に適用。現状の Pillow + FFmpeg ベース video_renderer.py は廃止。
+  - 対応案:
+    (1) Remotion プロジェクトを Hydrangea リポジトリに統合
+    (2) Python パイプラインから Remotion CLI を呼ぶブリッジ実装
+    (3) 各チャンネル別 Remotion テンプレート (geo_lens 用、後で japan_athletes / k_pulse 用追加)
+    (4) Remotion Lambda for 並列レンダリング (Phase B で本格化)
+    (5) フィーチャーフラグで段階移行 (VIDEO_RENDERER=remotion|legacy)
+  - 検討時期: F-elevenlabs-integration / F-image-gen-integration 完了後
+  - 想定工数: 2-3 週間
+  - 関連ファイル: remotion/ (新規), src/generation/video_renderer.py (廃止予定), configs/remotion/ (新規)
+  - 不変原則整合: video_renderer.py は不変原則 1-4 の対象外、廃止可能
+
+- **F-cron** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: 現状はカズヤ手動実行のみ。本番リリース後は 1 日 4 動画 + 12 記事の自動生成が必要。F-16-B (旧 cron 計画) を ElevenLabs / Remotion 前提で再定義。
+  - 対応案:
+    (1) .github/workflows/hydrangea-pipeline.yml 新規
+    (2) cron: 6 時間おき (00:00, 06:00, 12:00, 18:00 JST)
+    (3) GitHub Secrets 設定 (GEMINI_API_KEY / ELEVENLABS_API_KEY / 画像生成 API キー / その他)
+    (4) ロギング (実行結果を GitHub Issue or Slack に通知、run_summary.json を artifact 保存)
+    (5) 環境変数: AUDIO_RENDERER=elevenlabs, VIDEO_RENDERER=remotion
+  - 検討時期: F-elevenlabs-integration / F-image-gen-integration / F-video-compose-integration 完了後
+  - 想定工数: 2-3 時間
+  - 関連ファイル: .github/workflows/hydrangea-pipeline.yml (新規)
+  - 不変原則整合: .github/ 配下は src/ 外、既存テスト破壊なし
+
+### Phase A.5-3d 投稿前ゲート + 自動投稿 (F-doc-backfill / 2026-05-02 登録)
+
+- **Phase A.5-3d 投稿前ゲート + 自動投稿** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: F-cron 完了で「動画自動生成」が動くが、品質保証ゲートと投稿自動化が未実装。
+  - 対応案:
+    (1) F-publish-gate: 投稿前ゲート実装
+        - LLM 自己採点 7 軸 (Hook 強度 / 情報密度 / 価値観揺さぶり / 具体性 / 感情ドライブ / 共有動機 / ループ性、各 3.5 点以上で通過)
+        - 文字化け検知 (字幕に不正文字)
+        - 無音検知 (音声ファイルの音量ゼロ区間)
+        - 不通過はレビューキューに退避、カズヤが手動確認
+    (2) F-tiktok-api: TikTok Content Posting API 統合 (審査 1-3 週間、早めに申請)
+    (3) F-youtube-api: YouTube Data API v3 統合 (即対応可)
+    (4) 投稿開始
+  - 検討時期: F-cron 完了 + 1 週間の自動実行安定確認後
+  - 想定工数: 2-3 週間 (TikTok 審査含む)
+  - 関連ファイル: src/publishing/ (新規)
+  - 不変原則整合: 新規ディレクトリ追加で既存に影響なし
 
 ---
 
@@ -159,14 +227,55 @@
   - 関連ファイル: docs/FUTURE_WORK.md, CLAUDE.md
   - 補足: このレビュー自体も FUTURE_WORK.md の項目として登録されている（自己参照型管理）
 
-### Phase A.5-3b (F-state-protocol-supplement / 2026-05-02 登録)
+### Phase A.5-3b 手動 PoC: Remotion + ElevenLabs + 画像生成 (F-doc-backfill / 2026-05-02 改訂)
 
-- **手動最高傑作の作成 (golden_master_spec.md)** (F-state-protocol-supplement / 2026-05-02 登録)
-  - 背景: 「自動化の前に最高傑作を 1 本人間が手作りする」哲学 (DISCUSSION_NOTES #1「手動 PoC 推奨の軌道修正経緯」参照)。完全自動化前にゴールドスタンダードを確立し、自動生成出力の評価基準とする。クラウド誤り 5 例目 (自動化先行提案 → カズヤが手動 PoC 優先で軌道修正) の成果を実装に反映する位置付け。
-  - 対応案: ElevenLabs (音声) / Nano Banana Pro / Flux (画像) / CapCut (合成) で手動制作 → `docs/golden_master_spec.md` (新規) に全パラメータ (声 ID / プロンプト / Ken Burns / 字幕タイミング等) を記録。完成物は `data/output/golden_master/` に格納。
-  - 検討時期: Phase A.5-3a-verify 全通過後 (5 カテゴリ全部 OK 判定)
-  - 想定工数: 3-4 時間 (制作) + 判断議論
-  - 関連ファイル: docs/golden_master_spec.md (新規), data/output/golden_master/ (新規)
+- **Phase A.5-3b 手動 PoC: Remotion + ElevenLabs + 画像生成** (F-doc-backfill / 2026-05-02 改訂)
+  - 背景: 「自動化の前に最高傑作を 1 本人間が手作りする」哲学 (DISCUSSION_NOTES #1 参照)。Phase A.5-3a-verify 全通過後、自動化前にゴールドスタンダードを確立。Remotion / ElevenLabs / 画像生成ツール選定を実地で確定する位置付け。当初 F-state-protocol-supplement では CapCut 仮組みも視野に入っていたが、F-doc-backfill (2026-05-02) で「Phase A.5-3b からいきなり Remotion」を採用 (二度手間回避、DECISION_LOG「動画合成ツール Remotion 採用確定」参照)。
+  - 対応案:
+    (1) ElevenLabs アカウント取得 + API キー設定、声選定 (geo_lens 用は低音ダンディ男性、ブランド資産化のため 1 声に固定)
+    (2) Nano Banana Pro / ChatGPT (DALL-E 3) / Flux 1.1 Pro で画像生成比較 (シーンごとの画像プロンプトを使って最低 12-15 枚生成、品質とシネマティック表現を比較してツール確定)
+    (3) Remotion プロジェクトセットアップ (Claude Code に書かせる)
+        - 字幕コンポーネント (動的タイミング、Noto Sans JP Black、基本 72pt 強調 96pt、白/金/赤の 3 段階強調)
+        - Ken Burns 効果 (ズームイン基本 1.0 → 1.15、強ズーム 1.25)
+        - トランジション (ハードカット 0 秒、ピーク地点 0.1 秒ズームパンチ)
+        - BGM ダッキング (通常 22%、ナレーション時 15%)
+    (4) 動画 1 本完成 (80 秒 MP4)
+    (5) docs/golden_master_spec.md に全パラメータ記録 (声 ID / 画像生成プロンプトテンプレ / Ken Burns 設定 / 字幕タイミング / BGM 設定等)
+  - 検討時期: Phase A.5-3a-verify 全通過後 (4 カテゴリ全部 OK 判定)
+  - 想定工数: 1-2 週間 (制作 3-4 時間 + Remotion セットアップ + 試行錯誤)
+  - 関連ファイル: docs/golden_master_spec.md (新規), data/output/golden_master/ (新規), Remotion プロジェクト (新規)
+
+### Phase 1 (F-doc-backfill / 2026-05-02 登録、Phase A.5-3 完了後着手)
+
+- **Phase 1-A: ChannelConfig 統合** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: 現状 geo_lens 専用設計。Channel 2/3 追加には設計改修が必要。
+  - 対応案: configs/channels/base.yaml + geo_lens.yaml、--channel-id フラグ、TECH_DEBT 2.1/2.2/2.3 同時対応 (YAML 化)
+  - 検討時期: Phase A.5-3 全完了後
+  - 想定工数: 1 週間
+  - 関連: TECH_DEBT 2.1 (編集方針プロンプト YAML 化) / 2.2 (カテゴリ別ベース点数 YAML 化) / 2.3 (キーワード辞書 YAML 化) を本バッチ内で同時対応
+  - 関連ファイル: configs/channels/ (新規), src/shared/models.py (ChannelConfig 拡張), src/main.py (CLI 引数)
+
+- **Phase 1-B: src/pipeline/ 分割** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: main.py 3303 行は保守困難。pipeline/ への機能別モジュール分割が必要。
+  - 対応案: ingestion / clustering / scoring / filtering / analysis / generation / rendering / reporting に分割
+  - 検討時期: Phase 1-A 完了後
+  - 想定工数: 2-3 週間
+  - 関連: TECH_DEBT 4.4 (main.py モノリス化)
+  - 関連ファイル: src/pipeline/ (新規), src/main.py (薄いエントリポイント化)
+
+- **Phase 1-C: DB マイグレーション** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: 既存テーブルに channel_id カラム追加で多チャンネル対応。
+  - 対応案: events / jobs / daily_stats / recent_event_pool / jp_coverage_cache に channel_id カラム追加、デフォルト 'geo_lens' で後方互換
+  - 検討時期: Phase 1-A 完了後
+  - 想定工数: 1 週間
+  - 関連ファイル: src/storage/db.py, scripts/migrate_*.py (新規)
+
+- **Phase 1-D: Supabase 段階移行** (F-doc-backfill / 2026-05-02 登録、★慎重に)
+  - 背景: SQLite → Supabase 移行。影響範囲が大きく、段階的に実施必要。Apr 30 の議論で Gemini が「今週末 Supabase 移行」を提案したが、クラウドが「危険すぎる」と反論し計画的実施に変更 (DECISION_LOG「Supabase 段階移行『今週末は危険すぎる』判断」参照)。
+  - 対応案: 接続抽象化 → 開発環境動作確認 → テスト並走 → 本番切替 (フィーチャーフラグで戻せる)
+  - 検討時期: Phase 1-A/B/C 完了後、Phase B (Web メディア) 着手前
+  - 想定工数: 2-3 週間
+  - 関連ファイル: src/storage/db.py (抽象化), configs/database.yaml (新規)
 
 ---
 
@@ -189,6 +298,102 @@
   - 対応案: 月1回、除外された記事タイトルをカズヤが目視確認。誤除外パターンを発見したら BLOCKED_CATEGORIES や閾値を調整
   - 検討時期: 1ヶ月運用後
 
+### Phase B (F-doc-backfill / 2026-05-02 登録、3-6 ヶ月後)
+
+- **B-1: TikTok Content Posting API 申請 + 実装** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: 自動投稿の本命。審査期間が長いため早めに申請が必要。
+  - 対応案: 申請 1 日 + 審査 1-3 週間 + 実装 1 週間。Phase A.5-3d で先行統合済の場合は本エントリは「審査通過後の本格運用」に縮小
+  - 検討時期: Phase A.5-3d 後
+  - 関連ファイル: src/publishing/tiktok.py (新規)
+
+- **B-2: ElevenLabs 統合 (追加声)** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: ★Phase A.5-3c の F-elevenlabs-integration で前倒し実施済の予定。本エントリは japan_athletes / k_pulse 用の声追加のみ
+  - 対応案: configs/audio.yaml に japan_athletes / k_pulse 用の声 ID を追加
+  - 検討時期: Channel 2/3 立ち上げ時
+  - 関連ファイル: configs/audio.yaml
+
+- **B-3: Channel 2 (Japan Athletes Abroad) 立ち上げ** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: 海外で戦う日本人スポーツ選手チャンネル。
+  - 対応案: スポーツ系 RSS ソース追加 (ESPN, Marca, L'Équipe 等)、scoring.py の sports カテゴリベース調整、Breaking Shock 中心の武器庫
+  - 検討時期: Phase 1-A (ChannelConfig 統合) 完了後
+  - 想定工数: 1-2 週間
+  - 関連ファイル: configs/channels/japan_athletes.yaml (新規), configs/sources.yaml (拡張)
+
+- **B-4: Channel 3 (K-Pulse) 立ち上げ** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: 韓国エンタメチャンネル。
+  - 対応案: 韓国エンタメ系 RSS 追加 (Yonhap、Soompi、Koreaboo 等)、entertainment カテゴリベース調整、Breaking Shock + Cultural Divide 武器庫
+  - 検討時期: Phase 1-A 完了後
+  - 想定工数: 1-2 週間
+  - 関連ファイル: configs/channels/k_pulse.yaml (新規), configs/sources.yaml (拡張)
+
+- **B-5: Remotion Lambda 並列レンダリング** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: ★基本 Remotion 移行は Phase A.5-3c の F-video-compose-integration で前倒し実施済の予定。本エントリは Remotion Lambda 並列レンダリングのみ
+  - 対応案: AWS Lambda + Remotion Lambda のセットアップ、3 チャンネル並列レンダリング
+  - 検討時期: Channel 2/3 稼働後
+  - 関連ファイル: remotion/ (拡張), .github/workflows/ (拡張)
+
+- **B-6: Lovable + Vercel フロントエンド** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: Web メディアとしての公開、SEO で長期的トラフィック獲得。
+  - 対応案: Lovable で Next.js 生成 + Vercel デプロイ、生成済み記事の表示 / チャンネル別アーカイブ / SEO 対策
+  - 検討時期: Phase 1-D (Supabase 移行) 完了後
+  - 想定工数: 2-3 週間
+  - 関連ファイル: web/ (新規, 別リポジトリも検討)
+
+- **B-7: Cloudflare R2 (ストレージ移行)** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: 動画ファイルの保存コスト削減。S3 互換 API、エグレス料金ゼロ、保存料金 $0.015/GB/月
+  - 対応案: 動画ファイルの保存先を data/output/ → R2 に移行、CDN 配信
+  - 検討時期: Phase B (動画自動化) 完了後
+  - 想定工数: 1 週間
+  - 関連ファイル: src/storage/ (R2 クライアント新規)
+
+### Phase C (F-doc-backfill / 2026-05-02 登録、6-12 ヶ月後)
+
+- **C-1: YouTube Partner Program 申請** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: 収益化の最初のマイルストーン。
+  - 条件: フォロワー 1000 人 + 視聴時間 4000 時間
+  - 期待: 収益化開始 (広告収入)
+  - 検討時期: 投稿開始 + 数ヶ月後
+
+- **C-2: サブスク (note 等) / B2B レポート販売** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: ストック型収益、ファンベース化。
+  - 対応案: note プレミアム / Substack 等で月額、B2B レポート (10-50 万円)
+  - 検討時期: Web メディア稼働後
+  - 想定: 月額 500-2000 円のサブスクで読者数次第
+
+- **C-3: SaaS 化検討** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: Hydrangea パイプラインを他メディア向けにカスタマイズ可能な SaaS 化
+  - 対応案: マルチテナント化、テンプレート化された Channel 設定、API 提供
+  - 期待: B2B SaaS、数百万-数千万 ARR
+  - 検討時期: Channel 3 稼働 + 安定運用後
+
+- **C-4: 事業売却検討** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: Exit 戦略の選択肢。
+  - 期待: 単体 1-10 億円 / 自社連携 5-50 億円
+  - 検討時期: 規模拡大後
+
+- **C-5: 自社サービス (観光・ブライダル) 連携** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: Hydrangea を「メディア」として PR、本業との相乗効果
+  - 対応案: コンテンツ内での自社サービス自然紹介、SEO 流入の自社サービス送客
+  - 検討時期: Web メディア稼働後
+
+### 観察中項目 (F-doc-backfill / 2026-05-02 登録)
+
+- **F-17 候補: Gemini API 503 安定性対処** (F-doc-backfill / 2026-05-02 登録)
+  - 背景: 現状の 4 階層フォールバック + GEMINI_QUALITY_MAX_ATTEMPTS=2 + GEMINI_CALL_INTERVAL_SEC=0.5 で大体動くが、スパイク時の 503 が時々発生。試運転は早朝 5-8 時に固定する運用ルール化、リトライ間隔の動的調整、サーキットブレーカーパターン等が改善余地。
+  - 着手条件: 503 多発が確認された場合
+  - 関連ファイル: src/llm/factory.py, src/llm/retry.py
+
+- **_FRAMING_RESULTS の LRU 化** (F-doc-backfill / 2026-05-02 登録、Phase 2 案件)
+  - 背景: src/analysis/perspective_extractor.py の _FRAMING_RESULTS が無制限 dict キャッシュ。長時間稼働でメモリ肥大化の可能性。functools.lru_cache(maxsize=1000) に変更。
+  - 不変原則整合: 不変原則 4 (analysis 触らない) と衝突、Phase 1-A で他の analysis 改修と同時対応
+  - 着手条件: メモリ使用量の実測値次第
+  - 関連ファイル: src/analysis/perspective_extractor.py
+
+- **並列化検討** (F-doc-backfill / 2026-05-02 登録、Phase 2 案件)
+  - 背景: candidate1 の framing_inversion / multi_angle / insights は並列可能。asyncio + concurrent.futures で時間効率改善 (RPM 制限内のため合計コール数は変わらない)。
+  - 着手条件: Phase 1 完了後
+  - 関連ファイル: src/analysis/analysis_engine.py
+
 ---
 
 ## 完了済み（参考用）
@@ -198,6 +403,11 @@
   - 何を対応したか
 
 ---
+
+- **過去 19 セッション分の積み残し登録 + ロードマップ大幅改訂 (F-doc-backfill)** (F-doc-backfill / 2026-05-02 完了)
+  - 発生バッチ: F-state-protocol / F-state-protocol-supplement で CURRENT_STATE.md / DISCUSSION_NOTES.md / Phase A.5-3a-verify ロードマップを整備した直後、2026-05-02 のカズヤとの議論で「F-verify-e2e / F-verify-rss は過剰防衛」「ElevenLabs 採用なら macOS say の Linux 対応 (F-16-B-pre) は無意味」「動画合成は Remotion で確定 (Phase A.5-3b から使う)」「画像プロンプト出力仕様の確認が必要」「過去 19 セッション分の積み残し (Phase 1 / Phase B / Phase C / クラウド誤り 1-4 / 三角測量未対応 / 3 ソース対比未実装 等) が未登録」が判明。ロードマップを 4 段階 (3a-verify → 3b → 3c → 3d) に再構成する必要があった。
+  - 対応内容: (1) FUTURE_WORK.md の Phase A.5-3a-verify を 5→4 カテゴリに縮小 (F-verify-e2e / F-verify-rss を削除、F-image-prompt-spec を新規追加)。(2) Phase A.5-3b を Remotion + ElevenLabs + 画像生成前提に書き直し (CapCut 仮組み案を廃止)。(3) Phase A.5-3c (合成パート自動化) を新設、F-elevenlabs-integration / F-image-gen-integration / F-video-compose-integration / F-cron の 4 エントリを登録。(4) Phase A.5-3d (投稿前ゲート + 自動投稿) を新設。(5) Phase 1 (1-A〜1-D + TECH_DEBT 2.1/2.2/2.3/2.5 同時対応) を緊急度 中に登録。(6) Phase B (B-1〜B-7) と Phase C (C-1〜C-5) を緊急度 低に登録。(7) 観察中項目 (F-17 候補 / _FRAMING_RESULTS LRU / 並列化検討) を新設。(8) DISCUSSION_NOTES.md にクラウド誤り 1-4 + 三角測量未対応 + 3 ソース対比部分実装の 6 エントリ追加。(9) DECISION_LOG.md に F-doc-backfill 概要 + 「Phase A.5-3a-verify スコープ縮小」「macOS say 廃止 + ElevenLabs 前倒し」「動画合成ツール Remotion 採用」「Supabase 移行『今週末は危険すぎる』判断 (Apr 30 遡及)」「6 パターン武器庫 → 4 パターン削減経緯 (遡及)」「Hook 5 類型 / 視聴維持ピーク 4 点設計の廃止経緯 (遡及)」の 7 エントリ追加。(10) CURRENT_STATE.md の「次バッチ候補」を新ロードマップに合わせて全置換更新。(11) BATCH_PROTOCOL Task 1-5 を本バッチ自身に適用 (ドッグフーディング)。リグレッション影響なし (docs/ のみ変更、src/ tests/ configs/ は 0 行変更、baseline 1315 passed 維持)。
+  - 関連ファイル: `docs/FUTURE_WORK.md` (Phase A.5-3a-verify 縮小 + 3c/3d/Phase1/B/C/観察中項目 新設 + 本エントリ), `docs/DISCUSSION_NOTES.md` (6 エントリ追加 = 16 Active), `docs/DECISION_LOG.md` (7 エントリ追加), `docs/CURRENT_STATE.md` (次バッチ候補刷新)
 
 - **CURRENT_STATE / DISCUSSION_NOTES 導入と不変原則 2 の正確化 (F-state-protocol)** (F-state-protocol / 2026-05-01 完了)
   - 発生バッチ: Phase A.5-3a で 11 連続 main マージ成功 (F-12-A → F-12-B-1-extension) を達成したが、チャット移行のたびに 2806 行の引き継ぎプロンプトを手作業で再構築する運用が持続不可能になった。過去の決定事項 (C-1/C-2/C-3 RPM 対策、F-13 隠れ層、F-7-α 部分実装等) がバッチ歴史リストから消える事故、不変原則 2「script_writer.py 一切変更不可」が実装と乖離 (F-12-A / F-12-B / Batch 5 で大改修済み、新ルート稼働中)、DECISION_LOG / FUTURE_WORK が時系列ログとして機能する一方で「今この瞬間のスナップショット」と「議論中の未確定メモ蓄積」の仕組みがない、といった構造的課題が顕在化していた。
