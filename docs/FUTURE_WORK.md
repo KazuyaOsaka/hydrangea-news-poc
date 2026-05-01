@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-01 (F-12-B-1-extension 完了)
+最終更新: 2026-05-01 (F-state-protocol 完了)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -153,6 +153,11 @@
   - 何を対応したか
 
 ---
+
+- **CURRENT_STATE / DISCUSSION_NOTES 導入と不変原則 2 の正確化 (F-state-protocol)** (F-state-protocol / 2026-05-01 完了)
+  - 発生バッチ: Phase A.5-3a で 11 連続 main マージ成功 (F-12-A → F-12-B-1-extension) を達成したが、チャット移行のたびに 2806 行の引き継ぎプロンプトを手作業で再構築する運用が持続不可能になった。過去の決定事項 (C-1/C-2/C-3 RPM 対策、F-13 隠れ層、F-7-α 部分実装等) がバッチ歴史リストから消える事故、不変原則 2「script_writer.py 一切変更不可」が実装と乖離 (F-12-A / F-12-B / Batch 5 で大改修済み、新ルート稼働中)、DECISION_LOG / FUTURE_WORK が時系列ログとして機能する一方で「今この瞬間のスナップショット」と「議論中の未確定メモ蓄積」の仕組みがない、といった構造的課題が顕在化していた。
+  - 対応内容: (1) `docs/CURRENT_STATE.md` を新規作成 — 8 セクション構成 (リポジトリ状態 / 現在のフェーズ / 直近試運転 / 防衛機構の現状 4+1 層 / 触ってよい・ダメ領域マップ / 不変原則 5 つ / カズヤの直近フィードバック / 関連ドキュメント導線)、初回値として main HEAD `1e4a932` / baseline `1315 passed` / 11 連続成功 / 試運転 7-K 動画化率 100% / Phase A.5-3a 完了 → A.5-3a-verify 着手前を投入。バッチ完了時に「全置換更新」する運用 (追記ではない)。(2) `docs/DISCUSSION_NOTES.md` を新規作成 — 「未分類 (Active)」と「アーカイブ」の 2 セクション構成、初期エントリ 10 件投入 (手動 PoC 軌道修正 / C-1/C-2/C-3 欠落 / CLAUDE_CODE_INSTRUCTIONS.md 遺産化 / スコープ転換昇格ルール / STEP 3 と F-12-B-1 のレイヤー関係 / ★不変原則 2 乖離 / F-13 隠れ層 / target_enemy 排除 / F-12-B-1.5 と原則 2 不整合 / F-7-α 部分実装済み)。(3) `docs/BATCH_PROTOCOL.md` を拡張 — 不変原則 5 つを A.5-3a 時点版に差し替え (特に不変原則 2 を「既存ルート不可、新ルート可、`_CHAR_BOUNDS` 等の定数調整は最小改変なら許容」に正確化)、Task 4 (DISCUSSION_NOTES 整理: 4-A 新規追加 + 4-B 既存再評価) と Task 5 (CURRENT_STATE 全置換更新) を追加、バッチプロンプトテンプレートを Task 1-5 に更新。(4) `CLAUDE.md` を更新 — 必読ドキュメントリストの最上位に CURRENT_STATE.md を配置、DISCUSSION_NOTES.md を 5 番目に追加、参照順序を明示化。(5) 本バッチ自身に Task 1-5 を適用 (ドッグフーディング)。リグレッション影響なし (docs/ + CLAUDE.md のみ変更、src/ tests/ configs/ は 0 行変更、baseline 1315 passed 維持)。
+  - 関連ファイル: `docs/CURRENT_STATE.md` (新規), `docs/DISCUSSION_NOTES.md` (新規), `docs/BATCH_PROTOCOL.md` (不変原則差し替え + Task 4/5 追加), `CLAUDE.md` (必読リスト刷新), `docs/DECISION_LOG.md` (F-state-protocol エントリ), `docs/FUTURE_WORK.md` (本エントリ)
 
 - **punchline 定義の「シニカル × 具体着地」両立化 (F-12-B-1-extension)** (F-12-B-1-extension / 2026-05-01 完了)
   - 発生バッチ: F-12-B-1 (視聴者ファースト原則追加) 完了後の試運転で、punchline 末尾に抽象比喩の癖が残存することが観察された (「地政学の檻に閉じ込める」「冷徹な力学」)。根本原因は `configs/prompts/analysis/geo_lens/script_with_analysis.md` STEP 2 の punchline 定義「シニカルかつ知的な余韻」が抽象詩を呼び込んでいたこと、および例示された「綺麗事を信じた側が損をする」が STEP 3 禁止表現 (物申す系 YouTuber 構文) と矛盾していたこと。視聴者ファースト原則 (抽象より具体) と punchline 定義 (シニカルな余韻) の方向性が一貫していない構造的問題。
