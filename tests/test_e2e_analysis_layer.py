@@ -235,7 +235,13 @@ def test_e2e_analysis_layer_geo_lens_writes_both_jsons(
     """
     monkeypatch.setenv("ANALYSIS_LAYER_ENABLED", "true")
     monkeypatch.setenv("DEFAULT_CHANNEL_ID", "geo_lens")
+    # F-16-A: legacy TOP_N_GENERATION は TOP_N_ARTICLES_PER_RUN にリネーム済み。
+    # ユーザー .env に TOP_N_ARTICLES_PER_RUN=3 が固定されているため、新変数を
+    # 明示的に上書きして Slot-1 のみ処理させる (E2E は単一イベントのフロー検証が目的)。
+    # TOP_N_GENERATION も後方互換のため残す (一部下流テストが参照)。
     monkeypatch.setenv("TOP_N_GENERATION", "1")
+    monkeypatch.setenv("TOP_N_ARTICLES_PER_RUN", "1")
+    monkeypatch.setenv("TOP_N_VIDEOS_PER_RUN", "1")
 
     # 分析レイヤー: 固定 AnalysisResult を返す
     captured: dict = {"event_id": None}
