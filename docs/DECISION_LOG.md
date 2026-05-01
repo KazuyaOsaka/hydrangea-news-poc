@@ -854,7 +854,7 @@ Phase A.5-2 で 7 連続バッチ (F-12-A / F-13-A / F-13.B / F-14 / F-15 / F-16
 
 ### 関連ファイル・コミット
 
-- コミット: (push 時に追記)
+- コミット: 535f8e0 (feature/F-12-B-1)
 - 変更:
   - `configs/prompts/analysis/geo_lens/script_with_analysis.md` (【視聴者ファーストの編集姿勢】追加、20 行追加)
   - `docs/BATCH_PROTOCOL.md` (不変原則 2 の例外条項拡大 + 注記追加)
