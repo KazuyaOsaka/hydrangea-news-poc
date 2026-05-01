@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-02 (F-state-protocol-supplement 完了時点)
+最終更新: 2026-05-02 (F-doc-backfill 完了時点)
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -25,14 +25,16 @@
 ## 2. 現在のフェーズ
 
 - **Phase**: Phase A.5-3a 完了 → A.5-3a-verify 着手中
-- **進行中バッチ**: なし (F-state-protocol-supplement 完了直後)
+- **進行中バッチ**: なし (F-doc-backfill 完了直後)
 - **次バッチ候補と推奨**:
   - 1st: **F-verify-jp-coverage** (★最優先、ゴールデンセット 20 件、2-3 時間)
-  - 2nd: F-verify-e2e (5 日連続稼働、毎日 30 分手動運用)
-  - 3rd: F-verify-rss (47+ sources 疎通、1 時間)
-  - 4th: F-verify-perspective (4 軸バランス検証、F-12-B-2 着手判断材料)
-  - 5th: F-verify-script-quality (NG パターン頻度、F-12-B-1.5 着手判断材料)
-  - Phase A.5-3a-verify 全通過後 → Phase A.5-3b (手動 PoC、golden_master_spec 作成)
+  - 2nd: F-verify-perspective (4 軸バランス検証、F-12-B-2 着手判断材料)
+  - 3rd: F-verify-script-quality (NG パターン頻度、F-12-B-1.5 着手判断材料)
+  - 4th: F-image-prompt-spec (画像プロンプト仕様確認、Phase A.5-3b 前提)
+  - Phase A.5-3a-verify 全通過後 → Phase A.5-3b 手動 PoC (Remotion + ElevenLabs + 画像生成)
+  - Phase A.5-3c で自動化 (F-elevenlabs-integration / F-image-gen-integration /
+    F-video-compose-integration / F-cron)
+  - Phase A.5-3d で投稿前ゲート + 自動投稿
 
 ## 3. 直近の試運転結果サマリー
 
@@ -118,4 +120,7 @@
 *このドキュメントは F-state-protocol (2026-05-01) で導入。
  Claude Code がバッチ完了時に全置換更新する運用 (BATCH_PROTOCOL.md Task 5 参照)。
  F-state-protocol-supplement (2026-05-02) で「次バッチ候補」セクションを最小更新し、
- Phase A.5-3a-verify ロードマップを反映。*
+ Phase A.5-3a-verify ロードマップを反映。
+ F-doc-backfill (2026-05-02) で過去 19 セッション分の積み残しを正式登録、
+ Phase A.5-3a-verify を 5→4 カテゴリに縮小、ElevenLabs 前倒しと Remotion 採用を
+ DECISION_LOG に記録、ロードマップを 4 段階 (3a-verify → 3b → 3c → 3d) に再構成。*
