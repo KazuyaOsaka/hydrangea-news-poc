@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-01 (F-13-B 完了)
+最終更新: 2026-05-01 (F-doc-protocol 完了)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -153,6 +153,11 @@
   - 何を対応したか
 
 ---
+
+- **文書自動更新プロトコルの確立 (F-doc-protocol)** (F-doc-protocol / 2026-05-01 完了)
+  - 発生バッチ: Phase A.5-2 の 7 連続バッチで DECISION_LOG.md / FUTURE_WORK.md の更新が散逸し、「台本の日本語改善」「document 更新」「手動 PoC」等の重要事項が忘却される問題が発生。月次レビュー (FW-1) だけでは速度が追いつかないと判明。
+  - 対応内容: `docs/BATCH_PROTOCOL.md` を新規作成し、各バッチ完了時に必須となる 3 タスク (Task 1: DECISION_LOG エントリ追加 / Task 2: FUTURE_WORK 更新 / Task 3: 完了レポート明記) と 5 つの不変原則を明文化。`CLAUDE.md` 冒頭に「Hydrangea Batch Protocol」セクションを追加し、必読ドキュメントリストにも追記することで全セッションで参照される動線を整備。本プロトコル自体も月 1 レビュー対象に登録。`src/` `tests/` `configs/` には一切手を入れず、ドキュメント層のみで仕組み化 (リグレッション 1315 passed 維持)。
+  - 関連ファイル: `docs/BATCH_PROTOCOL.md` (新規), `CLAUDE.md` (参照追加), `docs/DECISION_LOG.md` (Task 1 最初の実装例), `docs/FUTURE_WORK.md` (Task 2 最初の実装例)
 
 - **rescue path の Hydrangea ミッション本丸との矛盾 (F-13-B で完全廃止)** (F-13-B / 2026-05-01 完了)
   - 発生バッチ: 試運転 7-J (2026-04-30) で動画化率 0%。Slot-1 候補が JP=0 件で `requires_more_evidence=True` → rescue 発動 → script skip。これは Hydrangea ミッション「日本で封殺されている海外ニュース」(blind_spot_global) を skip する本末転倒な設計だった。
