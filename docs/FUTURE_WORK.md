@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-03 (F-doc-cleanup 完了)
+最終更新: 2026-05-03 (F-doc-cleanup-followup 完了)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -418,6 +418,11 @@
   - 何を対応したか
 
 ---
+
+- **議論結果反映 + コアミッション 2 系統並立の docs 化 (F-doc-cleanup-followup)** (F-doc-cleanup-followup / 2026-05-03 完了)
+  - 発生バッチ: F-doc-cleanup (2026-05-03 / e34f36e、main マージ 3e817d8) 完了直後、カズヤとの議論で 3 つの追加判断が確定 (大規模調査機能登録 / ★最重要 コアミッション 2 系統並立訂正 / クラウド誤り 7 過小評価)。これらは F-doc-cleanup のスコープ外で、別バッチで反映する必要があった。特にコアミッション 2 系統並立は、F-doc-cleanup で CLAUDE.md の「プロジェクト概要」セクションを削除して CURRENT_STATE 参照に統合した結果、現状 docs のどこにもコアミッションが明文化されていない状態となっており、別チャット移行時のクラウド誤り 7 (系統 1 中心理解で系統 2 を過小評価) の再発リスクが極めて高い構造だった。
+  - 対応内容: (Task A) DISCUSSION_NOTES.md に 3 エントリ追加 = (1) 大規模調査機能 (オンデマンド深掘りパイプライン): Phase B 以降の新選択肢として、井上 vs 中谷の例を含む実装上の主要論点 6 点と Phase 配置を記録、(2) ★最重要 — Hydrangea コアミッション 2 系統並立: 系統 1 (silence_gap) と系統 2 (framing_inversion + 構造分析) の並立、既存構造との関係 (framing_inversion 軸 / multi_angle 5 観点 / media_divergence) を明文化、(3) クラウド誤り 7 — 系統 1 中心理解で系統 2 を過小評価: 訂正前のクラウド理解と教訓・類似リスク・防止策を記録。Active 件数 18 → 21。(Task B) CURRENT_STATE.md 冒頭に新セクション「0. Hydrangea コアミッション (2 系統並立)」を追加: 系統 1 / 系統 2 の説明、ブランドポジション、3 チャンネル構想と現フォーカス、Phase B 以降の新選択肢 (大規模調査機能) を集約。既存セクション 1-8 はそのまま維持 (リナンバーしない)。末尾注記に本バッチ概要追記。(Task C) BATCH_PROTOCOL Task 1-5 を本バッチ自身に適用 (ドッグフーディング)。リグレッション影響なし (docs/ のみ変更、src/ tests/ configs/ CLAUDE.md は 0 行変更、baseline 1315 passed 維持)。
+  - 関連ファイル: `docs/DISCUSSION_NOTES.md` (3 エントリ追加 + 最終更新日更新), `docs/CURRENT_STATE.md` (新セクション「0. Hydrangea コアミッション (2 系統並立)」冒頭追加 + 最終更新日更新 + 末尾注記更新), `docs/DECISION_LOG.md` (本バッチエントリ追加), `docs/FUTURE_WORK.md` (本エントリ追加)
 
 - **文書負債の一括根本治療 (F-doc-cleanup)** (F-doc-cleanup / 2026-05-03 完了)
   - 発生バッチ: F-state-protocol / F-state-protocol-supplement / F-doc-backfill / F-doc-backfill-supplement / F-cleanup-merge-streak の文書整備系 5 連発の最終仕上げ。Phase A.5-3a 完了 → A.5-3a-verify 着手前に過去の文書負債 (F-13 隠れ層未昇格、DECISION_LOG 遡及記録の未完、CLAUDE.md の現運用乖離、REFACTORING_PLAN.md の重複ドキュメント化、2026-05-03 議論結果の docs 未反映、拡張性差し込み判断ルールの暗黙運用) を一括清算する必要があった。カズヤ哲学「対症療法じゃなくて根本治療」「負の遺産残さないように」に従い、注記による応急処置ではなく文書構造そのものを整地。
