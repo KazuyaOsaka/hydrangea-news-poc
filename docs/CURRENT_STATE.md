@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-03 (F-doc-cleanup 完了時点)
+最終更新: 2026-05-03 (F-doc-cleanup-followup 完了時点)
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -8,18 +8,78 @@
 
 ---
 
+## 0. Hydrangea コアミッション (2 系統並立)
+
+> ★最重要: 別チャット移行時のクラウド誤り再発防止のため冒頭配置 (F-doc-cleanup-followup / 2026-05-03)。
+> 系統 1 中心で理解して系統 2 を過小評価する誤りはクラウド誤り 7 として記録済み。
+
+Hydrangea のコアミッションは **2 系統並立** で、片方だけでは Hydrangea のメディア性が成立しない。
+
+### 系統 1: 日本未報道の大ニュース (silence_gap)
+
+日本で報じられていない海外大ニュースを日本人に届ける。
+
+- 海外で大きく扱われているが日本で報じられていない事象を発掘
+- F-13.B JpCoverageVerifier で `has_jp_coverage=False` を判定 → blind_spot_global として動画化
+- 実装: rescue 完全廃止 + Web 検証導入済み (F-13.B / 2026-05-01)
+
+### 系統 2: 報道差の背景解説 (framing_inversion + 構造分析)
+
+日本/西側 vs 海外/東側 の報道差を取り上げ、その差の背景にある **地政学的理由 /
+文化的歴史的背景 / 政治的意図 / 利害構造** を解説する。
+
+「日本人が知っておくべき教養としての国際的評価」を提供するメディアとしての本質。
+
+- `framing_inversion` 軸 (perspective_select_and_verify.md): 系統 2 を担う中核軸
+- `multi_angle_analysis.md` の 5 観点 (geopolitical / political_intent /
+  economic_impact / cultural_context / media_divergence): 報道差の背景を構造化
+- `media_divergence` 観点: 日本 / 西側 / グローバルサウス の比較分析
+- 実装は部分的: 3 ソース対比ルールが未実装 (系統 2 の核心機能の重大な欠落、
+  DISCUSSION_NOTES「3 ソース対比ルール部分実装」参照)
+
+### ブランドポジション
+
+ReHacQ・東洋経済オンラインのトーン。シニカル × 知性、ただし「シニカル = 抽象詩で飾る」
+ではなく **「シニカル × 視聴者の生活実感への着地」** が punchline 定義
+(F-12-B-1-extension で確定)。陰謀論・扇動禁止、情報密度で勝負。
+
+ターゲット: 20 代後半〜40 代の知的好奇心が高いビジネス層。
+
+### 3 チャンネル構想と現フォーカス
+
+| チャンネル | 内容 | 状態 |
+|---|---|---|
+| `geo_lens` | Geopolitical Lens (政治・経済地政学) | **現在唯一のフォーカス** |
+| `japan_athletes` | 海外で戦う日本人アスリート | Phase B 以降、立ち上げ未確定 |
+| `k_pulse` | 韓国エンタメ | Phase B 以降、立ち上げ未確定 |
+
+Phase A.5-3d で本番リリースするのは geo_lens のみ単独。japan_athletes / k_pulse /
+カテゴリ細分化は Phase A.5-3d 安定稼働後に判断 (DISCUSSION_NOTES「Phase B 以降の
+方向性未確定」参照、2026-05-03 議論で「本命: geo_lens 動画自動投稿、その先は
+動画 / 独自メディア / 手動 note・LinkedIn の 3 択」に縮約)。
+
+### Phase B 以降の新選択肢: 大規模調査機能 (オンデマンド深掘り)
+
+通常運用 (cron 自動 / 短尺動画) とは別に、カズヤが事象を指定して大規模調査 →
+長尺動画 + 記事を生成する手動起動パイプラインを Phase B 以降に追加する構想。
+**系統 2 を特定事象についてオンデマンドで深掘りする機能** = コアミッションの本流
+深掘り版。詳細は DISCUSSION_NOTES「大規模調査機能 (オンデマンド深掘りパイプライン)」
+参照。
+
+---
+
 ## 1. リポジトリ状態
 
-- **main HEAD コミット**: `eaa0ac1`
+- **main HEAD コミット**: `3e817d8`
 - **直近 5 件のコミットログ**:
   ```
+  3e817d8 Merge branch 'feature/F-doc-cleanup'
+  e34f36e docs: cleanup doc debt before Phase A.5-3a-verify (F-doc-cleanup)
   eaa0ac1 Merge branch 'feature/F-cleanup-merge-streak'
   9369867 feat: remove meaningless 'consecutive merge streak' counter (F-cleanup-merge-streak)
   c736dc2 Merge branch 'feature/F-doc-backfill-supplement'
-  a618803 feat: confirm image gen candidates + auto-publishing policy + extensibility (F-doc-backfill-supplement)
-  fd1a41b Merge branch 'feature/F-doc-backfill'
   ```
-- **baseline テスト数**: `1315 passed` (2026-05-03 F-doc-cleanup 完了時点で確認)
+- **baseline テスト数**: `1315 passed` (2026-05-03 F-doc-cleanup-followup 完了時点で確認)
 
 ## 2. 現在のフェーズ
 
@@ -154,4 +214,8 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
  (F-13 / F-13.B / F-15 / F-16-A / F-12-A / F-12-B / F-14)、CLAUDE.md 全面書き直し
  (Claude Code 振る舞い指針に集約、重複セクション排除)、REFACTORING_PLAN.md
  アーカイブ注記、2026-05-03 議論結果の docs 反映 (Phase B 3 択構造、Phase A.5-3a-verify
- 順序見直し、クラウド誤り 6 追加)、BATCH_PROTOCOL に拡張性差し込み判断ルール新設。*
+ 順序見直し、クラウド誤り 6 追加)、BATCH_PROTOCOL に拡張性差し込み判断ルール新設。
+ F-doc-cleanup-followup (2026-05-03) で 2026-05-03 議論結果を完全反映: DISCUSSION_NOTES に
+ 3 エントリ追加 (大規模調査機能 / ★最重要 コアミッション 2 系統並立 / クラウド誤り 7)、
+ CURRENT_STATE.md 冒頭に新セクション「0. Hydrangea コアミッション (2 系統並立)」を追加
+ (別チャット移行時のクラウド誤り 7 再発防止のため最重要事項を冒頭配置)。*
