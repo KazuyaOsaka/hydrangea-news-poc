@@ -1626,3 +1626,611 @@ F-doc-backfill / F-doc-backfill-supplement の 3 連続バッチで Claude Code 
   - `docs/DECISION_LOG.md` (本エントリ)
   - `docs/DISCUSSION_NOTES.md` (機械的踏襲リスクエントリ追加)
 - 関連: F-state-protocol (連続成功カウント導入元)
+
+---
+
+## 2026-05-03: F-doc-cleanup — F-13 隠れ層の正式昇格 (遡及記録)
+
+### 背景
+
+`src/generation/script_writer.py:951-985` (旧 865-895 行から移動) に存在する
+`quality_floor_miss` bypass ロジックは、Hydrangea コンセプト防衛機構の独立した
+安全網として機能している。具体的には、`appraisal_cautions` が `[抑制]` で始まる
+候補に対して、(1) `editorial_mission_score >= MISSION_SCORE_THRESHOLD`、
+(2) `judge_result.publishability_class in {blind_spot_global, linked_jp_global}`、
+(3) `analysis_result is not None` のいずれかが満たされれば抑制を上書きして
+通過させる。
+
+しかし本ロジックは F-13 本体エントリにも EDITORIAL_MISSION_FILTER_DESIGN.md にも
+未記録で、CURRENT_STATE.md の防衛機構表に「⚠️ DECISION_LOG / 設計書未記録」と
+注記された状態 (DISCUSSION_NOTES「F-13 ガード quality_floor_miss bypass が
+独立した安全網として機能」エントリ) が続いていた。
+
+F-doc-cleanup (2026-05-03) で正式に防衛機構の 5 層目として位置付け、
+DECISION_LOG と CURRENT_STATE と EDITORIAL_MISSION_FILTER_DESIGN.md に
+明文化することで「忘れ去られた約束」を解消する。
+
+### 議論
+
+- **位置付け案 A**: F-13 本体の一部として扱い、独立層として認めない
+  → 不採用。判定主体 (script_writer 側) と発動条件 (3 通りの OR 条件) が独立で、
+  Filter (F-1) / Gate (F-2) / Verifier (F-13.B) / FlagshipGate 下流救済 (F-5) と
+  並ぶ独立した安全網としての性格が強い
+
+- **位置付け案 B**: 独立した防衛機構の 5 層目として正式昇格 → 採用
+  - 根拠: `analysis_result is not None` 条件は「多角的分析が成立している」という
+    独立した証拠で、上流ガードとは別系統の判定材料 (analysis レイヤーは
+    Filter/Gate/Verifier から独立している)
+  - 根拠: `editorial_mission_score >= MISSION_SCORE_THRESHOLD` は F-1 通過条件と
+    同じ閾値だが、bypass の発動タイミングが script_writer の最下流 (動画化直前)
+    で、上流ガードとは時系列的にも独立
+  - 根拠: 5 層目として明文化することで、防衛機構の総覧性が向上し、
+    将来の防衛機構改修時の影響範囲が把握しやすくなる
+
+- **F-13 命名の根拠**:
+  - 旧 quality_floor_miss ガードは「証拠不足候補を script 生成時に弾く」設計
+    だったが、F-13 (2026-04-29 / 3fbfa70) で「Hydrangea ミッション本丸候補は
+    抑制を上書きする」設計に再構築された。本ロジックは F-13 本体の一部として
+    実装されたため、5 層目として独立記録する際も F-13 隠れ層の名称を維持する
+
+### 決定
+
+1. F-13 隠れ層を防衛機構の正式 5 層目として位置付ける
+   (4+1 層から 5 層体系に昇格)
+2. CURRENT_STATE.md 防衛機構表の「⚠️」マークを削除し、状態を「✅ 稼働中」に変更
+3. EDITORIAL_MISSION_FILTER_DESIGN.md に F-13 隠れ層セクションを追加
+   (script_writer.py:951-985 のロジック説明 + 防衛機構との関係)
+4. DISCUSSION_NOTES から「F-13 ガード quality_floor_miss bypass が独立した
+   安全網として機能」エントリを削除 (DECISION_LOG に昇格、Active 18 → 17)
+
+### 結果
+
+- 防衛機構の総覧性が向上、5 層体系として明文化
+- 「忘れ去られた約束」の典型例が解消、F-state-protocol 哲学の実証
+- 将来の防衛機構改修時、F-13 隠れ層への影響を漏らさず検討できる構造に
+- 実装変更ゼロ (記録のみ、`src/generation/script_writer.py` は参照のみ)
+
+### 関連ファイル・コミット
+
+- コミット: (F-doc-cleanup 一括コミットに統合 — 議論自体は 2026-05-03)
+- 変更:
+  - `docs/DECISION_LOG.md` (本エントリ)
+  - `docs/CURRENT_STATE.md` (防衛機構表 5 層化、「⚠️」削除)
+  - `docs/EDITORIAL_MISSION_FILTER_DESIGN.md` (F-13 隠れ層セクション追加)
+  - `docs/DISCUSSION_NOTES.md` (該当エントリ削除、Active 18 → 17)
+- 参照のみ: `src/generation/script_writer.py:951-985` (実装変更なし)
+
+---
+
+## 2026-05-03: F-doc-cleanup — F-13 (rescue 廃止前提整備) 本体 (遡及記録)
+
+### 背景
+
+試運転 7-J (2026-04-30) で動画化率 0%。Slot-1 候補が JP=0 件で
+`requires_more_evidence=True` → rescue 発動 → script skip という挙動が観察され、
+これが Hydrangea ミッション「日本で封殺されている海外ニュース」(blind_spot_global) を
+skip する本末転倒な設計だと判明した。
+
+旧 quality_floor_miss ガードは「証拠が不足した候補は script 生成段階で
+ブロックする」という単純な設計だったが、F-1 (EditorialMissionFilter) や
+F-2 (FlagshipGate) で「Hydrangea コンセプト本丸記事」として認められた候補も
+同じ条件で弾かれてしまい、上流ガードと矛盾する状態だった。
+
+F-13 本体エントリは DECISION_LOG に未記録のまま、F-13.B (rescue 完全廃止) や
+他のバッチ群が積み上がっていた。F-doc-cleanup で遡及記録する。
+
+### 議論
+
+- **案 A**: quality_floor_miss ガードを完全撤去し、`appraisal_cautions=[抑制]` でも
+  全部通す → 不採用。既存の品質保証 (証拠不足候補のブロック) が機能しなくなる
+
+- **案 B (採用)**: ガードは残しつつ、Hydrangea コンセプト本丸記事は抑制を
+  上書きする bypass 経路を追加
+  - bypass 発動条件: 以下の OR
+    - `editorial_mission_score >= MISSION_SCORE_THRESHOLD`
+      (F-1 通過レベルの編集ミッション適合度)
+    - `judge_result.publishability_class in {blind_spot_global, linked_jp_global}`
+      (F-2 / FlagshipGate 通過判定)
+    - `analysis_result is not None`
+      (AnalysisLayer で多角的分析が成立)
+  - bypass 発動時は WARNING ログで可視化 (`[F-13] quality_floor_miss bypass`)
+
+- **rescue path との関係**: F-13 完了時点では rescue path (judge rescue) が
+  まだ稼働中。F-13 は「script_writer 側のガード」、rescue は
+  「main.py 側の judge rescue 分岐」で別系統。ただし両者が連動して動画化を
+  阻害するケースが続いており、最終的には F-13.B (2026-05-01) で rescue 完全廃止に至る
+
+### 決定
+
+`src/generation/script_writer.py` の quality_floor_miss ガードを再設計し、
+Hydrangea コンセプト本丸記事は bypass する経路を追加。実装は
+`script_writer.py:951-985` (現行行番号) に集約。
+
+### 結果
+
+- F-13 完了直後の試運転 7-K (2026-05-01) で 3/3 Slot 動画化成功 (FIFA + Gaza×2)
+- ただし rescue path は依然稼働中で、F-13.B (2026-05-01) で完全廃止に至る
+- F-13 隠れ層は 5 層目の防衛機構として後日 (本バッチ) 正式昇格
+
+### 関連ファイル・コミット
+
+- コミット: 3fbfa70 (2026-04-29 13:09 +0900) — feat: redesign quality_floor_miss
+  guard for Hydrangea concept (F-13)
+- 変更:
+  - `src/generation/script_writer.py` (quality_floor_miss bypass 追加)
+- 関連:
+  - F-13.B (2026-05-01 b950813) で rescue path 完全廃止
+  - F-13 隠れ層の正式昇格は F-doc-cleanup (2026-05-03) で実施
+
+---
+
+## 2026-05-03: F-doc-cleanup — F-13.B (JpCoverageVerifier + rescue 完全廃止) 本体 (遡及記録)
+
+### 背景
+
+F-13 (2026-04-29) で quality_floor_miss bypass を追加したが、main.py の
+`_write_judge_rescue()` 経由の rescue path (judge_report.json /
+followup_queries.* 出力 + script skip) は依然稼働しており、Slot-1 候補が
+JP=0 件のとき rescue 発動で動画化が止まる事象が継続していた。
+
+これは Hydrangea ミッション「日本で封殺されている海外ニュース」(blind_spot_global) を
+skip する設計矛盾の温存。さらに F-13-A (JP RSS 13 媒体拡張、c9502d0) でも
+ニッチ海外ニュース (Gaza 電力危機等) は依然 JP ソース 0 件のケースが残ることが
+判明し、RSS 取得漏れと「真の日本未報道」を区別できない構造的問題が顕在化。
+
+### 議論
+
+- **案 A**: rescue を維持しつつ閾値を緩和 → 不採用。Hydrangea ミッション本丸の
+  blind_spot_global を skip する根本矛盾は解消されない
+
+- **案 B (採用)**: rescue path を完全廃止 + 「日本未報道」の Web 検証経路を新設
+  - rescue 完全廃止: `_write_judge_rescue()` 関数と main.py 内 rescue 分岐を撤去。
+    `is_rescue_candidate` 判定ロジックは src/triage/gemini_judge.py 側に残置
+    (不変原則 3 遵守) しつつ main.py から呼ばない
+  - JpCoverageVerifier 新設: Gemini Grounding (Google Search) で日本語検索、
+    27+ ドメインホワイトリスト (新聞・テレビ・通信社・主要ビジネスメディア) と
+    除外リスト (Yahoo!ニュース・SNS・個人ブログ等) で照合。判定基準は
+    「大手メディアの報道有無のみ」(個人投稿は判定材料にしない、Hydrangea の
+    ミッション本丸: 大手の空白を埋める)。24h SQLite キャッシュ
+    (`jp_coverage_cache` テーブル新設) で重複検証抑制、月コスト約 $4.2 想定
+  - Grounding API エラー時の安全側倒し: `has_jp_coverage=True` で
+    動画化を止める (誤って「日本未報道」と判定するリスクを回避)
+
+- **不変原則 3 との整合**: src/triage/ の既存ファイルは触らず、
+  `jp_coverage_verifier.py` を新規追加。`_write_judge_rescue()` は
+  src/main.py 側の関数で、main.py は不変原則対象外
+
+### 決定
+
+1. rescue path 完全廃止 (`_write_judge_rescue()` + main.py の rescue 分岐撤去)
+2. JpCoverageVerifier 新設 (Gemini Grounding + 27 ドメイン WL +
+   24h キャッシュ + 安全側倒し)
+3. 環境変数: `JP_COVERAGE_VERIFIER_ENABLED` /
+   `JP_COVERAGE_CACHE_HOURS` / `JP_COVERAGE_GROUNDING_MODEL`
+4. テスト 36 件追加 (`tests/test_f13b_rescue_abolition.py`)
+
+### 結果
+
+- 試運転 7-K (2026-05-01) で 3/3 Slot 動画化成功 (FIFA + Gaza×2)
+- Slot-2 (cls-33b4f4960bf9) と Slot-3 (cls-204a683f73ee) で
+  `has_jp_coverage=False` を確認、blind_spot_global として動画化フローへ進行
+- judge_report.json / followup_queries.* の新規出力なし (既存ファイルは履歴として残置)
+- rescue 廃止後初の全 Slot 動画化成功
+- 防衛機構の正式 4 層目として CURRENT_STATE.md に登録
+
+### 関連ファイル・コミット
+
+- コミット: b950813 (2026-05-01 12:08 +0900) — feat: abolish rescue path +
+  add JP major media Web verification (F-13.B)
+- 関連: 800a01f (2026-05-01) — fix: align baseline test expectations with
+  F-16-A / F-13.B design
+- 変更:
+  - `src/triage/jp_coverage_verifier.py` (新規)
+  - `src/storage/db.py` (jp_coverage_cache テーブル追加)
+  - `src/main.py` (rescue 分岐撤去 + Web 検証統合)
+  - `src/shared/config.py`
+  - `.env.example`
+  - `tests/test_f13b_rescue_abolition.py` (新規 36 テスト)
+
+---
+
+## 2026-05-03: F-doc-cleanup — F-15 (Slot-event_id 同期) 本体 (遡及記録)
+
+### 背景
+
+試運転 7-H' (2026-04-29 21:20) で動画化率 1/3 (33%) で頭打ちが発覚。
+原因は AnalysisLayer 対象選定ループと Top-3 台本生成ループが別の event_id 列を
+対象にしていたこと:
+
+- AnalysisLayer 対象: `all_ranked[:_top_n_for_analysis]` (Tier 1 score 降順)
+- Top-3 台本生成: `sorted(all_ranked, key=lambda se:
+  _elite_judge_results[...].total_score, reverse=True)[:_top_n_for_analysis]`
+  (Elite Judge total_score 降順)
+
+両ループでスコア基準が異なるため、特定の Slot で
+「analysis_result is None, skipping」が発生し、Slot-2 / Slot-3 が動画化失敗。
+構造的に Slot-event_id がズレる問題で、実装の不整合だった。
+
+### 議論
+
+- **案 A**: AnalysisLayer 対象を増やして両方のスコア順をカバー → 不採用。
+  AnalysisLayer の LLM コストが線形増加する
+
+- **案 B (採用)**: AnalysisLayer 対象を Top-3 台本生成と同じ Elite Judge
+  total_score 降順に揃える
+  - 根拠: 動画化されるのは Top-3 (Elite Judge total_score 降順) なので、
+    AnalysisLayer も同じ順序で選定するのが筋
+  - 副作用: Tier 1 score では低位だが Elite Judge では上位の event が
+    AnalysisLayer 対象になる。これは品質的にも妥当 (Elite Judge は最上流のジャッジ)
+
+- **不変原則との整合**: src/main.py は不変原則対象外、変更可能
+
+### 決定
+
+`src/main.py` の AnalysisLayer 対象選定を Elite Judge total_score 降順に変更。
+両ループが必ず同じ event_id 列を対象とするよう同期。
+
+### 結果
+
+- 試運転 7-I (2026-04-29) で動画化率 67% (2/3) に改善
+- Slot-3 (UAE OPEC) は AnalysisLayer 完了済みだったが
+  MAX_PUBLISHES_PER_DAY=5 で skip → F-16-A の発見につながる
+- 構造的な Slot-event_id ズレが解消、AnalysisLayer 完了 = 動画化対象が成立
+
+### 関連ファイル・コミット
+
+- コミット: c573df8 (2026-04-29 23:09 +0900) — fix: align AnalysisLayer
+  target selection with Top-3 generation loop (F-15)
+- 変更:
+  - `src/main.py`
+  - `tests/test_main_f15_slot_event_sync.py`
+
+---
+
+## 2026-05-03: F-doc-cleanup — F-16-A (per-run 上限分離 + MAX_PUBLISHES_PER_DAY 撤廃) 本体 (遡及記録)
+
+### 背景
+
+試運転 7-I (2026-04-29) で動画化率 67% (2/3) で頭打ち。Slot-3 (UAE OPEC) は
+AnalysisLayer 完了済みだったが `MAX_PUBLISHES_PER_DAY=5` のハードコード制限で
+skip された。
+
+`MAX_PUBLISHES_PER_DAY` は Phase 1 の単発 PoC 時代の設計で「1 日の公開上限」を
+グローバルに制御していたが、Phase A.5 以降は cron 6 時間おき自動実行 (1 日 4 run) の
+本番運用が前提になり、per-run 上限と per-day 上限の概念が混乱していた。
+
+### 議論
+
+- **案 A**: MAX_PUBLISHES_PER_DAY を引き上げる → 不採用。設計上の混乱が残る
+
+- **案 B (採用)**: per-run 上限と per-day 上限を分離
+  - `TOP_N_VIDEOS_PER_RUN` (default 1) — 1 run で生成する動画数
+  - `TOP_N_ARTICLES_PER_RUN` (default 3) — 1 run で生成する記事数
+  - `MAX_PUBLISHES_PER_DAY` は default 999 に変更し実質撤廃
+    (後方互換のため env / コードからは読み続ける)
+  - cron 自動実行 (F-16-B) と組み合わせて公開頻度を制御
+  - 本番運用想定: 4 run/日 × 1 動画 = 4 動画/日 + 4 run × 3 記事 = 12 記事/日
+
+- **video > article クランプ**: video 数が article 数を超える設定は不整合
+  なので min クランプして警告
+
+- **AnalysisLayer Top 3 対象 (F-15) との整合**: AnalysisLayer は Top 3 全部で動かし、
+  動画化は Slot index >= TOP_N_VIDEOS_PER_RUN は article のみ生成
+
+- **publish_count インクリメント**: 後方互換のため維持
+  (将来の per-day 上限復活に備える)
+
+### 決定
+
+1. `TOP_N_VIDEOS_PER_RUN` / `TOP_N_ARTICLES_PER_RUN` 環境変数を新設
+2. `_generate_outputs()` に `generate_video_track: bool = True` パラメータ追加
+3. `MAX_PUBLISHES_PER_DAY` を default 999 に変更 (実質撤廃)
+4. テスト 26 件追加 (`tests/test_f16a_per_run_limits.py`)
+
+### 結果
+
+- 試運転 7-J (2026-04-30) でも依然動画化率 0% を観測 (rescue 発動が原因) →
+  F-13.B のトリガー
+- per-run / per-day の概念分離で、cron 自動実行 (F-16-B) の設計が明確化
+- Phase 1-A で `ChannelConfig.publishing_limits` に統合予定
+  (FUTURE_WORK 緊急度高)
+
+### 関連ファイル・コミット
+
+- コミット: 192eeaf (2026-04-30 00:44 +0900) — feat: separate per-run
+  video/article limits (F-16-A, root-cause fix)
+- 変更:
+  - `src/shared/config.py`
+  - `src/main.py`
+  - `.env.example`
+  - `tests/test_f16a_per_run_limits.py` (新規 26 テスト)
+
+---
+
+## 2026-05-03: F-doc-cleanup — F-12-A (article-first 順序逆転) 本体 (遡及記録)
+
+### 背景
+
+試運転 7-D (2026-04-28) で「アーティクル品質が東洋経済オンライン超え」評価を
+得たが、台本 (script.json) は文字数制約とブロック分割で表現が硬くなりがちだった。
+具体例として、アーティクルが「移動する主権領土」のような独自言語化を含むのに対し、
+台本は「物理的限界に達している構造的変化を象徴」のような平凡な表現になっていた。
+
+根本原因は生成順序: `script → article` だったため、台本生成時にアーティクルの
+独自フレーズが存在せず、台本が独自言語化を獲得できなかった。
+
+### 議論
+
+- **案 A**: 台本生成プロンプトに「金フレーズ」を直接埋め込む → 不採用。
+  プロンプトハードコードでバッチごとに更新が必要、保守性が低い
+
+- **案 B (採用)**: 順序逆転 (`article → script`) を実施し、
+  台本生成時にアーティクル本文を参考素材として渡す
+  - article.markdown を script_writer に `article_text` 引数で参照素材として渡す
+  - article_writer.py は不変原則 1 で touch しない
+  - script_writer.py は新ルート (`generate_script_with_analysis`) のみ改修、
+    既存ルート (`write_script` / `_PROMPT_TEMPLATE` / `_build_script_from_llm`) は
+    不変原則 2 で触らない
+
+- **F-12-B との関係**: F-12-A は順序逆転の基盤整備のみ。実際の台本品質改善
+  (script_writer プロンプト全面刷新) は F-12-B (= F-12-B-1 / F-12-B-1-extension) で実施
+
+### 決定
+
+`src/main.py` の生成順序を `script → article` から `article → script` に逆転。
+article.markdown を script_writer に `article_text` 引数で渡す基盤を整備。
+article_writer.py は不変 (プロンプト・シグネチャ・入力素材いずれも touch しない)。
+
+### 結果
+
+- 試運転 7-F (2026-04-29) でアーティクル品質維持を確認
+- F-12-B (= F-12-B-1) で script_writer プロンプト全面刷新を着手する基盤が整う
+- 不変原則 1 / 2 を完全遵守 (article_writer.py / script_writer.py 既存ルート無改修)
+
+### 関連ファイル・コミット
+
+- コミット: f199834 (2026-04-29 01:56 +0900) — feat: invert generation
+  order (article → script) for F-12-A
+- 変更:
+  - `src/main.py` (生成順序逆転)
+  - `src/generation/script_writer.py` (新ルートに `article_text` 引数追加)
+
+---
+
+## 2026-05-03: F-doc-cleanup — F-12-B (script_writer サマリ型台本刷新) 本体 (遡及記録)
+
+### 背景
+
+F-12-A (2026-04-29) で生成順序を逆転し、台本生成時にアーティクルを参考素材として
+渡す基盤が整った。次の段階として、script_writer プロンプト全面刷新が必要だった。
+
+試運転 7-K (2026-05-01) の baseline 台本 (cls-7bd1406438b6 FIFA 提訴 /
+cls-579833967531 フーシ派) で、カズヤから 6 個の問題が指摘された
+(略しすぎ「イスラエル入植地クラブ」/補足なし「スポーツ仲裁裁判所」/
+不明「ロシア侵攻時の即時排除」/直訳「公然たる支持」/
+抽象比喩「地政学的断層」「直撃弾」/硬い文語「発動」「ツール」)。
+
+`configs/prompts/analysis/geo_lens/script_with_analysis.md` を分析した結果、
+「扇動・陰謀論の禁止」(STEP 3) は強力だが「視聴者へのわかりやすさ」への配慮が
+皆無で、LLM が「教科書っぽい硬い分析調」に寄っていた。
+
+### 議論
+
+- **案 A**: NG リスト方式で禁止表現を Tier 1〜3 で機械的に管理 → 不採用
+  (クラウド誤り 1: NG リスト・Tier 分類で機械制御提案、カズヤから
+  「無理だから、考え方で制御したい」で軌道修正)
+
+- **案 B**: 「優れた具体例 A/B/C」を提示 + 「こう書きなさい」テンプレ 5 個 → 不採用
+  (クラウド誤り 2: テンプレ過剰押し付け、カズヤから「いちいち制御する話じゃない、
+  感想だよ」で軌道修正)
+
+- **案 C (採用)**: 「視聴者ファースト原則」(姿勢として記述、判断は LLM の知性に委ねる)
+  - 3 原則: 聞いてわかる / 抽象より具体 / 読み上げて自然
+  - 合格基準: TikTok/Shorts で違和感なく聞けるか
+  - NG リストではなく姿勢として記述、既存セクションは一切変更せず追加のみ
+  - F-12-B-1 (2026-05-01) で実施
+
+- **F-12-B-1-extension の追加**: F-12-B-1 完了後の試運転で punchline 末尾に
+  抽象比喩の癖が残存することが観察された (「地政学の檻に閉じ込める」「冷徹な力学」)。
+  根本原因は STEP 2 punchline 定義「シニカルかつ知的な余韻」が抽象詩を呼び込んでいた
+  ことと、例示「綺麗事を信じた側が損をする」が STEP 3 禁止表現と矛盾していたこと。
+  F-12-B-1-extension で STEP 2 punchline 定義を「シニカル × 具体着地の両立」に
+  改訂、優れた例「秩序を信じる代償を、私たちは電気代という形で支払うことになる」を
+  併記、矛盾していた例を削除
+
+- **不変原則 2 との整合**: F-12-B 系は configs/prompts/ 配下の改修のみで、
+  script_writer.py 既存ルートは無改修。不変原則 2 完全遵守
+
+### 決定
+
+F-12-B 本体は 2 段階で実施:
+1. F-12-B-1 (535f8e0、2026-05-01 15:22): 視聴者ファースト原則を STEP 3 直前に追加
+2. F-12-B-1-extension (4db3335、2026-05-01 15:45): STEP 2 punchline 定義を
+   「シニカル × 具体着地」両立化に改訂
+
+### 結果
+
+- 試運転 (cls-56c4197b6fd2 米イスラエル隠密作戦) で「中東独立メディアの
+  ミドル・イースト・アイ」のような固有名詞補足、「動かしたんです」「ある日突然」の
+  ような話し言葉的接続を確認
+- char validation で 1 リトライ発生 (setup=94→82 字)、F-12-B-1.5
+  (文字数制約緩和) を緊急度中に新設して継続観察項目化
+- F-12-B-1-extension は LLM 出力依存のため試運転は未実施 (時間と再現性を考慮、
+  必須化せず継続観察項目)
+- 当初想定の旧 F-12-B-1 (blind_spot_global 用フレーム追加) は試運転 7-K の
+  結果を受けて視聴者ファースト原則の方が優先と判断され、スコープを再定義
+
+### 関連ファイル・コミット
+
+- コミット (F-12-B-1): 535f8e0 (2026-05-01 15:22 +0900) — feat: add viewer-first
+  editorial stance to script prompt (F-12-B-1)
+- コミット (F-12-B-1-extension): 4db3335 (2026-05-01 15:45 +0900) — feat:
+  refine punchline definition for cynical+grounded balance (F-12-B-1-extension)
+- 変更:
+  - `configs/prompts/analysis/geo_lens/script_with_analysis.md`
+    (視聴者ファースト原則追加 + STEP 2 punchline 定義改訂)
+  - `docs/BATCH_PROTOCOL.md` (不変原則 2 例外条項を `configs/prompts/` 全般に拡大)
+
+---
+
+## 2026-05-03: F-doc-cleanup — F-14 (AnalysisLayer JSON parser 堅牢化) 本体 (遡及記録)
+
+### 背景
+
+試運転 7-G (2026-04-29) で Slot-1 (cls-8bbec722d420 Venezuela) の
+AnalysisLayer 出力が JSON parse エラーで `analysis_result=None` になる事象が発生。
+LLM 出力が途中で切れた (max_tokens 制限 / Tier フォールバック中の長い応答) ことが
+直接原因。
+
+`analysis_result=None` は AnalysisLayer 全体の動画化阻害につながるため
+(Slot ごとの AnalysisLayer は独立して動くが、Top 3 全体での品質保証が崩れる)、
+JSON parse 失敗時の救済ロジックが必要だった。
+
+### 議論
+
+- **案 A**: max_output_tokens の明示指定 + プロンプト改修で根本対処 → 中長期対応
+  (FUTURE_WORK 「AnalysisLayer LLM の max_tokens / 切れ防止」として登録、
+  発動頻度確認後に着手判断)
+
+- **案 B (採用、対症療法)**: JSON parser に修復ロジックを追加
+  - 末尾の不完全な JSON フラグメントを検出し、可能な限り補完
+  - 補完不可能な場合は途中まで parse できた構造を返す
+  - 修復発動時は WARNING ログで可視化 (`[F-14] JSON repaired`)
+  - 根本原因 (LLM 出力途中切断) は別途 FUTURE_WORK で追跡
+
+- **対症療法と認識して登録**: F-14 は対症療法と明示し、根本対応 (max_tokens
+  明示指定 + プロンプト改修) を FUTURE_WORK 緊急度高に登録。発動頻度を
+  試運転 7-H で確認後、根本対応着手を判断する運用ルール
+
+- **不変原則 4 との整合**: src/analysis/ 配下を変更するため、不変原則 4
+  「analysis 触らない」と衝突するが、JSON parser の堅牢化は parse ロジックの
+  不具合修正に該当 (axis 変更や設計改修ではない) ため、本質的な原則違反ではない
+
+### 決定
+
+`src/analysis/` 配下の JSON parser に修復ロジックを追加。発動頻度に応じて
+FUTURE_WORK 緊急度高エントリ「AnalysisLayer LLM の max_tokens / 切れ防止」で
+根本対応を判断する運用ルール化。
+
+### 結果
+
+- 試運転 7-G で `analysis_result=None` が解消、Slot-1 動画化が進行
+- ただし `extract_perspectives()` のルールベース判定が厳しすぎる別事象は
+  本対応の範囲外 (FUTURE_WORK「perspective_extractor 改善 (F-7-α 候補)」で別途追跡)
+- F-14 は対症療法という性格を DECISION_LOG に明記することで、後続バッチで
+  根本対応に着手する判断材料が時系列で残る
+
+### 関連ファイル・コミット
+
+- コミット: c93a8bb (2026-04-29 17:26 +0900) — feat: add JSON repair logic to
+  AnalysisLayer parser (F-14)
+- 変更:
+  - `src/analysis/` 配下の JSON parser
+- 関連:
+  - FUTURE_WORK 緊急度高「AnalysisLayer LLM の max_tokens / 切れ防止」(根本対応)
+  - FUTURE_WORK 緊急度高「perspective_extractor 改善 (F-7-α 候補)」(別事象)
+
+---
+
+## 2026-05-03: F-doc-cleanup — Phase B 方向性整理 + 拡張性原則の力点確定 + verify 順序見直し
+
+### 背景
+
+2026-05-03 のカズヤ x クラウド議論で Phase A.5-3a-verify 着手前の方針整理を実施。
+新チャット移行時に同種の議論を繰り返さないため、議論結果を docs に反映する必要があった。
+
+具体的論点:
+1. Phase B 以降の方向性 (5 シナリオ並立だった当初整理を 3 択構造に縮約)
+2. Phase A.5-3c 拡張性原則の力点 (4 項目から 2 項目に集約)
+3. Phase A.5-3a-verify 順序 (4 つ全部完了 → 3b の当初計画を、性格別に並走可能な
+   構造に修正)
+
+### 議論
+
+#### 1. Phase B 以降の方向性
+
+- **当初整理 (DISCUSSION_NOTES 2026-05-02)**: シナリオ A〜E の 5 並立
+  - A: japan_athletes / k_pulse 展開
+  - B: 政治・経済細分化
+  - C: 動画継続 + 独自メディア並行
+  - D: 動画縮小 + 独自メディア軸足
+  - E: SaaS 化
+
+- **2026-05-03 議論で確定**: 本命 + 3 択に縮約
+  - 本命: geo_lens 動画自動投稿 (Phase A.5-3d) を完成 → 安定稼働
+  - その先の選択肢 (運用結果次第):
+    - 動画継続 (geo_lens の TikTok / YouTube Shorts 投稿を主軸として継続)
+    - 独自メディア (Web / Substack / note 等への記事配信展開)
+    - 手動 note・LinkedIn 投稿 (完全自動化を諦めるオプション、新チャネルは
+      手動から始める柔軟性確保)
+  - japan_athletes / k_pulse / カテゴリ細分化 / SaaS 化は明示的選択肢から後退
+    (運用結果次第で再浮上の可能性は残す)
+
+#### 2. Phase A.5-3c 拡張性原則の力点
+
+- **当初 (F-doc-backfill-supplement 2026-05-02)**: 4 項目の拡張性原則
+  - ChannelConfig YAML 化
+  - Publisher 抽象
+  - Content Format 抽象化
+  - Audio/Image/Video Renderer 抽象化
+
+- **2026-05-03 議論で確定**: 2 項目に集約
+  - ChannelConfig YAML 化 (必要)
+  - Publisher 抽象 (必要)
+  - Content Format 抽象化は不要 (記事は既に高品質 Markdown で出ているため、
+    Web メディアは UI に流し込むだけで足りる)
+  - Audio/Image/Video Renderer 抽象化は Phase A.5-3c 各統合バッチで
+    「抽象化 + 実装」をセット実施 (前倒し却下)
+
+- **クラウド誤り 6 (新規記録)**: 過剰拡張性の罠
+  - 2026-05-03 議論でクラウドが「シナリオ C/D には Content Format 抽象化と
+    Publisher 抽象が必要」と提案
+  - カズヤから「記事は既に高品質 Markdown で出ているので、Web メディアは
+    UI に流し込むだけ。Content Format 抽象化は不要、Publisher 抽象だけで足りる」
+    で訂正
+  - 教訓: 「将来の柔軟性のため」と称して抽象化レイヤーを増やすと、
+    各シナリオで本当に必要な抽象化を見誤る
+  - 抽象化の必要性は「実装先が存在するか」で判断する
+    (Publisher は実装先複数、Content Format は実装先 1 つしかないので不要)
+  - 構造的防止策として Task F (拡張性差し込み判断ルール) を BATCH_PROTOCOL に追加
+
+#### 3. Phase A.5-3a-verify 順序
+
+- **当初 (F-state-protocol-supplement 2026-05-02)**: 4 つ全部完了 → 3b
+  - F-verify-jp-coverage / F-verify-perspective / F-verify-script-quality /
+    F-image-prompt-spec を全部通過してから Phase A.5-3b 着手
+
+- **2026-05-03 議論で確定**: 性格別の最適タイミングに分解
+  - 1st: F-verify-jp-coverage (★最優先、ゲート / 防衛機構の中核)
+  - 2nd: Phase A.5-3b 着手 (image-prompt-spec を 3b の最初の作業に組み込み)
+  - 並走: F-verify-perspective / F-verify-script-quality
+    (3b/3c 中にデータ収集、判断は 3b/3c 完了後)
+  - 根拠: 4 つの verify が同じ性格ではなく、ゲート (jp-coverage) /
+    3b 前提 (image-prompt-spec) / データ収集 (perspective / script-quality) の
+    3 種類に分かれる。性格別に最適タイミングが違う
+
+### 決定
+
+1. DISCUSSION_NOTES「Phase B 以降の方向性未確定」エントリを 3 択構造に更新
+2. DISCUSSION_NOTES にクラウド誤り 6「過剰拡張性の罠」を新規追加
+3. FUTURE_WORK の Phase A.5-3a-verify セクションを順序見直しに合わせて更新
+4. CURRENT_STATE.md「次バッチ候補」を新順序に全置換更新
+5. BATCH_PROTOCOL.md に「拡張性差し込み判断ルール」セクション新設 (Task F)
+
+### 結果
+
+- 別チャット移行時に同種の議論を繰り返さない構造確保
+- Phase A.5-3c 着手時の力点が明確化、過剰設計を構造的に防ぐ
+  (BATCH_PROTOCOL「拡張性差し込み判断ルール」で運用ルール化)
+- Phase A.5-3b 着手が verify 4 つ全通過待ちから 1 つ通過後に前倒し可能に
+
+### 関連ファイル・コミット
+
+- コミット: (F-doc-cleanup 一括コミットに統合 — 議論自体は 2026-05-03)
+- 変更:
+  - `docs/DISCUSSION_NOTES.md` (Phase B エントリ更新 + クラウド誤り 6 追加)
+  - `docs/FUTURE_WORK.md` (Phase A.5-3a-verify セクション更新)
+  - `docs/CURRENT_STATE.md` (次バッチ候補刷新 + 防衛機構表 5 層化)
+  - `docs/BATCH_PROTOCOL.md` (拡張性差し込み判断ルール新設)
+  - `docs/DECISION_LOG.md` (本エントリ + Task A エントリ + Task B 7 エントリ)
+

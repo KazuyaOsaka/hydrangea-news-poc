@@ -1,5 +1,24 @@
 # REFACTORING_PLAN.md — Hydrangea 改修計画
 
+> ⚠️ **本書は 2026-04-23 時点の改修議論アーカイブ**。Phase 命名 (Phase 1-4) は
+> 当時のもので、最新の Phase 体系 (Phase A.5-3a-verify → 3b → 3c → 3d → Phase 1
+> (1-A〜1-D) → Phase B → Phase C) とは別系列。最新の Phase 体系および
+> ロードマップは `docs/CURRENT_STATE.md` / `docs/FUTURE_WORK.md` を **正本** として
+> 参照すること。
+>
+> 本書の個別改修内容は以下のように現運用に取り込み済み:
+>
+> - 旧 Phase 1 (ChannelConfig / scoring.py YAML 化等) → FUTURE_WORK Phase 1-A
+> - 旧 Phase 2 (japan_athletes 立ち上げ) → FUTURE_WORK Phase B-3
+> - 旧 Phase 3 (k_pulse 立ち上げ) → FUTURE_WORK Phase B-4
+> - 旧 Phase 4 (Remotion 移行) → FUTURE_WORK Phase A.5-3c
+>   F-video-compose-integration として前倒し
+>
+> 本書は設計議論の歴史的記録として保持する (F-state-protocol 哲学
+> 「アーカイブは削除しない」)。新規バッチ実装時の参照は限定的とすること。
+> 最終整理 (アーカイブ統合 or 完全削除の判断) は README 全面書き直しと同時、
+> Phase A.5-3d 完了後を予定 (FUTURE_WORK 緊急度低を参照)。
+
 > このドキュメントは、Hydrangea の今後 2 つの大きな変更（**A: 3 チャンネル対応化**、**B: Remotion 移行**）に向けた改修計画です。
 > エンジニア素人の方向けに、専門用語は都度注釈します。
 > 作成日：2026-04-23

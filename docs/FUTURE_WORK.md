@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-02 (F-cleanup-merge-streak 完了)
+最終更新: 2026-05-03 (F-doc-cleanup 完了)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -65,31 +65,31 @@
 
 ### Phase A.5-3a-verify (F-state-protocol-supplement / 2026-05-02 登録)
 
-- **F-verify-jp-coverage** ★最優先 (F-state-protocol-supplement / 2026-05-02 登録)
+- **F-verify-jp-coverage** ★最優先 (F-state-protocol-supplement / 2026-05-02 登録、F-doc-cleanup / 2026-05-03 順序見直し)
   - 背景: F-13.B JpCoverageVerifier の精度を実データで検証する。Phase A.5-3a 完了時点では理論動作のみ確認、実 precision/recall は未測定。Hydrangea コンセプト防衛機構の中核 (rescue 完全廃止後の唯一の JP 報道判定経路) であり、ここの精度がコンセプト整合性を決める。
   - 対応案: ゴールデンセット 20 件作成 (日本未報道 10 件 / 報道済み 10 件) で precision / recall を測定。閾値調整の判断材料にする。Grounding API 失敗時の安全側倒し (`has_jp_coverage=True`) の発動率も同時計測。
-  - 検討時期: F-state-protocol-supplement 完了直後 (Phase A.5-3a-verify 開始の最優先)
+  - 検討時期: ★最優先 / Phase A.5-3a-verify 開始の最優先 (ゲート性格、ここを通過しないと Phase A.5-3b に進めない)
   - 想定工数: 2-3 時間
   - 関連ファイル: src/triage/jp_coverage_verifier.py, tests/golden/jp_coverage/ (新規)
 
-- **F-verify-perspective** (F-state-protocol-supplement / 2026-05-02 登録)
+- **F-verify-perspective** (F-state-protocol-supplement / 2026-05-02 登録、F-doc-cleanup / 2026-05-03 順序見直し)
   - 背景: 4 軸 (cultural_blindspot / silence_gap / hidden_stakes / framing_inversion) のバランスを検証。DISCUSSION_NOTES #6 (F-12-B-2 axis 多様化) の着手判断材料となる。cultural_blindspot 偏重が確認されれば F-12-B-2 起動。
   - 対応案: 直近 50 イベントで axis 分布を集計、cultural_blindspot 偏重があれば F-12-B-2 起動判断。
-  - 検討時期: F-verify-jp-coverage と並行可
+  - 検討時期: Phase A.5-3b 着手後に並走でデータ収集、判断は 3b/3c 完了後 (データ収集性格、ゲートではない)
   - 想定工数: 集計 1 時間 + 判断議論
   - 関連ファイル: src/analysis/perspective_extractor.py (読み取りのみ), data/output/ の AnalysisLayer 出力
 
-- **F-verify-script-quality** (F-state-protocol-supplement / 2026-05-02 登録)
+- **F-verify-script-quality** (F-state-protocol-supplement / 2026-05-02 登録、F-doc-cleanup / 2026-05-03 順序見直し)
   - 背景: 新ルート (`generate_script_with_analysis`) の NG パターン出現頻度 / char validation リトライ率を測定。F-12-B-1.5 (文字数制約緩和) 着手判断材料を兼ねる。F-12-B-1 投入後 1 run の試運転では setup 1/1 でリトライ発動だが標本不足。
   - 対応案: 直近 30 件で NG 語彙頻度 / リトライ回数集計、`_CHAR_BOUNDS` 調整可否を判断。
-  - 検討時期: F-verify-jp-coverage と並行可
+  - 検討時期: Phase A.5-3b 着手後に並走でデータ収集、判断は 3b/3c 完了後 (データ収集性格、ゲートではない)
   - 想定工数: 集計 1 時間 + 判断議論
   - 関連ファイル: src/generation/script_writer.py (読み取りのみ), data/output/ の script.json
 
-- **F-image-prompt-spec** (F-doc-backfill / 2026-05-02 登録、F-doc-backfill-supplement / 2026-05-02 改訂)
-  - 背景: Phase A.5-3b 手動 PoC で「自動生成された台本 + 画像プロンプト」を使って Nano Banana Pro / ChatGPT Images 2.0 (gpt-image-2) / Flux 1.1 Pro に画像生成依頼する想定だが、現状 video_payload_writer.py がシーンごとの画像プロンプトを十分な品質で出力しているか未確認。Phase A.5-3b 着手前に仕様確認 + 必要なら改修。
+- **F-image-prompt-spec** (F-doc-backfill / 2026-05-02 登録、F-doc-backfill-supplement / 2026-05-02 改訂、F-doc-cleanup / 2026-05-03 順序見直し)
+  - 背景: Phase A.5-3b 手動 PoC で「自動生成された台本 + 画像プロンプト」を使って Nano Banana Pro / ChatGPT Images 2.0 (gpt-image-2) / Flux 1.1 Pro に画像生成依頼する想定だが、現状 video_payload_writer.py がシーンごとの画像プロンプトを十分な品質で出力しているか未確認。Phase A.5-3b 着手前 or 着手と同時に仕様確認 + 必要なら改修。
   - 対応案: (1) src/generation/video_payload_writer.py の現状調査 (シーンごとに画像プロンプトを出してるか / 統一末尾「cinematic, hyper-realistic, dark geopolitical thriller style, high contrast, dramatic lighting, vertical composition, 9:16 aspect ratio」が含まれてるか) (2) 不十分なら configs/prompts/ 配下のプロンプトファイルを改修 (3) 試運転で画像プロンプト品質を確認
-  - 検討時期: F-verify-jp-coverage / F-verify-perspective / F-verify-script-quality と並行
+  - 検討時期: Phase A.5-3b 着手の最初の作業として組み込む (3b 直前 or 3b 内、3b 前提性格)
   - 想定工数: 2-3 時間
   - 関連ファイル: src/generation/video_payload_writer.py (調査のみ), configs/prompts/ (必要なら改修)
   - 不変原則整合: video_payload_writer.py は不変原則 1-4 の対象外、必要なら configs/prompts/ 経由で改修可能
@@ -297,6 +297,12 @@
   - 対応案: 全フェーズ完了時に書き直し
   - 検討時期: Phase 1.5 完了後
 
+- **REFACTORING_PLAN.md の最終整理** (F-doc-cleanup / 2026-05-03 登録)
+  - 背景: REFACTORING_PLAN.md (2026-04-23) は Phase 1-4 系列の改修議論。F-doc-cleanup で冒頭にアーカイブ注記を追加し、個別改修内容は FUTURE_WORK の Phase 1-A / Phase B-3/4 / Phase A.5-3c F-video-compose-integration として現運用に取り込み済。本書は歴史的記録として保持中。
+  - 対応案: アーカイブ統合 (docs/archive/REFACTORING_PLAN.md に移動) or 完全削除の最終判断 + 歴史的記録としての価値再評価。「対症療法じゃなくて根本治療」哲学に基づき、不要なら削除する選択肢も含めて検討。
+  - 検討時期: README 全面書き直しと同時 (Phase A.5-3d 完了後)
+  - 関連ファイル: docs/REFACTORING_PLAN.md, docs/CURRENT_STATE.md (関連ドキュメント導線の更新)
+
 - **触っちゃダメリストのコメント整理** (CLAUDE.md)
   - 背景: なぜ触ってはいけないかの理由が曖昧
   - 対応案: 各ファイルに「触れない理由」と「将来触れる条件」を併記
@@ -412,6 +418,11 @@
   - 何を対応したか
 
 ---
+
+- **文書負債の一括根本治療 (F-doc-cleanup)** (F-doc-cleanup / 2026-05-03 完了)
+  - 発生バッチ: F-state-protocol / F-state-protocol-supplement / F-doc-backfill / F-doc-backfill-supplement / F-cleanup-merge-streak の文書整備系 5 連発の最終仕上げ。Phase A.5-3a 完了 → A.5-3a-verify 着手前に過去の文書負債 (F-13 隠れ層未昇格、DECISION_LOG 遡及記録の未完、CLAUDE.md の現運用乖離、REFACTORING_PLAN.md の重複ドキュメント化、2026-05-03 議論結果の docs 未反映、拡張性差し込み判断ルールの暗黙運用) を一括清算する必要があった。カズヤ哲学「対症療法じゃなくて根本治療」「負の遺産残さないように」に従い、注記による応急処置ではなく文書構造そのものを整地。
+  - 対応内容: (Task A) F-13 隠れ層を防衛機構の正式 5 層目として昇格 — DECISION_LOG エントリ追加、CURRENT_STATE 防衛機構表を 4+1 → 5 層化、EDITORIAL_MISSION_FILTER_DESIGN.md に F-13 隠れ層セクション追加、DISCUSSION_NOTES の該当エントリ削除。(Task B) DECISION_LOG 遡及記録 7 エントリ追加 — F-13 / F-13.B / F-15 / F-16-A / F-12-A / F-12-B / F-14 の本体エントリを既存 docs から事実集約のみで再構成 (新規情報の創作なし)、各エントリにコミットハッシュと日時を実測値で記録。(Task C) CLAUDE.md 全面書き直し — 責務を「Claude Code 振る舞い指針」に集約、プロジェクト概要 / 不変原則 / 触ってはいけないリスト / 将来対応リスト運用 / FUTURE_WORK レビュータイミング / ファイル配置等の重複セクションを完全削除し、CURRENT_STATE / BATCH_PROTOCOL への導線のみに整理。(Task D) REFACTORING_PLAN.md 整理 — 冒頭にアーカイブ注記追加 (歴史的記録として保持、Phase 命名整合化)、FUTURE_WORK 緊急度低に最終整理エントリ追加。(Task E) 2026-05-03 議論内容の docs 反映 — DISCUSSION_NOTES Phase B 方向性エントリを 3 択構造に更新、クラウド誤り 6 (過剰拡張性の罠) 追加、DECISION_LOG に「Phase B 方向性整理 + 拡張性原則の力点確定 + verify 順序見直し」エントリ追加、FUTURE_WORK の Phase A.5-3a-verify セクションを順序見直し (1st: jp-coverage、2nd: 3b 着手、perspective/script-quality は 3b/3c 並走、image-prompt-spec は 3b 直前 or 3b 内) に合わせて更新。(Task F) 拡張性差し込み判断ルールの BATCH_PROTOCOL 明文化 — 3 条件 + 4 つの過去判断例 (ChannelConfig YAML 化 / Publisher 抽象 / Renderer 抽象化 / Content Format 抽象化) + 例外 (文書層) を新セクションとして追加。(Task 1-5 のドッグフーディング) BATCH_PROTOCOL Task 1-5 を本バッチ自身に適用。リグレッション影響なし (docs/ + CLAUDE.md のみ変更、src/ tests/ configs/ は 0 行変更、baseline 1315 passed 維持)。
+  - 関連ファイル: `docs/DECISION_LOG.md` (Task A エントリ + Task B 7 エントリ + Task E-3 エントリ = 計 9 エントリ追加), `docs/CURRENT_STATE.md` (防衛機構表 5 層化 + 次バッチ候補刷新 + main HEAD / 直近 5 件ログ / baseline 実測値更新), `docs/BATCH_PROTOCOL.md` (拡張性差し込み判断ルール新設), `docs/DISCUSSION_NOTES.md` (F-13 隠れ層エントリ削除 + Phase B エントリ更新 + クラウド誤り 6 追加 = 18 → 17 → 18 Active), `docs/EDITORIAL_MISSION_FILTER_DESIGN.md` (F-13 隠れ層セクション追加), `docs/REFACTORING_PLAN.md` (冒頭アーカイブ注記追加), `docs/FUTURE_WORK.md` (verify 順序更新 + REFACTORING_PLAN 整理エントリ追加 + 本エントリ), `CLAUDE.md` (全面書き直し)
 
 - **「連続 main マージ成功カウント」廃止 (F-cleanup-merge-streak)** (F-cleanup-merge-streak / 2026-05-02 完了)
   - 発生バッチ: F-state-protocol (2026-05-01) で CURRENT_STATE.md / BATCH_PROTOCOL.md に「連続 main マージ成功カウント」を導入したが、F-state-protocol-supplement / F-doc-backfill / F-doc-backfill-supplement の 3 連続バッチで Claude Code が Task 5 でこの数値を更新し忘れる事象が発生 (CURRENT_STATE.md は 11 連続のまま、実際は 15 連続)。カズヤとの議論 (2026-05-02) で指標自体の意味を再検討した結果、(1) 何の意思決定にも使えない (12 連続と 100 連続で何が違うのか?)、(2) 品質保証は別の指標 (baseline 1315 passed / 試運転動画化率) で担保されている、(3) 「カウントを途切れさせたくない」という悪いインセンティブを生む、(4) 重要数値 (main HEAD / baseline / Phase) と並べると情報ノイズになる、と判明。カズヤ哲学「対症療法じゃなくて根本治療」「負の遺産残さないように」に照らし、形骸化リスクのある指標を早期削除。
