@@ -1,0 +1,508 @@
+{
+  "version": "1.1",
+  "created_at": "2026-05-03T06:21:15Z",
+  "last_updated_at": "2026-05-04",
+  "last_update_batch": "F-verify-jp-coverage-golden-fix",
+  "next_batch": "F-verify-jp-coverage-measure",
+  "f13b_source_commit": "b61d3f5dc2cd538ad4b72ddde38c8f1edfeca946",
+  "f13b_source_path": "src/triage/jp_coverage_verifier.py",
+  "wl_tier_count": 27,
+  "excluded_domain_count": 14,
+  "purpose": "F-verify-jp-coverage-measure バッチで F-13.B JpCoverageVerifier の精度測定 (TP/FP/TN/FN) の真値として使うゴールデンセット 19 件。blind 9 + covered 10 の構成。次バッチで F-13.B を実行し本ファイルの expected_* と突合する。",
+  "v1_1_changelog": {
+    "summary": "F-verify-jp-coverage-golden-fix (2026-05-04): カズヤレビュー結果反映。5 件の真値修正 + 系統 1 判定基準 4 軸明文化 + Hydrangea メディア宣言反映 + 2 段階フィルタ設計確定。",
+    "changes": [
+      "blind_002 (cls-a1fde1c574a7): expected_has_jp_coverage False → True (像破壊事件本体は朝日・日経で報道済み、ラビ庁拒否角度は系統 2 候補)。expected_tier=tier_1_newspaper。stream_2_candidate メタ追加。",
+      "blind_004 (cls-204a683f73ee): expected_has_jp_coverage False → True (ガザ電力危機本体は東京新聞で報道済み、潤滑油 100 倍角度は系統 2 候補)。expected_tier=tier_1_newspaper。stream_2_candidate メタ追加。",
+      "blind_005 (cls-33b4f4960bf9): expected_has_jp_coverage False → True (マンデルソン人事本体は日経・Bloomberg JP で報道済み、ガザ武器供与角度は系統 2 候補)。expected_tier=tier_1_newspaper。stream_2_candidate メタ追加。",
+      "blind_006 (cls-7bd1406438b6 Palestine FIFA): 削除。理由: Hydrangea 系統 1 ミッション (構造的未報道理由を持つ事象) に整合しない (単にマイナーで報道価値が低い候補)。差し替え候補を heuristic 未採用 12 件から探索したが、いずれも (a) 中東以外を優先したい意向に反する (b) 既に Tier 1 で報道済み (Iraq al-Zaidi / NK-Russia 記念館 / Hormuz クラスタ等) のため該当なし。9 件構成 (blind 9 + covered 10 = 19 件) に変更。",
+      "blind_009 (cls-4045a389ba04): expected_has_jp_coverage False → True (関連トピック『戦争長期化の経済的理由』は SPF・Bloomberg JP・JBpress で報道済み、制裁収益分配角度は系統 2 候補)。expected_tier=tier_2_wire_service (Bloomberg JP)。stream_2_candidate メタ追加。",
+      "kazuya_review_required_ids: 空配列に更新 (全件確定済み)。",
+      "diversity_check.blind_set: 件数 10→9、expected_distribution に True 4 / False 5 を新設。",
+      "コアミッション (CURRENT_STATE.md セクション 0) に「未報道理由の構造性」(4 軸) と Hydrangea メディア宣言を反映。"
+    ]
+  },
+  "selection_methodology": {
+    "blind_candidates_source": "過去試運転の data/output/*_evidence.json から has_jp_view=0.0 + has_en_view=1.0 + editorial:coverage_gap_score>=6.0 + sources.jp=[] を満たす候補 18 件をヒューリスティック抽出 (うち 6 件は jp_coverage_cache に F-13.B 判定 has_jp_coverage=False が残存)。そこから多様性 (region/topic) を考慮して 10 件選定 → カズヤレビュー後 9 件 (1 件削除)。各件について F-13.B を呼ばずに WebSearch で独立に日本大手メディア (WL Tier 1-4) 報道有無を確認。確認結果は manual_verification_note に記載。",
+    "covered_candidates_source": "WebSearch で 2026 年 4-5 月の主要国際ニュースを検索し、JP_MEDIA_WHITELIST (NHK / Nikkei / Asahi / Yomiuri / Sankei / Mainichi / Tokyo-np 等) の Tier 1-4 ドメインで実際に報道されている事象 10 件を選定。各件について報道 URL を記録。",
+    "independence_from_f13b": "ゴールデンセットの真値判定は F-13.B 自体を呼ばず、Claude Code が WebSearch ツールで独立に日本語検索 (例: '<title> NHK 朝日 日経' 等) を実行して確認した。F-13.B の jp_coverage_cache に残る過去判定は参考情報として `f13b_prior_verdict` フィールドに併記したが、expected_has_jp_coverage の真値は独立検証結果に基づく。",
+    "stream_1_judgment_criteria": "v1.1 で確立: 系統 1 (silence_gap) のターゲットは『日本未報道』だけでは不十分。未報道理由が構造的 (4 軸: 制度・システム面 / 外交・経済・利害関係面 / 個人・権力者面 / 関心領域・地政学的死角 のいずれか) に該当する事象のみ系統 1 として動画化価値がある。詳細は DISCUSSION_NOTES「系統 1 (silence_gap) の判定基準明確化」エントリ参照。",
+    "stream_2_candidate_meta": "v1.1 で導入: True に修正された 4 件 (blind_002 / 004 / 005 / 009) には `stream_2_candidate` フィールドが付与され、F-stream-2-filter-design 実装時に系統 2 ターゲット候補として再評価される。"
+  },
+  "entries": [
+    {
+      "id": "blind_001",
+      "event_id": "cls-36a6425c7e68",
+      "title": "Ukrainian Forces Wounded, Killed 1,725 Civilians in Q1 2026",
+      "summary": "ロシア外務省が 2026 年第 1 四半期にウクライナ軍が民間人 1,725 人を死傷させたと発表 (死亡 412 / 負傷 1,313)。ベネズエラ拠点 TeleSUR 等グローバルサウスメディアが詳報する一方、日本を含む西側主要メディアでは黙殺もしくはプロパガンダ扱いで報じられない構造。",
+      "source_url": "https://www.telesurenglish.net/news/ (TeleSUR、article.md 記載)",
+      "expected_has_jp_coverage": false,
+      "expected_tier": null,
+      "source_run": "F-13.B trial run (2026-05-01 cached)",
+      "f13b_prior_verdict": {"has_jp_coverage": false, "matched_tier": null, "cached_at": "2026-05-01T15:15:37"},
+      "topic_category": "geopolitical_information_warfare",
+      "region": "russia_ukraine",
+      "volume_in_jp": "low",
+      "manual_verification_note": "WebSearch で 'ロシア外務省 ウクライナ軍 民間人 1725人 第1四半期 2026 NHK 日経 朝日' を検索 → NHK / 日経 / 朝日いずれもこの特定の数値・主張を直接報道していない。NIDS コメンタリー (防衛研究所) や日経の戦況一般記事はあるが、ロシア側の主張する『ウクライナ軍による民間人被害』という枠組みでの報道は確認できず。Web 検証結果と F-13.B 過去判定が一致 (両方 False)。",
+      "manual_verification_urls": [
+        "https://www.nids.mod.go.jp/publication/commentary/pdf/commentary430.pdf (NIDS、WL外、参考)",
+        "https://www.nikkei.com/article/DGXZQOGR102CF0Q3A211C2000000/ (Nikkei、ロシア兵力増強、ロシア側主張ではない)"
+      ]
+    },
+    {
+      "id": "blind_002",
+      "event_id": "cls-a1fde1c574a7",
+      "title": "Israel's top Jewish religious body 'refuses to condemn' smashing of Jesus statue",
+      "summary": "レバノン南部でイスラエル兵がキリスト像を破壊した事件で、イスラエル軍がラビ庁 (最高ユダヤ教宗教権威) に非難声明を要請したが、ラビ庁がこれを拒否。軍と宗教界の宗教的シオニズム融合の徴候として中東メディアが詳報する一方、日本では事件本体は報道されたがラビ庁拒否の構造分析角度は欠落。",
+      "source_url": "https://www.middleeasteye.net/news/ (MEE)",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_1_newspaper",
+      "source_run": "F-13.B trial run (2026-05-01 cached)",
+      "f13b_prior_verdict": {"has_jp_coverage": false, "matched_tier": null, "cached_at": "2026-05-01T15:15:14"},
+      "topic_category": "religion_political_structural",
+      "region": "middle_east",
+      "volume_in_jp": "high_for_broad_event_low_for_specific_angle",
+      "manual_verification_note": "カズヤレビュー結果 (2026-05-04 F-verify-jp-coverage-golden-fix): 広範な事件 (キリスト像破壊) は朝日・日経・Newsweek JP で報道済み。MEE 記事の核心『ラビ庁拒否』角度は系統 2 (framing_inversion + 構造分析) 候補として別途検討。expected を False → True に修正、expected_tier=tier_1_newspaper (Nikkei + Asahi)。F-13.B (機械) の精度測定としては True が真値 (機械は title から広範な事件を判定するため)。",
+      "manual_verification_urls": [
+        "https://www.nikkei.com/article/DGXZQOCB209MO0Q6A420C2000000/ (Nikkei T1: 像破壊事件本体)",
+        "https://topics.smt.docomo.ne.jp/article/asahi/nation/ASV4M7VXDV4MSFVU25BM (Asahi T1: 像破壊本体)",
+        "https://www.cnn.co.jp/world/35246711.html (CNN.co.jp、WL外、参考)"
+      ],
+      "stream_2_candidate": {
+        "broad_event_jp_coverage": "朝日・日経で像破壊本体を報道済み、Newsweek JP T4 も処分・拘禁関連を報道",
+        "specific_angle_unreported_in_jp": "イスラエル最高宗教権威『ラビ庁』が軍からの非難要請を拒否した、軍と宗教界の宗教的シオニズム融合という構造分析角度",
+        "interpretation_value": ["cultural_context", "political_intent", "media_divergence"],
+        "decided_at": "2026-05-04",
+        "note": "F-stream-2-filter-design 実装時に系統 2 ターゲット候補として再評価。ラビ庁拒否は日本では報道されないが、イスラエル国内の宗教的右傾化を理解する鍵となる構造的事象。"
+      }
+    },
+    {
+      "id": "blind_003",
+      "event_id": "cls-56c4197b6fd2",
+      "title": "US-Israel intervention frees Israeli-Turkish citizen held for serving in Israeli army",
+      "summary": "イスラエル軍服務歴のある二重国籍女性がトルコで『許可なき外国軍従事』で拘束され、米イスラエル政府が隠密作戦で奪還。SNS 上の活動家による過去軍服写真特定が拘束のきっかけ。法執行が外交カードに転用される地政学的リスクを中東メディアが報道する一方、日本では完全に未報道。",
+      "source_url": "https://www.middleeasteye.net/news/us-israel-intervention-frees-israeli-turkish-citizen-held-serving-army",
+      "expected_has_jp_coverage": false,
+      "expected_tier": null,
+      "source_run": "F-13.B trial run (2026-05-01 cached) + F-12-B-1 試運転",
+      "f13b_prior_verdict": {"has_jp_coverage": false, "matched_tier": null, "cached_at": "2026-05-01T15:14:09"},
+      "topic_category": "geopolitical_individual_risk",
+      "region": "middle_east",
+      "volume_in_jp": "none",
+      "manual_verification_note": "WebSearch で『米イスラエル 隠密作戦 トルコ 二重国籍 兵士 救出 NHK 日経』を検索 → NHK / Nikkei / Asahi いずれもこの事件を報道確認できず。Tier 1-4 全てで未報道。Web 検証結果と F-13.B 過去判定が一致 (両方 False)。",
+      "manual_verification_urls": []
+    },
+    {
+      "id": "blind_004",
+      "event_id": "cls-204a683f73ee",
+      "title": "In Gaza, life flickers as power cuts shatter livelihoods and healthcare",
+      "summary": "ガザの停電・ジェネレーター劣化危機。潤滑油価格が 1L 14 シェケル → 1,500 シェケル (100 倍以上) に暴騰し中小企業 9 割が廃業危機、シファ病院 ICU が分単位停電も許されない瀬戸際。MEE が報じる『社会インフラの物理的解体』という視座は日本の戦闘・人道危機報道では欠落。",
+      "source_url": "https://www.middleeasteye.net/news/ (MEE)",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_1_newspaper",
+      "source_run": "F-13.B trial run (2026-05-01 cached)",
+      "f13b_prior_verdict": {"has_jp_coverage": false, "matched_tier": null, "cached_at": "2026-05-01T12:06:37"},
+      "topic_category": "humanitarian_structural_collapse",
+      "region": "middle_east",
+      "volume_in_jp": "high_for_broad_event_low_for_specific_angle",
+      "manual_verification_note": "カズヤレビュー結果 (2026-05-04 F-verify-jp-coverage-golden-fix): 広範な事件 (ガザ電力危機) は東京新聞 (Tier 1) シファ病院突入記事や CNN.co.jp で報道済み。MEE 記事の核心『潤滑油 100 倍』『社会インフラの物理的解体』『分散型サバイバル経済』角度は系統 2 候補として別途検討。expected を False → True に修正、expected_tier=tier_1_newspaper (東京新聞)。F-13.B (機械) の精度測定としては True が真値。",
+      "manual_verification_urls": [
+        "https://www.tokyo-np.co.jp/article/290155 (Tokyo Shimbun T1: シファ病院突入)",
+        "https://www.cnn.co.jp/world/35210202.html (CNN.co.jp、WL外、参考)"
+      ],
+      "stream_2_candidate": {
+        "broad_event_jp_coverage": "東京新聞でシファ病院突入記事、CNN.co.jp でガザ電力危機関連報道",
+        "specific_angle_unreported_in_jp": "潤滑油 1L 14 → 1,500 シェケル (100 倍) 暴騰、中小企業 9 割廃業危機、ケーキ店主の生活破綻、ジェネレーター燃料に食用油転用といった『社会インフラの物理的解体』『分散型サバイバル経済への変質』という具体的データ + 構造分析角度",
+        "interpretation_value": ["economic_impact", "cultural_context"],
+        "decided_at": "2026-05-04",
+        "note": "F-stream-2-filter-design 実装時に系統 2 ターゲット候補として再評価。日本の戦闘・人道危機報道では『戦闘の推移』『死傷者数』を伝えるが、社会経済構造の物理的解体という生活実感への着地は欠落。"
+      }
+    },
+    {
+      "id": "blind_005",
+      "event_id": "cls-33b4f4960bf9",
+      "title": "Gaza was the scandal that should have ended Keir Starmer's political career",
+      "summary": "英スターマー首相が駐米大使マンデルソン人事スキャンダルで窮地。中東メディアは『真の道徳的スキャンダル』はガザでのイスラエル無条件支援 (アクロティリ基地からの監視飛行・F-35 部品継続供給) であるべきと指摘。日本/西側報道は手続き論に終始しガザ支援の道徳的負債は欠落。",
+      "source_url": "https://www.middleeasteye.net/ (MEE オピニオン)",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_1_newspaper",
+      "source_run": "F-13.B trial run (2026-05-01 cached)",
+      "f13b_prior_verdict": {"has_jp_coverage": false, "matched_tier": null, "cached_at": "2026-05-01T12:06:13"},
+      "topic_category": "political_moral_critique",
+      "region": "europe_uk",
+      "volume_in_jp": "high_for_broad_event_low_for_specific_angle",
+      "manual_verification_note": "カズヤレビュー結果 (2026-05-04 F-verify-jp-coverage-golden-fix): 広範な事件 (マンデルソン人事スキャンダル) は Nikkei (T1) + 時事 (T2) + Bloomberg JP (T2) で広く報道済み。MEE オピニオン核心『ガザ武器供与こそ本来のスキャンダル』『F-35 部品継続供給』『キプロス基地監視飛行』の道徳的批判フレームは系統 2 候補として別途検討。expected を False → True に修正、expected_tier=tier_1_newspaper (Nikkei)。F-13.B (機械) の精度測定としては True が真値。",
+      "manual_verification_urls": [
+        "https://www.nikkei.com/article/DGXZQOGR05CC20V00C26A2000000/ (Nikkei T1: マンデルソン本体)",
+        "https://www.cnn.co.jp/world/35244228.html (CNN.co.jp、WL外、マンデルソン本体)",
+        "https://www.bloomberg.com/jp/news/articles/2025-09-11/T2FATLGOYMTR00 (Bloomberg JP T2: マンデルソン本体)"
+      ],
+      "stream_2_candidate": {
+        "broad_event_jp_coverage": "Nikkei T1 + 時事 T2 + Bloomberg JP T2 でマンデルソン人事スキャンダル本体を報道済み",
+        "specific_angle_unreported_in_jp": "英国によるガザ向け F-35 部品継続供給、キプロス・アクロティリ基地からの監視飛行情報共有といった『英国の構造的なイスラエル軍事支援』こそが本来の道徳的スキャンダルだという批判フレーム",
+        "interpretation_value": ["political_intent", "media_divergence", "geopolitical"],
+        "decided_at": "2026-05-04",
+        "note": "F-stream-2-filter-design 実装時に系統 2 ターゲット候補として再評価。西側主流メディア (含む日本) はマンデルソン氏のエプスタイン氏との関係性に焦点、ガザ支援継続の構造問題はフレームから外れる。系統 2 視点で扱うべき。"
+      }
+    },
+    {
+      "id": "blind_007",
+      "event_id": "cls-3165c4e2f049",
+      "title": "Putin ally's $500 million Russian superyacht sails through Hormuz despite US blockade",
+      "summary": "プーチン側近モルダショフ氏所有の 142m 級超豪華ヨット『ノルド号』 (5 億ドル) が米イラン対立で封鎖中のホルムズ海峡を通過 (4/24 ドバイ発・4/25 通過・4/26 オマーン到着)。商船数隻のみ通過の中で『制裁逃れの優遇』を受けたとの報。",
+      "source_url": "https://timesofindia.indiatimes.com/world/us/putin-allys-500-million-russian-superyacht-cruises-through-strait-of-hormuz-despite-blockade-report/",
+      "expected_has_jp_coverage": false,
+      "expected_tier": null,
+      "source_run": "F-13.B 過去ヒューリスティック抽出 (evidence.json has_jp_view=0)",
+      "f13b_prior_verdict": null,
+      "topic_category": "sanctions_evasion_geopolitics",
+      "region": "russia_iran",
+      "volume_in_jp": "very_low",
+      "manual_verification_note": "WebSearch で『プーチン側近 ロシア スーパーヨット 5億ドル ホルムズ海峡 NHK 朝日 日経』を検索 → 該当する直接報道は『中央日報日本語版 (Yahoo!ニュース経由)』のみ。Yahoo はアグリゲータとして JP_MEDIA_EXCLUDED に明示登録。ロイター日本版 (Tier 2) で報道されたか不明 (russia.johocloud.net というサードパーティ集約サイトが Reuters 記事を引用)。Tier 1-4 直接報道は確認できず。Web 検証結果から expected_has_jp_coverage=False と判定。",
+      "manual_verification_urls": [
+        "https://news.yahoo.co.jp/articles/d1730f6f47e97b93023f8b6f23826322c25257f4 (Yahoo!=excluded)",
+        "https://news.yahoo.co.jp/pickup/6577911 (Yahoo!=excluded)"
+      ]
+    },
+    {
+      "id": "blind_008",
+      "event_id": "cls-37a708b96a94",
+      "title": "Israel accused of using 'water as a weapon' against Palestinians in Gaza",
+      "summary": "国境なき医師団 (MSF) と国連特別委員会が、イスラエルがガザの海水淡水化施設・井戸・送水管・下水システムの 90% 近くを破壊したと指摘。『水を武器化』した集団的懲罰として国際人権法違反の可能性を提起。",
+      "source_url": "https://www.middleeasteye.net/news/israel-accused-using-water-weapon-fresh-bombing-kills-two-children",
+      "expected_has_jp_coverage": false,
+      "expected_tier": null,
+      "source_run": "F-13.B 過去ヒューリスティック抽出 (evidence.json has_jp_view=0)",
+      "f13b_prior_verdict": null,
+      "topic_category": "humanitarian_human_rights",
+      "region": "middle_east",
+      "volume_in_jp": "low",
+      "manual_verification_note": "WebSearch で『イスラエル 水を武器 パレスチナ ガザ 国連 専門家 NHK 朝日 日経』を検索 → MSF プレスリリース (msf.or.jp、WL外) + Arab News JP (WL外) + CNN.co.jp (WL外) + 三菱総研コラム (WL外) のみヒット。Tier 1-4 (NHK / 日経 / 朝日 / 読売 / 産経 / 毎日 / 東京新聞) いずれも『水を武器化』フレームでの直接報道は確認できず。Web 検証結果から expected_has_jp_coverage=False と判定。",
+      "manual_verification_urls": [
+        "https://www.msf.or.jp/news/press/detail/pse20260428nt.html (MSF JP、WL外、参考)",
+        "https://www.arabnews.jp/article/middle-east/article_175641/ (Arab News JP、WL外)"
+      ]
+    },
+    {
+      "id": "blind_009",
+      "event_id": "cls-4045a389ba04",
+      "title": "The real reason Iran and the US cannot end the war: Money",
+      "summary": "MEE ライブブログのオピニオン分析。イランと米国の戦争が長期化する『本当の理由』として経済構造的要因 (制裁収益分配・革命防衛隊の利権) を提示。日本の戦況報道では欠落する経済的視座。",
+      "source_url": "https://www.middleeasteye.net/live-blog/live-blog-update/real-reason-iran-and-us-cannot-end-war-money",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_2_wire_service",
+      "source_run": "F-13.B 過去ヒューリスティック抽出 (evidence.json has_jp_view=0)",
+      "f13b_prior_verdict": null,
+      "topic_category": "economic_structural_analysis",
+      "region": "middle_east",
+      "volume_in_jp": "high_for_broad_event_low_for_specific_angle",
+      "manual_verification_note": "カズヤレビュー結果 (2026-05-04 F-verify-jp-coverage-golden-fix): 関連トピック『戦争長期化の経済的理由』は SPF (笹川平和財団) + JBpress + Bloomberg JP (T2) + 中東調査会 + 地経学研究所 (IOG) で報道済み。MEE オピニオン核心『制裁収益分配が継戦動機』『革命防衛隊の利権構造』フレームは系統 2 候補として別途検討。expected を False → True に修正、expected_tier=tier_2_wire_service (Bloomberg JP)。F-13.B (機械) の精度測定としては True が真値。",
+      "manual_verification_urls": [
+        "https://www.bloomberg.com/jp/news/articles/2026-04-12/TDCXVXT96OSG00 (Bloomberg JP T2: 戦争終結合意難航、関連)",
+        "https://www.bloomberg.com/jp/news/articles/2026-05-01/TED2BUKGZAM800 (Bloomberg JP T2: トランプ氏イラン交渉)",
+        "https://jbpress.ismedia.jp/articles/-/93464 (JBpress、WL外、関連分析)"
+      ],
+      "stream_2_candidate": {
+        "broad_event_jp_coverage": "Bloomberg JP T2 でイラン-米国和平合意難航を報道、SPF/JBpress/中東調査会等のシンクタンクが地政学的解説",
+        "specific_angle_unreported_in_jp": "イラン革命防衛隊が制裁網下の闇経済から得る既得権益と、それが戦争継続の構造的動機になっているという『継戦の経済的合理性』分析角度",
+        "interpretation_value": ["economic_impact", "political_intent", "geopolitical"],
+        "decided_at": "2026-05-04",
+        "note": "F-stream-2-filter-design 実装時に系統 2 ターゲット候補として再評価。日本主要紙の社説・解説は『核合意』『地政学』中心、制裁経済の構造的継戦動機分析は欠落。"
+      }
+    },
+    {
+      "id": "blind_010",
+      "event_id": "cls-e80fe02f603c",
+      "title": "Israel's policy of endless war is fuelled by the crisis of Zionism",
+      "summary": "MEE オピニオン記事。イスラエルの『終わらない戦争』政策の根本原因をシオニズム自体の構造的危機に求める分析。Ilan Pappe 等の歴史学者の議論を踏まえた長期構造論。",
+      "source_url": "https://www.middleeasteye.net/opinion/israel-policy-endless-war-driven-crisis-Zionism",
+      "expected_has_jp_coverage": false,
+      "expected_tier": null,
+      "source_run": "F-13.B 過去ヒューリスティック抽出 (evidence.json has_jp_view=0)",
+      "f13b_prior_verdict": null,
+      "topic_category": "structural_ideological_critique",
+      "region": "middle_east",
+      "volume_in_jp": "none",
+      "manual_verification_note": "WebSearch で『Israel Zionism crisis endless war MEE 日本 報道』を検索 → MEE 原文・Jewish Voice for Liberation・Counterpunch・Al Jazeera・Haaretz 等の英語ソースのみ。日本語報道は確認できず (Tier 1-4 全て不在、WL外含めても日本語ソース 0 件)。シオニズム構造批判のオピニオンは日本主要紙ではほぼ扱わない領域。Web 検証結果から expected_has_jp_coverage=False と判定。",
+      "manual_verification_urls": []
+    },
+
+    {
+      "id": "covered_001",
+      "event_id": "synthetic-2026-04-trump-hormuz-blockade",
+      "title": "ホルムズ海峡めぐりアメリカの対イラン封鎖始まる イランは反発",
+      "summary": "トランプ米大統領が 4/13 にイランの港湾出入りに対する海上封鎖発令。CENTCOM が実施。イスラマバード和平交渉決裂を受けた措置。米イラン双方の譲歩条件が根本的に相容れず。",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_1_newspaper",
+      "source_run": "manual-curation-2026-05-03",
+      "topic_category": "geopolitical_conflict",
+      "region": "middle_east",
+      "volume_in_jp": "high",
+      "manual_verification_note": "WebSearch で『トランプ イラン 攻撃 ホルムズ 海峡 NHK ニュース 2026年4月』を検索 → NHK ニュース (news.web.nhk = Tier 1) 複数記事 + 時事ドットコム (jiji.com = Tier 2) + 産経/共同配信 (佐賀新聞経由) + ロケットボーイズ + プレジデントオンライン (T4)。Tier 1 (NHK) + Tier 2 (Jiji) で確実にカバー。expected_tier=tier_1_newspaper (最高 Tier)。",
+      "manual_verification_urls": [
+        "https://news.web.nhk/newsweb/na/na-k10015098661000 (NHK Tier 1)",
+        "https://news.web.nhk/newsweb/na/na-k10015106881000 (NHK Tier 1)",
+        "https://www.jiji.com/jc/v8?id=202604hormuz-team (Jiji Tier 2)",
+        "https://www.saga-s.co.jp/articles/-/1689826 (佐賀新聞、共同通信配信、Tier 2 wire service 経由)"
+      ]
+    },
+    {
+      "id": "covered_002",
+      "event_id": "synthetic-2026-04-russia-ukraine-may-ceasefire-talks",
+      "title": "米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』",
+      "summary": "プーチン大統領がトランプ米大統領との電話会談 (4/30) で 5 月 9 日戦勝記念日に合わせウクライナとの停戦に応じる用意を表明。トランプ政権は当初 28 項目の停戦案を提示し 20 項目に整理して交渉中。",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_1_newspaper",
+      "source_run": "manual-curation-2026-05-03",
+      "topic_category": "diplomacy_ceasefire",
+      "region": "europe_russia",
+      "volume_in_jp": "high",
+      "manual_verification_note": "WebSearch で『ウクライナ ロシア 停戦 交渉 NHK 朝日 日経 2026年4月』を検索 → NHK ニュース (Tier 1) + 日本経済新聞 (Tier 1) 複数記事 + 時事 (Tier 2) + 復活祭 32 時間停戦も NHK 直接報道。Tier 1 確実カバー。",
+      "manual_verification_urls": [
+        "https://news.web.nhk/newsweb/na/na-k10015111241000 (NHK Tier 1: 5月停戦用意)",
+        "https://www.nikkei.com/article/DGXZQOGR16DSQ0W5A510C2000000/ (Nikkei Tier 1)",
+        "https://news.web.nhk/newsweb/na/na-k10015096231000 (NHK Tier 1: 復活祭 32 時間停戦)",
+        "https://www.nikkei.com/article/DGKKZO88640570T10C25A5FF8000/ (Nikkei Tier 1)"
+      ]
+    },
+    {
+      "id": "covered_003",
+      "event_id": "synthetic-2026-04-us-china-tariff",
+      "title": "米中 関税協議 / 通商交渉 (2026 年 4 月)",
+      "summary": "トランプ米政権の関税政策更新 (4/14)。日本含む 57 か国地域への追加関税を 8/1 まで停止 (中国除く)、停止中は一律 10% 適用。米中閣僚級協議継続。日本は『日米交渉が後回し』される懸念を Nikkei が報道。",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_1_newspaper",
+      "source_run": "manual-curation-2026-05-03",
+      "topic_category": "economic_trade_policy",
+      "region": "americas_global",
+      "volume_in_jp": "high",
+      "manual_verification_note": "WebSearch で『米中 関税 通商交渉 NHK 朝日 日経 2026年4月』を検索 → 日本経済新聞 (Tier 1) 複数記事が中心。日経ビジネス (T1 関連) + ジェトロ (WL外、参考) + 内閣府月例経済報告 (公的、参考)。Tier 1 確実カバー、報道密度極めて高い。",
+      "manual_verification_urls": [
+        "https://www.nikkei.com/article/DGXZQOUB09AB00Z00C25A5000000/ (Nikkei Tier 1)",
+        "https://www.nikkei.com/article/DGXZQOGM097LT0Z00C25A5000000/ (Nikkei Tier 1: 米中閣僚級協議開始)",
+        "https://www.nikkei.com/article/DGXZQOUA093SZ0Z00C25A6000000/ (Nikkei Tier 1: 日本後回し懸念)",
+        "https://www.nikkei.com/article/DGXZQOGN0208J0S5A500C2000000/ (Nikkei Tier 1: 合意枠組み案)"
+      ]
+    },
+    {
+      "id": "covered_004",
+      "event_id": "synthetic-2026-04-pope-leo-xiv-tyrant-warning",
+      "title": "ローマ教皇『多数派の専制』を警告 民主主義に危機感",
+      "summary": "ローマ教皇レオ 14 世が 4 月 5 日復活祭メッセージ + 4/15 演説で『多数派の専制』『宗教と神の名を利用する暴君』を批判。世界の紛争・暴力への無関心の蔓延に警鐘。米国出身初の教皇、改革路線継承。",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_1_newspaper",
+      "source_run": "manual-curation-2026-05-03",
+      "topic_category": "religion_politics",
+      "region": "europe_vatican",
+      "volume_in_jp": "medium",
+      "manual_verification_note": "WebSearch で『ローマ教皇 レオ14世 演説 NHK 朝日 日経 2026年4月』を検索 → 日本経済新聞 (Tier 1) 複数記事『多数派の専制を警告』『新教皇就任時の人物紹介』。AFPBB 配信が dmenu/ docomo 経由で広く配信。カトリック中央協議会・バチカンニュース日本語 (WL外、教会公式)。Tier 1 確実カバー。",
+      "manual_verification_urls": [
+        "https://www.nikkei.com/article/DGXZQOGM154DL0V10C26A4000000/ (Nikkei Tier 1: 多数派専制警告)",
+        "https://www.nikkei.com/article/DGKKZO88569240Z00C25A5FF8000/ (Nikkei Tier 1: 新教皇就任)"
+      ]
+    },
+    {
+      "id": "covered_005",
+      "event_id": "synthetic-2026-brazil-lula-amazon-cop30",
+      "title": "ブラジル ルラ政権、アマゾン開催の COP30 で狙うグローバルサウス主導役",
+      "summary": "ルラ大統領肝煎りでブラジル政府がアマゾン開催 COP30 でグローバルサウスの主導役を狙う。NHK が森林破壊現場 (アマゾン) を直接取材報道。森林伐採・森林火災が継続、温暖化加速が森林伐採措置を上回る状況。",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_1_newspaper",
+      "source_run": "manual-curation-2026-05-03",
+      "topic_category": "environment_diplomacy",
+      "region": "americas_brazil",
+      "volume_in_jp": "medium",
+      "manual_verification_note": "WebSearch で『ブラジル ルラ 環境 アマゾン 山火事 NHK 朝日 日経 2026』を検索 → NHK ニュース (Tier 1) アマゾン現地取材記事 + 日本経済新聞 (Tier 1) 複数記事 (COP30 グローバルサウス主導役 / アマゾン火災煙) + プレジデント (Tier 4)。Tier 1 + Tier 4 で確実カバー。",
+      "manual_verification_urls": [
+        "https://news.web.nhk/newsweb/na/na-k10014980111000 (NHK Tier 1: 森林破壊取材)",
+        "https://www.nikkei.com/article/DGXZQOGN0800F0Y5A101C2000000/ (Nikkei Tier 1: COP30 グローバルサウス)",
+        "https://www.nikkei.com/article/DGXZQOGN2203B0S4A820C2000000/ (Nikkei Tier 1: アマゾン火災煙)",
+        "https://president.jp/articles/-/30265 (President Tier 4)"
+      ]
+    },
+    {
+      "id": "covered_006",
+      "event_id": "synthetic-2026-04-nvidia-stock-peak",
+      "title": "NVIDIA 株が半年ぶり最高値更新 衰えぬ AI 需要、循環投資にはリスク",
+      "summary": "米半導体 Nvidia 株が 4/27 一時 4% 高 216.83 ドル、2025 年 10 月以来約半年ぶり最高値更新。時価総額 5.3 兆ドル (約 840 兆円)。AI 設備投資ブーム継続、ただし循環投資のリスクも指摘。",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_1_newspaper",
+      "source_run": "manual-curation-2026-05-03",
+      "topic_category": "economic_tech_markets",
+      "region": "americas_global",
+      "volume_in_jp": "high",
+      "manual_verification_note": "WebSearch で『エヌビディア Nvidia 決算 AI 半導体 ニューズウィーク 東洋経済 ダイヤモンド 2026年4月』を検索 → 日本経済新聞 (Tier 1) 直接記事 + Bloomberg JP (Tier 2) + 日経会社情報 + Investing JP + Bloomo (WL外、ファンド向け解説)。Tier 1 + Tier 2 確実カバー。",
+      "manual_verification_urls": [
+        "https://www.nikkei.com/article/DGXZQOGN2732H0X20C26A4000000/ (Nikkei Tier 1: 半年ぶり最高値)",
+        "https://www.nikkei.com/article/DGXZQOGN196390Z10C26A2000000/ (Nikkei Tier 1: 26日決算発表)",
+        "https://www.bloomberg.com/jp/news/articles/2026-02-25/TB1AM6T9NJLT00 (Bloomberg JP Tier 2: 4Q強気見通し)",
+        "https://www.bloomberg.com/jp/news/articles/2026-02-26/TB35XEKIJHA700 (Bloomberg JP Tier 2: AIバブル懸念)"
+      ]
+    },
+    {
+      "id": "covered_007",
+      "event_id": "synthetic-2026-03-nigeria-boko-haram-mass-abduction",
+      "title": "ナイジェリアで 100 人拉致 過激派襲撃、死者多数か",
+      "summary": "2026 年 3 月 4 日、ナイジェリア北東部ボルノ州で武装集団が集落を襲撃、女性・子ども含む 100 人以上を拉致。ボコ・ハラムが幹部殺害への報復として犯行声明。共同通信配信を東京新聞・秋田魁新報等が掲載。",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_1_newspaper",
+      "source_run": "manual-curation-2026-05-03",
+      "topic_category": "terrorism_kidnapping",
+      "region": "africa",
+      "volume_in_jp": "medium",
+      "manual_verification_note": "WebSearch で『ナイジェリア 武装勢力 BokoHaram 拉致 ボコハラム NHK 朝日 日経 2026』を検索 → 東京新聞デジタル (tokyo-np.co.jp = Tier 1) 直接掲載 + CNN.co.jp (WL外) + 共同通信配信を秋田魁新報 (WL外) 経由で広く配信 + UNHCR / UNICEF (WL外)。Tier 1 (東京新聞) + Tier 2 (共同通信 配信) でカバー。expected_tier=tier_1_newspaper。",
+      "manual_verification_urls": [
+        "https://www.tokyo-np.co.jp/article/473282 (Tokyo Shimbun Tier 1)",
+        "https://www.sakigake.jp/news/article/20260307CO0033/ (秋田魁新報、共同通信配信、Tier 2 wire service 経由)",
+        "https://www.cnn.co.jp/world/35219377.html (CNN.co.jp、WL外、関連 160 人拉致)"
+      ]
+    },
+    {
+      "id": "covered_008",
+      "event_id": "synthetic-2026-04-mali-defense-minister-killed",
+      "title": "マリ 軍事政権に反政府勢力が一斉攻撃 暫定国防相死亡",
+      "summary": "2026 年 4 月 25-27 日、マリでアザワド解放戦線 (FLA、トゥアレグ反乱勢力) と JNIM (アルカイダ系) が連携して国内複数地域を一斉攻撃。サディオ・カマラ国防相がカティ自宅の車爆弾攻撃で死亡 (本人 + 第二夫人 + 孫 2 人)。2012 年攻勢以来最大の試練。",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_1_newspaper",
+      "source_run": "manual-curation-2026-05-03",
+      "topic_category": "terrorism_geopolitical_conflict",
+      "region": "africa",
+      "volume_in_jp": "high",
+      "manual_verification_note": "WebSearch で『マリ 国防相 殺害 ジハーディスト 4月 NHK 朝日 日経 共同通信 時事』を検索 → NHK ニュース (Tier 1) 直接記事 + 時事ドットコム (Tier 2) + 共同通信配信を沖縄タイムス・東奥日報・熊本日日新聞等が掲載。Tier 1 (NHK) + Tier 2 (Jiji + 共同) で確実カバー。",
+      "manual_verification_urls": [
+        "https://news.web.nhk/newsweb/na/na-k10015109641000 (NHK Tier 1)",
+        "https://www.jiji.com/jc/article?k=20260427048789a&g=afp (Jiji Tier 2)",
+        "https://www.okinawatimes.co.jp/articles/-/1825694 (沖縄タイムス、共同通信配信、Tier 2 wire service 経由)"
+      ]
+    },
+    {
+      "id": "covered_009",
+      "event_id": "synthetic-2026-04-india-pakistan-kashmir-crisis",
+      "title": "インド・パキスタン カシミール 緊張 (4 月 22 日テロ攻撃 + 5 月 7-10 日 Operation Sindoor)",
+      "summary": "2026 年 4 月 22 日カシミール・パハルガムでテロ攻撃、観光客含む 26 名死亡 (TRF が犯行声明)。インドが 5/7 Operation Sindoor として PoK の 9 拠点をラファール・自爆ドローン等で精密攻撃。5/10 トランプ仲介で停戦合意。1 ヶ月後の現在も緊張継続、両国とも核保有国。",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_1_newspaper",
+      "source_run": "manual-curation-2026-05-03",
+      "topic_category": "geopolitical_conflict_terrorism",
+      "region": "asia",
+      "volume_in_jp": "high",
+      "manual_verification_note": "WebSearch で『インド モディ パキスタン カシミール 緊張 ニューズウィーク 東洋経済 ダイヤモンド ブルームバーグ 2026』を検索 → NHK 国際報道 (web.nhk = Tier 1) 直接特集 + Newsweek Japan (Tier 4) + 日本経済研究センター + 笹川平和財団 + JBpress + 日本総研 + 戸田記念国際平和研究所 + 外務省安全情報。Tier 1 (NHK) + Tier 4 (Newsweek) 確実カバー。",
+      "manual_verification_urls": [
+        "https://www.web.nhk/tv/an/kokusaihoudou/pl/series-tep-8M689W8RVX/ep/VR5Y11629N (NHK Tier 1: 国際報道特集)",
+        "https://www.newsweekjapan.jp/wada/2025/05/post-8.php (Newsweek Japan Tier 4)"
+      ]
+    },
+    {
+      "id": "covered_010",
+      "event_id": "synthetic-2026-03-houthi-iran-explicit-support",
+      "title": "イエメン・フーシ派、イスラエルに弾道ミサイル発射し『イラン支援』を公式表明",
+      "summary": "2026 年 3 月 28 日、イエメンのフーシ派がイスラエルに対し弾道ミサイル発射、米イスラエル・イラン交戦への『初の軍事介入』として参戦。フーシ派幹部ブハイティ氏が『イランへの支援は明確・公的・明示的』と表明、イラン・ヒズボラとの共同作戦と主張。",
+      "expected_has_jp_coverage": true,
+      "expected_tier": "tier_2_wire_service",
+      "source_run": "manual-curation-2026-05-03",
+      "topic_category": "geopolitical_conflict_proxy_war",
+      "region": "middle_east",
+      "volume_in_jp": "medium",
+      "manual_verification_note": "★Tier 2-4 only テストケース: WebSearch で『フーシ派 イラン 戦争 介入 ミサイル 2026 4月 Bloomberg Newsweek Japan』を検索 → Bloomberg JP (bloomberg.com/jp = Tier 2) + Newsweek Japan (Tier 4) + 時事ドットコム (Jiji = Tier 2) で報道。日本経済新聞 (Tier 1) も同件のミサイル発射を 3/27 報道していたが、本ゴールデンセットの試験対象としては『フーシ派の<明確・公的・明示的なイラン支援>表明』という MEE 記事の特定フレームに焦点を当てる。F-13.B が Tier 1 に当たれば expected_tier=tier_1_newspaper に修正される可能性あり。expected_has_jp_coverage=True は確定 (Tier 2 Bloomberg JP + Jiji で確実)。",
+      "manual_verification_urls": [
+        "https://www.bloomberg.com/jp/news/articles/2026-03-29/TCOKVVKK3NY800 (Bloomberg JP Tier 2)",
+        "https://www.jiji.com/jc/article?k=2026032800441&g=int (Jiji Tier 2)",
+        "https://www.newsweekjapan.jp/headlines/world/2026/03/592133.php (Newsweek Japan Tier 4)",
+        "https://www.nikkei.com/article/DGXZQOGR27BHT0X20C26A3000000/ (Nikkei Tier 1: 同件のフーシ参戦)"
+      ]
+    }
+  ],
+  "diversity_check": {
+    "blind_set": {
+      "entry_count": 9,
+      "expected_distribution": {
+        "expected_has_jp_coverage_true": 4,
+        "expected_has_jp_coverage_false": 5,
+        "true_entries_note": "blind_002 / 004 / 005 / 009 を v1.1 で True 化。これら 4 件は『広範な事件は Tier 1-2 で報道済み、特定角度は系統 2 候補』のパターン (stream_2_candidate メタ参照)。F-13.B (機械) の精度測定としては True が真値。系統 2 (framing_inversion + 構造分析) で別途扱うべき事象。",
+        "false_entries_note": "blind_001 / 003 / 007 / 008 / 010 は Web 検証で Tier 1-4 報道確認できず、純粋な日本未報道事象。"
+      },
+      "regions": {
+        "middle_east": 6,
+        "europe_uk": 1,
+        "russia_ukraine": 1,
+        "russia_iran_hybrid": 1,
+        "asia": 0,
+        "africa": 0,
+        "americas": 0
+      },
+      "topics": {
+        "political": 2,
+        "economic": 2,
+        "conflict_humanitarian": 4,
+        "religion_political": 1,
+        "structural_critique": 2,
+        "geopolitics": 3
+      },
+      "volume_in_jp": {
+        "none": 2,
+        "very_low": 1,
+        "low": 1,
+        "high_for_broad_event_low_for_specific_angle": 4
+      },
+      "bias_note": "★過去試運転データ (data/output/cls-* + jp_coverage_cache) が中東 (特にイスラエル/ガザ/イラン) 関連に大きく偏在 (9 件中 6-7 件)。アフリカ・米州・東アジアの blind_spot 候補は試運転データ自体に存在しなかった。これは試運転期 (4-5 月) の世界的ニュース流通自体がホルムズ封鎖・ガザ等中東情勢中心であったことを反映する構造的バイアス。次バッチ (F-verify-jp-coverage-measure) では本ゴールデンセットに含まれる中東バイアスを認識した上で精度測定を行う必要がある。将来 (Phase A.5-3b 以降) に試運転データが多様化したら本ゴールデンセットも追補する余地。",
+      "v1_1_blind_006_deletion_note": "★v1.1 で blind_006 (Palestine FIFA) を削除。理由: Hydrangea 系統 1 ミッション (構造的未報道理由を持つ事象) に整合しない単にマイナーで報道価値が低い候補だった。差し替え候補を heuristic 未採用 12 件から探索したが、いずれも (a) 既に Tier 1 で報道済み (Iraq al-Zaidi 首相指名 / NK-Russia 戦没者記念館 / Hormuz 関連クラスタ多数) (b) 中東以外を優先したい意向に反する (c) Bloomberg JP T2 で報道済み (Houthi 統一表明) のいずれかで該当なし。仕様 (BATCH_PROTOCOL: 該当候補ゼロなら 9 件構成許容) に従い 9 件構成で確定。"
+    },
+    "covered_set": {
+      "regions": {
+        "middle_east": 2,
+        "europe": 2,
+        "americas": 3,
+        "africa": 2,
+        "asia": 1
+      },
+      "topics": {
+        "geopolitical_conflict": 4,
+        "diplomacy": 1,
+        "economic": 2,
+        "religion_politics": 1,
+        "environment": 1,
+        "terrorism": 2
+      },
+      "volume_in_jp": {
+        "high": 6,
+        "medium": 4
+      },
+      "tiers_covered": {
+        "tier_1_newspaper": 9,
+        "tier_2_wire_service_only": 1,
+        "tier_3_broadcaster_only": 0,
+        "tier_4_business_only": 0
+      },
+      "tier_2_4_only_deviation_note": "★仕様要求 (Tier 2-4 のみ報道事象 ≥2 件) に対して 1 件のみ達成 (covered_010 Houthi)。理由: 国際大ニュースは Tier 1 (NHK / 日経) でほぼ必ず報道されるため、Tier 2-4 のみの事象を多数確保するのは構造的に困難。代替として (a) 業界専門メディア (Bloomberg JP / Newsweek JP / Diamond / 東洋経済) の 独自取材記事を探す、(b) Tier 1 不在で Tier 2-4 のみ取り上げる事象を意図的に拾う、等の追補が次バッチで必要。本ゴールデンセットでは expected_tier の判定精度ではなく has_jp_coverage の True/False 判定精度を主要測定対象とする。"
+    }
+  },
+  "kazuya_review_required_ids": [],
+  "kazuya_review_summary": {
+    "status": "完了 (2026-05-04 F-verify-jp-coverage-golden-fix)",
+    "v1_0_count": 5,
+    "v1_1_resolution": "5 件全件のカズヤレビューが完了: 4 件 (blind_002 / 004 / 005 / 009) を expected False → True に修正 (機械の精度測定としては True が真値、特定角度は系統 2 候補として stream_2_candidate メタで識別)、1 件 (blind_006 Palestine FIFA) を削除 (Hydrangea 系統 1 ミッションに整合しない単マイナー事象)。差し替え候補は heuristic 未採用 12 件から探索したが該当なし、9 件構成で確定。",
+    "decisions_made": [
+      "(1) ★ 5 件の真値確定: 4 件 True 化 + 1 件削除",
+      "(2) ★ F-13.B 動作仕様維持: 現仕様 (タイトル全体の広範な事件判定) で良しとし、改修しない (過剰拡張性の罠回避、単一責任原則)",
+      "(3) ★ 系統 2 用ロジックは F-stream-2-filter-design として独立実装 (FUTURE_WORK 緊急度 高に登録、Phase A.5-3b 前に着手)",
+      "(4) ★ 系統 1 (silence_gap) 判定基準を『未報道理由の構造性』(4 軸) として明文化 (DISCUSSION_NOTES + CURRENT_STATE セクション 0)",
+      "(5) ★ Hydrangea のメディア宣言『忖度、報道規制、報道の自由度の低さをぶち壊そう』を docs に固定化"
+    ]
+  },
+  "next_batch_handoff": {
+    "batch_name": "F-verify-jp-coverage-measure",
+    "expected_inputs": [
+      "本 golden_set.json (entries 配列)",
+      "F-13.B JpCoverageVerifier (src/triage/jp_coverage_verifier.py、現コミット b61d3f5)"
+    ],
+    "expected_outputs": [
+      "各 entry (19 件) に F-13.B を実行し has_jp_coverage / matched_tier を取得",
+      "expected_has_jp_coverage と突合して TP/FP/TN/FN を算出 (TP=報道済→True 一致 / TN=未報道→False 一致 / FP=未報道→True 誤判定 / FN=報道済→False 誤判定)",
+      "Precision / Recall / F1 を全体 + blind set / covered set で別個に算出",
+      "stream_2_candidate メタ付き 4 件 (blind_002/004/005/009) は『広範な事件で True 期待』として集計、系統 2 候補としても並行記録",
+      "Tier 判定精度 (matched_tier) を expected_tier と突合 (Tier 1-4 のみ集計、19 件中 14 件が tier 期待値あり: covered 10 + blind の True 4)",
+      "結果を docs/runs/F-verify-jp-coverage/measurement_result.json に保存"
+    ],
+    "kazuya_review_gate": "★完了済み (2026-05-04 F-verify-jp-coverage-golden-fix で全件確定)。即着手可能。"
+  }
+}

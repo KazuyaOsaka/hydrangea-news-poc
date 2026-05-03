@@ -2289,3 +2289,252 @@ F-doc-cleanup (e34f36e、main マージ 3e817d8、2026-05-03) 完了直後、カ
   - `docs/FUTURE_WORK.md` (本エントリを完了済みに追加)
 - 関連: F-doc-cleanup (e34f36e、main マージ 3e817d8) — 本バッチの前提となる文書整地バッチ
 
+---
+
+## 2026-05-03: F-verify-jp-coverage-golden — F-13.B 精度測定用ゴールデンセット作成 (2 段階分割の第 1 段階)
+
+### 背景
+
+F-verify-jp-coverage は Phase A.5-3a-verify の最優先ゲートとして FUTURE_WORK
+緊急度 高に登録済み (F-state-protocol-supplement / 2026-05-02)。
+F-13.B JpCoverageVerifier の precision/recall を実データで測定し、Hydrangea
+コンセプト防衛機構の中核 (rescue 完全廃止後の唯一の JP 報道判定経路) の
+信頼性を担保する位置付け。
+
+ゴールデンセットの品質が F-verify-jp-coverage 全体の信頼性を決めるため、
+本バッチでは独立にゴールデンセット 20 件 (blind 10 + covered 10) を作成し、
+カズヤがレビューしてから次バッチ (F-verify-jp-coverage-measure) で実際の
+精度測定を行う 2 段階構成を採用した。
+
+### 議論
+
+- **単一バッチ (golden + measure を同一バッチ) vs 2 段階分割**:
+  - 単一バッチ案: 1 度の作業で完結、バッチ数が少ない、ゴールデンセット作成と
+    測定の文脈を保持できる
+  - 2 段階分割案 (採用): Task A の判断密度が高い (20 件全件で region/topic/tier
+    多様性の判断 + 各件の独立 Web 検証 + 真値判定の確定)。ゴールデンセットは
+    F-13.B 精度測定の真値となるため、measure 投入前にカズヤレビュー機会を
+    持つ価値が高い。間違ったゴールデンセットで measure を回すと結果も
+    間違う構造的リスク
+  - → 2 段階分割を採用
+
+- **真値判定の独立性確保**:
+  - F-13.B 自体を呼んで「F-13.B が False と言ったから expected も False」と
+    すると自己参照になり精度測定の意味がない
+  - WebSearch ツールで Claude Code が独立に日本語検索 (例: タイトル + 'NHK
+    朝日 日経' 等) を実行し、JP_MEDIA_WHITELIST Tier 1-4 ドメイン直接報道の
+    有無を確認する方式を採用
+  - F-13.B の jp_coverage_cache に残る過去判定 (6 件) は参考情報として
+    `f13b_prior_verdict` フィールドに併記するが、expected_has_jp_coverage の
+    真値は独立検証結果に基づく
+
+- **blind 候補の選定方針**:
+  - 案 i: F-13.B が `has_jp_coverage=False` 判定したものだけを使う → 6 件しか
+    存在せず 10 件に届かない、かつ中東バイアスが極端
+  - 案 ii (採用): F-13.B 過去判定 6 件 + 過去試運転 evidence.json から
+    has_jp_view=0.0 + coverage_gap_score>=6.0 + sources.jp=[] を満たす
+    候補をヒューリスティック抽出 (18 件) → そこから region/topic 多様性を
+    考慮して 10 件選定
+  - 結果: 中東バイアス (10 件中 7-8 件) は試運転期 (4-5 月) の世界的ニュース
+    流通自体がホルムズ封鎖・ガザ等中東情勢中心であった構造的反映として
+    diversity_check.bias_note に明記
+
+- **覆われた事象 10 件の選定方針**:
+  - F-13.B 自身の判定結果 (has_jp_coverage=True 出力) を使うと自己参照
+  - WebSearch で 2026 年 4-5 月の主要国際ニュース (Trump-Hormuz / Russia-Ukraine
+    停戦交渉 / 米中関税 / 教皇レオ 14 世警告 / Lula-Amazon / NVIDIA / Boko
+    Haram / Mali 国防相殺害 / India-Pakistan Kashmir / フーシ-イラン支援表明)
+    を検索し、JP_MEDIA_WHITELIST Tier 1-4 直接報道 URL を確認
+
+- **Tier 2-4 only テストケースの確保**:
+  - 仕様要求: Tier 1 ≥ 5、Tier 2-4 only ≥ 2
+  - 達成: Tier 1 = 9 件、Tier 2-4 only = 1 件 (フーシ-イラン支援表明、Bloomberg
+    JP T2 + Newsweek JP T4 + Jiji T2)
+  - 1 件不足の理由: 国際大ニュースは Tier 1 (NHK / 日経) でほぼ必ず報道
+    されるため、Tier 2-4 のみの事象を多数確保するのは構造的に困難
+  - diversity_check.tier_2_4_only_deviation_note に明記、次バッチで追補可能性
+
+- **kazuya_review_required_ids の発生**:
+  - 5 件 (blind_002 / 004 / 005 / 006 / 009) で「広範な事件は Tier 1 報道あり、
+    MEE 記事の核心 (特定の構造分析角度) は未報道」というパターンが共通発生
+  - F-13.B の動作仕様 (タイトル全体の事件 vs 特定角度の判定基準) によって
+    expected_has_jp_coverage の真値が False/True に分岐する可能性あり
+  - カズヤレビューで真値を確定してから次バッチ起動の前提
+
+### 決定
+
+1. `docs/runs/F-verify-jp-coverage/golden_set.json` を新規作成
+   - blind 10 件 + covered 10 件
+   - 各 entry に title / summary / expected_has_jp_coverage / expected_tier
+     / source_run / topic_category / region / volume_in_jp /
+     manual_verification_note / manual_verification_urls
+   - blind 6 件は f13b_prior_verdict 併記 (F-13.B 過去キャッシュからの参考情報)
+   - diversity_check (region / topic / tier / volume) + bias_note 完備
+   - kazuya_review_required_ids 5 件明示 + kazuya_review_summary に共通
+     パターン記述
+   - next_batch_handoff に F-verify-jp-coverage-measure の期待 input/output
+     とカズヤレビューゲートを定義
+
+2. F-13.B 自体は呼ばず、Claude Code が WebSearch で独立に日本語検索して
+   真値判定 (F-13.B 過去判定は参考情報として併記のみ)
+
+3. 中東バイアス (blind 10 件中 7-8 件 ME) は試運転データ自体の構造的反映
+   として診断コメント明記、矯正のための差し替えは行わない (実運用データに
+   即した評価を優先)
+
+4. Tier 2-4 only 不足 (仕様要求 ≥2 に対して 1 件) は明示的偏差として
+   diversity_check に記録、次バッチで追補可能性を残す
+
+5. 本バッチは中間成果物のため BATCH_PROTOCOL Task 1-5 ドッグフーディングは
+   軽量版で実施 (DECISION_LOG / FUTURE_WORK / DISCUSSION_NOTES /
+   CURRENT_STATE 更新は通常通り、CLAUDE.md は変更なし)
+
+### 結果
+
+- `docs/runs/F-verify-jp-coverage/golden_set.json` 作成 (20 entries valid JSON)
+- 真値判定独立性確保: F-13.B 自体の呼び出しなし、WebSearch 経由のみ
+- カズヤレビュー対象 5 件を明示、レビュー後の真値確定により次バッチ
+  (F-verify-jp-coverage-measure) で TP/FP/TN/FN 算出可能な状態
+- Phase A.5-3a-verify の最優先ゲート (F-verify-jp-coverage) の第 1 段階完了、
+  第 2 段階 (measure) 着手準備完了
+- F-13.B 動作仕様の根本的な検討課題 (タイトルクエリで広範な事件を引き当てて
+  しまう構造、MEE 記事の核心 = 特定構造分析角度の判定不能性) を 5 件の
+  borderline 候補として浮き彫りにした → DISCUSSION_NOTES に新エントリ追加
+- リグレッション影響なし (docs/ + docs/runs/ のみ追加、src/ tests/ configs/
+  CLAUDE.md は 0 行変更、baseline 1315 passed 維持)
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 変更:
+  - `docs/runs/F-verify-jp-coverage/golden_set.json` (新規、20 entries)
+  - `docs/DECISION_LOG.md` (本エントリ)
+  - `docs/FUTURE_WORK.md` (F-verify-jp-coverage を 2 段階分割反映 +
+    F-verify-jp-coverage-measure を新規追加 + 本エントリを完了済みに)
+  - `docs/DISCUSSION_NOTES.md` (F-13.B 動作仕様の検討課題 1 エントリ追加)
+  - `docs/CURRENT_STATE.md` (main HEAD / 直近 5 件 / 次バッチ候補刷新)
+- 関連: F-13.B JpCoverageVerifier (src/triage/jp_coverage_verifier.py、
+  本バッチ時点コミット b61d3f5)
+- 関連: F-doc-cleanup-followup (bcf3577、main マージ b61d3f5、2026-05-03) —
+  本バッチの前提
+
+---
+
+## 2026-05-04: F-verify-jp-coverage-golden-fix — ゴールデンセット真値修正 + 系統 1 判定基準 4 軸明文化 + Hydrangea メディア宣言反映 + 2 段階フィルタ設計確定
+
+### 背景
+
+F-verify-jp-coverage-golden (前バッチ、未マージ feature ブランチ
+`feature/F-verify-jp-coverage-golden` 上で同一ブランチ追加コミット) のカズヤレビューで、
+4 つの重要な設計判断が確定:
+
+1. ゴールデンセット 5 件の真値修正 (4 件 False → True、1 件削除)
+2. 系統 1 (silence_gap) の判定基準明文化 (「未報道理由の構造性」が必要、4 軸構造)
+3. Hydrangea のメディアとしての存在意義の明示化 (カズヤ宣言「忖度、報道規制、
+   報道の自由度の低さをぶち壊そう」)
+4. F-13.B の役割を系統 1 専用と確定 + 系統 2 用の独立ロジック
+   (F-stream-2-filter-design) を Phase A.5-3b 前に実装する Phase 配置確定
+
+### 議論
+
+- **真値判定の修正方針**:
+  - 案 α: 全件を True に修正 (機械仕様視点厳密化) → 不採用 (1 件は本物の未報道
+    マイナー候補、機械の精度測定としては True が真値だが Hydrangea ミッション
+    整合性を欠く)
+  - 案 β: 全件を False のまま (系統 2 視点優先) → 不採用 (機械の精度測定としては
+    誤り、F-13.B が広範な事件 = Tier 1 報道済みを正しく True 判定するのを
+    『誤判定』扱いにすると測定が崩壊)
+  - 案 γ (採用): 件ごとに判断 → 4 件 (blind_002/004/005/009) を True 化 +
+    1 件 (blind_006 Palestine FIFA) は削除
+
+- **blind_006 (Palestine FIFA) の扱い**:
+  - 案 (B) ラベル付けて残す → 不採用 (ゴールデンセット純度低下)
+  - 案 (C) 削除 → 採用 (Hydrangea 系統 1 ミッションに整合しない単マイナー候補は
+    blind set から外す)
+  - 案 (A) 構造的未報道理由を持つ候補に差し替え → 試行したが該当候補なし。
+    heuristic 未採用 12 件を全件評価:
+    - cls-2d791f7f4b17 (Iraq al-Zaidi 首相指名): Tier 1 報道済み (Nikkei + Asahi)
+    - cls-f383daaef143 (NK-Russia 戦没者記念館): Tier 1 報道済み
+      (Mainichi + Nikkei + Hokkaido + Jiji + ANN)
+    - cls-579833967531 (Houthi 統一表明): Tier 2 報道済み (Bloomberg JP)
+    - Hormuz クラスタ (cls-7eaa0040dfff / 819a09bdda6f / 962feee682b9 /
+      a83e0f0a56a5 / b107a1e4becb / b574fcfd8cb3 / cf5b64e8fc3f): 全て Tier 1
+      報道済み
+    - cls-74974ee82dbd (Russian yacht): blind_007 と重複
+    - cls-e97b90f53eac (Japan Rapidus AI chips): JP 国内、Tier 1 報道済み
+    - 該当候補ゼロ → spec 規定 (該当なしなら 9 件構成許容) に従い 9 件構成で確定
+
+- **系統 1 判定基準の構造化 (4 軸)**:
+  - カズヤから「特定国への忖度」観点が追加提示
+  - さらに「上級国民・政治家への忖度」観点が追加提示 (個人・権力者層への
+    構造的配慮、メディアオーナー一族・司法関係者・財界要人等を含む)
+  - カズヤのメディア宣言: 「忖度、報道規制、報道の自由度の低さをぶち壊そう。
+    そういうクソみたいな理由で報道されないものこそ Hydrangea で取り扱うべき記事」
+  - 制度・システム面 / 外交・経済・利害関係面 / **個人・権力者面 (★新規)** /
+    関心領域・地政学的死角 の 4 軸に整理
+
+- **Hydrangea のメディアとしての存在意義の明示化**:
+  - 当初の系統 1 説明: 「日本で報じられていない海外大ニュースを日本人に届ける」
+  - 課題: 「なぜ届けるか」の動機・ミッション本質が docs に明記されていない
+  - 採用案: CURRENT_STATE.md セクション 0 (コアミッション) の系統 1 説明を強化、
+    4 軸の構造的バイアス + カズヤ宣言を明示。これにより新しいクラウドインスタンス
+    (別チャット移行時) も Hydrangea のメディアとしての存在意義を即座に理解できる
+
+- **F-13.B の役割と Phase 配置**:
+  - 当初案 (a): 現仕様維持 + 系統 2 は別ロジック → 採用
+  - 当初案 (b): F-13.B 改修で広範な事件をフィルタアウト → 不採用 (過剰拡張性の罠、
+    単一責任原則違反)
+  - 当初案 (c): 段階的判断 → 採用 (a と統合)
+  - 系統 2 用ロジックの Phase 配置:
+    - 当初案: Phase A.5-3b 内に組み込み → 不採用 (カズヤ指摘「PoC は PoC に集中
+      したい」)
+    - 採用案: Phase A.5-3b 前に F-stream-2-filter-design として独立実装
+
+### 決定
+
+1. ゴールデンセット 5 件の真値修正 (4 件 True 化 + 1 件削除) +
+   stream_2_candidate メタフィールドで系統 2 候補識別 (4 件)
+2. 系統 1 (silence_gap) 判定基準を「未報道理由の構造性」として 4 軸構造で明文化、
+   DISCUSSION_NOTES に新規エントリで記録 (制度・システム面 / 外交・経済・利害関係
+   面 / 個人・権力者面 / 関心領域・地政学的死角)
+3. Hydrangea のメディアとしての存在意義をカズヤ宣言として明示化、
+   CURRENT_STATE.md セクション 0 の系統 1 説明を強化 (4 軸 + 宣言を明示)
+4. 2 段階フィルタ設計を確立:
+   - ステップ 1 (F-13.B): 系統 1 用、現仕様維持 (改修しない)
+   - ステップ 2 (F-stream-2-filter-design 新規実装): 系統 2 用、F-verify-jp-
+     coverage-measure 完了後 → Phase A.5-3b 前に実装
+5. Phase 順序を更新: F-verify-jp-coverage-measure → F-stream-2-filter-design
+   → Phase A.5-3b
+
+### 結果
+
+- ゴールデンセットが完成形に (kazuya_review_required_ids 空配列、19 件構成)
+- 系統 1 判定基準が 4 軸構造で docs として固定化 (新チャット移行時の認識ブレ防止)
+- Hydrangea メディア宣言が docs に固定化 (CURRENT_STATE セクション 0 で最初に
+  読む構造、別チャット移行時にも本質的ミッションが伝わる)
+- F-stream-2-filter-design が新規バッチ候補として FUTURE_WORK 緊急度 高に登録、
+  Phase A.5-3b の前提条件として位置付け
+- F-verify-jp-coverage-measure 着手の前提条件確定 (即着手可能)
+- カズヤ哲学整合: 「動くものを壊さない」(F-13.B 維持)、「対症療法じゃなくて根本治療」
+  (系統 1 判定基準明文化)、「過剰拡張性の罠回避」(F-13.B 改修不採用)、「PoC は PoC
+  に集中」(系統 2 ロジックは PoC 前に独立実装)、「忘れ去られた約束を絶対忘れない
+  仕組み」(メディア宣言を docs に固定化)
+- リグレッション影響なし (docs/ のみ変更、baseline 1315 passed 維持)
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 変更:
+  - `docs/runs/F-verify-jp-coverage/golden_set.json` (v1.0 → v1.1: 4 件
+    True 修正 + 1 件削除 + メタ更新 + stream_2_candidate 追加 + v1_1_changelog
+    追加 + selection_methodology 拡張)
+  - `docs/DISCUSSION_NOTES.md` (1 新規 = 系統 1 判定基準 4 軸 + メディア宣言、
+    1 追記 = F-13.B 動作仕様検討課題に 2026-05-04 議論結果)
+  - `docs/FUTURE_WORK.md` (F-stream-2-filter-design 新規 + F-verify-jp-coverage-
+    measure 前提更新 + Phase 順序新設 + 本エントリ)
+  - `docs/CURRENT_STATE.md` (全置換更新 + ★セクション 0 系統 1 説明強化 = 4 軸 +
+    Hydrangea メディア宣言 + Phase A.5-3a-verify ロードマップ 1-C/1-D/1-E 追加)
+  - `docs/DECISION_LOG.md` (本エントリ)
+- 関連: F-verify-jp-coverage-golden (前バッチ、未マージ feature ブランチ上で
+  追加コミットとして本バッチを実施)
+
