@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-04 (F-verify-jp-coverage-golden-fix 完了時点)
+最終更新: 2026-05-05 (F-verify-jp-coverage-measure 完了時点)
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -96,47 +96,54 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。japan_ath
 
 ## 1. リポジトリ状態
 
-- **main HEAD コミット**: `b61d3f5`
+- **main HEAD コミット**: `20da7c0`
 - **直近 5 件のコミットログ**:
   ```
+  20da7c0 Merge branch 'feature/F-verify-jp-coverage-golden'
+  069c318 docs: create golden set v1.1 with truth values fixed + 4-axis stream-1 criteria + Hydrangea media manifesto + F-stream-2-filter-design plan (F-verify-jp-coverage-golden + F-verify-jp-coverage-golden-fix combined)
   b61d3f5 Merge branch 'feature/F-doc-cleanup-followup'
   bcf3577 docs: reflect 2026-05-03 discussion results + add core mission 2-stream section (F-doc-cleanup-followup)
   3e817d8 Merge branch 'feature/F-doc-cleanup'
-  e34f36e docs: cleanup doc debt before Phase A.5-3a-verify (F-doc-cleanup)
-  eaa0ac1 Merge branch 'feature/F-cleanup-merge-streak'
   ```
-- **baseline テスト数**: `1315 passed` (2026-05-03 F-doc-cleanup-followup 時点で確認、F-verify-jp-coverage-golden は docs のみで src/tests/configs 0 行変更のため維持)
+- **baseline テスト数**: `1315 passed` (2026-05-05 F-verify-jp-coverage-measure 時点で確認、本バッチは scripts/ + docs/runs/ + docs/ のみで src/tests/configs 0 行変更のため維持)
 
 ## 2. 現在のフェーズ
 
 - **Phase**: Phase A.5-3a 完了 → A.5-3a-verify **進行中**
-  (F-verify-jp-coverage 第 1 段階 + 真値修正完了)
-- **進行中バッチ**: なし (F-verify-jp-coverage-golden-fix 完了直後、
-  main マージ待ち)
-- **次バッチ候補と推奨** (F-verify-jp-coverage-golden-fix / 2026-05-04 で確定):
-  - **1st: F-verify-jp-coverage-measure** (★最優先、ゴールデンセット使った
-    F-13.B 精度測定、2-3 時間、ゲート性格)
-  - **2nd: F-stream-2-filter-design** (★最優先、系統 2 用 2 段階フィルタ実装、
-    4-6 時間、Phase A.5-3b の前提)
-  - **3rd: Phase A.5-3b 手動 PoC 着手** (image-prompt-spec を 3b 最初の作業に
+  (F-verify-jp-coverage 1-D 完了、verdict=fail → F-13.B 構造的不具合特定、
+  F-jp-coverage-improve 起動待ち)
+- **進行中バッチ**: なし (F-verify-jp-coverage-measure 完了直後、main マージ待ち)
+- **次バッチ候補と推奨** (★F-verify-jp-coverage-measure / 2026-05-05 で更新、
+  verdict=fail を受けて Phase 順序を再構成):
+  - **1st: F-jp-coverage-improve** (★★最優先、F-13.B 構造的不具合修正、
+    Gemini Grounding redirect URL → web.title 読み取りへの最小修正、1-2 時間、
+    Hydrangea ミッション系統 1 の中核機構が機能していなかった懸念を即修正)
+  - **2nd: 改修後 verify_jp_coverage_measure.py 再実行** (合格判定取り直し、
+    Recall covered >= 90% 達成見込み、30 分)
+  - **3rd: F-stream-2-filter-design** (★最優先、系統 2 用 2 段階フィルタ実装、
+    4-6 時間、F-13.B 修正完了後に着手再開、Phase A.5-3b の前提)
+  - **4th: Phase A.5-3b 手動 PoC 着手** (image-prompt-spec を 3b 最初の作業に
     組み込み、フィルタは事前確定済みで PoC に集中)
   - 並走: F-verify-perspective / F-verify-script-quality
     (3b/3c 中にデータ収集、判断は 3b/3c 完了後 = データ収集性格)
 - **推奨フロー**:
-  - F-verify-jp-coverage-measure 合格 + F-stream-2-filter-design 完了 →
-    Phase A.5-3b 手動 PoC 着手 → 3c 自動化 (F-elevenlabs-integration /
-    F-image-gen-integration / F-video-compose-integration / F-cron) →
-    Phase A.5-3d で投稿前ゲート + 自動投稿
+  - F-jp-coverage-improve 完了 + 計測再実行で合格判定取得 →
+    F-stream-2-filter-design 完了 → Phase A.5-3b 手動 PoC 着手 →
+    3c 自動化 (F-elevenlabs-integration / F-image-gen-integration /
+    F-video-compose-integration / F-cron) → Phase A.5-3d で投稿前ゲート +
+    自動投稿
 
-### Phase A.5-3a-verify ロードマップ (F-verify-jp-coverage-golden-fix / 2026-05-04 更新)
+### Phase A.5-3a-verify ロードマップ (★F-verify-jp-coverage-measure / 2026-05-05 更新)
 
 | 段階 | バッチ | 状態 | 概要 |
 |---|---|---|---|
 | 1-A | F-verify-jp-coverage-golden | ✅ 完了 (2026-05-03) | ゴールデンセット 20 件作成 |
 | 1-B | カズヤレビュー (人手) | ✅ 完了 (2026-05-04) | 5 件件ごと判断完了 |
 | 1-C | F-verify-jp-coverage-golden-fix | ✅ 完了 (2026-05-04) | 真値修正 + 4 軸判定基準明文化 + メディア宣言反映 + 2 段階フィルタ設計確定 |
-| 1-D | **F-verify-jp-coverage-measure** | 着手前 | F-13.B 精度測定 (TP/FP/TN/FN)、ゲート判定 |
-| 1-E | **F-stream-2-filter-design** | 着手前 | 系統 2 用 2 段階フィルタ実装、Phase A.5-3b の前提 |
+| 1-D | F-verify-jp-coverage-measure | ✅ 完了 (2026-05-05) | verdict=fail (Recall covered 0% / Precision blind 26% / F1 0.000 / Tier 一致率 0%) → ★ F-13.B 構造的不具合 (Grounding redirect URL を WL マッチングに使用、実ドメインは web.title) を特定 |
+| 1-D′ | **F-jp-coverage-improve** | ★★着手前 (最優先) | F-13.B 構造的不具合修正 (web.title 読み取り)、1-2 時間 |
+| 1-D″ | **計測再実行** | 着手前 | 改修後 verify_jp_coverage_measure.py 再実行で合格判定取り直し、30 分 |
+| 1-E | **F-stream-2-filter-design** | 着手保留 (1-D′完了待ち) | 系統 2 用 2 段階フィルタ実装、Phase A.5-3b の前提、F-13.B 修正後に再開 |
 | 2 | F-verify-perspective | 並走候補 | axis 分布集計 (3b/3c 中) |
 | 3 | F-verify-script-quality | 並走候補 | NG 語彙頻度 / リトライ率集計 (3b/3c 中) |
 
@@ -170,7 +177,7 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 |---|---|---|---|---|
 | F-1 | F-1 / F-1.5 | EditorialMissionFilter | 編集ミッション適合度で score 算出 (>= 45.0 で通過) | ✅ 稼働中 |
 | F-2 | F-2 / F-5 | FlagshipGate (Hydrangea コンセプト整合) | 海外発の重要ニュースを優先 | ✅ 稼働中 |
-| F-13.B | F-13.B | JpCoverageVerifier (rescue 完全廃止 + Web 検証) | JP 報道カバレッジを 27 ドメイン WL で検証 | ✅ 稼働中 |
+| F-13.B | F-13.B | JpCoverageVerifier (rescue 完全廃止 + Web 検証) | JP 報道カバレッジを 27 ドメイン WL で検証 | ⚠️ **構造的不具合特定** (2026-05-05 F-verify-jp-coverage-measure 実測 verdict=fail / Recall covered 0% / Precision blind 26.32% / F1 0.000 / Tier 一致率 0% / Error 0%): Grounding API の chunk.web.uri が redirect URL を返す仕様により WL マッチング常時不一致 → 本番でも常に has_jp_coverage=False 返却の懸念。F-jp-coverage-improve で web.title 読み取りに最小修正予定 |
 | F-5 | F-5 | FlagshipGate 下流救済 | 上流ガードを通過した候補の最終整合 | ✅ 稼働中 |
 | **F-13 (隠れ層)** | F-13 / F-doc-cleanup | script_writer.py:951-985 quality_floor_miss bypass | analysis_result 等が成立すれば appraisal の [抑制] を上書き | ✅ 稼働中 (F-doc-cleanup / 2026-05-03 で正式 5 層目に昇格、DECISION_LOG / EDITORIAL_MISSION_FILTER_DESIGN.md に明文化) |
 
@@ -279,4 +286,27 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
  2 段階フィルタ) を Phase A.5-3b 前に独立実装する Phase 配置確定。Phase A.5-3a-verify
  ロードマップに 1-C / 1-D / 1-E 段階を追加。CURRENT_STATE セクション 0 (コアミッション)
  の系統 1 説明を 4 軸 + メディア宣言を含む強化版に全置換 (系統 2 / ブランドポジション /
- 3 チャンネル構想は不変)。*
+ 3 チャンネル構想は不変)。
+ F-verify-jp-coverage-measure (2026-05-05) で Phase A.5-3a-verify 1-D 段階完了:
+ ゴールデンセット v1.1 (19 件) を真値として F-13.B の精度を実測したところ、verdict=fail
+ (Recall covered 0% / Precision blind 26.32% / F1 0.000 / Tier 一致率 0% / Error 0%)。
+ 19/19 件で matched=0 という異常パターンを観測 → デバッグで根本原因を特定:
+ F-13.B `_search_with_grounding()` (jp_coverage_verifier.py:271-285) が
+ Gemini Grounding API の `chunk.web.uri` を WL マッチングに使っているが、
+ Gemini は実ソースドメインではなく Vertex AI の redirect URL
+ (vertexaisearch.cloud.google.com/grounding-api-redirect/...) を返す仕様、
+ 実ドメインは `chunk.web.title` (例: jiji.com / jetro.go.jp / recordchina.co.jp)
+ に格納されている事実が判明 (chunk.web.domain は SDK 現行版で常に None)。
+ F-13.B は本番でも構造的に常に has_jp_coverage=False を返している懸念があり、
+ Hydrangea コンセプト防衛機構 (5 層) の中核 (F-13.B 層) が機能していなかった
+ 可能性 = 試運転 7-K の「100% 動画化」も実質的に「全 Slot が blind_spot
+ ルートに進んだだけ」と再解釈される。F-jp-coverage-improve (web.title 読み取り
+ への最小修正、1-2 時間) を緊急度 高に新規登録、即着手推奨。
+ F-stream-2-filter-design 着手は **保留** (F-13.B が機能していない状態で
+ 系統 2 だけ実装しても上流で報道済み事象が blind_spot ルートに流れたままに
+ なるため、設計前提が崩れる)。
+ 計測スクリプト scripts/verify_jp_coverage_measure.py は将来 (改修後の再測定 +
+ 継続的精度監視) に再利用可能な資産として確立、ゴールデンセット v1.1 +
+ 計測スクリプトの設計妥当性も同時確認できた (matched=0 の検出力)。
+ リグレッション影響なし (scripts/ + docs/runs/ + docs/ のみ変更、src/ tests/
+ configs/ CLAUDE.md 0 行、baseline 1315 passed 維持)。*
