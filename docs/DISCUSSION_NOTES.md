@@ -1,6 +1,6 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-04 (F-verify-jp-coverage-golden-fix 完了時点)
+最終更新: 2026-05-05 (F-verify-jp-coverage-measure 完了時点)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -176,6 +176,56 @@ F-stream-2-filter-design として独立実装
 
 **ステータス更新**: `要確認 → 確定` (方針確定、F-stream-2-filter-design として
 FUTURE_WORK 緊急度 高に登録)
+
+**2026-05-05 実測結果 (F-verify-jp-coverage-measure)**:
+
+ゴールデンセット v1.1 (19 件) で F-13.B の精度を実測したところ、
+全 19 件で `matched=0`, `has_jp_coverage=False` という異常パターンが観測された:
+
+| 指標 | 実測値 | 合格基準 | 達成 |
+|---|---|---|---|
+| Recall (covered) | 0.00% | >= 90% | ❌ |
+| Precision (blind) | 26.32% | >= 80% | ❌ |
+| F1 (covered) | 0.000 | >= 0.85 | ❌ |
+| Tier 一致率 | 0.00% (0/0) | >= 70% | ❌ |
+| Errors | 0/19 | — | (測定は安定) |
+
+verdict=fail。NHK / Nikkei / Jiji / Bloomberg JP 等で確実に報道されている
+covered 10 件 (例: covered_001 ホルムズ封鎖、covered_003 米中関税) でも
+すべて `has_jp_coverage=False` 判定。
+
+★ **根本原因の特定 (2026-05-05 デバッグ追加)**:
+F-13.B `_search_with_grounding()` (`src/triage/jp_coverage_verifier.py:271-285`)
+は `chunk.web.uri` を URL として WL マッチングに使っているが、
+Gemini Grounding API は実ソースドメインではなく Vertex AI のリダイレクト URL
+(`vertexaisearch.cloud.google.com/grounding-api-redirect/...`) を返す仕様。
+実ドメインは `chunk.web.title` (例: `jiji.com`, `jetro.go.jp`,
+`recordchina.co.jp`) に格納されている。`chunk.web.domain` は SDK 現行版で
+常に None。
+
+このため WL マッチング (`if domain in url_lower`) は redirect URL に対して
+構造的に常に不一致 → F-13.B は **本番でも常に has_jp_coverage=False を
+返している** 可能性が極めて高い。本来 divergence 扱いすべき「日本で報道済み
+の海外ニュース」を blind_spot として動画化していた懸念。試運転 7-K の
+「100% (3/3) 動画化」は F-13.B の判定精度ではなく、F-13.B が常に False を
+返した結果として全 Slot が blind_spot ルートに進んだだけと再解釈される。
+
+**修正方針**: `_search_with_grounding()` で `chunk.web.title` を読み取り、
+`https://{title.lower().strip()}` 形式で urls に積む最小修正。
+F-jp-coverage-improve バッチで対応 (FUTURE_WORK 緊急度 高に新規登録)。
+F-stream-2-filter-design 着手は **保留** (F-13.B が機能していない状態で
+系統 2 だけ実装しても上流で報道済み事象が blind_spot ルートに流れたままに
+なるため、設計前提が崩れる)。
+
+**ステータス更新**: `確定 (2 段階フィルタ採用) → 確定 + 致命バグ特定 (2026-05-05)
+→ F-jp-coverage-improve で修正後に再測定で取り直し` (本検討課題は F-13.B
+仕様の理解には決着、ただし F-13.B 実装の不具合が別途見つかったため、本実装
+バグの修正後に系統 2 フィルタ設計の前提が改めて成立する)
+
+- **出典**: F-verify-jp-coverage-measure (2026-05-05) 実測 +
+  `docs/runs/F-verify-jp-coverage/measurement_result.json`
+  (root_cause_finding フィールド) +
+  `docs/runs/F-verify-jp-coverage/REPORT.md` (★1.5 根本原因の特定セクション)
 
 ### 2026-05-01: 手動 PoC 推奨の軌道修正経緯 (クラウド誤り 5 例目)
 - **内容**: クラウド (claude.ai 側) が当初「自動化を先に」と提案したが、

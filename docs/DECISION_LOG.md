@@ -1,6 +1,6 @@
 # Hydrangea — 意思決定ログ (DECISION_LOG)
 
-最終更新: 2026-05-03 (F-doc-cleanup-followup 完了)
+最終更新: 2026-05-05 (F-verify-jp-coverage-measure 完了)
 
 このドキュメントは Hydrangea プロジェクトにおける重要な意思決定の履歴を記録する。
 コードや設定の「結果」ではなく、「なぜそうなったか」の判断プロセスを残すことが目的。
@@ -2537,4 +2537,97 @@ F-verify-jp-coverage-golden (前バッチ、未マージ feature ブランチ
   - `docs/DECISION_LOG.md` (本エントリ)
 - 関連: F-verify-jp-coverage-golden (前バッチ、未マージ feature ブランチ上で
   追加コミットとして本バッチを実施)
+
+---
+
+## F-verify-jp-coverage-measure (Phase A.5-3a-verify 1-D / 2026-05-05)
+
+### 背景
+
+F-verify-jp-coverage-golden + F-verify-jp-coverage-golden-fix で確定した
+ゴールデンセット 19 件 (blind 9 + covered 10、v1.1) を真値として
+F-13.B JpCoverageVerifier の実精度を測定。Phase A.5-3a-verify 1-D 段階。
+
+合格基準 (本バッチで設定):
+- Recall (covered) >= 90% (致命的 FN 抑制が最重要)
+- Precision (blind) >= 80%
+- F1 (covered) >= 0.85
+- Tier 一致率 >= 70%
+
+### 議論
+
+実装方針:
+- pytest 統合 vs scripts/ スタンドアロンスクリプト → スタンドアロン採用
+  (pytest で実 API 呼び出し $0.10 が走るのは baseline 1315 passed 維持と
+  相性が悪い、API エラーが pytest を破壊するリスク、結果ファイル永続化が
+  後の再分析に有利)
+- Gemini クライアント取得方法 → src/main.py:3179-3180 と同じ
+  `google.genai.Client(api_key=...)` 直接生成パターンを採用 (LLMClient 抽象は
+  Grounding ツールに対応していないため不採用)
+- 一時 DB は `/tmp/jp_coverage_measure.db` に CREATE して本番 DB を汚染しない
+
+### 決定
+
+verdict: **fail** (Recall covered 0%、Precision blind 26.32%、
+F1 covered 0.000、Tier 一致率 0%、エラー 0/19)。
+
+★ **根本原因の特定** (2026-05-05 デバッグで判明):
+F-13.B の `_search_with_grounding()` 内で `chunk.web.uri` を URL として
+扱っているが、Gemini Grounding API は実ソースドメインではなく Vertex AI の
+リダイレクト URL (`vertexaisearch.cloud.google.com/grounding-api-redirect/...`)
+を返す仕様。実ドメインは `chunk.web.title` (例: `jiji.com`, `jetro.go.jp`,
+`recordchina.co.jp`) に格納されている。`chunk.web.domain` は SDK 現行版で
+常に None。
+
+このため WL マッチング (`if domain in url_lower`) は redirect URL に対して
+構造的に常に不一致 → F-13.B は **本番でも常に has_jp_coverage=False を
+返している** 可能性が極めて高い。本来 divergence 扱いすべき「日本で報道済み
+の海外ニュース」を blind_spot として動画化していた可能性があり、Hydrangea
+ミッション系統 1 (silence_gap) の品質保証機構が機能していなかった懸念。
+
+判定アクション:
+- F-jp-coverage-improve バッチを FUTURE_WORK 緊急度 高に新規登録、即着手推奨
+- F-stream-2-filter-design 着手は **保留** (F-13.B が機能していない状態で
+  系統 2 だけ実装しても意味が薄いため)
+- 修正方針: `_search_with_grounding()` で `web.title` を読み取り
+  `https://{title.lower()}` で URL 化して urls に積む最小修正
+- 修正後に本スクリプト (verify_jp_coverage_measure.py) を再実行して合格判定を
+  取り直す (covered 10 件の大半は TP に転じる見込み: jiji.com / nippon.com /
+  nikkei.com 等の WL ドメインが実測で chunk.web.title にヒット)
+
+### 結果
+
+- 合格基準 4 指標すべて未達 (Recall covered 0% は致命的)、verdict=fail
+- 根本原因が特定できたため、F-jp-coverage-improve は最小修正で済む見込み
+  (スコープ: jp_coverage_verifier.py 1 ファイル、既存テスト保護下で修正)
+- 19 件全件 matched=0 + エラー 0 件という整合性のある計測ができた
+  (ゴールデンセット v1.1 + 計測スクリプトの設計妥当性も同時に確認できた)
+- 計測スクリプト `scripts/verify_jp_coverage_measure.py` は将来 (改修後の
+  再測定・継続的な精度監視) に再利用可能な資産として確立
+- 試運転 7-K で「100% (3/3) 動画化」と記録されているが、これは F-13.B が
+  常に has_jp_coverage=False を返した結果、全 Slot が blind_spot 動画化
+  ルートに進んだだけで、F-13.B の判定精度を示すものではないと再解釈される
+  (試運転 7-K の 3 件は実際は日本主要メディアで報道済みだった可能性、要追跡)
+- リグレッション影響なし (scripts/ + docs/runs/ + docs/ のみ変更、
+  src/ tests/ configs/ CLAUDE.md 0 行、baseline 1315 passed 維持)
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規追加:
+  - `scripts/verify_jp_coverage_measure.py` (約 600 行、CLI スクリプト)
+  - `docs/runs/F-verify-jp-coverage/measurement_result.json`
+    (機械読み詳細 + root_cause_finding フィールド)
+  - `docs/runs/F-verify-jp-coverage/REPORT.md`
+    (人間読みレポート + ★1.5 根本原因の特定セクション)
+- 変更:
+  - `docs/DECISION_LOG.md` (本エントリ)
+  - `docs/FUTURE_WORK.md` (F-jp-coverage-improve 新規追加 +
+    F-verify-jp-coverage-measure 完了済みに移動 +
+    F-stream-2-filter-design 着手保留化)
+  - `docs/DISCUSSION_NOTES.md` (F-13.B 動作仕様検討課題に
+    2026-05-05 実測結果 + 根本原因特定を追記)
+  - `docs/CURRENT_STATE.md` (全置換更新)
+- 関連: F-verify-jp-coverage-golden / F-verify-jp-coverage-golden-fix
+  (前バッチ、ゴールデンセット v1.1 を真値として使用)
 
