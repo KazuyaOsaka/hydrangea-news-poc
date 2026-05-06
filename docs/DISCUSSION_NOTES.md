@@ -1,6 +1,6 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-07 (F-jp-coverage-improve 完了時点)
+最終更新: 2026-05-07 (F-trial-run-post-fix 完了、Phase A.5-3a-verify ゲート完了時点)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -13,6 +13,53 @@
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-07: F-13.B Grounding 検索クエリ品質問題 — 英語タイトルクエリでの youtube.com 偏重 (F-trial-run-post-fix で観測)
+
+**背景**:
+F-trial-run-post-fix 試運転 (2026-05-07) で F-13.B が 6 invocations
+(試運転 3 Slot + replay 7-K 3 件) 行われた。全 invocation で Grounding API が
+返す URL は `youtube.com` (excluded URLs 計 23 件) 中心で、日本主要メディア
+(WL 27 ドメイン) のヒットが 0 件だった。
+
+WebSearch 後追いで明らかになった事実:
+- 試運転 Slot-1 (Insider trading: Oil and stocks jolt on news of US-Iran deal)
+  は nikkei.com (Tier 1) + jiji.com (Tier 2) + bloomberg.co.jp (Tier 2) で広範
+  に報道済み
+- 過去 7-K Slot-1 (FIFA Palestine) は jiji.com (Tier 2) で関連報道
+- 過去 7-K Slot-2 (Mandelson) は nikkei.com (Tier 1) + bloomberg.co.jp (Tier 2)
+  + jiji.com (Tier 2) で広範に報道済み
+
+→ F-13.B の Grounding 検索クエリ (`{title} 日本 報道` 形式) では英語タイトルの
+場合、Grounding が日本語ニュース記事を引き当てられない傾向。代わりに英語
+タイトル文字列にマッチする YouTube 動画が返される構造。
+
+**論点**:
+- (a) F-jp-coverage-tune で Grounding クエリを改善 (英語タイトル → LLM で
+  日本語キーワード抽出 → 「NHK 朝日 日経 ロイター」等の WL ドメイン名ヒント
+  混入) で対応する案
+- (b) 検索クエリそのものに加えて、Grounding API の filter / site: 演算子等で
+  日本主要メディアサイトを優先指定する案 (Gemini Grounding が site: 演算子を
+  サポートするかは要確認)
+- (c) Grounding API → 別の検索 API (Bing 等) に変更する案 (過剰スコープ、
+  既存設計大幅変更のため見送り推奨)
+
+**Hydrangea コアミッションへの影響**:
+- 系統 1 (silence_gap) 判定で Recall miss が発生 = 本来 divergence 扱いすべき
+  事象を blind_spot として動画化する誤判定が現状残存
+- F-stream-2-filter-design 完成後は系統 2 で救出される設計だが、Grounding
+  クエリ品質改善でフィルタの上流精度を上げる方が根本解
+- これは F-jp-coverage-tune の主要課題と整合
+
+**出典**:
+- F-trial-run-post-fix 試運転結果 (`docs/runs/F-trial-run-post-fix/trial_run_log.json`)
+- 過去 7-K WebSearch 後追い (`docs/runs/F-trial-run-post-fix/past_videos_audit.json`)
+- DECISION_LOG (F-trial-run-post-fix / 2026-05-07)
+- 既存 FUTURE_WORK エントリ「F-jp-coverage-tune」の対応案 1 (FN Recall 改善)
+  が本論点と完全整合
+
+**ステータス**: `昇格候補(FUTURE_WORK)` (F-jp-coverage-tune に統合可、本エントリは
+F-jp-coverage-tune 着手時の根拠データとして再利用)
 
 ### 2026-05-04: 系統 1 (silence_gap) の判定基準明確化 — 「未報道理由の構造性」(4 軸)
 
@@ -219,10 +266,12 @@ F-stream-2-filter-design 着手は **保留** (F-13.B が機能していない�
 
 **ステータス更新**: `確定 (2 段階フィルタ採用) → 確定 + 致命バグ特定 (2026-05-05)
 → F-jp-coverage-improve で修正後に再測定で取り直し → 確定 + 致命バグ修正完了
-(2026-05-07、F-jp-coverage-improve resolved)` (本検討課題は F-13.B 仕様の理解
-に決着し、別途見つかった構造的不具合も F-jp-coverage-improve で根本治療済み。
-2 段階フィルタ設計の前提条件が改めて確保された。残課題は精度閾値達成のみで
-F-jp-coverage-tune に分離)
+(2026-05-07、F-jp-coverage-improve resolved) → 確定 + 修正の本番動作確認済み
+(2026-05-07, F-trial-run-post-fix)` (本検討課題は F-13.B 仕様の理解に決着し、
+別途見つかった構造的不具合も F-jp-coverage-improve で根本治療済み。
+F-trial-run-post-fix で本番試運転 + 過去判定後追いを実施し、構造的に機能している
+ことが本番運用でも確認できた。2 段階フィルタ設計の前提条件が完全に確保された。
+残課題は精度閾値達成のみで F-jp-coverage-tune に分離)
 
 **2026-05-07 修正完了報告 (F-jp-coverage-improve)**:
 
@@ -248,11 +297,36 @@ F-stream-2-filter-design 着手再開条件は「F-trial-run-post-fix 完了後�
 (精度閾値達成は F-stream-2-filter-design の必須前提ではない、構造的に動いて
 いれば設計は進められる)。
 
+**2026-05-07 本番動作確認 (F-trial-run-post-fix)**:
+
+修正後 F-13.B を本番パイプライン (`python -m src.main --mode normalized`) で試運転
+し、防衛機構 5 層の発火状況 + 過去試運転 7-K 動画化 3 件の WebSearch 後追いと
+修正後 F-13.B での再判定を実施。
+
+主要結果:
+- 試運転で 3 Slot 全て has_jp_coverage=False、ただし excluded_urls_count > 0
+  (1/10/3、全 youtube.com) で **構造的不具合解消の本番動作確認済み** (修正前は
+  excluded=0 で構造的に常に False だった)
+- WebSearch 後追いで 試運転 Slot-1 (Insider trading) は Tier 1 (nikkei) + Tier 2
+  (jiji + bloomberg) で報道済みと判明 = Recall miss 1/3 (F-jp-coverage-tune 対象)
+- 過去 7-K 動画化 3 件: Slot-1 (FIFA) + Slot-2 (Mandelson) は WebSearch では
+  Tier 1-2 報道済み (典型的 stream_2_candidate パターン)、Slot-3 (Gaza 電力) は
+  真の blind_spot に近い
+- 修正後 F-13.B での 7-K 再判定: 3 件全て False→False 判定不変 (excluded 0/5/4 で
+  構造機能は OK、Recall miss は Grounding クエリ品質問題)
+- 防衛機構 5 層全機能確認 (F-1 18/364, F-2 全通過, F-13.B 3 invocations,
+  F-5 救済 0, F-13 隠れ層 0)
+
+→ Phase A.5-3a-verify ゲート完了 (1-A〜1-D''' 全完了) を正式宣言。
+F-stream-2-filter-design 着手 OK。F-jp-coverage-tune は別系で並走可能。
+
 - **出典**: F-verify-jp-coverage-measure (2026-05-05) 実測 + F-jp-coverage-improve
-  (2026-05-07) 修正後再測定 + `docs/runs/F-verify-jp-coverage/measurement_result.json`
-  v2 (root_cause_finding に resolved_in 追加) + `docs/runs/F-verify-jp-coverage/REPORT.md`
-  v2 (★1.5 根本原因の特定と修正済み報告セクション) + DECISION_LOG エントリ
-  (F-jp-coverage-improve / 2026-05-07)
+  (2026-05-07) 修正後再測定 + F-trial-run-post-fix (2026-05-07) 本番試運転 +
+  `docs/runs/F-verify-jp-coverage/measurement_result.json` v2 (root_cause_finding
+  に resolved_in 追加) + `docs/runs/F-verify-jp-coverage/REPORT.md` v2 (★1.5
+  根本原因の特定と修正済み報告セクション) + `docs/runs/F-trial-run-post-fix/REPORT.md`
+  + DECISION_LOG エントリ (F-jp-coverage-improve / 2026-05-07,
+  F-trial-run-post-fix / 2026-05-07)
 
 ### 2026-05-01: 手動 PoC 推奨の軌道修正経緯 (クラウド誤り 5 例目)
 - **内容**: クラウド (claude.ai 側) が当初「自動化を先に」と提案したが、

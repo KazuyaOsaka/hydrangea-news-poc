@@ -1,0 +1,105 @@
+{
+  "version": "1.0",
+  "batch": "F-trial-run-post-fix",
+  "generated_at": "2026-05-07T04:35:00+09:00",
+  "source": "trial_run_log.txt の各層ログ行を grep して抽出 + run_summary.json の補完データ",
+  "f1_editorial_mission_filter": {
+    "log_pattern": "[EditorialMissionFilter]",
+    "candidates_evaluated": 364,
+    "candidates_prescore_top_n": 20,
+    "llm_scored": 20,
+    "llm_failed": 0,
+    "score_threshold": 45.0,
+    "candidates_passed": 18,
+    "candidates_rejected": 346,
+    "pass_rate": "18/364 (4.95%)",
+    "score_stats": {
+      "min": 0.0,
+      "max": 66.2,
+      "mean": 24.43
+    },
+    "concerns": [],
+    "status": "✅ 正常稼働"
+  },
+  "f2_flagship_gate": {
+    "log_pattern": "[FlagshipGate]",
+    "candidates_evaluated": 18,
+    "flagship_recognized_count": "implicit (logs not explicit)",
+    "blocked_auto_generation_count": 0,
+    "concerns": [],
+    "status": "✅ 正常稼働 (Blocked ログ 0 件、全 18 件が次段階に進行)"
+  },
+  "f13b_jp_coverage_verifier": {
+    "log_pattern": "[F-13.B] / [JpCoverageVerifier]",
+    "candidates_evaluated": 3,
+    "verification_invocations": 3,
+    "has_jp_coverage_true": 0,
+    "has_jp_coverage_false": 3,
+    "errors": 0,
+    "by_slot": [
+      {
+        "slot": 1,
+        "event_id": "cls-6be4fc09d9ed",
+        "matched_count": 0,
+        "excluded_count": 1,
+        "excluded_domains_observed": ["youtube.com"],
+        "elapsed_seconds": 8,
+        "result": "False (excluded URLs 1 件 = youtube.com)"
+      },
+      {
+        "slot": 2,
+        "event_id": "cls-0c7fa7c667d6",
+        "matched_count": 0,
+        "excluded_count": 10,
+        "excluded_domains_observed": ["youtube.com (×10)"],
+        "elapsed_seconds": 7,
+        "result": "False (excluded URLs 10 件 = 全 youtube.com)"
+      },
+      {
+        "slot": 3,
+        "event_id": "cls-a4132ec7d949",
+        "matched_count": 0,
+        "excluded_count": 3,
+        "excluded_domains_observed": ["youtube.com (×3)"],
+        "elapsed_seconds": 8,
+        "result": "False (excluded URLs 3 件 = 全 youtube.com)"
+      }
+    ],
+    "concerns": [
+      "全 3 件 has_jp_coverage=False = 全 Slot が blind_spot_global ルートに進む結果に",
+      "WebSearch 後追いで Slot-1 (Insider trading) は実は Tier 1 (nikkei) で報道済み = Recall miss",
+      "Grounding API が youtube.com 偏重の結果を返す (英語タイトルクエリ品質問題、F-jp-coverage-tune の対象)"
+    ],
+    "structural_fix_status": "✅ 修正完了 (F-jp-coverage-improve / 2026-05-07): excluded_urls_count > 0 がドメイン抽出層機能の証拠",
+    "status": "⚠️ 構造機能 OK / Recall 課題は別系 (F-jp-coverage-tune)"
+  },
+  "f5_flagship_gate_downstream_rescue": {
+    "log_pattern": "[FinalSelection] F-5 fallback applied",
+    "rescue_triggered_count": 0,
+    "rescued_event_ids": [],
+    "concerns": [],
+    "status": "✅ 正常稼働 (本試運転では F-5 救済不要、Elite Judge Gate 3 で 9 件採用済み)"
+  },
+  "f13_hidden_layer_quality_floor_bypass": {
+    "log_pattern": "[F-13] quality_floor_miss bypass",
+    "bypass_triggered_count": 0,
+    "bypassed_event_ids": [],
+    "concerns": [],
+    "status": "✅ 正常稼働 (本試運転では quality_floor_miss bypass 発火なし、3 Slot 全て script generation 継続条件を満たした)"
+  },
+  "summary": {
+    "all_5_layers_functional": true,
+    "layer_invocation_summary": {
+      "F-1 (EditorialMissionFilter)": "18/364 通過、score_threshold=45.0 で機能",
+      "F-2 (FlagshipGate)": "Blocked ログ 0 件、18 件全て通過",
+      "F-13.B (JpCoverageVerifier)": "3/3 invocations、構造的に正常 (excluded count 非ゼロ)、ただし Recall 1/3 で miss",
+      "F-5 (Downstream Rescue)": "rescue 発火 0 件 (Elite Judge で十分採用済み)",
+      "F-13 (隠れ層 quality_floor bypass)": "bypass 発火 0 件 (3 Slot 全て floor 通過)"
+    },
+    "concerns": [
+      "F-13.B Recall miss 1/3 (Slot-1) は F-jp-coverage-tune で対処予定の既知課題",
+      "F-13.B 構造的不具合は完全解消 (excluded_count 非ゼロが証拠)"
+    ],
+    "phase_a5_3a_verify_gate_implication": "防衛機構 5 層全て構造的に機能、F-13.B 構造的不具合解消が本番動作で確認できた → Phase A.5-3a-verify ゲート完了の根拠。F-jp-coverage-tune は別系で精度閾値達成の課題、ゲート完了の必須条件ではない (CURRENT_STATE 1-D''' 完了時点の整理と整合)"
+  }
+}

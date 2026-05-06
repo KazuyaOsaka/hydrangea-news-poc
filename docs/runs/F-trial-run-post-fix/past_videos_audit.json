@@ -1,0 +1,207 @@
+{
+  "version": "1.0",
+  "batch": "F-trial-run-post-fix",
+  "trial_run_reference": "試運転 7-K (2026-05-01)",
+  "past_video_count": 3,
+  "audited_at": "2026-05-07T04:10:00+09:00",
+  "audit_method": "WebSearch (Anthropic web search) を 27 ドメイン WL 範囲で実行、Tier 別ヒット数を集計",
+  "audit_caveats": [
+    "Anthropic WebSearch クローラは asahi.com/yomiuri.co.jp/sankei.com/mainichi.jp/nhk.or.jp/47news.jp/kyodonews.jp/kyodonews.net への直接クロールがブロックされる仕様。これら Tier 1/2 主要紙の報道有無は jiji.com / nikkei.com / bloomberg.co.jp / 各テレビ局 / Tier 4 ビジネス誌等のヒットから推定。",
+    "Yahoo!ニュース経由の二次掲載 URL (例: news.yahoo.co.jp/...nikkei...) は WebSearch では「Yahoo!ニュース」表示で検索結果に出ることがあるが、実コンテンツは Tier 1/2 媒体が一次配信元。本 audit では一次配信元 (nikkei/jiji 等) の URL がヒットすれば Tier 認定。",
+    "報道があっても「特定構造分析角度の解説価値」は別レイヤー (系統 2 = framing_inversion + 構造分析) で扱う。「Tier 1-2 で報道済み = blind_spot 判定が誤り」とは即断しない。",
+    "判定確信度: 「明確に Tier 1-2 で報道済み (high)」「Tier 4 のみで報道 (medium)」「未報道を確認 (low ~ medium)」「複合 (specific 角度は未報道)」の 4 段階で分類。"
+  ],
+  "events": [
+    {
+      "slot_index": 1,
+      "event_id": "cls-7bd1406438b6",
+      "title": "Palestine football appeals Fifa decision to do nothing about Israeli clubs in illegal settlements",
+      "summary_excerpt": "パレスチナサッカー協会 (PFA) が、イスラエル入植地クラブを放置する FIFA の決定を不服とし CAS へ提訴。FIFA は『政治的に複雑』として 15 年間判断を先送り、2026 年 W 杯共催国カナダのビザ発給拒否など地政学的対立に発展。",
+      "f13b_judgment_at_trial_run_7K": "has_jp_coverage=False (= blind_spot_global として動画化)",
+      "websearch_findings": {
+        "tier_1_hits": [
+          {
+            "domain": "nikkei.com",
+            "url": "https://www.nikkei.com/article/DGXZQOGR272QF0X20C25A9000000/",
+            "headline_summary": "欧州サッカーもイスラエル処分検討 広がる排除は『反ユダヤ主義』か (2025-09-27 系)",
+            "relevance": "近接トピック (FIFA/欧州サッカーのイスラエル処分議論) を Tier 1 でカバー"
+          }
+        ],
+        "tier_2_hits": [
+          {
+            "domain": "jiji.com",
+            "url": "https://www.jiji.com/jc/article?k=2026032500710&g=spo",
+            "headline_summary": "イスラエルの資格停止要求 パレスチナ・サッカー協会 (2026-03-25)",
+            "relevance": "★ 直接関連 (PFA → FIFA への要求) を Tier 2 でカバー、約 1 ヶ月前"
+          },
+          {
+            "domain": "jiji.com",
+            "url": "https://www.jiji.com/jc/article?k=2024100400252&g=spo",
+            "headline_summary": "イスラエル資格停止要求で調査へ FIFA",
+            "relevance": "FIFA 側の対応を Tier 2 でカバー"
+          },
+          {
+            "domain": "jiji.com",
+            "url": "https://www.jiji.com/jc/v7?id=palestine",
+            "headline_summary": "イスラエル・パレスチナ情勢 関連ニュース まとめ",
+            "relevance": "Tier 2 でテーマ別アグリゲーション"
+          }
+        ],
+        "tier_3_hits": [],
+        "tier_4_hits": []
+      },
+      "outside_wl_hits": [
+        {
+          "domain": "afpbb.com",
+          "url": "https://www.afpbb.com/articles/-/3633762",
+          "note": "AFPBB: WL 外 (フランス通信社日本版、Tier 化されていない)"
+        },
+        {
+          "domain": "arabnews.jp",
+          "url": "https://www.arabnews.jp/article/middle-east/article_175877",
+          "note": "ArabNews 日本語版: WL 外"
+        },
+        {
+          "domain": "cnn.co.jp",
+          "url": "https://www.cnn.co.jp/world/35243030.html",
+          "note": "CNN.co.jp: WL 外 (海外メディア日本版)"
+        },
+        {
+          "domain": "soccerdigestweb.com",
+          "url": "https://www.soccerdigestweb.com/news/detail/id=179940",
+          "note": "サッカー専門誌: WL 外"
+        }
+      ],
+      "audit_conclusion": "★明確に Tier 2 で関連報道あり (jiji.com 複数件、約 1 ヶ月前 = 2026-03-25 同等トピック)。Tier 1 (nikkei.com) で近接トピック (欧州サッカーのイスラエル処分) もカバー。「FIFA 提訴 + 入植地クラブ」という MEE オリジナル角度は Tier 2 まで含めれば日本主要メディアでカバー済みと判定すべきだった",
+      "audit_confidence": "high",
+      "implication_for_hydrangea": "修正後 F-13.B では has_jp_coverage=True / matched_tier=tier_2_wire_service が期待される。stream_2 角度 (CAS 提訴の地政学的含意 / FIFA の 15 年先送り構造 / W 杯共催国 vs パレスチナの構図) は別レイヤー (F-stream-2-filter-design) で扱うべき事象。本来 blind_spot_global ではなく divergence パターン (stream_2 候補) として処理されるのが妥当だった事例。",
+      "stream_2_candidate": true,
+      "stream_2_specific_angle": "FIFA の 15 年先送りという『政治的に複雑』判断の構造的背景 / 2026 W 杯共催国カナダのパレスチナへのビザ拒否 / スポーツの『中立』と国際法の矛盾"
+    },
+    {
+      "slot_index": 2,
+      "event_id": "cls-33b4f4960bf9",
+      "title": "Gaza was the scandal that should have ended Keir Starmer's political career",
+      "summary_excerpt": "英国スターマー首相が駐米大使ピーター・マンデルソン氏の任命プロセス (マンデルソン・サガ) を巡り窮地。中東メディアは、人事疑惑よりもガザ情勢でのイスラエル無条件支援こそ本来の政治的致命傷であるべきだと批判。",
+      "f13b_judgment_at_trial_run_7K": "has_jp_coverage=False (= blind_spot_global として動画化)",
+      "websearch_findings": {
+        "tier_1_hits": [
+          {
+            "domain": "nikkei.com",
+            "url": "https://www.nikkei.com/article/DGXZQOGR05CC20V00C26A2000000/",
+            "headline_summary": "英首相、前駐米大使任命を謝罪 エプスタイン氏に機密漏洩疑惑 (2026-02-05 系)",
+            "relevance": "★ スターマー首相のマンデルソン任命謝罪を Tier 1 で報道"
+          },
+          {
+            "domain": "nikkei.com",
+            "url": "https://www.nikkei.com/article/DGXZQOGR11BDP0R10C25A9000000/",
+            "headline_summary": "英スターマー政権、駐米大使を解任 エプスタイン氏との関係に批判 (2025-09-11)",
+            "relevance": "★ マンデルソン解任を Tier 1 で速報"
+          },
+          {
+            "domain": "nikkei.com",
+            "url": "https://www.nikkei.com/article/DGXZQOCB0907O0Z00C26A2000000/",
+            "headline_summary": "エプスタイン問題でスターマー英首相の側近辞任 政権に打撃 (2026-02-09 系)",
+            "relevance": "首席補佐官辞任まで Tier 1 で追跡報道"
+          }
+        ],
+        "tier_2_hits": [
+          {
+            "domain": "bloomberg.co.jp",
+            "url": "https://www.bloomberg.com/jp/news/articles/2025-09-11/T2FATLGOYMTR00",
+            "headline_summary": "英首相、マンデルソン駐米大使を解任－エプスタイン氏と親しい関係",
+            "relevance": "★ 解任を Tier 2 で速報"
+          },
+          {
+            "domain": "jiji.com",
+            "url": "https://www.jiji.com/jc/article?k=2026020700326&g=int",
+            "headline_summary": "スターマー首相に批判集中 エプスタイン疑惑、進退に発展も (2026-02-07)",
+            "relevance": "★ スターマー進退議論まで Tier 2 でカバー"
+          }
+        ],
+        "tier_3_hits": [],
+        "tier_4_hits": [
+          {
+            "domain": "newsweekjapan.jp",
+            "url": "https://news.yahoo.co.jp/articles/cf844fc34b444bec01df21113e24a9a6423f9a9e",
+            "headline_summary": "エプスタインが政権中枢の情報をプーチンに流していた？ 首相の辞任にも関与 (Newsweek 日本版)",
+            "relevance": "Tier 4 で深掘り角度"
+          }
+        ]
+      },
+      "outside_wl_hits": [
+        {
+          "domain": "dlri.co.jp",
+          "url": "https://www.dlri.co.jp/report/macro/598235.html",
+          "note": "第一生命研究所レポート: WL 外 (シンクタンク)"
+        }
+      ],
+      "audit_conclusion": "★明確に Tier 1-2 で広範に報道済み (nikkei 複数 + bloomberg + jiji)。ただし、報道角度は『エプスタイン氏との関係 + セキュリティ事前審査』に集中、MEE オリジナル角度の『ガザ情勢への対応こそ本来の政治的致命傷』(英国の F-35 部品供給継続 / アクロティリ基地監視飛行 / イスラエル無条件支援) は日本主要メディアではほぼ未報道",
+      "audit_confidence": "high",
+      "implication_for_hydrangea": "★典型的な stream_2_candidate パターン (golden set v1.1 の blind_002/004/005/009 と同形)。広範な事件 (マンデルソン辞任) は Tier 1-2 で報道済み = 修正後 F-13.B では has_jp_coverage=True が期待される。一方、特定角度 (Gaza 道徳的責任 / 英国の軍事的関与) は系統 2 (framing_inversion 軸 + media_divergence 角度) で扱うべき事象。本来 blind_spot_global ではなく divergence + stream_2 として処理されるのが妥当だった事例。",
+      "stream_2_candidate": true,
+      "stream_2_specific_angle": "ガザ情勢への英国の構造的加担 (アクロティリ基地監視飛行・F-35 部品供給・イスラエル無条件支援) という『道徳的負債』角度 / 英国メディア vs 中東メディアの報道フレーム差"
+    },
+    {
+      "slot_index": 3,
+      "event_id": "cls-204a683f73ee",
+      "title": "In Gaza, life flickers as power cuts shatter livelihoods and healthcare",
+      "summary_excerpt": "ガザ地区では 2023 年の電力遮断以降、ジェネレーターの老朽化と部品不足により、医療と経済が「完全な暗黒」の淵にある。イスラエルによる制限で潤滑油価格が 100 倍に暴騰し、中小企業の 9 割が廃業の危機に直面するなど、単なる物不足を超えた産業破壊が進んでいる。",
+      "f13b_judgment_at_trial_run_7K": "has_jp_coverage=False (= blind_spot_global として動画化)",
+      "websearch_findings": {
+        "tier_1_hits": [
+          {
+            "domain": "nikkei.com",
+            "url": "https://www.nikkei.com/article/DGXZQOGR2501B0V21C23A0000000/",
+            "headline_summary": "ガザ地区の国連拠点『25 日夜に燃料尽きる』 UNRWA が警告 (2023-10 系)",
+            "relevance": "古い類似トピック (2023 年燃料切れ) を Tier 1 でカバー、2026-04 時点の特定角度との直接対応物ではない"
+          }
+        ],
+        "tier_2_hits": [],
+        "tier_3_hits": [],
+        "tier_4_hits": [
+          {
+            "domain": "newsweekjapan.jp",
+            "url": "https://www.newsweekjapan.jp/headlines/world/2024/05/497003.php",
+            "headline_summary": "ガザ南部、医療機関向け燃料あと 3 日で枯渇 ＷＨＯが警告 (2024-05)",
+            "relevance": "Tier 4 で 2024 年同類トピック、2026-04 時点の角度ではない"
+          }
+        ]
+      },
+      "outside_wl_hits": [
+        {
+          "domain": "cnn.co.jp",
+          "url": "https://www.cnn.co.jp/world/35210202.html",
+          "note": "CNN.co.jp 2023 年記事: WL 外、古い"
+        },
+        {
+          "domain": "arabnews.jp",
+          "url": "https://www.arabnews.jp/article/middle-east/article_102901/",
+          "note": "ArabNews 日本語版: WL 外、2023-2024 年記事"
+        },
+        {
+          "domain": "topics.smt.docomo.ne.jp",
+          "url": "https://topics.smt.docomo.ne.jp/article/yomiuri/world/20231025-567-OYT1T50191",
+          "note": "Yomiuri 由来 (Tier 1 一次配信元) が docomo 経由で再配信、2023 年記事"
+        }
+      ],
+      "audit_conclusion": "★ 2023-2024 年の停電・燃料切れ基本事実は Tier 1 (nikkei) と Yomiuri 系で過去に報道済みだが、MEE 2026-04 時点の特定角度 (潤滑油 100 倍暴騰 / 中小企業 9 割廃業 / 産業構造の物理的解体 / 社会変容) を扱った日本主要メディア記事は WebSearch 範囲では確認できず。2026 年 4 月時点の角度は『真の blind_spot』として動画化判断は妥当だった可能性が高い",
+      "audit_confidence": "medium",
+      "implication_for_hydrangea": "修正後 F-13.B の Grounding 検索は最新報道優先のため、2023-2024 古い nikkei/yomiuri 記事を拾うかどうかは Grounding 結果次第。仮に拾えば has_jp_coverage=True だが、それは古いトピック整合のみで、2026-04 時点の MEE オリジナル角度は依然 blind_spot。これは F-13.B (時間軸を考慮しない) の仕様上の限界として記録対象。次バッチ F-jp-coverage-tune または F-stream-2-filter-design で「時間軸+特定角度」の二段階判定の必要性を議論。",
+      "stream_2_candidate": false,
+      "stream_2_specific_angle": null
+    }
+  ],
+  "overall_conclusion": {
+    "true_blind_spot_count": 1,
+    "stream_2_candidate_count": 2,
+    "false_negative_count_in_old_judgment": 2,
+    "summary": "試運転 7-K で動画化された 3 件のうち、2 件 (Slot-1 FIFA, Slot-2 Mandelson) は実は Tier 1-2 主要メディアで広範に報道済みだった (= F-13.B 構造的不具合による誤判定)。ただしいずれも『広範事件は報道済み + MEE オリジナル角度は未報道』という典型的 stream_2_candidate パターン。1 件 (Slot-3 Gaza 電力) は MEE 2026-04 時点の特定角度 (産業破壊・社会変容) は日本主要メディアで未報道、真の blind_spot 判定は妥当だった可能性が高い。",
+    "implication_for_phase_a5_3a_verify_gate": "F-13.B 構造的不具合修正の妥当性は再確認できた (試運転 7-K の False 全件は本来 True が混在していた)。修正後 F-13.B + F-stream-2-filter-design (系統 2 二段階フィルタ) の組み合わせで、過去の 7-K 3 件は Slot-1/Slot-2 が divergence + stream_2、Slot-3 が blind_spot_global と分類されるのが望ましい。"
+  },
+  "next_action": {
+    "f_stream_2_filter_design": "★着手 OK (Phase A.5-3a-verify ゲート完了の根拠になる) — Slot-1/Slot-2 のような『広範報道済み + 特定角度未報道』を系統 2 として救出する仕組みが必須",
+    "f_jp_coverage_tune": "別系で Recall/Tier 一致率改善に取り組む価値あり (本 audit から直接の優先度は変わらない)",
+    "trial_7k_videos_review": "data/output/cls-7bd1406438b6_*, cls-33b4f4960bf9_*, cls-204a683f73ee_* は既存資産として保持、Phase A.5-3b 手動 PoC 着手時に『修正前 F-13.B で blind_spot 動画化された事例』として比較対照に使える"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "version": "1.0",
+  "batch": "F-trial-run-post-fix",
+  "generated_at": "2026-05-07T04:35:00+09:00",
+  "source": "trial_run_log.json + jp_coverage_cache (今回試運転 + replay 含む新規キャッシュ)",
+  "f13b_commit": "fd76660 (= main HEAD、F-jp-coverage-improve マージ後)",
+  "scope": {
+    "trial_run_invocations": 3,
+    "replay_invocations": 3,
+    "total_invocations_in_batch": 6,
+    "trial_run_slot_event_ids": ["cls-6be4fc09d9ed", "cls-0c7fa7c667d6", "cls-a4132ec7d949"],
+    "replay_event_ids": ["cls-7bd1406438b6", "cls-33b4f4960bf9", "cls-204a683f73ee"]
+  },
+  "has_jp_coverage_distribution": {
+    "true": 0,
+    "false": 6,
+    "error": 0
+  },
+  "matched_tier_distribution": {
+    "tier_1_newspaper": 0,
+    "tier_2_wire_service": 0,
+    "tier_3_broadcaster": 0,
+    "tier_4_business": 0,
+    "null (False 判定)": 6
+  },
+  "matched_domains_summary": {
+    "total_unique_matched": 0,
+    "top_matched_domains": []
+  },
+  "excluded_domains_summary": {
+    "youtube.com": 23,
+    "note": "全 6 invocations で excluded URLs はすべて youtube.com。Grounding API がニュース記事ではなく YouTube 動画を返している"
+  },
+  "excluded_urls_count_distribution": {
+    "0": 1,
+    "1": 1,
+    "3": 2,
+    "4": 1,
+    "5": 1,
+    "10": 1
+  },
+  "errors": [],
+  "redirect_url_observation": "F-jp-coverage-improve で `chunk.web.uri` (Vertex AI redirect URL) は debug 用の redirect_urls リストに分離記録、WL マッチングには使われない設計。本試運転でも redirect_urls は WL マッチングに影響していないことを `_extract_domain_from_chunk` の戦略 2 (chunk.web.title 経由) のフロー記録から確認。`grounding chunks` のうち title に `youtube.com` がドメイン形式で入っているチャンクのみが urls に積まれた結果、excluded リストが youtube.com で埋まった。",
+  "interpretation": {
+    "structural_fix_validated": true,
+    "structural_fix_evidence": [
+      "全 6 invocations で excluded_urls_count > 0 のものが 5/6 (Slot-1=1, Slot-2=10, Slot-3=3, replay-2=5, replay-3=4)。修正前は redirect URL のみで matched=0 + excluded=0 という状態だった",
+      "ドメイン抽出層 `_extract_domain_from_chunk` の戦略 2 (chunk.web.title) が `youtube.com` という文字列をドメイン形式として正しく識別 → `JP_MEDIA_EXCLUDED` リスト (`youtube.com` 含む) で適切に除外",
+      "FN/FP 判定は別問題 (Grounding 結果品質)、構造的不具合 (URL 形式判定エラー) は完全に解消"
+    ],
+    "tier_1_2_appearance_rate": 0.0,
+    "concerns": [
+      "Tier 1-4 ヒット 0/6 = WL マッチングが本試運転では一度も成立せず",
+      "Grounding API が youtube.com 偏重の結果を返している (英語タイトル + 『日本 報道』クエリの品質問題)",
+      "WebSearch 後追い (Task E + 試運転 3 Slot 個別確認) では、6 件中 4 件 (試運転 Slot-1 + replay 7-K Slot-1 = FIFA, Slot-2 = Mandelson) で実は Tier 1-2 報道済みだったと判明 = F-13.B Recall miss",
+      "F-13.B が現状 Recall 不足 (本試運転で全 False) は F-jp-coverage-tune (再測定 verdict=fail の Recall covered 71.43% / Tier 一致率 30%) と整合する既知課題"
+    ],
+    "next_batch_routing": "F-stream-2-filter-design 着手 OK (構造的不具合は解消、Phase A.5-3a-verify ゲート完了の前提条件確保)。F-jp-coverage-tune は本試運転結果から優先度向上 (Grounding クエリ品質改善 = 英語タイトル → 日本語キーワード抽出 → 検索クエリ最適化が候補)",
+    "production_observation": [
+      "本試運転で動画化された Slot-1 (cls-6be4fc09d9ed Insider trading) は WebSearch では Tier 1 (nikkei.com) で詳細報道済み = 本来 divergence ルートが妥当 (修正後 F-13.B でも Recall miss で blind_spot_global ルートに進んでしまった)",
+      "ただし、Insider trading という事象は『広範な事件は Tier 1-2 報道済み + 特定角度 (米政府関係者の事前情報利用) は深掘り余地』という典型的 stream_2_candidate パターン",
+      "F-stream-2-filter-design 完成時には、このような『広範事件は報道済み + 特定角度未報道』パターンを系統 2 (framing_inversion + 構造分析) として救出する設計が機能するはず",
+      "F-jp-coverage-tune 完成時には Grounding 検索品質改善で has_jp_coverage=True が返るようになり、divergence + stream_2 二段階処理になる見込み"
+    ]
+  }
+}

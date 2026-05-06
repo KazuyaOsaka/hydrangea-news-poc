@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "trial_run_reference": "試運転 7-K (2026-05-01)",
+  "f13b_old_commit": "b950813 (F-13.B 初実装、構造的不具合あり = chunk.web.uri redirect URL を WL マッチングに使うバグ)",
+  "f13b_new_commit_at_input_time": "fd76660 (F-jp-coverage-improve マージ後)",
+  "source": "data/output/cls-*_evidence.json + data/output/cls-*_analysis.json + jp_coverage_cache テーブル",
+  "events": [
+    {
+      "slot_index": 1,
+      "event_id": "cls-7bd1406438b6",
+      "title": "Palestine football appeals Fifa decision to do nothing about Israeli clubs in illegal settlements",
+      "summary": "パレスチナサッカー協会 (PFA) が、イスラエルの入植地クラブを放置する FIFA の決定を不服とし、スポーツ仲裁裁判所 (CAS) へ提訴。国際司法裁判所 (ICJ) が「入植地は違法」と判断する中、FIFA は「政治的に複雑」として 15 年間判断を先送りしている。",
+      "old_judgment": {
+        "has_jp_coverage": false,
+        "matched_tier": null,
+        "matched_domains": [],
+        "cached_at": "2026-05-01T12:05:26.725120"
+      }
+    },
+    {
+      "slot_index": 2,
+      "event_id": "cls-33b4f4960bf9",
+      "title": "Gaza was the scandal that should have ended Keir Starmer's political career",
+      "summary": "英国スターマー首相が駐米大使ピーター・マンデルソン氏の任命プロセス (マンデルソン・サガ) を巡り窮地。中東メディアは、人事疑惑よりもガザ情勢でのイスラエル無条件支援こそ本来の政治的致命傷であるべきだと批判。英国による監視飛行や F-35 部品供給継続が「誠実さ」と国際法遵守の矛盾を露呈。",
+      "old_judgment": {
+        "has_jp_coverage": false,
+        "matched_tier": null,
+        "matched_domains": [],
+        "cached_at": "2026-05-01T12:06:13.215444"
+      }
+    },
+    {
+      "slot_index": 3,
+      "event_id": "cls-204a683f73ee",
+      "title": "In Gaza, life flickers as power cuts shatter livelihoods and healthcare",
+      "summary": "ガザ地区では 2023 年の電力遮断以降、ジェネレーターの老朽化と部品不足により、医療と経済が「完全な暗黒」の淵にある。イスラエルによる制限で潤滑油価格が 100 倍に暴騰し、中小企業の 9 割が廃業の危機に直面するなど、単なる物不足を超えた産業破壊が進んでいる。",
+      "old_judgment": {
+        "has_jp_coverage": false,
+        "matched_tier": null,
+        "matched_domains": [],
+        "cached_at": "2026-05-01T12:06:37.689251"
+      }
+    }
+  ]
+}
