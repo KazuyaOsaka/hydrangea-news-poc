@@ -1,0 +1,17 @@
+2026-05-07T04:34:09 [INFO] replay_jp_coverage: Temp DB ready at /tmp/jp_coverage_replay.db
+2026-05-07T04:34:09 [INFO] replay_jp_coverage: [1/3] Replaying cls-7bd1406438b6: Palestine football appeals Fifa decision to do nothing about...
+2026-05-07T04:34:17 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] event=cls-7bd1406438b6 has_jp_coverage=False tier=None matched=0 excluded=0
+2026-05-07T04:34:17 [INFO] replay_jp_coverage:   -> old=False new=False tier=None matched_n=0 elapsed=7.92s diff=False → False (判定不変)
+2026-05-07T04:34:17 [INFO] replay_jp_coverage: [2/3] Replaying cls-33b4f4960bf9: Gaza was the scandal that should have ended Keir Starmer's p...
+2026-05-07T04:34:25 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] event=cls-33b4f4960bf9 has_jp_coverage=False tier=None matched=0 excluded=5
+2026-05-07T04:34:25 [INFO] replay_jp_coverage:   -> old=False new=False tier=None matched_n=0 elapsed=7.47s diff=False → False (判定不変)
+2026-05-07T04:34:25 [INFO] replay_jp_coverage: [3/3] Replaying cls-204a683f73ee: In Gaza, life flickers as power cuts shatter livelihoods and...
+2026-05-07T04:34:34 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] event=cls-204a683f73ee has_jp_coverage=False tier=None matched=0 excluded=4
+2026-05-07T04:34:34 [INFO] replay_jp_coverage:   -> old=False new=False tier=None matched_n=0 elapsed=8.98s diff=False → False (判定不変)
+2026-05-07T04:34:34 [INFO] replay_jp_coverage: Result saved: docs/runs/F-trial-run-post-fix/past_runs_replay.json
+
+=== Replay Summary ===
+Total: 3
+Judgment changed: 0
+Judgment unchanged: 3
+Errors: 0

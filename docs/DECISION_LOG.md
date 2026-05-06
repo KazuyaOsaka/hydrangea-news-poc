@@ -1,6 +1,6 @@
 # Hydrangea — 意思決定ログ (DECISION_LOG)
 
-最終更新: 2026-05-07 (F-jp-coverage-improve 完了)
+最終更新: 2026-05-07 (F-trial-run-post-fix 完了、Phase A.5-3a-verify ゲート完了)
 
 このドキュメントは Hydrangea プロジェクトにおける重要な意思決定の履歴を記録する。
 コードや設定の「結果」ではなく、「なぜそうなったか」の判断プロセスを残すことが目的。
@@ -2830,4 +2830,217 @@ verdict: **fail** (4 指標とも閾値未達のまま)。ただし「ロジッ�
   - `docs/DISCUSSION_NOTES.md` (F-13.B 動作仕様検討課題エントリ更新)
 - 関連: F-verify-jp-coverage-measure (前バッチ、本バッチ修正対象の構造的
   不具合を特定)
+
+## F-trial-run-post-fix (Phase A.5-3a-verify 1-D''' / 2026-05-07)
+
+### 背景
+
+F-jp-coverage-improve (2026-05-07) で F-13.B の構造的不具合
+(`chunk.web.uri` の Vertex redirect URL 誤読み問題) を根本治療し、ドメイン抽出
+レイヤー (`_extract_domain_from_chunk` / `_looks_like_domain` / `_normalize_domain`)
+を追加。修正後の `verify_jp_coverage_measure.py` 再測定で構造的不具合は解消
+(TP=0→10, FN=14→4)。ただし精度閾値未達 (verdict=fail) のため残課題は
+F-jp-coverage-tune に分離。
+
+「動くものを壊さない」哲学に従い、修正後 F-13.B が本番運用 (RSS 収集 → triage →
+Slot 選定) で期待通り動くか試運転で確認、過去試運転 7-K 動画化 3 件 (FIFA + Gaza×2)
+の WebSearch 後追いで「実は日本主要メディアで報道済みだったか」を検証する必要が
+あった。本バッチは Phase A.5-3a-verify ゲート完了の **最終段階 (1-D''')**。
+
+### 議論
+
+#### 議論 1: 試運転実行範囲
+
+選択肢:
+- (a) 試運転 = 動画化前段階まで (script + article 生成、TTS / 動画レンダリング
+  スキップ) → ★ 採用
+- (b) 試運転 = 動画レンダリングまで実施 → 不採用 (Phase A.5-3b 手動 PoC で
+  品質確立する設計のため、本バッチは F-13.B 動作確認に責務を限定)
+- (c) 試運転 = ingestion + triage まで (Slot 選定スキップ) → 不採用 (F-13.B
+  は Slot 選定後の script 生成段階で呼ばれるため、Slot 選定まで実行が必須)
+
+採用根拠: バッチプロンプト指定通り、Phase A.5-3b 手動 PoC との責務分離。
+
+#### 議論 2: WebSearch 後追いの判定確信度
+
+Anthropic WebSearch クローラは asahi.com / yomiuri.co.jp / nhk.or.jp /
+mainichi.jp / sankei.com / 47news.jp / kyodonews.jp / kyodonews.net への直接
+クロールがブロックされる仕様。Tier 1 主要紙の報道有無を直接確認できない制約。
+
+選択肢:
+- (a) 確認可能な WL ドメイン (jiji / nikkei / bloomberg / 各テレビ局 / Tier 4
+  ビジネス誌) のヒットから推定する → ★ 採用
+- (b) Tier 1 主要紙の報道有無は判定不能として記録 → 不採用 (jiji / nikkei
+  ヒットがあれば「広範に報道済み」推定は妥当)
+
+採用根拠: WL 27 ドメイン全体での「報道有無の傾向」判定が目的、特定 Tier の
+個別判定ではない。past_videos_audit.json の audit_caveats に明記。
+
+#### 議論 3: 試運転 3 Slot 全 has_jp_coverage=False への対処
+
+試運転で全 3 Slot has_jp_coverage=False、ただし WebSearch 後追いで Slot-1
+(Insider trading) は Tier 1-2 報道済み = Recall miss を確認。
+
+選択肢:
+- (a) 本バッチで F-13.B 検索クエリ修正に着手 → ★ 不採用 (バッチプロンプト
+  「想定外結果が出た場合は本バッチでは記録のみ、勝手にスコープ広げない」)
+- (b) 想定外結果として記録 + 次バッチ (F-jp-coverage-tune) に明示的に
+  引き継ぐ → ★ 採用
+
+採用根拠: 「対症療法じゃなくて根本治療」哲学、「動くものを壊さない」哲学
+に整合。Recall miss は構造的不具合ではなく Grounding API の検索結果品質問題で、
+F-jp-coverage-tune の主要課題と完全整合。本バッチでは記録のみ。
+
+#### 議論 4: Phase A.5-3a-verify ゲート完了判定
+
+本バッチ完了時点での 1-D''' 達成条件:
+- 試運転実行 (Task B): ✅
+- 構造的不具合解消の本番動作確認 (excluded_count 非ゼロ): ✅
+- 防衛機構 5 層全機能確認 (Task D): ✅
+- 過去 7-K 動画化 3 件の WebSearch 後追い (Task E): ✅
+- 修正後 F-13.B での過去試運転再判定 (Task F): ✅
+
+→ Phase A.5-3a-verify ゲート完了 (1-A〜1-D''' 全完了) を **正式宣言**。
+F-stream-2-filter-design 着手 OK。F-jp-coverage-tune は別系で精度閾値達成の
+課題、ゲート完了の必須条件ではない (CURRENT_STATE 1-D''' 完了時点の整理と整合)。
+
+### 決定
+
+1. **試運転実行モード**: `python -m src.ingestion.run_ingestion` で RSS 取得 →
+   `python -m src.main --mode normalized` で動画化前段階まで実行 (AUDIO/VIDEO
+   render はデフォルト false でスキップ)
+2. **WebSearch 後追い判定基準**: 確認可能 WL ドメイン (jiji / nikkei /
+   bloomberg / 各テレビ局 / Tier 4 ビジネス誌) のヒットから「広範報道」推定。
+   Tier 1 主要紙 (asahi / yomiuri / nhk / mainichi / sankei / 47news / kyodo)
+   は WebSearch クローラ制約で直接確認不能、past_videos_audit.json に明記
+3. **想定外結果 (Recall miss 1/3) への対応**: 本バッチでは記録のみ、
+   F-jp-coverage-tune に明示的に引き継ぐ
+4. **過去試運転再判定**: 一時 DB (`/tmp/jp_coverage_replay.db`) で本番 DB を
+   汚染しない構造、`scripts/replay_jp_coverage.py` で実装 (前バッチの
+   `verify_jp_coverage_measure.py` 構造を踏襲)
+5. **Phase A.5-3a-verify ゲート完了正式宣言**: 1-A〜1-D''' 全完了で
+   F-stream-2-filter-design 着手 OK 状態に
+6. **テスト**: 本バッチは src/ tests/ configs/ への変更なし (新規スクリプト +
+   docs/runs/ + docs/ のみ)、baseline 1345 passed 維持
+
+### 結果
+
+#### 試運転実行結果
+
+| 項目 | 値 |
+|---|---|
+| 実行時間 | 約 26 分 (ingestion 1.5 分 + 試運転 26 分) |
+| batch_id | 20260506_190600 |
+| RSS 取得 | 41 ソース中 40 成功 |
+| 記事収集 | 1454 raw → 584 重複除去後 → 364 events |
+| EditorialMissionFilter | 18/364 通過 (4.95%) |
+| Elite Judge Gate 3 | 採用 9 / 棄却 1 |
+| Slot 選定 | 上位 3 件 (動画化 1 件 + 記事化 3 件) |
+| F-13.B invocations | 3 件、全 has_jp_coverage=False |
+| Budget | run_llm=38/150 |
+| 出力 | scripts 1, articles 3, video_payloads 1, evidence 1 |
+
+#### F-13.B 出力分布 (試運転 3 + replay 7-K 3 = 6 invocations)
+
+| 項目 | 件数 |
+|---|---|
+| has_jp_coverage = True | 0 |
+| has_jp_coverage = False | 6 |
+| Error | 0 |
+| matched_tier 別: Tier 1-4 | 0 |
+| excluded URLs 合計 | 23 件 (全 youtube.com) |
+
+→ **構造的不具合解消の本番動作確認**: 全 6 invocations のうち 5/6 で
+excluded_urls_count > 0 (1/10/3/0/5/4)。修正前は redirect URL のみ収集 → 全
+構造的に excluded=0 だった。ドメイン抽出レイヤーが正しく機能している証拠。
+
+#### 防衛機構 5 層発火状況
+
+| 層 | 発火状況 | 結果 |
+|---|---|---|
+| F-1 EditorialMissionFilter | 364 評価、20 LLM scored、threshold 45.0、18 通過 | ✅ 正常稼働 |
+| F-2 FlagshipGate | 18 評価、Blocked 0 件 | ✅ 正常稼働 |
+| F-13.B JpCoverageVerifier | 3 invocations、True 0 / False 3 / Error 0 | ✅ 構造機能 OK |
+| F-5 Downstream Rescue | 救済発火 0 件 (Elite Judge で十分採用済み) | ✅ 正常稼働 |
+| F-13 隠れ層 (quality_floor bypass) | bypass 発火 0 件 | ✅ 正常稼働 |
+
+→ 全 5 層が構造的に機能。
+
+#### 試運転 7-K 過去動画化 3 件 WebSearch 後追い
+
+| Slot | Event ID | 旧判定 | WebSearch 後追い結論 | stream_2 候補 |
+|---|---|---|---|---|
+| 1 | cls-7bd1406438b6 (FIFA Palestine) | False | Tier 2 (jiji.com) で関連報道 (2026-03-25) | ✅ |
+| 2 | cls-33b4f4960bf9 (Mandelson Gaza) | False | Tier 1 (nikkei) + Tier 2 (jiji + bloomberg) で広範報道済み (Epstein 角度)、MEE オリジナル『Gaza 道徳的責任』角度は未報道 | ✅ |
+| 3 | cls-204a683f73ee (Gaza 電力) | False | 2023-2024 古い基本事実は Tier 1 で過去報道、MEE 2026-04 時点の特定角度は未報道 | ❌ (真の blind_spot に近い) |
+
+→ 3 件中 2 件 (Slot-1/Slot-2) は実は Tier 1-2 報道済み、典型的
+stream_2_candidate パターン (golden set v1.1 の blind_002/004/005/009 と同形)。
+F-stream-2-filter-design 完成後の 2 段階フィルタで救出される設計と整合。
+
+#### 過去試運転 7-K 修正後 F-13.B 再判定
+
+| Event ID | 旧判定 (b950813) | 新判定 (fd76660) | excluded_urls_count |
+|---|---|---|---|
+| cls-7bd1406438b6 | False | False (判定不変) | 0 |
+| cls-33b4f4960bf9 | False | False (判定不変) | 5 |
+| cls-204a683f73ee | False | False (判定不変) | 4 |
+
+→ 3 件全て False→False、ただし excluded_count 非ゼロ (2/3 件) で構造機能 OK。
+Recall miss は Grounding 検索クエリ品質問題 (F-jp-coverage-tune 対象)。
+
+#### Phase A.5-3a-verify ゲート完了
+
+1-A〜1-D''' 全完了確認 → **Phase A.5-3a-verify ゲート完了** 正式宣言。
+F-stream-2-filter-design 着手 OK。
+
+#### カズヤ哲学整合
+
+- 「対症療法じゃなくて根本治療」: 試運転で発見された Recall miss を本バッチで
+  即修正せず、F-jp-coverage-tune に分離して根本対応する判断
+- 「動くものを壊さない」: 本バッチは src/ tests/ configs/ 変更なし、新規
+  スクリプト + docs/runs/ + docs/ のみ。baseline 1345 passed 維持
+- 「忘れ去られた約束を絶対忘れない仕組み」: Phase A.5-3a-verify ロードマップを
+  1-D''' まで完了、CURRENT_STATE / DECISION_LOG / FUTURE_WORK に明文化
+- 「PoC は PoC に集中」: 本バッチで Phase A.5-3a-verify ゲート完了確定 →
+  Phase A.5-3b 手動 PoC 着手準備が整った
+- 「過剰拡張性の罠回避」: 試運転で発見された WebSearch クローラ制約
+  (asahi/yomiuri 等ブロック) について、特別対処せず audit_caveats に明記する
+  方針
+
+#### リグレッション影響
+
+- 本番コード変更: なし
+- 新規スクリプト: `scripts/replay_jp_coverage.py` (過去試運転データ再判定用)
+- 新規 docs: `docs/runs/F-trial-run-post-fix/` 配下
+  (trial_run_log.json / f13b_output_analysis.json / defense_layers_audit.json /
+  past_videos_audit.json / past_runs_replay.json / REPORT.md /
+  trial_7k_events.json / replay_log.txt / trial_run_log.txt / ingestion_log.txt)
+- baseline 1345 passed 維持
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規追加:
+  - `scripts/replay_jp_coverage.py` (過去試運転データ再判定スクリプト)
+  - `docs/runs/F-trial-run-post-fix/REPORT.md` (統合レポート)
+  - `docs/runs/F-trial-run-post-fix/trial_run_log.json` (試運転実行結果)
+  - `docs/runs/F-trial-run-post-fix/f13b_output_analysis.json` (F-13.B 出力分布)
+  - `docs/runs/F-trial-run-post-fix/defense_layers_audit.json` (防衛機構 5 層
+    発火状況)
+  - `docs/runs/F-trial-run-post-fix/past_videos_audit.json` (試運転 7-K 過去
+    動画 3 件 WebSearch 後追い)
+  - `docs/runs/F-trial-run-post-fix/past_runs_replay.json` (修正後 F-13.B での
+    7-K 再判定結果)
+  - `docs/runs/F-trial-run-post-fix/trial_7k_events.json` (replay 入力)
+- 変更:
+  - `docs/CURRENT_STATE.md` (全置換更新、Phase A.5-3a-verify ゲート完了反映)
+  - `docs/DECISION_LOG.md` (本エントリ追加)
+  - `docs/FUTURE_WORK.md` (F-trial-run-post-fix 完了済み移動 +
+    F-stream-2-filter-design 着手 OK 状態に更新 + F-jp-coverage-tune 優先度確認)
+  - `docs/DISCUSSION_NOTES.md` (F-13.B 動作仕様検討課題エントリのステータス更新 +
+    新規エントリ「Grounding 検索クエリ品質問題」追加)
+- 関連: F-jp-coverage-improve (前バッチ、本バッチで動作確認した F-13.B 修正)、
+  F-jp-coverage-tune (本バッチで再確認された Recall 課題の対処バッチ、
+  着手再開条件達成)、F-stream-2-filter-design (本バッチ完了で着手 OK 状態に)
 
