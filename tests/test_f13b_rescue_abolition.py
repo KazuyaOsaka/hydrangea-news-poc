@@ -24,6 +24,7 @@ import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock
+from urllib.parse import urlparse
 
 import pytest
 
@@ -49,12 +50,25 @@ def db_path(tmp_path: Path) -> Path:
 
 
 def _make_grounding_response(uris: list[str]) -> MagicMock:
-    """Gemini Grounding response を模した MagicMock を作る。"""
+    """Gemini Grounding response を模した MagicMock を作る。
+
+    F-jp-coverage-improve (2026-05-07) で実 API 仕様に合わせた:
+        - chunk.web.uri は Vertex AI redirect URL を模す (`vertexaisearch...`)
+        - chunk.web.title に **実ドメイン** (uri から抽出した host) を入れる
+        - chunk.web.domain は None (SDK 現行版仕様)
+    旧フィクスチャ (web.title="mocked", web.uri に直接ドメインを含む URL) は
+    F-13.B が web.uri を WL マッチングに使う前提だったが、実 API では
+    redirect URL のため使えない。本フィクスチャは新しい contract に整合する。
+    """
     chunks = []
     for uri in uris:
+        host = urlparse(uri).hostname or ""
         web = MagicMock()
-        web.uri = uri
-        web.title = "mocked"
+        web.uri = (
+            f"https://vertexaisearch.cloud.google.com/grounding-api-redirect/{host}"
+        )
+        web.title = host  # 実ドメイン (例: "www.asahi.com", "news.yahoo.co.jp")
+        web.domain = None  # SDK 現行版で常に None
         chunk = MagicMock()
         chunk.web = web
         chunks.append(chunk)
@@ -202,7 +216,12 @@ class TestExclusionList:
         assert result.has_jp_coverage is False, (
             f"除外 URL が matched に入っている: {excluded_url}"
         )
-        assert excluded_url in result.excluded_urls
+        # F-jp-coverage-improve: excluded_urls はドメイン抽出後の URL
+        # (https://<host>) なので host が含まれていることを確認する。
+        host = urlparse(excluded_url).hostname or ""
+        assert any(host in u for u in result.excluded_urls), (
+            f"host {host} が excluded_urls に見当たらない: {result.excluded_urls}"
+        )
         assert result.matched_urls == []
 
     def test_mixed_urls_only_major_media_counted(self, db_path):

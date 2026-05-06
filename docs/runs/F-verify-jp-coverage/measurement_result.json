@@ -1,13 +1,21 @@
 {
-  "version": "1.0",
-  "generated_at": "2026-05-05T15:05:25.363396",
-  "batch": "F-verify-jp-coverage-measure",
+  "version": "2.0",
+  "generated_at": "2026-05-07T03:12:30.498292",
+  "batch": "F-jp-coverage-improve (re-measurement after structural fix)",
+  "previous_batch": "F-verify-jp-coverage-measure (v1, verdict=fail, root cause identified)",
+  "root_cause_finding": {
+    "identified_in": "F-verify-jp-coverage-measure (2026-05-05)",
+    "summary": "Gemini Grounding API chunk.web.uri returns Vertex AI redirect URL (vertexaisearch.cloud.google.com/grounding-api-redirect/...) instead of the actual source domain. The actual domain is stored in chunk.web.title (e.g., 'jiji.com'). Original _search_with_grounding() used chunk.web.uri for WL matching, causing structural always-False has_jp_coverage in production.",
+    "resolved_in": "F-jp-coverage-improve (2026-05-07)",
+    "resolution": "Added domain-extraction layer (_extract_domain_from_chunk / _looks_like_domain / _normalize_domain) with 2 fallback strategies (chunk.web.domain → chunk.web.title) to provide SDK-version resilience. _search_with_grounding() now reads via _extract_domain_from_chunk and pushes 'https://<domain>' for WL matching."
+  },
+  "remeasurement_note": "Post-fix re-measurement still shows verdict=fail (Recall covered 71.43%, Precision blind 42.86%, F1 0.769, Tier accuracy 30%). Structural bug is resolved (TP=10 vs original TP=0, FN=4 vs original FN=14). Remaining gaps (Recall ↑ needed, Tier ranking issues, FP from diamond.jp) are out-of-scope for F-jp-coverage-improve and reported as 想定外結果. See CURRENT_STATE / DECISION_LOG / FUTURE_WORK for next-batch routing.",
   "golden_set_version": "1.1",
   "golden_set_path": "docs/runs/F-verify-jp-coverage/golden_set.json",
   "f13b_source_path": "src/triage/jp_coverage_verifier.py",
-  "f13b_source_commit": "20da7c0",
+  "f13b_source_commit": "b5d571d (pre-merge of F-jp-coverage-improve; fix commit pending)",
   "grounding_model": "gemini-2.5-flash",
-  "cache_mode": "fresh",
+  "cache_mode": "reuse (initial pass used fresh; 5 entries hit transient 503, retried via reuse)",
   "second_pass_cache_hits": null,
   "thresholds": {
     "recall_covered": 0.9,
@@ -15,52 +23,44 @@
     "f1_covered": 0.85,
     "tier_accuracy": 0.7
   },
-  "root_cause_finding": {
-    "summary": "F-13.B の Grounding URL 抽出が Vertex AI redirect URL を WL マッチングに使っているため、構造的に常に has_jp_coverage=False を返す不具合を特定 (2026-05-05 デバッグ追加)。",
-    "evidence": "src/triage/jp_coverage_verifier.py L271-285 で chunk.web.uri (= 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/...') を urls に積んでいるが、実ソースドメインは chunk.web.title (例: 'jiji.com', 'jetro.go.jp', 'recordchina.co.jp') に格納されている。chunk.web.domain は SDK 現行版では常に None。",
-    "impact": "F-13.B が本番運用でも構造的に全件 has_jp_coverage=False を返している懸念。本来 divergence 扱いすべき 『日本で報道済みの海外ニュース』 を blind_spot として動画化していた可能性。Hydrangea ミッション系統 1 (silence_gap) の品質保証機構が機能していなかった。",
-    "fix_strategy": "_search_with_grounding() で web.title を読み取り、'https://{title.lower()}' 形式で urls に積む最小修正。F-jp-coverage-improve バッチで対応。",
-    "next_batch": "F-jp-coverage-improve (緊急度 高、F-stream-2-filter-design は保留)。",
-    "verification_after_fix": "本スクリプト (verify_jp_coverage_measure.py) を再実行して合格判定を取り直す。covered 10 件の大半は TP に転じる見込み (jiji.com / nippon.com / nikkei.com 等の WL ドメインが豊富)。"
-  },
   "metrics": {
     "total": 19,
-    "tp": 0,
-    "tn": 5,
-    "fp": 0,
-    "fn": 14,
+    "tp": 10,
+    "tn": 3,
+    "fp": 2,
+    "fn": 4,
     "error": 0,
-    "precision_covered": 0.0,
-    "recall_covered": 0.0,
-    "f1_covered": 0.0,
-    "precision_blind": 0.2631578947368421,
-    "recall_blind": 1.0,
-    "tier_accuracy": 0.0,
-    "tier_eligible": 0,
-    "tier_matched": 0,
+    "precision_covered": 0.8333333333333334,
+    "recall_covered": 0.7142857142857143,
+    "f1_covered": 0.7692307692307692,
+    "precision_blind": 0.42857142857142855,
+    "recall_blind": 0.6,
+    "tier_accuracy": 0.3,
+    "tier_eligible": 10,
+    "tier_matched": 3,
     "stream_2_total": 4,
-    "stream_2_f13b_caught_as_true": 0
+    "stream_2_f13b_caught_as_true": 3
   },
   "judgement": {
     "verdict": "fail",
     "criteria": {
       "recall_covered": {
-        "actual": 0.0,
+        "actual": 0.7143,
         "threshold": 0.9,
         "passed": false
       },
       "precision_blind": {
-        "actual": 0.2632,
+        "actual": 0.4286,
         "threshold": 0.8,
         "passed": false
       },
       "f1_covered": {
-        "actual": 0.0,
+        "actual": 0.7692,
         "threshold": 0.85,
         "passed": false
       },
       "tier_accuracy": {
-        "actual": 0.0,
+        "actual": 0.3,
         "threshold": 0.7,
         "passed": false
       }
@@ -78,11 +78,14 @@
       "actual_matched_tier": null,
       "matched_urls": [],
       "matched_domains": [],
-      "excluded_urls": [],
+      "excluded_urls": [
+        "https://youtube.com",
+        "https://youtube.com"
+      ],
       "search_query": "Ukrainian Forces Wounded, Killed 1,725 Civilians in Q1 2026 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 15.236,
+      "cached": true,
+      "elapsed_seconds": 0.002,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で 'ロシア外務省 ウクライナ軍 民間人 1725人 第1四半期 2026 NHK 日経 朝日' を検索 → NHK / 日経 / 朝日いずれもこの特定の数値・主張を直接報道していない。NIDS コメンタリー (防衛研究所) や日経の戦況一般記事はあるが、ロシア側の主張する『ウクライナ軍による民間人被害』という枠組みでの報道は確認できず。Web 検証結果と F-13.B 過去判定が一致 (両方 False)。",
       "manual_verification_urls": [
@@ -96,15 +99,21 @@
       "title": "Israel's top Jewish religious body 'refuses to condemn' smashing of Jesus statue",
       "expected_has_jp_coverage": true,
       "expected_tier": "tier_1_newspaper",
-      "actual_has_jp_coverage": false,
-      "actual_matched_tier": null,
-      "matched_urls": [],
-      "matched_domains": [],
-      "excluded_urls": [],
+      "actual_has_jp_coverage": true,
+      "actual_matched_tier": "tier_1_newspaper",
+      "matched_urls": [
+        "https://yomiuri.co.jp"
+      ],
+      "matched_domains": [
+        "yomiuri.co.jp"
+      ],
+      "excluded_urls": [
+        "https://youtube.com"
+      ],
       "search_query": "Israel's top Jewish religious body 'refuses to condemn' smashing of Jesus statue 日本 報道",
       "error": null,
       "cached": false,
-      "elapsed_seconds": 7.778,
+      "elapsed_seconds": 7.979,
       "stream_2_candidate": {
         "broad_event_jp_coverage": "朝日・日経で像破壊本体を報道済み、Newsweek JP T4 も処分・拘禁関連を報道",
         "specific_angle_unreported_in_jp": "イスラエル最高宗教権威『ラビ庁』が軍からの非難要請を拒否した、軍と宗教界の宗教的シオニズム融合という構造分析角度",
@@ -137,7 +146,7 @@
       "search_query": "US-Israel intervention frees Israeli-Turkish citizen held for serving in Israeli army 日本 報道",
       "error": null,
       "cached": false,
-      "elapsed_seconds": 4.811,
+      "elapsed_seconds": 4.51,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で『米イスラエル 隠密作戦 トルコ 二重国籍 兵士 救出 NHK 日経』を検索 → NHK / Nikkei / Asahi いずれもこの事件を報道確認できず。Tier 1-4 全てで未報道。Web 検証結果と F-13.B 過去判定が一致 (両方 False)。",
       "manual_verification_urls": []
@@ -148,15 +157,24 @@
       "title": "In Gaza, life flickers as power cuts shatter livelihoods and healthcare",
       "expected_has_jp_coverage": true,
       "expected_tier": "tier_1_newspaper",
-      "actual_has_jp_coverage": false,
-      "actual_matched_tier": null,
-      "matched_urls": [],
-      "matched_domains": [],
-      "excluded_urls": [],
+      "actual_has_jp_coverage": true,
+      "actual_matched_tier": "tier_4_business",
+      "matched_urls": [
+        "https://newsweekjapan.jp"
+      ],
+      "matched_domains": [
+        "newsweekjapan.jp"
+      ],
+      "excluded_urls": [
+        "https://youtube.com",
+        "https://youtube.com",
+        "https://youtube.com",
+        "https://youtube.com"
+      ],
       "search_query": "In Gaza, life flickers as power cuts shatter livelihoods and healthcare 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 12.885,
+      "cached": true,
+      "elapsed_seconds": 0.002,
       "stream_2_candidate": {
         "broad_event_jp_coverage": "東京新聞でシファ病院突入記事、CNN.co.jp でガザ電力危機関連報道",
         "specific_angle_unreported_in_jp": "潤滑油 1L 14 → 1,500 シェケル (100 倍) 暴騰、中小企業 9 割廃業危機、ケーキ店主の生活破綻、ジェネレーター燃料に食用油転用といった『社会インフラの物理的解体』『分散型サバイバル経済への変質』という具体的データ + 構造分析角度",
@@ -183,11 +201,16 @@
       "actual_matched_tier": null,
       "matched_urls": [],
       "matched_domains": [],
-      "excluded_urls": [],
+      "excluded_urls": [
+        "https://youtube.com",
+        "https://youtube.com",
+        "https://note.com",
+        "https://youtube.com"
+      ],
       "search_query": "Gaza was the scandal that should have ended Keir Starmer's political career 日本 報道",
       "error": null,
       "cached": false,
-      "elapsed_seconds": 6.571,
+      "elapsed_seconds": 8.291,
       "stream_2_candidate": {
         "broad_event_jp_coverage": "Nikkei T1 + 時事 T2 + Bloomberg JP T2 でマンデルソン人事スキャンダル本体を報道済み",
         "specific_angle_unreported_in_jp": "英国によるガザ向け F-35 部品継続供給、キプロス・アクロティリ基地からの監視飛行情報共有といった『英国の構造的なイスラエル軍事支援』こそが本来の道徳的スキャンダルだという批判フレーム",
@@ -219,8 +242,8 @@
       "excluded_urls": [],
       "search_query": "Putin ally's $500 million Russian superyacht sails through Hormuz despite US blockade 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 10.858,
+      "cached": true,
+      "elapsed_seconds": 0.005,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で『プーチン側近 ロシア スーパーヨット 5億ドル ホルムズ海峡 NHK 朝日 日経』を検索 → 該当する直接報道は『中央日報日本語版 (Yahoo!ニュース経由)』のみ。Yahoo はアグリゲータとして JP_MEDIA_EXCLUDED に明示登録。ロイター日本版 (Tier 2) で報道されたか不明 (russia.johocloud.net というサードパーティ集約サイトが Reuters 記事を引用)。Tier 1-4 直接報道は確認できず。Web 検証結果から expected_has_jp_coverage=False と判定。",
       "manual_verification_urls": [
@@ -234,15 +257,19 @@
       "title": "Israel accused of using 'water as a weapon' against Palestinians in Gaza",
       "expected_has_jp_coverage": false,
       "expected_tier": null,
-      "actual_has_jp_coverage": false,
-      "actual_matched_tier": null,
-      "matched_urls": [],
-      "matched_domains": [],
+      "actual_has_jp_coverage": true,
+      "actual_matched_tier": "tier_4_business",
+      "matched_urls": [
+        "https://diamond.jp"
+      ],
+      "matched_domains": [
+        "diamond.jp"
+      ],
       "excluded_urls": [],
       "search_query": "Israel accused of using 'water as a weapon' against Palestinians in Gaza 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 8.193,
+      "cached": true,
+      "elapsed_seconds": 0.001,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で『イスラエル 水を武器 パレスチナ ガザ 国連 専門家 NHK 朝日 日経』を検索 → MSF プレスリリース (msf.or.jp、WL外) + Arab News JP (WL外) + CNN.co.jp (WL外) + 三菱総研コラム (WL外) のみヒット。Tier 1-4 (NHK / 日経 / 朝日 / 読売 / 産経 / 毎日 / 東京新聞) いずれも『水を武器化』フレームでの直接報道は確認できず。Web 検証結果から expected_has_jp_coverage=False と判定。",
       "manual_verification_urls": [
@@ -256,15 +283,23 @@
       "title": "The real reason Iran and the US cannot end the war: Money",
       "expected_has_jp_coverage": true,
       "expected_tier": "tier_2_wire_service",
-      "actual_has_jp_coverage": false,
-      "actual_matched_tier": null,
-      "matched_urls": [],
-      "matched_domains": [],
-      "excluded_urls": [],
+      "actual_has_jp_coverage": true,
+      "actual_matched_tier": "tier_4_business",
+      "matched_urls": [
+        "https://toyokeizai.net"
+      ],
+      "matched_domains": [
+        "toyokeizai.net"
+      ],
+      "excluded_urls": [
+        "https://youtube.com",
+        "https://youtube.com",
+        "https://youtube.com"
+      ],
       "search_query": "The real reason Iran and the US cannot end the war: Money 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 10.154,
+      "cached": true,
+      "elapsed_seconds": 0.0,
       "stream_2_candidate": {
         "broad_event_jp_coverage": "Bloomberg JP T2 でイラン-米国和平合意難航を報道、SPF/JBpress/中東調査会等のシンクタンクが地政学的解説",
         "specific_angle_unreported_in_jp": "イラン革命防衛隊が制裁網下の闇経済から得る既得権益と、それが戦争継続の構造的動機になっているという『継戦の経済的合理性』分析角度",
@@ -289,15 +324,23 @@
       "title": "Israel's policy of endless war is fuelled by the crisis of Zionism",
       "expected_has_jp_coverage": false,
       "expected_tier": null,
-      "actual_has_jp_coverage": false,
-      "actual_matched_tier": null,
-      "matched_urls": [],
-      "matched_domains": [],
-      "excluded_urls": [],
+      "actual_has_jp_coverage": true,
+      "actual_matched_tier": "tier_4_business",
+      "matched_urls": [
+        "https://diamond.jp",
+        "https://diamond.jp"
+      ],
+      "matched_domains": [
+        "diamond.jp"
+      ],
+      "excluded_urls": [
+        "https://youtube.com",
+        "https://youtube.com"
+      ],
       "search_query": "Israel's policy of endless war is fuelled by the crisis of Zionism 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 10.727,
+      "cached": true,
+      "elapsed_seconds": 0.0,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で『Israel Zionism crisis endless war MEE 日本 報道』を検索 → MEE 原文・Jewish Voice for Liberation・Counterpunch・Al Jazeera・Haaretz 等の英語ソースのみ。日本語報道は確認できず (Tier 1-4 全て不在、WL外含めても日本語ソース 0 件)。シオニズム構造批判のオピニオンは日本主要紙ではほぼ扱わない領域。Web 検証結果から expected_has_jp_coverage=False と判定。",
       "manual_verification_urls": []
@@ -308,15 +351,23 @@
       "title": "ホルムズ海峡めぐりアメリカの対イラン封鎖始まる イランは反発",
       "expected_has_jp_coverage": true,
       "expected_tier": "tier_1_newspaper",
-      "actual_has_jp_coverage": false,
-      "actual_matched_tier": null,
-      "matched_urls": [],
-      "matched_domains": [],
+      "actual_has_jp_coverage": true,
+      "actual_matched_tier": "tier_1_newspaper",
+      "matched_urls": [
+        "https://yomiuri.co.jp",
+        "https://yomiuri.co.jp",
+        "https://yomiuri.co.jp",
+        "https://newsweekjapan.jp"
+      ],
+      "matched_domains": [
+        "newsweekjapan.jp",
+        "yomiuri.co.jp"
+      ],
       "excluded_urls": [],
       "search_query": "ホルムズ海峡めぐりアメリカの対イラン封鎖始まる イランは反発 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 8.504,
+      "cached": true,
+      "elapsed_seconds": 0.0,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で『トランプ イラン 攻撃 ホルムズ 海峡 NHK ニュース 2026年4月』を検索 → NHK ニュース (news.web.nhk = Tier 1) 複数記事 + 時事ドットコム (jiji.com = Tier 2) + 産経/共同配信 (佐賀新聞経由) + ロケットボーイズ + プレジデントオンライン (T4)。Tier 1 (NHK) + Tier 2 (Jiji) で確実にカバー。expected_tier=tier_1_newspaper (最高 Tier)。",
       "manual_verification_urls": [
@@ -332,15 +383,21 @@
       "title": "米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』",
       "expected_has_jp_coverage": true,
       "expected_tier": "tier_1_newspaper",
-      "actual_has_jp_coverage": false,
-      "actual_matched_tier": null,
-      "matched_urls": [],
-      "matched_domains": [],
-      "excluded_urls": [],
+      "actual_has_jp_coverage": true,
+      "actual_matched_tier": "tier_1_newspaper",
+      "matched_urls": [
+        "https://yomiuri.co.jp"
+      ],
+      "matched_domains": [
+        "yomiuri.co.jp"
+      ],
+      "excluded_urls": [
+        "https://youtube.com"
+      ],
       "search_query": "米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 11.471,
+      "cached": true,
+      "elapsed_seconds": 0.0,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で『ウクライナ ロシア 停戦 交渉 NHK 朝日 日経 2026年4月』を検索 → NHK ニュース (Tier 1) + 日本経済新聞 (Tier 1) 複数記事 + 時事 (Tier 2) + 復活祭 32 時間停戦も NHK 直接報道。Tier 1 確実カバー。",
       "manual_verification_urls": [
@@ -356,15 +413,21 @@
       "title": "米中 関税協議 / 通商交渉 (2026 年 4 月)",
       "expected_has_jp_coverage": true,
       "expected_tier": "tier_1_newspaper",
-      "actual_has_jp_coverage": false,
-      "actual_matched_tier": null,
-      "matched_urls": [],
-      "matched_domains": [],
+      "actual_has_jp_coverage": true,
+      "actual_matched_tier": "tier_2_wire_service",
+      "matched_urls": [
+        "https://jiji.com",
+        "https://newsweekjapan.jp"
+      ],
+      "matched_domains": [
+        "jiji.com",
+        "newsweekjapan.jp"
+      ],
       "excluded_urls": [],
       "search_query": "米中 関税協議 / 通商交渉 (2026 年 4 月) 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 10.218,
+      "cached": true,
+      "elapsed_seconds": 0.0,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で『米中 関税 通商交渉 NHK 朝日 日経 2026年4月』を検索 → 日本経済新聞 (Tier 1) 複数記事が中心。日経ビジネス (T1 関連) + ジェトロ (WL外、参考) + 内閣府月例経済報告 (公的、参考)。Tier 1 確実カバー、報道密度極めて高い。",
       "manual_verification_urls": [
@@ -380,15 +443,21 @@
       "title": "ローマ教皇『多数派の専制』を警告 民主主義に危機感",
       "expected_has_jp_coverage": true,
       "expected_tier": "tier_1_newspaper",
-      "actual_has_jp_coverage": false,
-      "actual_matched_tier": null,
-      "matched_urls": [],
-      "matched_domains": [],
-      "excluded_urls": [],
+      "actual_has_jp_coverage": true,
+      "actual_matched_tier": "tier_4_business",
+      "matched_urls": [
+        "https://newsweekjapan.jp"
+      ],
+      "matched_domains": [
+        "newsweekjapan.jp"
+      ],
+      "excluded_urls": [
+        "https://hatena.ne.jp"
+      ],
       "search_query": "ローマ教皇『多数派の専制』を警告 民主主義に危機感 日本 報道",
       "error": null,
       "cached": false,
-      "elapsed_seconds": 4.934,
+      "elapsed_seconds": 8.172,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で『ローマ教皇 レオ14世 演説 NHK 朝日 日経 2026年4月』を検索 → 日本経済新聞 (Tier 1) 複数記事『多数派の専制を警告』『新教皇就任時の人物紹介』。AFPBB 配信が dmenu/ docomo 経由で広く配信。カトリック中央協議会・バチカンニュース日本語 (WL外、教会公式)。Tier 1 確実カバー。",
       "manual_verification_urls": [
@@ -402,15 +471,19 @@
       "title": "ブラジル ルラ政権、アマゾン開催の COP30 で狙うグローバルサウス主導役",
       "expected_has_jp_coverage": true,
       "expected_tier": "tier_1_newspaper",
-      "actual_has_jp_coverage": false,
-      "actual_matched_tier": null,
-      "matched_urls": [],
-      "matched_domains": [],
+      "actual_has_jp_coverage": true,
+      "actual_matched_tier": "tier_4_business",
+      "matched_urls": [
+        "https://newsweekjapan.jp"
+      ],
+      "matched_domains": [
+        "newsweekjapan.jp"
+      ],
       "excluded_urls": [],
       "search_query": "ブラジル ルラ政権、アマゾン開催の COP30 で狙うグローバルサウス主導役 日本 報道",
       "error": null,
       "cached": false,
-      "elapsed_seconds": 5.11,
+      "elapsed_seconds": 7.34,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で『ブラジル ルラ 環境 アマゾン 山火事 NHK 朝日 日経 2026』を検索 → NHK ニュース (Tier 1) アマゾン現地取材記事 + 日本経済新聞 (Tier 1) 複数記事 (COP30 グローバルサウス主導役 / アマゾン火災煙) + プレジデント (Tier 4)。Tier 1 + Tier 4 で確実カバー。",
       "manual_verification_urls": [
@@ -430,11 +503,13 @@
       "actual_matched_tier": null,
       "matched_urls": [],
       "matched_domains": [],
-      "excluded_urls": [],
+      "excluded_urls": [
+        "https://hatena.ne.jp"
+      ],
       "search_query": "NVIDIA 株が半年ぶり最高値更新 衰えぬ AI 需要、循環投資にはリスク 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 6.678,
+      "cached": true,
+      "elapsed_seconds": 0.002,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で『エヌビディア Nvidia 決算 AI 半導体 ニューズウィーク 東洋経済 ダイヤモンド 2026年4月』を検索 → 日本経済新聞 (Tier 1) 直接記事 + Bloomberg JP (Tier 2) + 日経会社情報 + Investing JP + Bloomo (WL外、ファンド向け解説)。Tier 1 + Tier 2 確実カバー。",
       "manual_verification_urls": [
@@ -457,8 +532,8 @@
       "excluded_urls": [],
       "search_query": "ナイジェリアで 100 人拉致 過激派襲撃、死者多数か 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 7.162,
+      "cached": true,
+      "elapsed_seconds": 0.0,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で『ナイジェリア 武装勢力 BokoHaram 拉致 ボコハラム NHK 朝日 日経 2026』を検索 → 東京新聞デジタル (tokyo-np.co.jp = Tier 1) 直接掲載 + CNN.co.jp (WL外) + 共同通信配信を秋田魁新報 (WL外) 経由で広く配信 + UNHCR / UNICEF (WL外)。Tier 1 (東京新聞) + Tier 2 (共同通信 配信) でカバー。expected_tier=tier_1_newspaper。",
       "manual_verification_urls": [
@@ -473,15 +548,21 @@
       "title": "マリ 軍事政権に反政府勢力が一斉攻撃 暫定国防相死亡",
       "expected_has_jp_coverage": true,
       "expected_tier": "tier_1_newspaper",
-      "actual_has_jp_coverage": false,
-      "actual_matched_tier": null,
-      "matched_urls": [],
-      "matched_domains": [],
-      "excluded_urls": [],
+      "actual_has_jp_coverage": true,
+      "actual_matched_tier": "tier_4_business",
+      "matched_urls": [
+        "https://newsweekjapan.jp"
+      ],
+      "matched_domains": [
+        "newsweekjapan.jp"
+      ],
+      "excluded_urls": [
+        "https://hatena.ne.jp"
+      ],
       "search_query": "マリ 軍事政権に反政府勢力が一斉攻撃 暫定国防相死亡 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 9.476,
+      "cached": true,
+      "elapsed_seconds": 0.0,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で『マリ 国防相 殺害 ジハーディスト 4月 NHK 朝日 日経 共同通信 時事』を検索 → NHK ニュース (Tier 1) 直接記事 + 時事ドットコム (Tier 2) + 共同通信配信を沖縄タイムス・東奥日報・熊本日日新聞等が掲載。Tier 1 (NHK) + Tier 2 (Jiji + 共同) で確実カバー。",
       "manual_verification_urls": [
@@ -503,8 +584,8 @@
       "excluded_urls": [],
       "search_query": "インド・パキスタン カシミール 緊張 (4 月 22 日テロ攻撃 + 5 月 7-10 日 Operation Sindoor) 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 19.643,
+      "cached": true,
+      "elapsed_seconds": 0.0,
       "stream_2_candidate": null,
       "manual_verification_note": "WebSearch で『インド モディ パキスタン カシミール 緊張 ニューズウィーク 東洋経済 ダイヤモンド ブルームバーグ 2026』を検索 → NHK 国際報道 (web.nhk = Tier 1) 直接特集 + Newsweek Japan (Tier 4) + 日本経済研究センター + 笹川平和財団 + JBpress + 日本総研 + 戸田記念国際平和研究所 + 外務省安全情報。Tier 1 (NHK) + Tier 4 (Newsweek) 確実カバー。",
       "manual_verification_urls": [
@@ -518,15 +599,24 @@
       "title": "イエメン・フーシ派、イスラエルに弾道ミサイル発射し『イラン支援』を公式表明",
       "expected_has_jp_coverage": true,
       "expected_tier": "tier_2_wire_service",
-      "actual_has_jp_coverage": false,
-      "actual_matched_tier": null,
-      "matched_urls": [],
-      "matched_domains": [],
-      "excluded_urls": [],
+      "actual_has_jp_coverage": true,
+      "actual_matched_tier": "tier_4_business",
+      "matched_urls": [
+        "https://newsweekjapan.jp",
+        "https://newsweekjapan.jp"
+      ],
+      "matched_domains": [
+        "newsweekjapan.jp"
+      ],
+      "excluded_urls": [
+        "https://youtube.com",
+        "https://youtube.com",
+        "https://youtube.com"
+      ],
       "search_query": "イエメン・フーシ派、イスラエルに弾道ミサイル発射し『イラン支援』を公式表明 日本 報道",
       "error": null,
-      "cached": false,
-      "elapsed_seconds": 6.613,
+      "cached": true,
+      "elapsed_seconds": 0.0,
       "stream_2_candidate": null,
       "manual_verification_note": "★Tier 2-4 only テストケース: WebSearch で『フーシ派 イラン 戦争 介入 ミサイル 2026 4月 Bloomberg Newsweek Japan』を検索 → Bloomberg JP (bloomberg.com/jp = Tier 2) + Newsweek Japan (Tier 4) + 時事ドットコム (Jiji = Tier 2) で報道。日本経済新聞 (Tier 1) も同件のミサイル発射を 3/27 報道していたが、本ゴールデンセットの試験対象としては『フーシ派の<明確・公的・明示的なイラン支援>表明』という MEE 記事の特定フレームに焦点を当てる。F-13.B が Tier 1 に当たれば expected_tier=tier_1_newspaper に修正される可能性あり。expected_has_jp_coverage=True は確定 (Tier 2 Bloomberg JP + Jiji で確実)。",
       "manual_verification_urls": [
