@@ -1,6 +1,6 @@
 # Hydrangea — 意思決定ログ (DECISION_LOG)
 
-最終更新: 2026-05-05 (F-verify-jp-coverage-measure 完了)
+最終更新: 2026-05-07 (F-jp-coverage-improve 完了)
 
 このドキュメントは Hydrangea プロジェクトにおける重要な意思決定の履歴を記録する。
 コードや設定の「結果」ではなく、「なぜそうなったか」の判断プロセスを残すことが目的。
@@ -2630,4 +2630,204 @@ F-13.B の `_search_with_grounding()` 内で `chunk.web.uri` を URL として
   - `docs/CURRENT_STATE.md` (全置換更新)
 - 関連: F-verify-jp-coverage-golden / F-verify-jp-coverage-golden-fix
   (前バッチ、ゴールデンセット v1.1 を真値として使用)
+
+---
+
+## F-jp-coverage-improve (Phase A.5-3a-verify 1-D' / 2026-05-07)
+
+### 背景
+
+F-verify-jp-coverage-measure (2026-05-05、verdict=fail) で F-13.B
+JpCoverageVerifier の構造的不具合 (`chunk.web.uri` を WL マッチングに使用、
+Gemini Grounding は実ドメインを `chunk.web.title` で返す) を特定。Hydrangea
+コンセプト防衛機構 5 層の中核 (F-13.B) が機能していなかった懸念。本バッチは
+**根本治療志向** で 5 つの目的を同時達成する複合バッチ:
+
+1. F-13.B 構造的不具合の根本治療 (ドメイン抽出レイヤー追加で SDK 変更耐性)
+2. 不変原則例外条件の構造化 (「実装バグ修正は例外」の運用ルール化)
+3. Project Knowledge 最新化運用のルール化 (別チャット移行時の認識ブレ防止)
+4. Phase A.5-3a-verify ゲート完了条件の再定義 (試運転を必須段階に組込み)
+5. 計測再実行で合格判定取得
+
+### 議論
+
+#### 議論 1: F-13.B 修正方針
+
+選択肢:
+- **案 A** (最小修正): `_search_with_grounding()` 内で `chunk.web.title` を
+  直接 `https://{title}` 形式で urls に push。実装 5 行程度
+- **案 B** (SDK アップデート待ち): `chunk.web.domain` が実値を返す SDK
+  バージョンを待つ → 不採用 (SDK 改善時期不明、緊急対応が必要)
+- **案 C** (検索戦略変更): Grounding API → 直接 Web 検索 API (Bing 等) に
+  変更 → 不採用 (過剰スコープ、既存設計の根本見直し)
+- **案 D** (URL 抽出 + ドメイン正規化レイヤー): `_extract_domain_from_chunk` /
+  `_looks_like_domain` / `_normalize_domain` を独立関数化、フォールバック
+  戦略 (戦略 1: domain → 戦略 2: title) を持たせる → ★ 採用
+
+採用根拠: 案 A は機能するが脆弱 (SDK が将来 `domain` を実値で返した時に整合性を
+取りにくい)、案 D は防御層としての設計 (SDK 変更耐性、ドメイン正規化ロジック
+独立化で F-stream-2-filter-design でも再利用可能)。「対症療法じゃなくて根本
+治療」哲学 + 「動くものを壊さない」哲学に整合。
+
+#### 議論 2: 不変原則 3 例外適用の根拠
+
+`src/triage/jp_coverage_verifier.py` 改修は不変原則 3 (`src/triage/` 既存
+ファイル変更不可) に抵触する。例外条件 4 つ全て満たすか議論:
+
+- **(1) 実装バグの修正である**: ✅ Gemini Grounding redirect URL を WL
+  マッチングに使うバグの修正、仕様通り動かない状態を直す
+- **(2) 設計変更ではない**: ✅ `verify()` / `verify_async()` シグネチャ・
+  戻り値構造不変、ドメイン抽出ロジックの「正しい実装」への置換のみ、新たな
+  責務は追加しない
+- **(3) DECISION_LOG エントリで明記**: ✅ 本エントリで明記
+- **(4) Hydrangea ミッション中核機構のためカズヤ承認必須**: ✅ Hydrangea
+  コンセプト防衛機構 5 層の F-13.B 層、バッチプロンプトの背景セクションに
+  カズヤ承認を記録済み
+
+→ 4 条件全て満たすため例外適用を承認。本事例を BATCH_PROTOCOL.md の
+「過去の例外適用事例」として記録し、将来の判断基準に資する。
+
+#### 議論 3: Project Knowledge 運用ルール化の必要性
+
+claude.ai の Project Knowledge は GitHub と自動同期されない。新チャット移行
+時に古い docs を読んでいると認識ブレが発生する (= クラウド誤りの一因)。
+F-doc-cleanup-followup (2026-05-03) でクラウド誤り 7 (系統 1 中心理解で
+系統 2 を過小評価) を記録した経緯から、構造的に再発防止する仕組みが必要。
+
+→ 「新チャット移行前に必ず Project Knowledge を最新化」を必須タイミング、
+「大きなフェーズ完了時 / 重要 docs 変更後」を推奨タイミングとして
+BATCH_PROTOCOL.md に明文化。
+
+#### 議論 4: Phase A.5-3a-verify ゲート完了条件再定義
+
+旧定義: 1-A〜1-E の 5 段階、1-D 完了で精度 verdict 取得 → 1-E (F-stream-2-
+filter-design) に進む構成。
+
+問題: 「動くものを壊さない」哲学に従えば、修正後 F-13.B の本番試運転 + 過去
+判定後追いを **必須段階** として組み込むべき。
+
+→ 1-D' (F-jp-coverage-improve、本バッチ) 内に 1-D'' (計測再実行) を統合
+(修正と検証は分離不能)、1-D''' (F-trial-run-post-fix、試運転バッチ) を
+新規段階として追加。1-A〜1-D''' 全完了で Phase A.5-3a-verify ゲート完了。
+
+#### 議論 5: 計測再実行の verdict=fail への対処
+
+修正後の再測定で構造的不具合は解消 (TP=0→10, FN=14→4) したが、4 指標とも
+閾値未達のため verdict=fail のまま。
+
+選択肢:
+- **(a)** 本バッチでスコープを広げて Recall/Precision/Tier 一致率も改善 →
+  ★ 不採用 (バッチプロンプト「勝手にスコープ広げないこと」、Tier ロジックは
+  別問題)
+- **(b)** 残課題を本バッチでは対象外として記録、別バッチに分離 → ★ 採用
+
+採用根拠: 「ロジックが構造的に常に False を返す」状態 → 「正しく動くが精度が
+閾値未達」状態は質的に異なる進捗。残課題 (FN クエリ最適化 / FP diamond.jp
+真値再評価 / Tier 一致率) はそれぞれ独立した問題で、同一バッチで対処すると
+複雑度が増す。F-trial-run-post-fix (試運転 + 過去後追い) と F-jp-coverage-tune
+(精度閾値達成) に分離。
+
+### 決定
+
+1. **F-13.B 修正は案 D 採用**: ドメイン抽出レイヤー
+   (`_extract_domain_from_chunk` / `_looks_like_domain` / `_normalize_domain`)
+   を `src/triage/jp_coverage_verifier.py` に追加。`_search_with_grounding()`
+   は新レイヤー経由で実ドメインを WL マッチングに供給、`chunk.web.uri` は
+   debug 用 `redirect_urls` に分離記録。
+2. **不変原則 3 例外適用**: 4 条件全て満たすため適用承認、BATCH_PROTOCOL.md
+   に「不変原則の例外条件」セクション (4 条件 + 例外不可ケース + 過去事例) を
+   新設、本バッチを過去事例として記録。
+3. **Project Knowledge 最新化運用ルール**: BATCH_PROTOCOL.md に「Project
+   Knowledge 最新化運用ルール」セクション (必須/推奨タイミング + 最新化対象 +
+   注意事項) を新設。新チャット移行前は必須最新化。
+4. **Phase A.5-3a-verify ゲート完了条件再定義**: 1-A〜1-D''' 構成に。
+   1-D' (本バッチ) 内に 1-D'' (計測再実行) 統合、1-D''' (F-trial-run-post-fix、
+   未着手) を最終段階として追加。
+5. **再測定 verdict=fail の残課題は分離対応**: F-trial-run-post-fix で
+   試運転 + 過去判定後追い、F-jp-coverage-tune で精度閾値達成。本バッチでは
+   スコープを広げない。
+6. **テスト**: 新規 28 テストを `tests/test_jp_coverage_verifier_domain_extract.py`
+   に追加。既存 `tests/test_f13b_rescue_abolition.py` のフィクスチャ
+   `_make_grounding_response` を実 API contract に整合化 (uri = Vertex
+   redirect URL、title = 実ドメイン、domain = None)、除外 URL アサーション
+   1 つを host ベースに調整。テスト総数 1315 → 1345 (+30) 全 passed 維持。
+
+### 結果
+
+#### 構造的不具合の解消 (修正前後比較)
+
+| 指標 | v1 (修正前) | v2 (修正後) | 変化 |
+| --- | --- | --- | --- |
+| TP (covered, 一致) | 0 | 10 | +10 |
+| FN (報道済→False 誤判定) | 14 | 4 | -10 (大幅改善) |
+| TN (blind, 一致) | 5 | 3 | -2 |
+| FP (未報道→True 誤判定) | 0 | 2 | +2 |
+| Recall (covered) | 0.00% | 71.43% | +71.43pt |
+| Precision (blind) | 26.32% | 42.86% | +16.54pt |
+| F1 (covered) | 0.000 | 0.769 | +0.769 |
+| Tier 一致率 | 0.00% (0/0) | 30.00% (3/10) | +30.00pt |
+| stream_2_candidate True | 0/4 | 3/4 | +3/4 |
+
+#### 計測再実行 verdict
+
+verdict: **fail** (4 指標とも閾値未達のまま)。ただし「ロジックが構造的に
+常に False を返す」状態 (v1) → 「正しく動くが精度が閾値未達」状態 (v2) は
+質的に異なる進捗。残課題は本バッチ責務範囲外。
+
+#### docs 化された運用ルール
+
+- BATCH_PROTOCOL.md「不変原則の例外条件」セクション新設 (4 条件 + 例外不可
+  ケース + 過去事例)
+- BATCH_PROTOCOL.md「Project Knowledge 最新化運用ルール」セクション新設
+  (必須/推奨タイミング + 最新化対象 + 注意事項)
+- CURRENT_STATE.md の Phase A.5-3a-verify ロードマップを 1-A〜1-D''' 構成に
+  再定義
+
+#### カズヤ哲学整合
+
+- 「対症療法じゃなくて根本治療」: 案 D (ドメイン抽出レイヤー) で SDK 変更耐性
+  を持たせ、対症療法的な修正を避けた
+- 「動くものを壊さない」: 既存 `verify()` シグネチャ・戻り値構造不変、
+  既存テストフィクスチャは API contract 整合化のみ (テスト意図は不変)、
+  baseline 1315 → 1345 全 passed 維持
+- 「過剰拡張性の罠回避」: 戦略 3 (uri からの redirect 解析) は spec 通り
+  実装せず、戦略 1/2 で十分と判断
+- 「忘れ去られた約束を絶対忘れない仕組み」: BATCH_PROTOCOL.md に例外条件 +
+  Project Knowledge 運用ルールを明文化 (個別バッチで再議論しない)
+- 「PoC は PoC に集中」: F-stream-2-filter-design 着手再開条件を更新、
+  F-trial-run-post-fix で本番試運転確認後に再開
+
+#### リグレッション影響
+
+- 本番コード変更: `src/triage/jp_coverage_verifier.py` (ドメイン抽出レイヤー
+  追加 + `_search_with_grounding()` 修正)
+- 新規テスト 28 件追加、既存テストフィクスチャ整合化、baseline 1315 → 1345
+  全 passed 維持
+- docs / configs / 他の src / は影響なし
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規追加:
+  - `tests/test_jp_coverage_verifier_domain_extract.py` (28 テスト、ドメイン
+    抽出レイヤー検証)
+- 変更:
+  - `src/triage/jp_coverage_verifier.py` (★不変原則 3 例外条項適用、ドメイン
+    抽出レイヤー追加 + `_search_with_grounding()` 修正)
+  - `tests/test_f13b_rescue_abolition.py` (`_make_grounding_response`
+    フィクスチャを実 API contract に整合化、除外 URL アサーション host ベース化)
+  - `docs/runs/F-verify-jp-coverage/measurement_result.json` v2 (再測定結果
+    上書き、root_cause_finding に resolved_in 追加)
+  - `docs/runs/F-verify-jp-coverage/REPORT.md` v2 (再測定結果上書き、★1.5
+    セクションを「根本原因の特定と修正済み報告」に更新、修正前後比較表追加)
+  - `docs/BATCH_PROTOCOL.md` (不変原則例外条件 + Project Knowledge 運用ルール
+    セクション新設)
+  - `docs/CURRENT_STATE.md` (全置換更新)
+  - `docs/DECISION_LOG.md` (本エントリ)
+  - `docs/FUTURE_WORK.md` (F-jp-coverage-improve 完了済み移動 +
+    F-trial-run-post-fix / F-jp-coverage-tune 緊急度 高新規追加 +
+    F-stream-2-filter-design 着手再開条件更新 + Phase 順序新版)
+  - `docs/DISCUSSION_NOTES.md` (F-13.B 動作仕様検討課題エントリ更新)
+- 関連: F-verify-jp-coverage-measure (前バッチ、本バッチ修正対象の構造的
+  不具合を特定)
 

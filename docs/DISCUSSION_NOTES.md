@@ -1,6 +1,6 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-05 (F-verify-jp-coverage-measure 完了時点)
+最終更新: 2026-05-07 (F-jp-coverage-improve 完了時点)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -218,14 +218,41 @@ F-stream-2-filter-design 着手は **保留** (F-13.B が機能していない�
 なるため、設計前提が崩れる)。
 
 **ステータス更新**: `確定 (2 段階フィルタ採用) → 確定 + 致命バグ特定 (2026-05-05)
-→ F-jp-coverage-improve で修正後に再測定で取り直し` (本検討課題は F-13.B
-仕様の理解には決着、ただし F-13.B 実装の不具合が別途見つかったため、本実装
-バグの修正後に系統 2 フィルタ設計の前提が改めて成立する)
+→ F-jp-coverage-improve で修正後に再測定で取り直し → 確定 + 致命バグ修正完了
+(2026-05-07、F-jp-coverage-improve resolved)` (本検討課題は F-13.B 仕様の理解
+に決着し、別途見つかった構造的不具合も F-jp-coverage-improve で根本治療済み。
+2 段階フィルタ設計の前提条件が改めて確保された。残課題は精度閾値達成のみで
+F-jp-coverage-tune に分離)
 
-- **出典**: F-verify-jp-coverage-measure (2026-05-05) 実測 +
-  `docs/runs/F-verify-jp-coverage/measurement_result.json`
-  (root_cause_finding フィールド) +
-  `docs/runs/F-verify-jp-coverage/REPORT.md` (★1.5 根本原因の特定セクション)
+**2026-05-07 修正完了報告 (F-jp-coverage-improve)**:
+
+`src/triage/jp_coverage_verifier.py` にドメイン抽出レイヤー
+(`_extract_domain_from_chunk` / `_looks_like_domain` / `_normalize_domain`) を
+SDK 変更耐性のある防御層として追加。`_search_with_grounding()` を修正して
+`chunk.web.title` を実ドメインとして読み取り `https://{domain}` 形式で WL
+マッチングに供給。`chunk.web.uri` (Vertex redirect URL) は debug 用
+`redirect_urls` に分離記録。
+
+再測定結果 (verdict=fail のままだが構造的不具合は解消):
+
+| 指標 | v1 (修正前) | v2 (修正後) | 変化 |
+|---|---|---|---|
+| TP | 0 | 10 | +10 |
+| FN | 14 | 4 | -10 |
+| Recall (covered) | 0.00% | 71.43% | +71.43pt |
+| F1 (covered) | 0.000 | 0.769 | +0.769 |
+
+残課題 (FN クエリ最適化 / FP diamond.jp 真値再評価 / Tier 一致率) は本検討課題
+の対象外で、F-jp-coverage-tune (FUTURE_WORK 緊急度 高新規登録) で対応。
+F-stream-2-filter-design 着手再開条件は「F-trial-run-post-fix 完了後」に更新
+(精度閾値達成は F-stream-2-filter-design の必須前提ではない、構造的に動いて
+いれば設計は進められる)。
+
+- **出典**: F-verify-jp-coverage-measure (2026-05-05) 実測 + F-jp-coverage-improve
+  (2026-05-07) 修正後再測定 + `docs/runs/F-verify-jp-coverage/measurement_result.json`
+  v2 (root_cause_finding に resolved_in 追加) + `docs/runs/F-verify-jp-coverage/REPORT.md`
+  v2 (★1.5 根本原因の特定と修正済み報告セクション) + DECISION_LOG エントリ
+  (F-jp-coverage-improve / 2026-05-07)
 
 ### 2026-05-01: 手動 PoC 推奨の軌道修正経緯 (クラウド誤り 5 例目)
 - **内容**: クラウド (claude.ai 側) が当初「自動化を先に」と提案したが、

@@ -32,15 +32,89 @@ Hydrangea のミッション:
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from src.shared.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+# F-jp-coverage-improve (2026-05-07): ドメイン形式判定 (簡易ヒューリスティック)。
+# Gemini Grounding API の chunk.web.title はドメイン形式 (例: "jiji.com") で
+# 返るため、ここで「ドメインっぽい文字列」かを判定して表示名 ("Jiji News" 等) を弾く。
+_DOMAIN_PATTERN = re.compile(r"^[a-z0-9.-]+\.[a-z]{2,}$")
+
+
+def _looks_like_domain(s: str) -> bool:
+    """文字列がドメイン形式かを判定 (簡易ヒューリスティック)。
+
+    Examples:
+        >>> _looks_like_domain("jiji.com")
+        True
+        >>> _looks_like_domain("jetro.go.jp")
+        True
+        >>> _looks_like_domain("Jiji News")
+        False
+        >>> _looks_like_domain("https://jiji.com/article/123")
+        False
+    """
+    if not s:
+        return False
+    return bool(_DOMAIN_PATTERN.match(s.strip().lower()))
+
+
+def _normalize_domain(s: str) -> str:
+    """ドメイン文字列を正規化 (lowercase + プロトコル / パス除去)。
+
+    Examples:
+        >>> _normalize_domain("Jiji.com")
+        'jiji.com'
+        >>> _normalize_domain("https://jiji.com/article/123")
+        'jiji.com'
+        >>> _normalize_domain("  jetro.go.jp  ")
+        'jetro.go.jp'
+    """
+    s = s.strip().lower()
+    s = re.sub(r"^https?://", "", s)
+    s = s.split("/", 1)[0]
+    return s
+
+
+def _extract_domain_from_chunk(chunk: Any) -> Optional[str]:
+    """Grounding chunk から実ソースドメインを抽出する。
+
+    Gemini SDK のバージョンや API 仕様変更に対する防御層として、複数のフィールドを
+    フォールバック順に試す。Gemini Grounding API は実ソースドメインを `chunk.web.uri`
+    ではなく Vertex AI の redirect URL で返す仕様 (vertexaisearch.cloud.google.com/
+    grounding-api-redirect/...)。実ドメインは現状 `chunk.web.title` に格納されている。
+
+    戦略:
+        1. chunk.web.domain (SDK 将来バージョンで実装される想定の正式 API)
+        2. chunk.web.title (SDK 現行版でドメイン形式が入っている、要妥当性検証)
+
+    Returns:
+        正規化されたドメイン文字列 (例: "jiji.com")、抽出不能なら None。
+    """
+    web = getattr(chunk, "web", None)
+    if web is None:
+        return None
+
+    # 戦略 1: 公式の domain フィールド (SDK 将来バージョンで実値を返す想定)
+    domain = getattr(web, "domain", None)
+    if isinstance(domain, str) and domain.strip():
+        return _normalize_domain(domain)
+
+    # 戦略 2: title フィールド (SDK 現行版でドメイン形式が格納されている)
+    title = getattr(web, "title", None)
+    if isinstance(title, str) and _looks_like_domain(title):
+        return _normalize_domain(title)
+
+    return None
 
 
 # 大手メディアホワイトリスト (Web 検証用)
@@ -269,19 +343,29 @@ class JpCoverageVerifier:
         )
 
         urls: list[str] = []
+        redirect_urls: list[str] = []
         candidates = getattr(response, "candidates", None) or []
         if candidates:
             metadata = getattr(candidates[0], "grounding_metadata", None)
             if metadata is not None:
                 chunks = getattr(metadata, "grounding_chunks", None) or []
                 for chunk in chunks:
+                    # F-jp-coverage-improve (2026-05-07): chunk.web.uri は Vertex AI
+                    # の redirect URL を返す仕様のため WL マッチングには使わず、
+                    # _extract_domain_from_chunk で実ドメインを取り出して urls に積む。
+                    domain = _extract_domain_from_chunk(chunk)
+                    if domain:
+                        urls.append(f"https://{domain}")
                     web = getattr(chunk, "web", None)
                     if web is not None:
                         uri = getattr(web, "uri", None)
                         if uri:
-                            urls.append(uri)
+                            redirect_urls.append(uri)
 
-        logger.debug(f"[JpCoverageVerifier] Grounding returned {len(urls)} URLs")
+        logger.debug(
+            f"[JpCoverageVerifier] Grounding returned {len(urls)} domains "
+            f"(redirect_urls={len(redirect_urls)})"
+        )
         return urls
 
     def _filter_excluded(self, urls: list[str]) -> tuple[list[str], list[str]]:
