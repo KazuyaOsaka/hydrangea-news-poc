@@ -3170,3 +3170,155 @@ docs 更新のみ。baseline 1345 passed 維持。
   F-stream-2-filter-design (★ 本バッチで共通基盤確立、即着手 OK)、
   F-jp-coverage-tune (本バッチの「特定角度」概念を検索クエリ生成に転用)
 
+---
+
+## 2026-05-08: F-particular-angle-redesign — 3 分類 → 4 分類化 (系統 1.5 perspective_gap 追加) + 台本表現ガイドライン正典化
+
+### 背景
+
+F-particular-angle-design (2026-05-07) で 3 分類 (系統 1 / 系統 2 / 動画化対象外)
+版を確立し、25 件の LLM ベースアノテーションを完了した。続くカズヤレビュー
+(2026-05-07 同日中に DISCUSSION_NOTES へ 4 エントリ追加) 過程で、3 分類の
+構造的不備が明らかになった。具体的には blind_002 (Israel ラビ庁) / blind_004
+(Gaza 潤滑油 100 倍) / blind_009 (Iran-US 戦争長期化) のような事象群で「広範
+事件は日本主要メディアで報道済み、特定角度のみ未報道」というパターンが多発
+しており、LLM 判定では「特定角度ベース」で stream_1_silence_gap に分類される
+が、台本表現としては「日本では報じられていない」と書くと嘘になり、視聴者
+からのツッコミを誘発するリスクが残る。カズヤから「一部報道だけど観点不足って
+いう 1.5 分類儲けてもいいのかもしれない」と提案され、議論の結果 4 分類化が
+必要との結論に到達。本バッチは Phase A.5-3a-verify ゲート完了後の **2 つ目**
+のバッチで、F-particular-angle-design の構造的不備の根本治療と、後続バッチ
+(F-stream-2-filter-design / F-jp-coverage-tune) の責務分離をより明確化する
+性格を持つ。
+
+### 議論
+
+(a) 4 分類化の構造: 系統 1 (両方未報道) / 系統 1.5 (広範のみ報道、特定角度
+未報道、新設) / 系統 2 (特定角度報道済み + 解釈差) / 動画化対象外 (4 軸該当
+なしまたは差分なし)。系統 1 の中に「完全空白」と「広範のみ報道」が混在する
+構造的問題を、系統 1.5 を新設することで分離する。
+
+(b) 4 分類化の論理フロー: Step 0 (特定角度抽出) → Step 1 (4 軸該当) → Step 2
+(広範事件の日本報道) → Step 3 (特定角度の日本報道) → Step 4 (解釈差)。
+Step 2 と Step 3 を **独立判定** することで、両者の組み合わせで系統 1 /
+系統 1.5 を区別する。これは F-13.B JpCoverageVerifier の二段階クエリ生成
+(広範事件クエリ + 特定角度クエリ) の責務分離に直結する。
+
+(c) 台本表現ガイドラインの設計哲学: カズヤから「言い回しを個別ルールで指定
+するのは避けたい (= ルール累積で全体劣化)、article_writer.py は触りたくない
+(= 不変原則 1)、LLM の知性に期待したい」という 3 つの制約が提示された。これに
+従い、台本表現は強制ルールではなく **particular_angle_metadata 構造を
+script_writer.py 新ルートに渡し、LLM が自律選択** する設計を採用。具体的
+言い回しは Phase A.5-3b 手動 PoC で 1 本作りながら試行錯誤する想定。
+
+(d) カズヤレビュー方式: F-particular-angle-design の Task F (3 分類版での
+カズヤレビュー) を **スキップ** し、4 分類版で初めてカズヤレビューを実施する
+方式を採用。理由は 3 分類版を確定させる前に 4 分類化が必要なことが判明した
+ため、3 分類版での確定作業は無駄になる。3 分類版の LLM 判定結果は
+`annotations_v1_3class.json` として保存し、参照可能にした。
+
+(e) `scripts/finalize_annotations.py` の改修方針: 既存の 3 分類対応関数を保持
+しつつ、4 分類対応関数を新規追加する形式を採用。CLI 引数に `--schema-version`
+を追加 (デフォルト 2.0 = 4 分類)。これは「動くものを壊さない」哲学に整合
+する設計で、F-particular-angle-design の Task F (3 分類版) を実行する選択肢も
+理論上は残る (実用上は実行しない)。
+
+### 決定
+
+(1) ★ **4 分類化採用**: 系統 1 / 系統 1.5 (perspective_gap、新設) / 系統 2 /
+動画化対象外。`docs/PARTICULAR_ANGLE_DEFINITION.md` を 3 分類 → 4 分類版に
+大幅改訂 (セクション 1 末尾追記 + セクション 3 大幅改訂 + 新サブセクション 3.5
+台本表現ガイドライン)。
+
+(2) ★ **二段階クエリ生成への接続**: 系統 1 vs 系統 1.5 の判別は『広範事件』
+と『特定角度』の報道状態を独立判定する必要があり、F-jp-coverage-tune の
+責務範囲。本バッチで `broad_event_jp_coverage` と `particular_angle_jp_coverage`
+の真値を 25 件分整備した (annotations.json)。
+
+(3) ★ **台本表現は LLM の知性に委ねる**: particular_angle_metadata 構造
+(stream_classification + core_question + differentiation_from_mainstream +
+hydrangea_axis_alignment) を script_writer.py 新ルートに渡し、LLM が系統別の
+言い回しを自律選択する設計。具体的な言い回しは Phase A.5-3b 手動 PoC で確立。
+
+(4) ★ **F-stream-2-filter-design の責務範囲縮小可能性**: LLM 推定段階で
+stream_2 が 0 件 (想定 13 件)、stream_1_5 が 20 件 (想定 5 件) という想定外
+分布が観測された。LLM が 4 分類定義を厳密適用した結果として技術的に整合
+する判定だが、F-stream-2-filter-design の優先度・スコープ判断はカズヤ
+レビュー後に再評価する。仮にカズヤレビュー後も stream_2 が 1-2 件しか
+ない場合、F-stream-2-filter-design は小規模実装で済み、F-jp-coverage-tune
+が **より優先** される構造になる。
+
+(5) ★ **本バッチは src/ tests/ configs/ への変更なし**: 新規 scripts/
+(reclassify_annotations.py / generate_review_draft_v2.py) + 改修 scripts/
+(finalize_annotations.py の `--schema-version 2.0` 追加) + 新規 docs
+(runs/F-particular-angle-redesign/ 配下) + 既存 docs 更新のみ。baseline
+1345 passed 維持。
+
+### 結果
+
+#### Task 別実施結果
+
+| Task | 状態 | 主要成果物 |
+|---|---|---|
+| A | ✅ | `docs/PARTICULAR_ANGLE_DEFINITION.md` 改訂 (3 分類 → 4 分類、新サブセクション 1.1 / 3.5 追加) |
+| B | ✅ | `scripts/reclassify_annotations.py` (新規、per-call timeout 90s + resume + incremental save 付き) |
+| C | ✅ | `annotations.json` (4 分類版、25/25 success、stream_1=4 / stream_1_5=20 / stream_2=0 / out_of_scope=1) + `reclassification_diff.json` + `reclassification_log.json` |
+| D | ✅ | `review_draft_v2.md` (重点レビュー section: 3 分類 → 4 分類で変更があった 20 件を冒頭表示) |
+| E | ★ 待ち | カズヤ手動レビュー (本バッチ内未実行) |
+| F | ✅ | `scripts/finalize_annotations.py` 改修 (`--schema-version 2.0` 追加、4 分類対応関数 + 3 分類対応関数併存) |
+| G | ✅ | `REPORT.md` + DECISION_LOG (本エントリ) + FUTURE_WORK + DISCUSSION_NOTES + CURRENT_STATE 全置換更新 |
+
+#### LLM 再分類の構造的観察
+
+(a) **想定外結果: stream_2 が 0 件 (想定 13 件)、stream_1_5 が 20 件 (想定 5 件)**:
+LLM の reasoning は技術的に整合 (例えば covered_002 米ロ停戦は「広範事件は
+日本でも報道済みだが、トランプ・プーチン直接交渉が既存 G7 合意を破壊する
+という特定角度は日本主要メディアで深掘り未報道」)。これは LLM の集約バイアス
+(stream_2 を選ぶ基準が厳しすぎる) または 4 分類定義の必然的帰結 (海外メディア
+の特定角度は日本で同フレームで報道されることが稀) のいずれかで、カズヤ
+レビューで判別する必要がある。
+
+(b) **3 分類版で stream_2 だった 13 件全てが stream_1_5 に移動**: covered 系列
+9 件 + blind_005/008 + 試運転 cls-7bd1406438b6 / cls-33b4f4960bf9_7K の全件。
+3 分類版の stream_2 が「広範事件レベルでの解釈差」を許容する緩い定義
+だったため数が多く見えたが、4 分類化で『特定角度レベル』に絞ると 0 になる
+構造を可視化。
+
+(c) **3 分類版で stream_1 だった 7 件が stream_1_5 に移動**: blind_002/004/009/
+010 + 試運転 3 件 (cls-204a683f73ee_7K / cls-6be4fc09d9ed / cls-a4132ec7d949)。
+F-particular-angle-design の DISCUSSION_NOTES 観察 1 で予測された変化と整合。
+
+(d) **Gemini API 503 高負荷で実行時間 1:36 hr**: 通常 6-7 分で完了する
+タスクが Tier 1 → Tier 2 → Tier 3 フォールバック多発のため大幅遅延。per-call
+timeout 90 秒 + incremental save の組み合わせで最終完走 (success=25 / error=0、
+timeout 警告 3 件 + 後続リトライで成功)。本バッチ内で第 1 試行 (kill 必要) →
+incremental save + timeout 追加 → 第 2 試行で完走、というスクリプト改善
+プロセスを経た。
+
+#### 不変原則違反
+
+なし (新規 scripts + docs のみ、src/ tests/ configs/ への変更なし)。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規追加:
+  - `scripts/reclassify_annotations.py` (4 分類化 LLM 再判定スクリプト、resume + incremental save + per-call timeout)
+  - `scripts/generate_review_draft_v2.py` (4 分類版 review_draft_v2.md 生成)
+  - `docs/runs/F-particular-angle-redesign/REPORT.md` (統合レポート)
+  - `docs/runs/F-particular-angle-redesign/reclassification_log.json` (実行ログ)
+  - `docs/runs/F-particular-angle-redesign/reclassification_diff.json` (3 → 4 分類差分)
+  - `docs/runs/F-particular-angle-redesign/reclassify_log.txt` (stdout/stderr)
+  - `docs/runs/F-particular-angle-redesign/review_draft_v2.md` (カズヤレビュー用)
+  - `docs/runs/F-particular-angle-design/annotations_v1_3class.json` (3 分類版バックアップ)
+- 改修:
+  - `scripts/finalize_annotations.py` (`--schema-version` 追加、4 分類対応関数 + 3 分類対応関数併存、golden_set v1.2 → v1.3 更新パス)
+  - `docs/PARTICULAR_ANGLE_DEFINITION.md` (3 分類 → 4 分類化、新サブセクション 1.1 / 3.5 追加、関連ファイル 3 サブセクション化)
+  - `docs/runs/F-particular-angle-design/annotations.json` (4 分類版に上書き、`legacy_stream_classification_v1` フィールド + 4 分類版 `stream_classification_estimate` + `broad_event_jp_coverage` / `particular_angle_jp_coverage` 新フィールド付与)
+- 更新:
+  - `docs/CURRENT_STATE.md` (全置換更新、F-particular-angle-redesign 完了反映)
+  - `docs/DECISION_LOG.md` (本エントリ追加)
+  - `docs/FUTURE_WORK.md` (本バッチを完了済みに移動、F-stream-2-filter-design の責務スコープ縮小可能性 + F-jp-coverage-tune の優先度上昇を追記)
+  - `docs/DISCUSSION_NOTES.md` (「2026-05-07: 系統 1.5 分類追加の検討」を Resolved 化、「2026-05-07: 台本表現課題」「2026-05-07: 動画化候補の系統分布実態」を 4 分類版データで更新)
+- 関連: F-particular-angle-design (前バッチ、3 分類版を確立 + DISCUSSION_NOTES 4 エントリ追加で本バッチの起点)、F-stream-2-filter-design (★ 本バッチ後カズヤレビュー結果で責務スコープ判断)、F-jp-coverage-tune (★ 本バッチで二段階クエリ生成の真値整備、優先度上昇)
+

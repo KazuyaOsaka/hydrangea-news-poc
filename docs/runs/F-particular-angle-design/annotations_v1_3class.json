@@ -1,26 +1,12 @@
 {
-  "version": "2.0",
-  "schema_version": "2.0",
-  "batch": "F-particular-angle-redesign",
-  "reclassified_at": "2026-05-07T14:36:19.305942+00:00",
-  "started_at": "2026-05-07T14:14:08.540231+00:00",
-  "previous_version": "1.0",
-  "previous_extracted_at": "2026-05-07T02:42:46.541356+00:00",
+  "version": "1.0",
+  "batch": "F-particular-angle-design",
+  "extracted_at": "2026-05-07T02:42:46.541356+00:00",
+  "started_at": "2026-05-07T02:36:03.405673+00:00",
   "llm_model": "gemini-analysis-tier-extended",
   "input_file": "docs/runs/F-particular-angle-design/input_events.json",
   "input_total_events": 25,
   "summary": {
-    "total": 25,
-    "stream_classification_estimate_distribution": {
-      "stream_2_framing_inversion": 0,
-      "stream_1_silence_gap": 4,
-      "out_of_scope": 1,
-      "stream_1_5_perspective_gap": 20,
-      "unknown": 0
-    },
-    "reclassification_errors": 0
-  },
-  "previous_summary_v1": {
     "total": 25,
     "extraction_confidence_distribution": {
       "high": 22,
@@ -50,10 +36,8 @@
       },
       "stream_classification_estimate": {
         "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "広範事件であるロシア外務省発表の具体的な民間人被害統計は、日本の主要メディアでは信憑性の懸念やプロパガンダ扱いにより殆ど報じられない情報空白の状態にある。また、特定角度であるグローバルサウス視点での情報の非対称性や西側メディアの偏向に関する構造分析も、日本国内では全く導入されていない。したがって、事象と分析視点の両方が日本の情報空間から欠落していると判断した。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "unreported",
-        "particular_angle_jp_coverage": "unreported"
+        "reasoning": "日本の主要メディアではウクライナ軍による民間人被害の具体的数値は殆ど報じられず、情報の空白（サイレンス・ギャップ）が顕著である。西側主導のナラティブを維持するために意図的に無視されている領域といえる。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -61,11 +45,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "日本の主要メディアではウクライナ軍による民間人被害の具体的数値は殆ど報じられず、情報の空白（サイレンス・ギャップ）が顕著である。西側主導のナラティブを維持するために意図的に無視されている領域といえる。",
-        "confidence": "high"
       }
     },
     {
@@ -80,11 +59,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "広範事件である「イスラエル兵によるキリスト像破壊」自体は日本の主要メディアで報道されているが、特定角度である「イスラエル最高宗教権威（ラビ庁）が非難を拒否した事実と、それが示す軍と宗教的過激主義の融合」という構造的分析は日本の報道では欠落している。事象そのものは既報だが、海外メディアが独自に掘り下げた構造分析の視点のみが未報道であるため、新設された stream_1_5 に該当する。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_1_silence_gap",
+        "reasoning": "事件本体は既報だが、ラビ庁の拒否という「宗教と軍の融合」を示す核心的な分析角度が日本の報道では完全に欠落しており、特定角度における情報の空白が顕著であるため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -92,11 +69,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "事件本体は既報だが、ラビ庁の拒否という「宗教と軍の融合」を示す核心的な分析角度が日本の報道では完全に欠落しており、特定角度における情報の空白が顕著であるため。",
-        "confidence": "high"
       }
     },
     {
@@ -112,10 +84,8 @@
       },
       "stream_classification_estimate": {
         "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "広範事件である『トルコによる二重国籍女性の拘束と米イスラエルによる救出劇』は、日本の主要メディアで報じられた形跡がなく、未報道の状態である。これに伴い、SNS監視が法執行に直結する地政学的リスクという特定角度も、日本の情報空間には全く存在していない。事象そのものと独自の分析視点の双方が欠落しているため、完全な情報空白であるstream_1と判定した。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "unreported",
-        "particular_angle_jp_coverage": "unreported"
+        "reasoning": "当該事象は日本国内で完全に未報道であり、中東メディアが指摘する「SNS活動家と法執行の連動」という現代的な地政学リスクの視点が日本の情報空間から脱落している。解釈の対立以前に、事象の存在自体が報じられていない情報の空白（Silence Gap）に該当する。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -123,11 +93,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "当該事象は日本国内で完全に未報道であり、中東メディアが指摘する「SNS活動家と法執行の連動」という現代的な地政学リスクの視点が日本の情報空間から脱落している。解釈の対立以前に、事象の存在自体が報じられていない情報の空白（Silence Gap）に該当する。",
-        "confidence": "high"
       }
     },
     {
@@ -142,11 +107,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "ガザにおける停電や病院の機能不全といった広範な人道危機事象は、日本の主要メディアでも連日詳細に報道されている。しかし、潤滑油の価格が100倍以上に暴騰しているという極めて具体的な経済的絞め殺しの実態や、それが中小企業の9割を廃業させ社会インフラを物理的に解体しているという構造的な分析視点は、日本の報道では欠落している。したがって、事象そのものは既知だが独自の分析角度が未報道である本件は、新設された1.5系統に合致する。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_1_silence_gap",
+        "reasoning": "日本の主要メディアではガザの悲劇を「戦争の付随的被害」として抽象的に報じる傾向が強く、潤滑油価格の100倍暴騰といった具体的な経済的絞め殺しのメカニズムは報じられていない。この情報の欠落は、現地の絶望的な構造を理解する上での重大なギャップである。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -154,11 +117,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "日本の主要メディアではガザの悲劇を「戦争の付随的被害」として抽象的に報じる傾向が強く、潤滑油価格の100倍暴騰といった具体的な経済的絞め殺しのメカニズムは報じられていない。この情報の欠落は、現地の絶望的な構造を理解する上での重大なギャップである。",
-        "confidence": "high"
       }
     },
     {
@@ -173,11 +131,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "スターマー首相の駐米大使人事を巡る国内政治スキャンダル（広範事件）は、日本の主要メディアでも国際ニュースとして報じられている。一方で、その国内問題よりもガザへの軍事的加担こそが真の政治的・道徳的スキャンダルであるという中東メディア独自の批判的視点（特定角度）は、日本の主要メディアでは取り上げられていない。事件本体は既知だが、構造的な分析角度が欠落している状態であるため、stream_1_5 に該当する。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_2_framing_inversion",
+        "reasoning": "スターマー首相の政治的窮地という事象自体は報じられているが、その「スキャンダルの本質」を国内人事からガザ加担へと転換させる視点は、日本や西側の主流報道には存在しない解釈の逆転であるため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -185,11 +141,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_2_framing_inversion",
-        "reasoning": "スターマー首相の政治的窮地という事象自体は報じられているが、その「スキャンダルの本質」を国内人事からガザ加担へと転換させる視点は、日本や西側の主流報道には存在しない解釈の逆転であるため。",
-        "confidence": "high"
       }
     },
     {
@@ -205,10 +156,8 @@
       },
       "stream_classification_estimate": {
         "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "広範事件である「ロシア大富豪のヨットがホルムズ海峡を通過した事実」自体が、日本の主要メディアでは当時ほとんど報じられておらず、情報の空白状態にある。また、特定角度である「ロシアとイランの地政学的結託による制裁網の無効化」という構造分析も、西側の制裁の有効性を前提とする日本メディアの論調からは完全に欠落している。したがって、事象と分析視点の両面において日本国内では未報道であると判断される。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "unreported",
-        "particular_angle_jp_coverage": "unreported"
+        "reasoning": "日本の主要メディアはウクライナ関連の制裁報道を「西側の団結」の文脈で扱うことが多く、ホルムズ海峡という特定の地政学的要衝における具体的な制裁回避の成功例や、イランによるロシアへの便宜供与という細部の事実は見落とされがちであるため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -216,11 +165,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "日本の主要メディアはウクライナ関連の制裁報道を「西側の団結」の文脈で扱うことが多く、ホルムズ海峡という特定の地政学的要衝における具体的な制裁回避の成功例や、イランによるロシアへの便宜供与という細部の事実は見落とされがちであるため。",
-        "confidence": "high"
       }
     },
     {
@@ -235,11 +179,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "ガザにおける深刻な水不足やインフラ破壊という広範な事象は日本の主要メディアで広く報じられている。一方で、国境なき医師団や国連が告発している『水の兵器化』や『意図的な集団的懲罰』という能動的な加害構造に焦点を当てた特定角度は、日本の報道では『紛争による人道危機の発生』という受動的な枠組みに留まっており、構造的分析としての視点は未報道である。したがって、事件本体は既報だが独自の分析角度が欠落している状態と判断した。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_2_framing_inversion",
+        "reasoning": "ガザの水不足自体は報じられているが、それをイスラエルによる「意図的なインフラ破壊と生存権の兵器化」と定義する視点は、西側・日本メディアの「戦闘に付随する悲劇」という標準的なフレーミングと明確に異なるため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -247,11 +189,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_2_framing_inversion",
-        "reasoning": "ガザの水不足自体は報じられているが、それをイスラエルによる「意図的なインフラ破壊と生存権の兵器化」と定義する視点は、西側・日本メディアの「戦闘に付随する悲劇」という標準的なフレーミングと明確に異なるため。",
-        "confidence": "high"
       }
     },
     {
@@ -266,11 +203,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "イランと米国の対立や中東の緊張状態という広範事件自体は、日本の主要メディアで日常的に報道されている既知の事実である。一方で、イラン革命防衛隊が制裁下の影の経済利権を維持するために意図的に紛争を長期化させているという経済構造的な特定角度は、日本の主要メディアでは殆ど掘り下げられていない。したがって、事件本体は報道済みだが独自の構造分析視点が欠落している状態に該当する。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_1_silence_gap",
+        "reasoning": "日本の主要メディアではイラン・米国間の対立を国家間の安全保障や外交問題として扱うのが主流であり、革命防衛隊の内部経済利権が紛争終結を阻んでいるという具体的な構造分析は殆ど報じられていない空白地帯であるため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -278,11 +213,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "日本の主要メディアではイラン・米国間の対立を国家間の安全保障や外交問題として扱うのが主流であり、革命防衛隊の内部経済利権が紛争終結を阻んでいるという具体的な構造分析は殆ど報じられていない空白地帯であるため。",
-        "confidence": "high"
       }
     },
     {
@@ -297,11 +227,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "イスラエルによるガザ攻撃や軍事行動という広範事件自体は、日本の主要メディアで連日詳細に報道されている。しかし、その動機をシオニズムという国家プロジェクト自体の構造的・歴史的な行き詰まりや内部崩壊の論理に求める特定角度の分析は、日本の主要メディアではほぼ皆無である。したがって、事件本体は既知だが構造分析の視点が欠落している状態と判断される。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_1_silence_gap",
+        "reasoning": "日本の主要メディアはガザの戦況やネタニヤフ政権への批判は報じるが、シオニズムという国家理念そのものの構造的危機に踏み込んだ分析はほぼ皆無である。この「視点の欠落」は、主流メディアが維持するイスラエル擁護的な枠組みを補完する沈黙として機能している。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -309,11 +237,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "日本の主要メディアはガザの戦況やネタニヤフ政権への批判は報じるが、シオニズムという国家理念そのものの構造的危機に踏み込んだ分析はほぼ皆無である。この「視点の欠落」は、主流メディアが維持するイスラエル擁護的な枠組みを補完する沈黙として機能している。",
-        "confidence": "high"
       }
     },
     {
@@ -328,11 +251,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "広範事件である米国の対イラン海上封鎖は、日本の主要メディアでも国際情勢の重要ニュースとして広く報道されている。一方で、特定角度である「海上封鎖が国際法上の開戦事由（casus belli）に該当するリスク」や「米国の非妥協的な前提条件による構造的対立」といった踏み込んだ分析は、米政府発表を追認する傾向の強い日本メディアでは欠落している。したがって、事件は既報だが視点が未報道である 1.5 系統に該当する。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_2_framing_inversion",
+        "reasoning": "主要メディアで既報の事件だが、報道内容が米政府の公式発表に沿った「対抗措置」というフレーミングに終始している。海外メディアが指摘する「一方的な現状変更」や「外交的解決の意図的拒絶」という解釈を提示することで、報道の多角化を図れるため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -340,11 +261,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_2_framing_inversion",
-        "reasoning": "主要メディアで既報の事件だが、報道内容が米政府の公式発表に沿った「対抗措置」というフレーミングに終始している。海外メディアが指摘する「一方的な現状変更」や「外交的解決の意図的拒絶」という解釈を提示することで、報道の多角化を図れるため。",
-        "confidence": "high"
       }
     },
     {
@@ -359,11 +275,9 @@
         "extraction_confidence": "medium"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "広範事件であるトランプ氏とプーチン氏の接触や停戦案の存在は日本の主要メディアでも報じられている。しかし、この動きがバイデン政権をバイパスし既存のG7合意や国際秩序を根底から破壊するという「外交的正当性と構造的影響」に関する踏み込んだ特定角度の分析は、日本国内では殆ど見られず中立的な事実報道に留まっている。したがって、事象は既報だが視点が未報である状態と判断した。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_2_framing_inversion",
+        "reasoning": "主要メディアで事象自体は報じられているが、解釈の軸が「トランプ氏の特異な動き」に留まっている。海外の視点を取り入れることで、これを「既存の西側外交の敗北」や「新たな地政学的リアリズム」として捉え直すフレーミングの逆転が可能であるため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -371,11 +285,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_2_framing_inversion",
-        "reasoning": "主要メディアで事象自体は報じられているが、解釈の軸が「トランプ氏の特異な動き」に留まっている。海外の視点を取り入れることで、これを「既存の西側外交の敗北」や「新たな地政学的リアリズム」として捉え直すフレーミングの逆転が可能であるため。",
-        "confidence": "high"
       }
     },
     {
@@ -390,11 +299,9 @@
         "extraction_confidence": "medium"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "広範事件である米国の関税政策更新とそれに対する日本の懸念は日経新聞等で既報ですが、米国が同盟国を対中包囲網のツールとして固定化・属国化させようとしているという構造的な批判的視点（特定角度）は、日本の主要メディアでは報道されていません。日本メディアは実務的な交渉の遅れという戦術的側面に終始しており、海外メディアが指摘する「経済的威圧」という戦略的フレーミングが欠落しているため、1.5 系統に該当します。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_2_framing_inversion",
+        "reasoning": "事象自体は日経等で既報だが、日本側は「日米関係の優先順位」という枠組みで捉えている。対して、海外メディアの特定角度は「米国の覇権的秩序再編」という上位のフレーミングを提示しており、解釈の優先順位に明確な差があるため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -402,11 +309,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_2_framing_inversion",
-        "reasoning": "事象自体は日経等で既報だが、日本側は「日米関係の優先順位」という枠組みで捉えている。対して、海外メディアの特定角度は「米国の覇権的秩序再編」という上位のフレーミングを提示しており、解釈の優先順位に明確な差があるため。",
-        "confidence": "high"
       }
     },
     {
@@ -421,11 +323,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "広範事件である教皇の復活祭メッセージや演説自体は、日経新聞等の日本主要メディアで「平和への祈り」という文脈で報道済みです。しかし、教皇がポピュリズムや宗教ナショナリズムといった具体的な政治潮流を構造的に批判しているという「特定角度」の分析は、日本の主要メディアでは報じられておらず、視点の欠落が確認できます。したがって、事象は既報だが独自の構造分析角度のみが未報道である stream_1_5 と判定します。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_2_framing_inversion",
+        "reasoning": "事象自体は日経等で既報だが、日本メディアが「道徳的な平和の訴え」として扱うのに対し、海外視点では「既存の権力構造や政治手法への鋭い介入」という全く異なるフレーミングで捉えられており、解釈の優先順位に大きな差があるため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -433,11 +333,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_2_framing_inversion",
-        "reasoning": "事象自体は日経等で既報だが、日本メディアが「道徳的な平和の訴え」として扱うのに対し、海外視点では「既存の権力構造や政治手法への鋭い介入」という全く異なるフレーミングで捉えられており、解釈の優先順位に大きな差があるため。",
-        "confidence": "high"
       }
     },
     {
@@ -452,11 +347,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "ブラジルが COP30 を開催することやアマゾンの森林破壊の現状については、NHK 等の主要メディアで既に現地取材を含め詳細に報道されている。しかし、ブラジルがこれを西側主導の気候秩序に対する「地政学的レバレッジ」や「経済的主権の確立」のための手段として利用しているという構造的な政治分析は、日本メディアでは殆ど触れられていない。したがって、広範事件は既報だが、特定の構造分析角度が欠落している状態と判断される。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_2_framing_inversion",
+        "reasoning": "日本メディアは既に現地取材を行っているが、そのフレーミングは「環境保護の成否」という人道・倫理的側面に偏っている。海外視点による「西側対グローバルサウスの構造的対立」という解釈の転換は、日本の視聴者に新たな視座を与えるため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -464,11 +357,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_2_framing_inversion",
-        "reasoning": "日本メディアは既に現地取材を行っているが、そのフレーミングは「環境保護の成否」という人道・倫理的側面に偏っている。海外視点による「西側対グローバルサウスの構造的対立」という解釈の転換は、日本の視聴者に新たな視座を与えるため。",
-        "confidence": "high"
       }
     },
     {
@@ -484,10 +372,8 @@
       },
       "stream_classification_estimate": {
         "estimated_stream": "out_of_scope",
-        "reasoning": "広範事件であるNVIDIAの株価最高値更新は、日経新聞やBloomberg JPなどの国内主要メディアで速報されている。特定角度である半導体特有の循環投資リスクについても、国内メディアが既に同様の警戒感を含めて報じており、情報の空白や解釈の乖離は存在しない。したがって、Hydrangeaが扱うべき独自の視点や構造分析の欠落は認められない。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "reported"
+        "reasoning": "日経新聞（Tier 1）で既に報じられている内容であり、日本国内での報道の空白（Stream 1）は存在しない。また、解釈において主流メディアと対立するような独自のフレーミング（Stream 2）も確認できないため、Hydrangeaの扱うべき範囲外である。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -495,11 +381,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "out_of_scope",
-        "reasoning": "日経新聞（Tier 1）で既に報じられている内容であり、日本国内での報道の空白（Stream 1）は存在しない。また、解釈において主流メディアと対立するような独自のフレーミング（Stream 2）も確認できないため、Hydrangeaの扱うべき範囲外である。",
-        "confidence": "high"
       }
     },
     {
@@ -514,11 +395,9 @@
         "extraction_confidence": "medium"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "広範事件であるナイジェリアでの大規模拉致については、共同通信の配信を通じて東京新聞等の主要メディアで既に報道されています。一方で、多額の国防予算を投じながら治安が悪化し続ける軍内部の汚職や構造的な統治不全という『特定角度』については、日本の主要メディアでは深掘りされておらず未報道の状態です。したがって、事件そのものは既報だが構造的視点が欠落している stream_1_5 に該当します。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_2_framing_inversion",
+        "reasoning": "日本でも共同通信経由で事象自体は報じられているが、単なる「遠い国の惨事」として扱われており、政府・軍の腐敗や統治能力の欠如といった権力構造への踏み込んだ分析が欠落しているため、解釈の転換が必要である。",
+        "confidence": "medium"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -526,11 +405,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_2_framing_inversion",
-        "reasoning": "日本でも共同通信経由で事象自体は報じられているが、単なる「遠い国の惨事」として扱われており、政府・軍の腐敗や統治能力の欠如といった権力構造への踏み込んだ分析が欠落しているため、解釈の転換が必要である。",
-        "confidence": "medium"
       }
     },
     {
@@ -545,11 +419,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "マリ国防相の死亡という広範事件自体は日本の主要メディアでも国際ニュースの速報として報道される可能性が高いが、世俗派とアルカイダ系の異例の共闘やロシア依存モデルの破綻という特定角度（構造分析）は日本の報道ではまず触れられない。事象の発生事実は認知されている一方で、海外メディアが掘り下げた地政学的な深層分析が完全に欠落している状態であるため、1.5 系統と判定した。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_2_framing_inversion",
+        "reasoning": "日本の主要メディアで事象自体は報じられているが、反政府勢力間の異例の連携やロシア依存モデルの機能不全といった「構造的失敗」の文脈は等閑視されており、解釈の優先順位と分析の深さに決定的な差がある。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -557,11 +429,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_2_framing_inversion",
-        "reasoning": "日本の主要メディアで事象自体は報じられているが、反政府勢力間の異例の連携やロシア依存モデルの機能不全といった「構造的失敗」の文脈は等閑視されており、解釈の優先順位と分析の深さに決定的な差がある。",
-        "confidence": "high"
       }
     },
     {
@@ -576,11 +443,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "広範事件であるインド・パキスタン間の軍事衝突やトランプ氏による仲介の事実は、日本の主要メディア（NHK等）で国際ニュースとして報道されている。しかし、核保有国間での精密攻撃の常態化がもたらす核抑止概念の変容や、既存の国際協調を排した個人的仲介が地政学構造に与える長期的リスクといった「特定角度」の深い構造分析は、日本メディアでは報じられていない。したがって、事象そのものは既報だが、海外メディア独自の分析視点が欠落している状態に該当する。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_2_framing_inversion",
+        "reasoning": "主要メディア（NHK）で事象自体は報じられているが、単なる「衝突と和解」という枠組みで扱われている。海外視点による「核抑止の定義変更」や「外交秩序の破壊」という解釈の深さと優先順位の差が顕著であるため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -588,11 +453,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_2_framing_inversion",
-        "reasoning": "主要メディア（NHK）で事象自体は報じられているが、単なる「衝突と和解」という枠組みで扱われている。海外視点による「核抑止の定義変更」や「外交秩序の破壊」という解釈の深さと優先順位の差が顕著であるため。",
-        "confidence": "high"
       }
     },
     {
@@ -607,11 +467,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "フーシ派によるイスラエルへのミサイル攻撃という広範事件自体は、日本の主要メディアでも国際ニュースとして速報・報道される。しかし、フーシ派がイランの「代理勢力」という受動的な立場を超え、イランを救済・支援する対等な「軍事同盟」の主体として振る舞っているという構造的変化（特定角度）は、日本の主要メディアでは分析・報道されていない。したがって、事件は既知だが独自の分析視点が欠落している状態に該当する。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_2_framing_inversion",
+        "reasoning": "ミサイル発射という事象自体は国内でも報じられているが、フーシ派を「支援を受ける側」ではなく「イランを支援する主体」として描くフレーミングは、西側メディアの「イランの代理人」という既存の解釈を逆転させる視点であるため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -619,11 +477,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_2_framing_inversion",
-        "reasoning": "ミサイル発射という事象自体は国内でも報じられているが、フーシ派を「支援を受ける側」ではなく「イランを支援する主体」として描くフレーミングは、西側メディアの「イランの代理人」という既存の解釈を逆転させる視点であるため。",
-        "confidence": "high"
       }
     },
     {
@@ -638,11 +491,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "広範事件であるパレスチナサッカー協会によるCASへの提訴自体は、時事通信などの国内主要メディアでも事実関係として報道されている。しかし、FIFAが15年間にわたり「政治的複雑さ」を口実に意図的な不作為を続けてきたという組織的な構造バイアスや、2026年W杯共催国カナダのビザ発給拒否といった具体的な地政学的波及効果という「特定角度」については、国内メディアでは掘り下げられていない。したがって、事件本体は既報だが構造分析角度が欠落している状態と判断される。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_2_framing_inversion",
+        "reasoning": "国内でも時事通信等が提訴の事実を報じているが、海外メディアはFIFAの長年の不作為やカナダのビザ発給拒否といった地政学的対立の深層を掘り下げている。単なるニュースの伝達ではなく、組織のダブルスタンダードを問う解釈の転換が含まれるため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -650,11 +501,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_2_framing_inversion",
-        "reasoning": "国内でも時事通信等が提訴の事実を報じているが、海外メディアはFIFAの長年の不作為やカナダのビザ発給拒否といった地政学的対立の深層を掘り下げている。単なるニュースの伝達ではなく、組織のダブルスタンダードを問う解釈の転換が含まれるため。",
-        "confidence": "high"
       }
     },
     {
@@ -669,11 +515,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "スターマー首相の国内的人事スキャンダル（マンデルソン・サガ）という広範事件は、日本の主要メディアでも国際情勢として報道されている。一方で、中東メディアが主張する「国内スキャンダルよりもガザへの軍事的加担こそが真の致命的不祥事である」という優先順位の逆転や、監視飛行・部品供給といった具体的な加担構造を突く特定角度は、日本国内では殆ど報じられていない。このため、事件本体は既知だが構造分析の視点が欠落している状態と判断した。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_2_framing_inversion",
+        "reasoning": "人事疑惑という広範な報道済み事象に対し、中東メディアが「真の不祥事はガザ政策である」という全く異なる優先順位と解釈（フレーミングの逆転）を提示している。日本メディアでは見落とされがちな「英国の軍事的加担」という視点を強調しているため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -681,11 +525,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_2_framing_inversion",
-        "reasoning": "人事疑惑という広範な報道済み事象に対し、中東メディアが「真の不祥事はガザ政策である」という全く異なる優先順位と解釈（フレーミングの逆転）を提示している。日本メディアでは見落とされがちな「英国の軍事的加担」という視点を強調しているため。",
-        "confidence": "high"
       }
     },
     {
@@ -700,11 +539,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "ガザ地区の戦闘や人道危機という広範事件は日本の主要メディアで連日詳細に報道されている。しかし、イスラエルによる部品供給制限が潤滑油価格の100倍暴騰を招き、中小企業の9割を廃業に追い込むといった『意図的な産業構造の破壊』という特定角度の構造分析は、日本の報道では殆ど見られない。事件本体は既報だが独自の分析視点が欠落しているため、stream_1_5 に該当する。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_1_silence_gap",
+        "reasoning": "日本の主要メディアではガザの惨状は報じられているものの、本記事が指摘する「産業破壊・社会変容」という具体的な経済構造の崩壊プロセスは未報道であると判定されているため、情報の空白を埋める Stream 1 に該当する。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -712,11 +549,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "日本の主要メディアではガザの惨状は報じられているものの、本記事が指摘する「産業破壊・社会変容」という具体的な経済構造の崩壊プロセスは未報道であると判定されているため、情報の空白を埋める Stream 1 に該当する。",
-        "confidence": "high"
       }
     },
     {
@@ -731,11 +563,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "米イラン合意という広範事件自体は日本の主要メディアでも外交ニュースとして広く報道されています。しかし、その裏側で発生した巨額のインサイダー取引疑惑や「TACOトレード」と呼ばれる外交情報の金融商品化という特定角度については、日本の主要メディアでは報じられていません。したがって、事件本体は既知だが構造分析の視点が欠落している状態と判断されます。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_1_silence_gap",
+        "reasoning": "日本の主要メディアは米イラン合意を外交ニュースとしてのみ扱っており、その裏で発生した巨額のインサイダー疑惑や「TACOトレード」という構造的問題については報じておらず、情報の空白（サイレンス・ギャップ）が生じているため。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -743,11 +573,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "日本の主要メディアは米イラン合意を外交ニュースとしてのみ扱っており、その裏で発生した巨額のインサイダー疑惑や「TACOトレード」という構造的問題については報じておらず、情報の空白（サイレンス・ギャップ）が生じているため。",
-        "confidence": "high"
       }
     },
     {
@@ -763,10 +588,8 @@
       },
       "stream_classification_estimate": {
         "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "広範事件であるカリーニングラードでの焼身自殺という抗議行動自体が、日本の主要メディアではウクライナ侵攻3周年のマクロな戦況や制裁の報道に終始しており報じられていない。また、ロシア独立系メディア連合による当局の組織的な情報隠蔽プロセスの追跡という特定角度についても、日本国内での報道は確認できない。事象と構造分析の両面で情報の空白が存在する完全なサイレンス・ギャップである。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "unreported",
-        "particular_angle_jp_coverage": "unreported"
+        "reasoning": "日本の主要メディアではウクライナ侵攻 3 周年のマクロな総括に終始しており、カリーニングラードでの焼身自殺という具体的な抗議事件およびその隠蔽事実は報じられていない。情報の空白（サイレンス・ギャップ）を埋める価値が高い。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -774,11 +597,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "日本の主要メディアではウクライナ侵攻 3 周年のマクロな総括に終始しており、カリーニングラードでの焼身自殺という具体的な抗議事件およびその隠蔽事実は報じられていない。情報の空白（サイレンス・ギャップ）を埋める価値が高い。",
-        "confidence": "high"
       }
     },
     {
@@ -793,11 +611,9 @@
         "extraction_confidence": "high"
       },
       "stream_classification_estimate": {
-        "estimated_stream": "stream_1_5_perspective_gap",
-        "reasoning": "ロンドンでのパレスチナ支持デモや警察との緊張関係という広範事件自体は、日本の主要メディアでも国際ニュースとして報じられています。一方で、警視庁総監個人のインタビュー発言が「合意済みのデモルートを無視した不当なレッテル貼り」であるとして法的苦情を申し立てられたという、権力側による情報操作や中立性を問う具体的な特定角度は報じられていません。事件本体は既報ですが、当局のバイアスを告発する構造分析の視点が欠落しているため、1.5 系統と判定します。",
-        "confidence": "high",
-        "broad_event_jp_coverage": "reported",
-        "particular_angle_jp_coverage": "unreported"
+        "estimated_stream": "stream_1_silence_gap",
+        "reasoning": "日本の主要メディアでロンドン警視庁総監個人のインタビュー発言に対する法的な異議申し立てという細部が報じられる可能性は極めて低い。権力側によるプロパガンダ的側面に焦点を当てたこの視点は、日本における報道の空白（Silence Gap）に該当する。",
+        "confidence": "high"
       },
       "extraction_error": null,
       "kazuya_review": {
@@ -805,11 +621,6 @@
         "stream_classification_revised": null,
         "review_note": null,
         "reviewed_at": null
-      },
-      "legacy_stream_classification_v1": {
-        "estimated_stream": "stream_1_silence_gap",
-        "reasoning": "日本の主要メディアでロンドン警視庁総監個人のインタビュー発言に対する法的な異議申し立てという細部が報じられる可能性は極めて低い。権力側によるプロパガンダ的側面に焦点を当てたこの視点は、日本における報道の空白（Silence Gap）に該当する。",
-        "confidence": "high"
       }
     }
   ]

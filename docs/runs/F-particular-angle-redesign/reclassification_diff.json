@@ -1,0 +1,138 @@
+{
+  "version": "1.0",
+  "batch": "F-particular-angle-redesign",
+  "generated_at": "2026-05-07T14:36:19.308274+00:00",
+  "total_events": 25,
+  "summary": {
+    "changed_count": 20,
+    "unchanged_count": 5,
+    "transitions": {
+      "stream_1_silence_gap -> stream_1_silence_gap": 4,
+      "stream_1_silence_gap -> stream_1_5_perspective_gap": 7,
+      "stream_2_framing_inversion -> stream_1_5_perspective_gap": 13,
+      "out_of_scope -> out_of_scope": 1
+    }
+  },
+  "changed_events": [
+    {
+      "event_id": "blind_002",
+      "title": "Israel's top Jewish religious body 'refuses to condemn' smashing of Jesus statue",
+      "before": "stream_1_silence_gap",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "blind_004",
+      "title": "In Gaza, life flickers as power cuts shatter livelihoods and healthcare",
+      "before": "stream_1_silence_gap",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "blind_005",
+      "title": "Gaza was the scandal that should have ended Keir Starmer's political career",
+      "before": "stream_2_framing_inversion",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "blind_008",
+      "title": "Israel accused of using 'water as a weapon' against Palestinians in Gaza",
+      "before": "stream_2_framing_inversion",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "blind_009",
+      "title": "The real reason Iran and the US cannot end the war: Money",
+      "before": "stream_1_silence_gap",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "blind_010",
+      "title": "Israel's policy of endless war is fuelled by the crisis of Zionism",
+      "before": "stream_1_silence_gap",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "covered_001",
+      "title": "ホルムズ海峡めぐりアメリカの対イラン封鎖始まる イランは反発",
+      "before": "stream_2_framing_inversion",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "covered_002",
+      "title": "米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』",
+      "before": "stream_2_framing_inversion",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "covered_003",
+      "title": "米中 関税協議 / 通商交渉 (2026 年 4 月)",
+      "before": "stream_2_framing_inversion",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "covered_004",
+      "title": "ローマ教皇『多数派の専制』を警告 民主主義に危機感",
+      "before": "stream_2_framing_inversion",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "covered_005",
+      "title": "ブラジル ルラ政権、アマゾン開催の COP30 で狙うグローバルサウス主導役",
+      "before": "stream_2_framing_inversion",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "covered_007",
+      "title": "ナイジェリアで 100 人拉致 過激派襲撃、死者多数か",
+      "before": "stream_2_framing_inversion",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "covered_008",
+      "title": "マリ 軍事政権に反政府勢力が一斉攻撃 暫定国防相死亡",
+      "before": "stream_2_framing_inversion",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "covered_009",
+      "title": "インド・パキスタン カシミール 緊張 (4 月 22 日テロ攻撃 + 5 月 7-10 日 Operation Sindoor)",
+      "before": "stream_2_framing_inversion",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "covered_010",
+      "title": "イエメン・フーシ派、イスラエルに弾道ミサイル発射し『イラン支援』を公式表明",
+      "before": "stream_2_framing_inversion",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "cls-7bd1406438b6",
+      "title": "Palestine football appeals Fifa decision to do nothing about Israeli clubs in illegal settlements",
+      "before": "stream_2_framing_inversion",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "cls-33b4f4960bf9_7K",
+      "title": "Gaza was the scandal that should have ended Keir Starmer's political career",
+      "before": "stream_2_framing_inversion",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "cls-204a683f73ee_7K",
+      "title": "In Gaza, life flickers as power cuts shatter livelihoods and healthcare",
+      "before": "stream_1_silence_gap",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "cls-6be4fc09d9ed",
+      "title": "'Insider trading': Oil and stocks jolt on news of US-Iran deal as some cry 'manipulation'",
+      "before": "stream_1_silence_gap",
+      "after": "stream_1_5_perspective_gap"
+    },
+    {
+      "event_id": "cls-a4132ec7d949",
+      "title": "Legal complaint filed by Palestine activists against Met Police chief over synagogue remarks",
+      "before": "stream_1_silence_gap",
+      "after": "stream_1_5_perspective_gap"
+    }
+  ]
+}
