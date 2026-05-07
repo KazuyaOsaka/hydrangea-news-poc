@@ -3044,3 +3044,129 @@ F-stream-2-filter-design 着手 OK。
   F-jp-coverage-tune (本バッチで再確認された Recall 課題の対処バッチ、
   着手再開条件達成)、F-stream-2-filter-design (本バッチ完了で着手 OK 状態に)
 
+## 2026-05-07: F-particular-angle-design — 「特定角度」概念の docs 化 + LLM ベースアノテーション 25 件
+
+### 背景
+
+F-trial-run-post-fix (2026-05-07) で Phase A.5-3a-verify ゲート完了が確定したが、
+本番試運転と過去 7-K 後追いで重要な発見があった: 試運転 Slot-1 (Insider trading) は
+WebSearch で nikkei (Tier 1) / jiji / bloomberg (Tier 2) で広範報道済みだったが
+MEE オリジナル「インサイダー取引疑惑 + 国家による金融兵器化」角度は未報道、過去
+7-K Slot-2 (Mandelson) は Tier 1-2 広範報道済みだが MEE オリジナル「Gaza 道徳的責任」
+角度は未報道、というパターン。これを系統 1 (silence_gap) と系統 2 (framing_inversion) に
+分類する際、判定対象を「広範事件」レベルで取ると両系統で重複ケースが発生し、
+F-stream-2-filter-design + F-jp-coverage-tune の仕様化が曖昧になる。カズヤとの
+議論 (2026-05-07) で「重複しないように定義すればよくね?」 = 判定対象を『特定角度』
+(MEE/海外メディアが独自に掘った視点) に限定すれば重複は構造的に消える、という
+結論に到達。本バッチは Phase A.5-3a-verify ゲート完了後の最初のバッチで、
+F-stream-2-filter-design + F-jp-coverage-tune の共通基盤 (= 「特定角度」概念の
+正典 docs + 25 件アノテーション) を確立する性格を持つ。
+
+### 議論
+
+(a) 「特定角度」概念の docs 化方針: 後続 2 バッチが同じ判定単位を参照できる
+正典 docs として `docs/PARTICULAR_ANGLE_DEFINITION.md` を新規作成。bullet 形式
+ではなく散文展開で系統 1 vs 系統 2 の責務分離 / 4 軸との関係 / multi_angle_analysis
+5 観点との関係 / media_divergence 観点との関係 / 抽出の難所まで網羅。
+(b) アノテーション方式: カズヤ手動 0 件 (= 全件 LLM 抽出 → カズヤレビュー方式)
+を採用。理由は 25 件を全件カズヤ手作業すると 3-5 時間かかるが、LLM 一次抽出 +
+カズヤレビューなら 1-2 時間で済む。LLM 出力は信頼ではなく初案として扱い、
+カズヤレビューで `kazuya_review.*_revised` フィールドを上書きする方式。
+(c) LLM モデル: Gemini Flash analysis Tier (既存 `get_analysis_llm_client()`
+経由) を採用。既存 LLM 抽象との整合 + Tier フォールバック + 予算管理を継承。
+ただし `max_output_tokens` は既定の 2000 では本プロンプトで JSON が途中切断
+される事象を覚知 (試行 1-2 で 6-7 件失敗) し、本スクリプトで `max_output_tokens=4096`
+の専用クライアントを構築する設計に変更 (試行 3 で 0 errors)。
+(d) golden_set v1.2 への統合範囲: 試運転 6 件 (7-K 3 + 2026-05-07 3) は
+golden_set には統合せず、`stream_classification.json` で全 25 件まとめて管理する
+責務分離を採用。理由は golden_set は計測精度の真値セットとして 19 件構成を
+維持する必要があり、試運転データはノイズになる。
+
+### 決定
+
+(1) ★ 「特定角度」概念採用: 系統 1 / 系統 2 / 対象外の判定対象を「広範事件」では
+なく「特定角度 (海外メディアが独自に掘った視点)」に限定。論理フローは Step 1
+(4 軸該当) → Step 2 (日本未報道) → Step 3 (解釈差) の 3 段階。これを
+`docs/PARTICULAR_ANGLE_DEFINITION.md` で正典化。
+
+(2) ★ LLM ベースアノテーション (カズヤ手動 0 件) 採用: 25 件全件を Gemini で
+一次抽出 → カズヤレビュー → `scripts/finalize_annotations.py` で最終化、の
+2 段階フロー。本バッチは Task A-E + G を完了させ、Task F (カズヤレビュー) は
+本バッチ内では実行しない。
+
+(3) ★ 系統 1/系統 2/対象外 の判定基準確定 (LLM 推定段階): stream_1_silence_gap=11、
+stream_2_framing_inversion=13、out_of_scope=1。covered 系列の 9/10 件が
+stream_2 に分類され、これは「日本主要メディアで報道済みの事象でも海外メディアの
+掘り下げ角度には解釈差があり stream_2 候補となる」という LLM 判断傾向。
+カズヤレビューで再評価され、最終確定値は `stream_classification.json` に記録される。
+
+(4) ★ F-stream-2-filter-design + F-jp-coverage-tune への共通基盤確立:
+本バッチで `docs/PARTICULAR_ANGLE_DEFINITION.md` + 25 件アノテーションを整備
+することで、後続 2 バッチが「特定角度」を共通の判定単位として実装できる
+状態に。F-stream-2-filter-design は系統 2 救出の 2 段階フィルタ実装、
+F-jp-coverage-tune は Grounding 検索クエリの「特定角度」ベース化。
+
+(5) ★ src/ tests/ configs/ への変更なし: 本バッチは新規 scripts/
+(extract_particular_angle.py / finalize_annotations.py) + 新規 docs
+(PARTICULAR_ANGLE_DEFINITION.md / runs/F-particular-angle-design/ 配下) +
+docs 更新のみ。baseline 1345 passed 維持。
+
+### 結果
+
+#### Task 別実施結果
+
+| Task | 状態 | 主要成果物 |
+|---|---|---|
+| A | ✅ | `docs/PARTICULAR_ANGLE_DEFINITION.md` (新規、5 セクション散文展開) |
+| B | ✅ | `scripts/extract_particular_angle.py` (新規、`max_output_tokens=4096` 専用クライアント + パーサ最小修復) |
+| C | ✅ | `docs/runs/F-particular-angle-design/input_events.json` (25 件統合: golden_set 19 + 7-K 3 + 2026-05-07 3) |
+| D | ✅ | `annotations.json` (extraction_confidence: high=22 / medium=3、stream 推定: 系統 1=11 / 系統 2=13 / 対象外=1、errors=0) |
+| E | ✅ | `review_draft.md` (655 行、25 events フォーマット統一) |
+| F | ★ 待ち | カズヤ手動レビュー (本バッチ内では未実行) |
+| G | ✅ | `scripts/finalize_annotations.py` (新規、annotation_diff + stream_classification + golden_set v1.2 を生成) |
+| H | ✅ | `REPORT.md` + DECISION_LOG (本エントリ) + FUTURE_WORK + DISCUSSION_NOTES + CURRENT_STATE |
+
+#### LLM 抽出の構造的観察
+
+(a) golden_set v1.1 の `stream_2_candidate` メタ付き 4 件 (blind_002/004/005/009)
+のうち 3 件 (blind_002/004/009) が LLM では stream_1 に分類された。これは v1.1 で
+「広範事件は報道済み = True、特定角度は系統 2 候補」とラベルしていたが、
+判定対象を『特定角度』に限定すると同じ事象でも『特定角度自体は日本未報道』と
+読める可能性があることを示唆。カズヤレビューで再評価される。
+
+(b) 試運転 2026-05-07 の Insider trading (cls-6be4fc09d9ed) は LLM が stream_1 と
+判定。F-trial-run-post-fix WebSearch 後追いで広範事件は Tier 1-2 報道済みと判明
+していたが、特定角度 (国家規模インサイダー取引疑惑) は日本主要メディアで
+深掘り未報道、と LLM が判定。「特定角度」概念の有効性を示唆する事例。
+
+(c) 試行 1-2 で max_output_tokens=2000 による JSON 途中切断を覚知 (6-7 件失敗)、
+4096 への拡張で 0 errors 達成。analysis_llm_client 既定の 2000 tokens は
+本タスクには不十分という観察を F-stream-2-filter-design 着手時の判断材料に。
+
+#### 不変原則違反
+
+なし (新規 scripts + docs のみ、src/ tests/ configs/ 変更なし)。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規追加:
+  - `docs/PARTICULAR_ANGLE_DEFINITION.md` (「特定角度」概念正典 docs)
+  - `scripts/extract_particular_angle.py` (LLM ベース特定角度抽出スクリプト)
+  - `scripts/finalize_annotations.py` (カズヤレビュー後の最終化スクリプト)
+  - `docs/runs/F-particular-angle-design/input_events.json` (25 件入力統合)
+  - `docs/runs/F-particular-angle-design/annotations.json` (LLM 抽出結果)
+  - `docs/runs/F-particular-angle-design/review_draft.md` (カズヤレビュー用 Markdown)
+  - `docs/runs/F-particular-angle-design/extraction_log.txt` (抽出実行ログ)
+  - `docs/runs/F-particular-angle-design/REPORT.md` (統合レポート)
+- 変更:
+  - `docs/CURRENT_STATE.md` (全置換更新、F-particular-angle-design 完了反映)
+  - `docs/DECISION_LOG.md` (本エントリ追加)
+  - `docs/FUTURE_WORK.md` (F-particular-angle-design 完了済み移動 +
+    F-stream-2-filter-design + F-jp-coverage-tune の前提に「F-particular-angle-design 完了」を追記)
+  - `docs/DISCUSSION_NOTES.md` (系統 1 判定基準明確化エントリと系統 2 設計エントリを
+    本バッチ結果で更新 + 新規エントリ「特定角度抽出の LLM 限界観察」)
+- 関連: F-trial-run-post-fix (前バッチ、本バッチの背景となる 6 件実例を提供)、
+  F-stream-2-filter-design (★ 本バッチで共通基盤確立、即着手 OK)、
+  F-jp-coverage-tune (本バッチの「特定角度」概念を検索クエリ生成に転用)
+

@@ -1,6 +1,6 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-07 (F-trial-run-post-fix 完了、Phase A.5-3a-verify ゲート完了時点)
+最終更新: 2026-05-07 (F-particular-angle-design 完了、「特定角度」概念正典化 + 25 件 LLM アノテーション完了時点)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -13,6 +13,80 @@
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-07: 特定角度抽出の LLM 限界観察 (F-particular-angle-design で観察)
+
+**背景**:
+F-particular-angle-design (2026-05-07) で 25 件の特定角度を Gemini analysis Tier
+で抽出した結果、いくつかの構造的観察が得られた。
+
+**観察 1: golden_set v1.1 stream_2_candidate メタとの差分**:
+v1.1 で `stream_2_candidate` メタを付与した 4 件 (blind_002 / blind_004 /
+blind_005 / blind_009) のうち、3 件 (blind_002 / blind_004 / blind_009) が
+LLM では `stream_1_silence_gap` に分類された。これは判定対象を「広範事件」から
+「特定角度」に絞ると同じ事象でも結論が変わる構造を示唆する事例。
+- blind_002 (Israel Jewish religious body): v1.1 では「像破壊事件本体は朝日・
+  日経で報道済み = stream_2_candidate」、LLM では「ラビ庁拒否という特定角度自体は
+  日本主要メディアで未報道 = stream_1_silence_gap」
+- blind_004 (Gaza power cuts): v1.1 では「ガザ電力危機本体は東京新聞で報道済み」、
+  LLM では「潤滑油 100 倍 / 産業構造の物理的解体という特定角度は日本未報道」
+- blind_009 (Iran-US war money): v1.1 では「戦争長期化の経済的理由は SPF/JBpress 等で
+  解説」、LLM では「制裁収益分配・革命防衛隊利権という特定角度は日本未報道」
+
+ただしこれは LLM 判断であり、カズヤレビューで再評価される。重要なのは「広範事件」
+vs「特定角度」の判定単位差で結論が変わる構造そのものの可視化。
+
+**観察 2: covered 系列 9/10 件が stream_2 に分類**:
+covered 系列 (= 日本主要メディアで広範事件は報道済みの 10 件) のうち 9 件が
+LLM では `stream_2_framing_inversion` に分類された (covered_006 NVIDIA 株式
+のみ out_of_scope)。これは LLM が「日本主要メディアで報道済みの事象でも、
+海外メディアの掘り下げ角度には解釈差があり stream_2 候補となる」と読む傾向を
+示す。F-stream-2-filter-design が処理する候補数の見積もり材料になる
+(= 系統 2 として救出される事象は『日本未報道』に限らず、『日本報道済み + 解釈差』も
+含む)。
+
+**観察 3: max_output_tokens=2000 では分析タスクで途中切断**:
+試行 1-2 で `get_analysis_llm_client()` 既定の max_output_tokens=2000 で
+6-7 件の JSON 途中切断 (= "Unterminated string" パース失敗) が発生。
+4096 への拡張で 0 errors 達成。analysis_llm_client 既定値は本タスクには
+不十分という観察を F-stream-2-filter-design で同種の LLM 分析を行う際の
+判断材料として記録。
+
+**観察 4: extraction_confidence の分布**:
+high=22 / medium=3 / low=0 / unknown=0。medium 3 件は covered_002 (米ロ停戦)、
+covered_003 (米中関税)、covered_007 (ナイジェリア拉致)。これらは『広範事件は
+日本でもガッツリ報道済み + MEE/海外特有の特定角度が薄い』タイプで、LLM が
+4 軸該当性の判断に自信を持てなかった (= 解釈差を抽出しにくい)。系統 2 候補の
+中でも解説価値の濃淡があることを示唆。
+
+**論点**:
+- (a) カズヤレビュー後に LLM 出力との差分が大きい場合、プロンプト改善の
+  余地ありと判断 → F-stream-2-filter-design でプロンプトを微調整
+- (b) covered 系列の stream_2 一括分類が「LLM の集約バイアス」(系統 2 寄りの
+  判定をしがち) なのか、本当に解説価値のある事象なのかを確認する必要 →
+  F-stream-2-filter-design で第二段階の解説価値判定を厳しくする設計の
+  根拠データになる
+- (c) max_output_tokens 既定値の見直し (=4096 に上げる方針) を analysis 系の
+  全 LLM 呼び出しに適用すべきかは別議論
+
+**Hydrangea コアミッションへの影響**:
+- 「特定角度」概念導入で系統 1 / 系統 2 の判定が排他になり、両系統並立の
+  実装基盤が確立した
+- ただし LLM 一次推定の精度はカズヤレビューで検証する必要があり、過度に
+  LLM 推定を信頼しないことが重要
+
+**出典**:
+- F-particular-angle-design REPORT.md セクション 5 (LLM 抽出結果) + セクション 7.1
+  (興味深い観察)
+- `docs/runs/F-particular-angle-design/annotations.json` 25 件の実データ
+- `docs/runs/F-particular-angle-design/extraction_log.txt` 試行 1-2-3 の
+  パース失敗ログ
+- DECISION_LOG (F-particular-angle-design / 2026-05-07)
+
+**ステータス**: `Active` (カズヤレビュー後に再評価、観察 1 の 3 件の差分が
+解消されればステータス変更可。観察 3 は F-stream-2-filter-design 着手時に
+判断材料として参照、観察 2/4 は同バッチで第二段階の解説価値判定設計の
+根拠データになる)
 
 ### 2026-05-07: F-13.B Grounding 検索クエリ品質問題 — 英語タイトルクエリでの youtube.com 偏重 (F-trial-run-post-fix で観測)
 
@@ -125,8 +199,20 @@ F-13.B JpCoverageVerifier は「日本未報道か否か」の機械的判定の
 - **出典**: F-verify-jp-coverage-golden-fix (2026-05-04) のカズヤレビュー +
   `docs/runs/F-verify-jp-coverage/golden_set.json` v1.1 changelog +
   本エントリ自体が判定基準の正本
-- **ステータス**: `Active` (Phase A.5-3b 系統 2 ロジック実装時に参照、
-  F-stream-2-filter-design でも参照される判定基準)
+
+**2026-05-07 更新 (F-particular-angle-design 完了反映)**:
+4 軸構造は維持しつつ、判定対象が「広範事件」から「特定角度」に絞られた
+(F-particular-angle-design / 2026-05-07)。これは系統 1 / 系統 2 / 対象外の
+判定が広範事件レベルだと両系統で重複する問題を構造的に消すための変更。
+詳細は `docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 2-3 参照。
+4 軸該当性 (本エントリの内容) は「特定角度が 4 軸のいずれかに該当するか」を
+判定する Step 1 として `docs/PARTICULAR_ANGLE_DEFINITION.md` の論理フロー
+内に組み込まれ、本エントリは引き続き 4 軸の正本として機能する。
+
+- **ステータス**: `Active` (★ F-particular-angle-design / 2026-05-07 で
+  「特定角度」概念と統合、`docs/PARTICULAR_ANGLE_DEFINITION.md` を判定基準
+  正典として参照する運用に。Phase A.5-3b 系統 2 ロジック実装時 +
+  F-stream-2-filter-design + F-jp-coverage-tune で参照される判定基準)
 
 ### 2026-05-03: F-13.B 動作仕様の検討課題 — タイトルクエリで広範な事件を引き当てる構造 (F-verify-jp-coverage-golden で観察)
 - **内容**: F-verify-jp-coverage-golden のゴールデンセット作成中に、blind 候補

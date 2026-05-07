@@ -1,6 +1,6 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-07 (F-trial-run-post-fix 完了、Phase A.5-3a-verify ゲート完了)
+最終更新: 2026-05-07 (F-particular-angle-design 完了、「特定角度」概念の docs 化 + 25 件 LLM アノテーション)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -100,20 +100,25 @@ F-stream-2-filter-design 着手 OK 状態に。
     2. **英語タイトルクエリの日本語化**: F-trial-run-post-fix で観測された「英語タイトル + 『日本 報道』では Grounding が youtube.com 偏重」問題への対処。LLM で英語タイトルから日本語キーワードを抽出してクエリを構築する案
     3. **FP (2 件、両方 diamond.jp) の Precision 改善**: ゴールデン真値再評価 (diamond.jp が実際に該当事象を報じていたかの再確認)、または Tier 4 重み付け (diamond.jp / newsweekjapan / toyokeizai を Tier 1 並みに信頼するか議論)
     4. **Tier 一致率 30% の改善**: Grounding が Tier 4 (newsweekjapan / toyokeizai / diamond) を Tier 1 より先に返す傾向を観測。`_match_whitelist` の Tier 判定ロジックは複数 Tier 同時マッチ時に highest_tier を採用しているが、API レスポンス自体に Tier 1 が含まれない場合は Tier 4 のみ。クエリ改善で Tier 1 ソースを引き当てる方が根本解
-  - 前提: ★ F-trial-run-post-fix 完了済み (2026-05-07) → 即着手可能
+  - 前提: ★ F-trial-run-post-fix 完了済み (2026-05-07) + ★ F-particular-angle-design 完了済み (2026-05-07、「特定角度」概念 docs + 25 件アノテーション) → 即着手可能
+  - 対応軸への補強 (F-particular-angle-design / 2026-05-07 で確立): 「特定角度」概念で検索クエリを生成する案 = 軸 2 (英語タイトル → 日本語キーワード抽出) を発展させ、LLM で「特定角度の日本語フレーズ」を抽出して Grounding クエリに混入する設計を採用できる。docs/runs/F-particular-angle-design/annotations.json の `particular_angle.core_question` は『特定角度を 1-2 文で表現したテキスト』なので、これを LLM 経由で日本語キーワードに圧縮するパイプラインを試作可能。
   - 検討時期: F-stream-2-filter-design と並行可 (Phase A.5-3a-verify ゲート完了済みのため、ゲート完了の必須条件ではない)
   - 想定工数: 3-5 時間 (クエリ最適化 + ゴールデン真値再評価 + 計測再々実行 + F-trial-run-post-fix の試運転データで本番再現性も確認)
-  - 関連ファイル: `src/triage/jp_coverage_verifier.py` (`_build_search_query` 等のクエリ生成ロジック)、`docs/runs/F-verify-jp-coverage/golden_set.json` (真値再評価)、`scripts/verify_jp_coverage_measure.py` (再実行)、`docs/runs/F-trial-run-post-fix/` (本番再現性データ)
-  - 関連: F-jp-coverage-improve REPORT.md v2 残課題セクション、F-trial-run-post-fix REPORT.md セクション 7.1 (Recall 観点の課題)
+  - 関連ファイル: `src/triage/jp_coverage_verifier.py` (`_build_search_query` 等のクエリ生成ロジック)、`docs/runs/F-verify-jp-coverage/golden_set.json` (v1.2、F-particular-angle-design で `particular_angle` フィールド付与)、`scripts/verify_jp_coverage_measure.py` (再実行)、`docs/runs/F-trial-run-post-fix/` (本番再現性データ)、`docs/runs/F-particular-angle-design/annotations.json` (特定角度抽出結果)、`docs/PARTICULAR_ANGLE_DEFINITION.md` (判定基準正典)
+  - 関連: F-jp-coverage-improve REPORT.md v2 残課題セクション、F-trial-run-post-fix REPORT.md セクション 7.1 (Recall 観点の課題)、F-particular-angle-design REPORT.md セクション 9 (引き継ぎ事項)
 
 - **F-stream-2-filter-design** ★最優先 (F-verify-jp-coverage-golden-fix / 2026-05-04 で派生、F-verify-jp-coverage-measure / 2026-05-05 で着手保留 → F-jp-coverage-improve / 2026-05-07 で再開条件更新 → ★ F-trial-run-post-fix / 2026-05-07 で着手 OK 状態に)
   - 背景: Hydrangea コアミッション系統 2 (報道差の背景解説) を担う 2 段階フィルタの第 2 段階を実装する。系統 1 (F-13.B) では「広範な事件は報道済み」と弾かれるが、特定の構造分析角度 (地政学・文化・政治の意図) が日本未報道で解説価値ある事象を捕捉する。F-verify-jp-coverage-golden-fix で 4 件 (blind_002/004/005/009) が系統 2 候補として stream_2_candidate メタ付きで識別済み。F-jp-coverage-improve (2026-05-07) 修正後の再測定では stream_2_candidate 4 件中 3 件が True 判定 (blind_005 のみ FN) と動作確認できた。F-trial-run-post-fix (2026-05-07) で試運転 7-K 過去動画化 3 件のうち 2 件 (Slot-1 FIFA / Slot-2 Mandelson) が典型的 stream_2_candidate パターンと判明 (Tier 1-2 報道済みだが MEE オリジナル角度は未報道) → 系統 2 ターゲットの実例が **golden set 4 件 + 試運転 7-K 2 件 = 6 件** に拡大。
-  - ★ **着手 OK 状態 (2026-05-07 更新、Phase A.5-3a-verify ゲート完了)**: F-jp-coverage-improve で構造的不具合解消、F-trial-run-post-fix で本番動作確認済み。Phase A.5-3a-verify ゲート完了 (1-A〜1-D''' 全完了) で着手再開条件達成。F-jp-coverage-tune (Recall/Precision/Tier 一致率閾値達成) の完了は本バッチの **必須前提ではない** (構造的に動いていれば系統 2 設計は進められる) — 並行可。
-  - 対応案: (1) 既存の framing_inversion 軸 + multi_angle_analysis 5 観点 + media_divergence 観点を統合した「3 ソース対比ルール + 解説価値判定」を新規実装。(2) パイプライン位置は F-13.B の下流 (報道済み判定後)。(3) 系統 2 ターゲット候補に対して LLM が「角度の差が存在するか」「解説価値があるか (5 観点のいずれか)」を判定。(4) ゴールデンセットの 4 件 + WebSearch で追加収集した系統 2 ターゲット候補数件で精度測定。(5) 不変原則順守 (article_writer 変更不可、script_writer 既存ルート変更不可、src/triage/ 既存ファイル変更不可、src/analysis/ 変更不可、新規追加のみ)。
-  - 検討時期: F-trial-run-post-fix 完了後、Phase A.5-3b 着手前 (★PoC は PoC に集中するため、フィルタを事前に確定)
+  - ★ **着手 OK 状態 (2026-05-07 更新、Phase A.5-3a-verify ゲート完了 + F-particular-angle-design 共通基盤確立)**: F-jp-coverage-improve で構造的不具合解消、F-trial-run-post-fix で本番動作確認済み。Phase A.5-3a-verify ゲート完了 (1-A〜1-D''' 全完了) で着手再開条件達成。F-particular-angle-design (2026-05-07) で「特定角度」概念の正典 docs + 25 件 LLM ベースアノテーションを整備、後段の解説価値判定で使う判定単位が確定済み。F-jp-coverage-tune (Recall/Precision/Tier 一致率閾値達成) の完了は本バッチの **必須前提ではない** (構造的に動いていれば系統 2 設計は進められる) — 並行可。
+  - 共通基盤 (F-particular-angle-design / 2026-05-07 で確立):
+    * 「特定角度」を判定単位として、系統 1 / 系統 2 / 対象外の 3 分類論理フロー (Step 1: 4 軸該当 → Step 2: 日本未報道 → Step 3: 解釈差) を `docs/PARTICULAR_ANGLE_DEFINITION.md` で正典化
+    * 25 件アノテーション (LLM 推定段階で stream_2=13 件、内訳: blind_005 / blind_008 / covered 系列 9/10 件 / 7-K Slot-1 FIFA / 7-K Slot-2 Mandelson) が系統 2 候補の実例として準備済み
+    * `scripts/extract_particular_angle.py` のプロンプト設計 (max_output_tokens=4096、3 要素 + confidence ラベル) が本バッチの解説価値判定 LLM の参考実装として使える
+  - 対応案: (1) 既存の framing_inversion 軸 + multi_angle_analysis 5 観点 + media_divergence 観点を統合した「3 ソース対比ルール + 解説価値判定」を新規実装。(2) パイプライン位置は F-13.B の下流 (報道済み判定後)。(3) 系統 2 ターゲット候補に対して LLM が「特定角度の差が存在するか」「解説価値があるか (5 観点のいずれか)」を判定。判定単位は **「特定角度」(F-particular-angle-design で正典化)** に限定する設計を採用。(4) ゴールデンセット v1.2 の `stream_classification` 付き 19 件 + 試運転 6 件 (stream_classification.json) で精度測定。(5) 不変原則順守 (article_writer 変更不可、script_writer 既存ルート変更不可、src/triage/ 既存ファイル変更不可、src/analysis/ 変更不可、新規追加のみ)。
+  - 検討時期: F-particular-angle-design 完了後、Phase A.5-3b 着手前 (★PoC は PoC に集中するため、フィルタを事前に確定)
   - 想定工数: 4-6 時間 (新規ロジック実装 + テスト + ゴールデンセット追加)
-  - 関連ファイル: src/triage/stream_2_filter.py (新規想定), tests/triage/test_stream_2_filter.py (新規想定), docs/runs/F-stream-2-filter-design/ (新規, ゴールデンセット拡張 + 精度測定レポート), configs/prompts/analysis/geo_lens/ 配下 (3 ソース対比 + 解説価値判定プロンプトを新規追加)
-  - 関連 DISCUSSION_NOTES: 「系統 1 (silence_gap) の判定基準明確化」「F-13.B 動作仕様の検討課題」「3 ソース対比ルール部分実装」
+  - 関連ファイル: src/triage/stream_2_filter.py (新規想定), tests/triage/test_stream_2_filter.py (新規想定), docs/runs/F-stream-2-filter-design/ (新規, ゴールデンセット拡張 + 精度測定レポート), configs/prompts/analysis/geo_lens/ 配下 (3 ソース対比 + 解説価値判定プロンプトを新規追加), docs/PARTICULAR_ANGLE_DEFINITION.md (判定基準正典), docs/runs/F-particular-angle-design/annotations.json (アノテーション参照), docs/runs/F-particular-angle-design/stream_classification.json (系統分類)
+  - 関連 DISCUSSION_NOTES: 「系統 1 (silence_gap) の判定基準明確化」「F-13.B 動作仕様の検討課題」「3 ソース対比ルール部分実装」「特定角度抽出の LLM 限界観察」
 
 - **F-verify-perspective** (F-state-protocol-supplement / 2026-05-02 登録、F-doc-cleanup / 2026-05-03 順序見直し)
   - 背景: 4 軸 (cultural_blindspot / silence_gap / hidden_stakes / framing_inversion) のバランスを検証。DISCUSSION_NOTES #6 (F-12-B-2 axis 多様化) の着手判断材料となる。cultural_blindspot 偏重が確認されれば F-12-B-2 起動。
@@ -461,6 +466,13 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **「特定角度」概念の docs 化 + LLM ベースアノテーション 25 件 (F-particular-angle-design)** (F-particular-angle-design / 2026-05-07 完了)
+  - 発生バッチ: F-trial-run-post-fix (2026-05-07) で「広範事件は日本主要メディアで報道済みだが、MEE/海外メディアの特定角度は未報道」という stream_2_candidate パターンが 6 件 (golden set 4 + 試運転 7-K 2) 確認された。系統 1 / 系統 2 の判定対象を「広範事件」レベルで取ると両系統で重複ケースが発生する問題が顕在化、カズヤとの議論 (2026-05-07) で「重複しないように定義すればよくね?」 = 判定対象を『特定角度』に限定すれば重複は構造的に消えるという結論に到達。Phase A.5-3a-verify ゲート完了後の最初のバッチで、F-stream-2-filter-design + F-jp-coverage-tune の共通基盤を確立する性格を持つ。
+  - 対応内容: (Task A) `docs/PARTICULAR_ANGLE_DEFINITION.md` 新規作成 (5 セクション散文展開: 背景 / 概念定義 / 系統判定基準 / LLM 抽出方針 / 関連ファイル)。(Task B) `scripts/extract_particular_angle.py` 新規作成 (LLM ベース特定角度抽出、max_output_tokens=4096 専用クライアント、JSON パーサ最小修復、リトライ最大 3 回)。(Task C) `docs/runs/F-particular-angle-design/input_events.json` 25 件統合 (golden_set v1.1: 19 件 + 試運転 7-K 2026-05-01: 3 件 + 試運転 2026-05-07: 3 件)。(Task D) Gemini analysis Tier で 25 件抽出実行、`annotations.json` 出力 (extraction_confidence: high=22 / medium=3 / low=0、stream 推定: 系統 1=11 / 系統 2=13 / 対象外=1、errors=0)。試行 1-2 で max_output_tokens=2000 による JSON 途中切断を覚知 (6-7 件失敗) → 4096 への拡張で 0 errors 達成。(Task E) `review_draft.md` 生成 (655 行、25 events フォーマット統一、各 event に LLM 抽出 + LLM 判定 + 判定根拠 + カズヤレビュー欄)。(Task F: ★ カズヤ手動レビュー、本バッチ内未実行)。(Task G) `scripts/finalize_annotations.py` 新規作成 (annotation_diff + stream_classification + golden_set v1.2 を生成、試運転 6 件は golden_set 統合せず stream_classification.json で 25 件まとめて管理する責務分離)。(Task H) 統合レポート `REPORT.md` + BATCH_PROTOCOL Task 1-5 ドッグフーディング (DECISION_LOG エントリ + FUTURE_WORK 完了済み移動 + DISCUSSION_NOTES 「系統 1 判定基準明確化」「F-13.B 動作仕様」エントリ更新 + 新規エントリ「特定角度抽出の LLM 限界観察」+ CURRENT_STATE 全置換更新)。
+  - 重要な発見: (1) **「特定角度」概念の有効性**: 試運転 2026-05-07 Slot-1 (Insider trading) は WebSearch で広範事件は Tier 1-2 報道済みと判明していたが、LLM は「特定角度 (国家規模インサイダー取引疑惑) は日本主要メディアで深掘り未報道」と判定し stream_1 に分類 = 「特定角度」概念を判定単位にすると blind_spot ルートに進んだ動画化が正当化される事例。(2) **golden_set v1.1 stream_2_candidate メタとの差分**: blind_002/004/009 は v1.1 で stream_2_candidate メタ付与だが LLM は stream_1 に分類。判定対象を『広範事件』vs『特定角度』で取ると同じ事象でも結論が変わる可能性、カズヤレビューで再評価対象。(3) **covered 系列 9/10 件が stream_2 に分類**: 「日本主要メディアで報道済みでも海外メディアの掘り下げ角度には解釈差があり stream_2 候補となる」という LLM 判断傾向、F-stream-2-filter-design が処理する候補数の見積もり材料。(4) **max_output_tokens=2000 では分析タスクで途中切断**: analysis_llm_client 既定の 2000 tokens は本タスクで JSON 途中切断を起こした、F-stream-2-filter-design 着手時の判断材料に。
+  - 残課題: ★ Task F (カズヤレビュー) 待ち、レビュー完了後 `python scripts/finalize_annotations.py --input docs/runs/F-particular-angle-design/annotations.json --output-diff docs/runs/F-particular-angle-design/annotation_diff.json --output-classification docs/runs/F-particular-angle-design/stream_classification.json --update-golden-set docs/runs/F-verify-jp-coverage/golden_set.json` を実行 → REPORT 補足更新 → 後続バッチ (F-stream-2-filter-design / F-jp-coverage-tune) 着手。
+  - 関連ファイル: `docs/PARTICULAR_ANGLE_DEFINITION.md` (新規)、`scripts/extract_particular_angle.py` (新規)、`scripts/finalize_annotations.py` (新規)、`docs/runs/F-particular-angle-design/` 配下 (input_events.json / annotations.json / review_draft.md / extraction_log.txt / REPORT.md)、`docs/CURRENT_STATE.md` (全置換更新)、`docs/DECISION_LOG.md` (本バッチエントリ追加)、`docs/FUTURE_WORK.md` (本エントリ + F-stream-2-filter-design / F-jp-coverage-tune の前提に F-particular-angle-design 完了を追記)、`docs/DISCUSSION_NOTES.md` (既存 2 エントリ更新 + 新規 1 エントリ)
 
 - **修正後 F-13.B の本番試運転 + 過去判定後追い + Phase A.5-3a-verify ゲート完了 (F-trial-run-post-fix)** (F-trial-run-post-fix / 2026-05-07 完了)
   - 発生バッチ: F-jp-coverage-improve (2026-05-07) で F-13.B 構造的不具合を修正したが、「動くものを壊さない」哲学に従い、本番運用 (RSS 収集 → triage → Slot 選定) で修正後 F-13.B が期待通り動くか試運転で確認 + 過去試運転 7-K 動画化 3 件 (FIFA + Gaza×2) の WebSearch 後追い + 修正後 F-13.B での過去試運転再判定が必要だった。Phase A.5-3a-verify ゲート完了の最終段階 (1-D''')。
