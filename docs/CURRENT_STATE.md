@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-07 (F-trial-run-post-fix 完了、★ Phase A.5-3a-verify ゲート完了)
+最終更新: 2026-05-07 (F-particular-angle-design 完了、Phase A.5-3a-verify ゲート完了後の最初のバッチ、「特定角度」概念正典化 + 25 件 LLM アノテーション)
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -14,6 +14,10 @@
 > 系統 1 中心で理解して系統 2 を過小評価する誤りはクラウド誤り 7 として記録済み。
 
 Hydrangea のコアミッションは **2 系統並立** で、片方だけでは Hydrangea のメディア性が成立しない。
+
+★ 2026-05-07 (F-particular-angle-design) で系統 1 / 系統 2 の判定単位が
+**「特定角度」(particular_angle)** に正典化された。判定基準の正本は
+`docs/PARTICULAR_ANGLE_DEFINITION.md` (新規)。
 
 ### 系統 1: 日本未報道の大ニュース (silence_gap)
 
@@ -42,16 +46,16 @@ Hydrangea のコアミッションは **2 系統並立** で、片方だけで�
 > そういうクソみたいな理由で報道されないものこそ Hydrangea で取り扱うべき記事。
 > (2026-05-04 カズヤのメディア宣言)
 
-実装機構:
-- F-13.B JpCoverageVerifier で `has_jp_coverage=False` を判定 → blind_spot_global
-  として動画化
-- 「未報道理由の構造性」判定は別レイヤー (LLM 判断 or 上流の素材選定) で担当
-- DISCUSSION_NOTES「系統 1 (silence_gap) の判定基準明確化」参照
+実装機構 (★ F-particular-angle-design / 2026-05-07 更新):
+- 判定単位は「特定角度」(海外メディアが独自に掘った視点) に限定する。
+  詳細は `docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 2-3
+- F-13.B JpCoverageVerifier で「特定角度」の日本未報道度を判定 (現実装は
+  広範事件レベルだが、F-jp-coverage-tune で「特定角度」ベースクエリ生成に転換予定)
+- 4 軸該当性判定は LLM ベース (F-stream-2-filter-design + F-jp-coverage-tune で
+  実装、F-particular-angle-design の 25 件アノテーションが入力データ)
 - 実装: rescue 完全廃止 + Web 検証導入済み (F-13.B / 2026-05-01) + 構造的不具合
-  根本治療済み (F-jp-coverage-improve / 2026-05-07、ドメイン抽出レイヤー追加で
-  `chunk.web.title` 経由の WL マッチングに移行) + ★ 本番動作確認済み
-  (F-trial-run-post-fix / 2026-05-07、試運転 6 invocations 5/6 で
-  excluded_count > 0 を確認、ドメイン抽出層が本番でも機能していることを証明)
+  根本治療済み (F-jp-coverage-improve / 2026-05-07) + ★ 本番動作確認済み
+  (F-trial-run-post-fix / 2026-05-07) + ★ 「特定角度」概念正典化 (F-particular-angle-design / 2026-05-07)
 
 ### 系統 2: 報道差の背景解説 (framing_inversion + 構造分析)
 
@@ -60,16 +64,19 @@ Hydrangea のコアミッションは **2 系統並立** で、片方だけで�
 
 「日本人が知っておくべき教養としての国際的評価」を提供するメディアとしての本質。
 
+★ 2026-05-07 (F-particular-angle-design) 更新: 系統 2 の判定対象も
+「特定角度」に限定された。「同じ広範事件についての解釈差」ではなく、
+**「同じ特定角度に対する解釈・フレーミング・優先順位の差」** を扱う。
+
 - `framing_inversion` 軸 (perspective_select_and_verify.md): 系統 2 を担う中核軸
 - `multi_angle_analysis.md` の 5 観点 (geopolitical / political_intent /
   economic_impact / cultural_context / media_divergence): 報道差の背景を構造化
 - `media_divergence` 観点: 日本 / 西側 / グローバルサウス の比較分析
 - 実装は部分的: 3 ソース対比ルールが未実装 (系統 2 の核心機能の重大な欠落、
   DISCUSSION_NOTES「3 ソース対比ルール部分実装」参照)
-- ★ F-trial-run-post-fix で系統 2 ターゲット候補が拡張: golden set 4 件
-  (blind_002/004/005/009) + 試運転 7-K 過去動画 2 件 (Slot-1 FIFA Palestine /
-  Slot-2 Mandelson Gaza scandal) = 6 件の実例で F-stream-2-filter-design の
-  設計妥当性根拠が増強された
+- ★ F-particular-angle-design (2026-05-07) で系統 2 候補が拡張: 25 件 LLM
+  アノテーションのうち stream_2_framing_inversion=13 件 (golden_set 11 + 7-K 2)、
+  F-stream-2-filter-design 実装時の入力データ + 設計妥当性根拠として活用される
 
 ### ブランドポジション
 
@@ -104,29 +111,31 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。japan_ath
 
 ## 1. リポジトリ状態
 
-- **main HEAD コミット**: `fd76660` (本バッチ未マージ、feature/F-trial-run-post-fix 上で作業)
+- **main HEAD コミット**: `2925fb8` (本バッチ未マージ、feature/F-particular-angle-design 上で作業)
 - **直近 5 件のコミットログ**:
   ```
+  2925fb8 Merge branch 'feature/F-jp-coverage-improve'
+  27be010 feat: root-cause fix for F-13.B Grounding domain extraction (TP 0→10) + structural exception conditions + Project Knowledge update protocol + Phase A.5-3a-verify gate redefinition (F-jp-coverage-improve)
   fd76660 Merge branch 'feature/F-jp-coverage-improve'
   3c8d470 feat: root-cause fix for F-13.B Grounding domain extraction (TP 0→10) + structural exception conditions + Project Knowledge update protocol + Phase A.5-3a-verify gate redefinition (F-jp-coverage-improve)
   b5d571d Merge branch 'feature/F-verify-jp-coverage-measure'
-  d23908e feat: measure F-13.B accuracy, verdict=fail, identify root cause (Grounding redirect URL vs web.title) (F-verify-jp-coverage-measure)
-  20da7c0 Merge branch 'feature/F-verify-jp-coverage-golden'
   ```
-- **baseline テスト数**: `1345 passed` (本バッチで src/ tests/ configs/ への変更なし、`scripts/replay_jp_coverage.py` 新規 + `docs/runs/F-trial-run-post-fix/` 新規 + `docs/` 更新のみ、テスト影響なし、baseline 維持)
+- **baseline テスト数**: `1345 passed` (本バッチで src/ tests/ configs/ への変更なし、
+  `docs/PARTICULAR_ANGLE_DEFINITION.md` 新規 + `scripts/extract_particular_angle.py` 新規 +
+  `scripts/finalize_annotations.py` 新規 + `docs/runs/F-particular-angle-design/` 新規 +
+  `docs/` 更新のみ、テスト影響なし、baseline 維持)
 
 ## 2. 現在のフェーズ
 
 - **Phase**: Phase A.5-3a-verify **完了** ★ 1-A〜1-D''' 全完了で Phase A.5-3a-verify ゲート完了 (2026-05-07)
-- **進行中バッチ**: なし (F-trial-run-post-fix 完了直後、main マージ待ち)
-- **次バッチ候補と推奨** (★F-trial-run-post-fix / 2026-05-07 で更新):
+- **進行中バッチ**: なし (F-particular-angle-design 完了直後、Task F カズヤレビュー待ち)
+- **次バッチ候補と推奨** (★F-particular-angle-design / 2026-05-07 で更新):
   - **1st: F-stream-2-filter-design** (★最優先、系統 2 用 2 段階フィルタ実装、
-    Phase A.5-3a-verify ゲート完了で着手 OK 状態に、4-6 時間)
+    本バッチで「特定角度」共通基盤確立、即着手 OK、4-6 時間)
   - **2nd: Phase A.5-3b 手動 PoC 着手準備** (image-prompt-spec を 3b 最初の作業に
     組み込み、フィルタは事前確定済みで PoC に集中)
-  - 別系 (任意): **F-jp-coverage-tune** (★高、再測定 verdict=fail の残課題 = Recall/
-    Precision/Tier 一致率閾値達成、3-5 時間、Phase A.5-3a-verify ゲート完了の必須
-    条件ではない、F-stream-2-filter-design と並走可)
+  - 別系 (任意): **F-jp-coverage-tune** (★高、本バッチの「特定角度」概念を
+    検索クエリ生成に転用可能、3-5 時間、F-stream-2-filter-design と並走可)
   - 並走: F-verify-perspective / F-verify-script-quality
     (3b/3c 中にデータ収集、判断は 3b/3c 完了後 = データ収集性格)
 - **推奨フロー**:
@@ -134,12 +143,16 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。japan_ath
     (F-elevenlabs-integration / F-image-gen-integration / F-video-compose-integration /
     F-cron) → Phase A.5-3d で投稿前ゲート + 自動投稿
   - 並走: F-jp-coverage-tune (任意、F-stream-2-filter-design と並列可)
+- **★ Task F (カズヤレビュー) 待ち**: `docs/runs/F-particular-angle-design/review_draft.md`
+  をレビュー → `annotations.json` の `kazuya_review.*_revised` 編集 →
+  `python scripts/finalize_annotations.py ...` 実行で最終化、その後
+  F-stream-2-filter-design + F-jp-coverage-tune の入力として使用
 
-### Phase A.5-3a-verify ロードマップ (★F-trial-run-post-fix / 2026-05-07 完了版)
+### Phase A.5-3a-verify ロードマップ (★F-particular-angle-design / 2026-05-07 完了版)
 
 **ゲート完了**: 1-A〜1-D''' 全段階完了で Phase A.5-3a-verify ゲート完了。
-1-E 以降は Phase A.5-3a-verify 後の次フェーズ (= F-stream-2-filter-design 着手)
-として再開。
+F-particular-angle-design は **ゲート完了後の最初のバッチ**で、後続 2 バッチ
+(F-stream-2-filter-design / F-jp-coverage-tune) の共通基盤を確立する性格。
 
 | 段階 | バッチ | 状態 | 概要 |
 |---|---|---|---|
@@ -149,17 +162,19 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。japan_ath
 | 1-D | F-verify-jp-coverage-measure | ✅ 完了 (2026-05-05) | F-13.B 精度実測 → verdict=fail、構造的不具合 (Grounding redirect URL vs web.title) を特定 |
 | 1-D' | F-jp-coverage-improve | ✅ 完了 (2026-05-07) | F-13.B 構造的不具合の根本治療 (ドメイン抽出レイヤー追加) + 計測再実行 + 不変原則例外条件構造化 + Project Knowledge 運用ルール化 |
 | 1-D'' | (1-D' 内で完結) | ✅ 完了 (2026-05-07) | 修正後 verify_jp_coverage_measure.py 再実行で構造的不具合解消を確認 (TP=0→10, FN=14→4)、ただし精度閾値未達は F-jp-coverage-tune に分離 |
-| 1-D''' | **F-trial-run-post-fix** | ✅ **完了 (2026-05-07)** | 修正後 F-13.B の本番試運転 + 過去判定後追い、構造的不具合解消の本番動作確認 (excluded_count 非ゼロ)、防衛機構 5 層全機能、試運転 7-K 過去動画 3 件中 2 件が stream_2_candidate パターンと判明 |
+| 1-D''' | F-trial-run-post-fix | ✅ 完了 (2026-05-07) | 修正後 F-13.B の本番試運転 + 過去判定後追い、構造的不具合解消の本番動作確認、防衛機構 5 層全機能、試運転 7-K 過去動画 3 件中 2 件が stream_2_candidate パターンと判明 |
 | **★ ゲート完了** | — | ✅ **2026-05-07** | 1-A〜1-D''' 全完了で Phase A.5-3a-verify ゲート完了正式宣言 |
-| 1-E | F-stream-2-filter-design | ★着手 OK | 系統 2 用 2 段階フィルタ実装、Phase A.5-3b の前提 |
-| 別系 | F-jp-coverage-tune | ★高 (任意、F-stream-2-filter-design と並走可) | 再測定 verdict=fail の精度閾値達成 (Recall/Precision/Tier 一致率)、Phase A.5-3a-verify ゲート完了の必須条件ではない |
+| **1-E (新)** | **F-particular-angle-design** | ✅ **完了 (2026-05-07)** | ゲート完了後の最初のバッチ、「特定角度」概念正典化 + 25 件 LLM アノテーション、F-stream-2-filter-design / F-jp-coverage-tune の共通基盤確立 |
+| 1-F | F-stream-2-filter-design | ★着手 OK | 系統 2 用 2 段階フィルタ実装、Phase A.5-3b の前提、本バッチで共通基盤確立 |
+| 別系 | F-jp-coverage-tune | ★高 (任意、F-stream-2-filter-design と並走可) | 再測定 verdict=fail の精度閾値達成 (Recall/Precision/Tier 一致率)、本バッチの「特定角度」概念を検索クエリに転用 |
 | 2 | F-verify-perspective | 並走候補 | axis 分布集計 (3b/3c 中) |
 | 3 | F-verify-script-quality | 並走候補 | NG 語彙頻度 / リトライ率集計 (3b/3c 中) |
 
 注: 1-D' 内に 1-D'' (計測再実行) を統合する設計とした (修正と検証は分離不能)。
-1-D''' (F-trial-run-post-fix、本バッチで完了) で Phase A.5-3a-verify ゲート完了
-正式宣言。F-jp-coverage-tune は精度閾値達成の別系で、ゲート完了の必須条件ではない
-(構造的不具合解消で F-stream-2-filter-design の前提条件は確保されている)。
+1-D''' (F-trial-run-post-fix) で Phase A.5-3a-verify ゲート完了正式宣言。
+1-E (F-particular-angle-design) は **ゲート完了後の最初のバッチ**で、
+ゲート完了の必須条件ではなく、後続バッチへの共通基盤確立の性格。
+F-jp-coverage-tune は精度閾値達成の別系で、ゲート完了の必須条件ではない。
 
 ### Phase A.5-3d 投稿対象の補足
 
@@ -179,7 +194,8 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 
 | 試運転 | バッチ | 動画化率 | 主要観察 |
 |---|---|---|---|
-| **2026-05-07** | **F-trial-run-post-fix** | 1/3 動画化 (Slot-1 のみ) + 3 articles | 修正後 F-13.B が本番で機能 (excluded_count 1/10/3 非ゼロでドメイン抽出層が稼働)、3 Slot 全 has_jp_coverage=False、防衛機構 5 層全機能、WebSearch 後追いで Slot-1 (Insider trading) は Tier 1-2 報道済み = Recall miss (F-jp-coverage-tune の対象)、過去 7-K 動画 3 件のうち 2 件が typical stream_2_candidate パターンと判明 |
+| **2026-05-07** | **F-particular-angle-design** | (試運転なし、docs + LLM アノテーション) | LLM (Gemini analysis Tier) で 25 件特定角度抽出: extraction_confidence (high=22 / medium=3 / low=0)、stream 推定 (系統 1=11 / 系統 2=13 / 対象外=1)、errors=0。max_output_tokens=2000 で JSON 途中切断 (試行 1-2 で 6-7 件失敗) を覚知 → 4096 への拡張で 0 errors。golden_set v1.1 stream_2_candidate メタ付き 4 件のうち 3 件が LLM では stream_1 に分類された差分が観測され、判定対象を「広範事件」vs「特定角度」で取ると結論が変わる構造を可視化。 |
+| 2026-05-07 | F-trial-run-post-fix | 1/3 動画化 (Slot-1 のみ) + 3 articles | 修正後 F-13.B が本番で機能 (excluded_count 1/10/3 非ゼロでドメイン抽出層が稼働)、3 Slot 全 has_jp_coverage=False、防衛機構 5 層全機能、WebSearch 後追いで Slot-1 (Insider trading) は Tier 1-2 報道済み = Recall miss (F-jp-coverage-tune の対象)、過去 7-K 動画 3 件のうち 2 件が typical stream_2_candidate パターンと判明 |
 | 7-K | F-13.B | 100% (3/3) | FIFA + Gaza×2、rescue path 完全廃止後初の全 Slot 動画化成功 — ★ ただし F-13.B 構造的不具合 (常に False 返却) で全 Slot が blind_spot ルートに進んだだけと再解釈。F-trial-run-post-fix で WebSearch 後追い実施、3 件中 2 件 (FIFA / Mandelson) が実は Tier 1-2 報道済みと判明 |
 | F-12-B-1 | F-12-B-1 | — | cls-56c4197b6fd2 米イスラエル隠密作戦、視聴者ファースト改善確認 (固有名詞補足・話し言葉化) |
 | F-12-B-1-extension | F-12-B-1-extension | 未実施 | LLM 出力依存のため未実施、抽象比喩軽減は継続観察項目 |
@@ -191,7 +207,7 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 |---|---|---|---|---|
 | F-1 | F-1 / F-1.5 | EditorialMissionFilter | 編集ミッション適合度で score 算出 (>= 45.0 で通過) | ✅ 稼働中 (F-trial-run-post-fix 試運転で 18/364 通過確認) |
 | F-2 | F-2 / F-5 | FlagshipGate (Hydrangea コンセプト整合) | 海外発の重要ニュースを優先 | ✅ 稼働中 (F-trial-run-post-fix 試運転で Blocked 0 件確認) |
-| F-13.B | F-13.B / F-jp-coverage-improve / F-trial-run-post-fix | JpCoverageVerifier (rescue 完全廃止 + Web 検証 + ドメイン抽出レイヤー) | JP 報道カバレッジを 27 ドメイン WL で検証 | ✅ **構造的不具合修正完了** (F-jp-coverage-improve / 2026-05-07): ドメイン抽出レイヤー (`_extract_domain_from_chunk` / `_looks_like_domain` / `_normalize_domain`) を SDK 変更耐性の防御層として追加、`chunk.web.title` 経由で実ドメインを WL マッチングに供給、`chunk.web.uri` (Vertex redirect URL) は debug 用に分離記録。再測定で TP=0→10, FN=14→4。**+ 本番動作確認済み** (F-trial-run-post-fix / 2026-05-07): 試運転 6 invocations (試運転 3 + replay 3) で excluded_urls_count > 0 が 5/6 件 (1/10/3/0/5/4) を確認、ドメイン抽出層の本番動作証明。残課題 (Recall/Precision/Tier 一致率閾値) は F-jp-coverage-tune に分離 (Phase A.5-3a-verify ゲート完了の必須条件ではない) |
+| F-13.B | F-13.B / F-jp-coverage-improve / F-trial-run-post-fix | JpCoverageVerifier (rescue 完全廃止 + Web 検証 + ドメイン抽出レイヤー) | JP 報道カバレッジを 27 ドメイン WL で検証 | ✅ **構造的不具合修正完了** (F-jp-coverage-improve / 2026-05-07) + 本番動作確認済み (F-trial-run-post-fix / 2026-05-07)。残課題 (Recall/Precision/Tier 一致率閾値) は F-jp-coverage-tune に分離。**★ F-particular-angle-design (2026-05-07) で「特定角度」概念が正典化、F-jp-coverage-tune では特定角度ベースのクエリ生成に転換予定** |
 | F-5 | F-5 | FlagshipGate 下流救済 | 上流ガードを通過した候補の最終整合 | ✅ 稼働中 (F-trial-run-post-fix 試運転で救済発火 0 件、Elite Judge Gate 3 で十分採用) |
 | **F-13 (隠れ層)** | F-13 / F-doc-cleanup | script_writer.py:951-985 quality_floor_miss bypass | analysis_result 等が成立すれば appraisal の [抑制] を上書き | ✅ 稼働中 (F-trial-run-post-fix 試運転で bypass 発火 0 件、3 Slot 全て floor 通過) |
 
@@ -200,12 +216,12 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 ### 触ってよい領域
 - `configs/prompts/` 配下全般 (主戦場: `configs/prompts/analysis/geo_lens/`)
 - `docs/` 配下全般 (CURRENT_STATE / DISCUSSION_NOTES / DECISION_LOG /
-  FUTURE_WORK / BATCH_PROTOCOL 等の更新)
+  FUTURE_WORK / BATCH_PROTOCOL / **PARTICULAR_ANGLE_DEFINITION** 等の更新)
 - `tests/` 配下に新規テストファイル追加 (既存ファイルは原則変更しない、
   ただし API contract 整合化に伴うフィクスチャ更新は許容、
   例: F-jp-coverage-improve で `_make_grounding_response` を整合化)
 - `scripts/` 配下に新規スクリプト追加 (例: `verify_jp_coverage_measure.py`,
-  `replay_jp_coverage.py`)
+  `replay_jp_coverage.py`, **`extract_particular_angle.py`**, **`finalize_annotations.py`**)
 - `src/triage/` に新規ファイル追加 (例: `jp_coverage_verifier.py`)
 - `src/generation/script_writer.py` の **新ルート**
   (`generate_script_with_analysis` / `ScriptWithAnalysisDraft` /
@@ -252,7 +268,12 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
   (F-doc-protocol / F-state-protocol / F-doc-cleanup 等の文書プロトコル整備の動機、
   F-jp-coverage-improve でドメイン抽出レイヤーを SDK 変更耐性の防御層として実装、
   F-trial-run-post-fix で本番試運転で発見された Recall miss は別系
-  F-jp-coverage-tune に分離)
+  F-jp-coverage-tune に分離、★ F-particular-angle-design で「広範事件 vs 特定角度」の
+  判定単位の曖昧さを概念正典化で根本治療)
+- **「重複しないように定義すればよくね?」** — 系統 1 / 系統 2 の判定対象が
+  「広範事件」だと両系統で重複ケース発生 → 判定対象を『特定角度』に限定すれば
+  重複は構造的に消える、という 2026-05-07 議論結論。F-particular-angle-design
+  で `docs/PARTICULAR_ANGLE_DEFINITION.md` として正典化
 - **「負の遺産残さないように」** — 不整合・乖離を早期解消
   (F-doc-cleanup で F-13 隠れ層昇格 + DECISION_LOG 7 遡及 + CLAUDE.md 全面書き直し)
 - **「カズヤの手作業はバッチプロンプトのコピペ 1 回のみ」** — 引き継ぎ
@@ -262,7 +283,7 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
   (BATCH_PROTOCOL「拡張性差し込み判断ルール」3 条件 / 2026-05-03)
 - **「動くものを壊さない」** — F-jp-coverage-improve で構造的不具合修正後も
   本番試運転 + 過去判定後追い (F-trial-run-post-fix) を必須段階として組み込み、
-  本バッチで完了
+  F-particular-angle-design では src/ tests/ configs/ 一切変更せず docs + scripts のみ
 
 ## 8. 関連ドキュメントへの導線
 
@@ -274,6 +295,7 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 - 技術的負債リスト → `docs/TECH_DEBT.md`
 - リファクタ計画 (歴史的記録) → `docs/REFACTORING_PLAN.md`
 - 編集ミッションフィルタ設計 (F-13 隠れ層含む) → `docs/EDITORIAL_MISSION_FILTER_DESIGN.md`
+- ★ **「特定角度」概念正典 (新規) → `docs/PARTICULAR_ANGLE_DEFINITION.md`** (F-particular-angle-design / 2026-05-07)
 - Claude Code 振る舞い指針 → `CLAUDE.md`
 
 ---
@@ -281,20 +303,19 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 *このドキュメントは F-state-protocol (2026-05-01) で導入。
  Claude Code がバッチ完了時に全置換更新する運用 (BATCH_PROTOCOL.md Task 5 参照)。
  F-jp-coverage-improve (2026-05-07) で F-13.B 構造的不具合の根本治療を実施。
- F-trial-run-post-fix (2026-05-07) で修正後 F-13.B の本番試運転 + 過去判定
- 後追いを実施: 試運転 6 invocations のうち 5/6 で excluded_urls_count > 0 を
- 確認 (ドメイン抽出層の本番動作証明)、防衛機構 5 層全機能確認、試運転 7-K
- 過去動画化 3 件のうち 2 件 (FIFA / Mandelson) が典型的 stream_2_candidate
- パターンと判明 (golden set 4 件 + 試運転 7-K 2 件 = 6 件で系統 2 設計の
- 妥当性根拠拡張)、修正後 F-13.B での過去 7-K 再判定で 3 件全て False→False
- 判定不変だが excluded_count 非ゼロで構造機能 OK。Recall miss 1/3 は
- F-jp-coverage-tune の主要課題と完全整合 (本バッチでは記録のみ、根本治療は
- 別系)。本バッチ完了で **Phase A.5-3a-verify ゲート完了** (1-A〜1-D''' 全完了)
- を正式宣言、F-stream-2-filter-design 着手 OK 状態に。本バッチは src/ tests/
- configs/ 変更なし (新規スクリプト + docs/runs/ + docs/ のみ)、baseline 1345
- passed 維持。
- ★ Project Knowledge 最新化リマインダ: 本バッチ完了は **Phase A.5-3a-verify
- ゲート完了の節目** (1-D''' 完了)、新チャット移行前にカズヤが手動で claude.ai
- の Project Knowledge を **必須最新化** することを推奨 (BATCH_PROTOCOL の
- Project Knowledge 運用ルールに従う)。
+ F-trial-run-post-fix (2026-05-07) で修正後 F-13.B の本番動作確認 + Phase A.5-3a-verify
+ ゲート完了正式宣言。F-particular-angle-design (2026-05-07) は **ゲート完了後の最初の
+ バッチ**で、「特定角度」概念を正典化 (`docs/PARTICULAR_ANGLE_DEFINITION.md` 新規) +
+ 25 件 LLM アノテーション (`docs/runs/F-particular-angle-design/annotations.json`) を
+ 整備し、F-stream-2-filter-design + F-jp-coverage-tune の共通基盤を確立。LLM 抽出は
+ extraction_confidence: high=22 / medium=3 / low=0 / errors=0、stream 推定: 系統 1=11 /
+ 系統 2=13 / 対象外=1。Task F (カズヤレビュー) 待ちで、レビュー後に
+ `scripts/finalize_annotations.py` で最終化される。本バッチは src/ tests/ configs/
+ 一切変更なし (新規 docs + 新規 scripts/ + 新規 docs/runs/F-particular-angle-design/
+ 配下のみ)、baseline 1345 passed 維持。
+ ★ Project Knowledge 最新化リマインダ: 本バッチ完了で F-stream-2-filter-design 着手
+ の前提が整ったため、新チャット移行前にカズヤが手動で claude.ai の Project
+ Knowledge を **必須最新化** することを推奨 (BATCH_PROTOCOL の Project Knowledge
+ 運用ルールに従う、`docs/PARTICULAR_ANGLE_DEFINITION.md` を新規アップロード対象に
+ 含めること)。
  過去の経緯は DECISION_LOG.md / FUTURE_WORK.md / DISCUSSION_NOTES.md を参照。*

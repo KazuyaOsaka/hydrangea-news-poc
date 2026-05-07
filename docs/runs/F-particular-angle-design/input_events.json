@@ -1,0 +1,239 @@
+{
+  "version": "1.0",
+  "batch": "F-particular-angle-design",
+  "generated_at": "2026-05-07T00:00:00Z",
+  "purpose": "scripts/extract_particular_angle.py の入力。golden_set v1.1 (19) + 試運転 7-K (3) + 試運転 2026-05-07 (3) = 25 件を統合。",
+  "source_breakdown": {
+    "golden_set_v1.1": 19,
+    "trial_run_7K_2026-05-01": 3,
+    "trial_run_2026-05-07": 3,
+    "total": 25
+  },
+  "events": [
+    {
+      "event_id": "blind_001",
+      "source_origin": "golden_set_v1.1",
+      "title": "Ukrainian Forces Wounded, Killed 1,725 Civilians in Q1 2026",
+      "summary": "ロシア外務省が 2026 年第 1 四半期にウクライナ軍が民間人 1,725 人を死傷させたと発表 (死亡 412 / 負傷 1,313)。ベネズエラ拠点 TeleSUR 等グローバルサウスメディアが詳報する一方、日本を含む西側主要メディアでは黙殺もしくはプロパガンダ扱いで報じられない構造。",
+      "sources": ["TeleSUR (en/global_south)"],
+      "region": "russia_ukraine",
+      "topic_category": "geopolitical_information_warfare"
+    },
+    {
+      "event_id": "blind_002",
+      "source_origin": "golden_set_v1.1",
+      "title": "Israel's top Jewish religious body 'refuses to condemn' smashing of Jesus statue",
+      "summary": "レバノン南部でイスラエル兵がキリスト像を破壊した事件で、イスラエル軍がラビ庁 (最高ユダヤ教宗教権威) に非難声明を要請したが、ラビ庁がこれを拒否。軍と宗教界の宗教的シオニズム融合の徴候として中東メディアが詳報する一方、日本では事件本体は報道されたがラビ庁拒否の構造分析角度は欠落。",
+      "sources": ["Middle_East_Eye (en/GB/middle_east)"],
+      "region": "middle_east",
+      "topic_category": "religion_political_structural"
+    },
+    {
+      "event_id": "blind_003",
+      "source_origin": "golden_set_v1.1",
+      "title": "US-Israel intervention frees Israeli-Turkish citizen held for serving in Israeli army",
+      "summary": "イスラエル軍服務歴のある二重国籍女性がトルコで『許可なき外国軍従事』で拘束され、米イスラエル政府が隠密作戦で奪還。SNS 上の活動家による過去軍服写真特定が拘束のきっかけ。法執行が外交カードに転用される地政学的リスクを中東メディアが報道する一方、日本では完全に未報道。",
+      "sources": ["Middle_East_Eye (en/GB/middle_east)"],
+      "region": "middle_east",
+      "topic_category": "geopolitical_individual_risk"
+    },
+    {
+      "event_id": "blind_004",
+      "source_origin": "golden_set_v1.1",
+      "title": "In Gaza, life flickers as power cuts shatter livelihoods and healthcare",
+      "summary": "ガザの停電・ジェネレーター劣化危機。潤滑油価格が 1L 14 シェケル → 1,500 シェケル (100 倍以上) に暴騰し中小企業 9 割が廃業危機、シファ病院 ICU が分単位停電も許されない瀬戸際。MEE が報じる『社会インフラの物理的解体』という視座は日本の戦闘・人道危機報道では欠落。",
+      "sources": ["Middle_East_Eye (en/GB/middle_east)"],
+      "region": "middle_east",
+      "topic_category": "humanitarian_structural_collapse"
+    },
+    {
+      "event_id": "blind_005",
+      "source_origin": "golden_set_v1.1",
+      "title": "Gaza was the scandal that should have ended Keir Starmer's political career",
+      "summary": "英スターマー首相が駐米大使マンデルソン人事スキャンダルで窮地。中東メディアは『真の道徳的スキャンダル』はガザでのイスラエル無条件支援 (アクロティリ基地からの監視飛行・F-35 部品継続供給) であるべきと指摘。日本/西側報道は手続き論に終始しガザ支援の道徳的負債は欠落。",
+      "sources": ["Middle_East_Eye (en/GB/middle_east) — opinion"],
+      "region": "europe_uk",
+      "topic_category": "political_moral_critique"
+    },
+    {
+      "event_id": "blind_007",
+      "source_origin": "golden_set_v1.1",
+      "title": "Putin ally's $500 million Russian superyacht sails through Hormuz despite US blockade",
+      "summary": "プーチン側近モルダショフ氏所有の 142m 級超豪華ヨット『ノルド号』 (5 億ドル) が米イラン対立で封鎖中のホルムズ海峡を通過 (4/24 ドバイ発・4/25 通過・4/26 オマーン到着)。商船数隻のみ通過の中で『制裁逃れの優遇』を受けたとの報。",
+      "sources": ["Times_of_India (en/IN/asia)"],
+      "region": "russia_iran_hybrid",
+      "topic_category": "sanctions_evasion_geopolitics"
+    },
+    {
+      "event_id": "blind_008",
+      "source_origin": "golden_set_v1.1",
+      "title": "Israel accused of using 'water as a weapon' against Palestinians in Gaza",
+      "summary": "国境なき医師団 (MSF) と国連特別委員会が、イスラエルがガザの海水淡水化施設・井戸・送水管・下水システムの 90% 近くを破壊したと指摘。『水を武器化』した集団的懲罰として国際人権法違反の可能性を提起。",
+      "sources": ["Middle_East_Eye (en/GB/middle_east)"],
+      "region": "middle_east",
+      "topic_category": "humanitarian_human_rights"
+    },
+    {
+      "event_id": "blind_009",
+      "source_origin": "golden_set_v1.1",
+      "title": "The real reason Iran and the US cannot end the war: Money",
+      "summary": "MEE ライブブログのオピニオン分析。イランと米国の戦争が長期化する『本当の理由』として経済構造的要因 (制裁収益分配・革命防衛隊の利権) を提示。日本の戦況報道では欠落する経済的視座。",
+      "sources": ["Middle_East_Eye (en/GB/middle_east) — opinion"],
+      "region": "middle_east",
+      "topic_category": "economic_structural_analysis"
+    },
+    {
+      "event_id": "blind_010",
+      "source_origin": "golden_set_v1.1",
+      "title": "Israel's policy of endless war is fuelled by the crisis of Zionism",
+      "summary": "MEE オピニオン記事。イスラエルの『終わらない戦争』政策の根本原因をシオニズム自体の構造的危機に求める分析。Ilan Pappe 等の歴史学者の議論を踏まえた長期構造論。",
+      "sources": ["Middle_East_Eye (en/GB/middle_east) — opinion"],
+      "region": "middle_east",
+      "topic_category": "structural_ideological_critique"
+    },
+    {
+      "event_id": "covered_001",
+      "source_origin": "golden_set_v1.1",
+      "title": "ホルムズ海峡めぐりアメリカの対イラン封鎖始まる イランは反発",
+      "summary": "トランプ米大統領が 4/13 にイランの港湾出入りに対する海上封鎖発令。CENTCOM が実施。イスラマバード和平交渉決裂を受けた措置。米イラン双方の譲歩条件が根本的に相容れず。",
+      "sources": ["NHK Tier 1 + Jiji Tier 2 + 共同通信配信"],
+      "region": "middle_east",
+      "topic_category": "geopolitical_conflict"
+    },
+    {
+      "event_id": "covered_002",
+      "source_origin": "golden_set_v1.1",
+      "title": "米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』",
+      "summary": "プーチン大統領がトランプ米大統領との電話会談 (4/30) で 5 月 9 日戦勝記念日に合わせウクライナとの停戦に応じる用意を表明。トランプ政権は当初 28 項目の停戦案を提示し 20 項目に整理して交渉中。",
+      "sources": ["NHK Tier 1 + Nikkei Tier 1 + Jiji Tier 2"],
+      "region": "europe_russia",
+      "topic_category": "diplomacy_ceasefire"
+    },
+    {
+      "event_id": "covered_003",
+      "source_origin": "golden_set_v1.1",
+      "title": "米中 関税協議 / 通商交渉 (2026 年 4 月)",
+      "summary": "トランプ米政権の関税政策更新 (4/14)。日本含む 57 か国地域への追加関税を 8/1 まで停止 (中国除く)、停止中は一律 10% 適用。米中閣僚級協議継続。日本は『日米交渉が後回し』される懸念を Nikkei が報道。",
+      "sources": ["Nikkei Tier 1 (複数記事)"],
+      "region": "americas_global",
+      "topic_category": "economic_trade_policy"
+    },
+    {
+      "event_id": "covered_004",
+      "source_origin": "golden_set_v1.1",
+      "title": "ローマ教皇『多数派の専制』を警告 民主主義に危機感",
+      "summary": "ローマ教皇レオ 14 世が 4 月 5 日復活祭メッセージ + 4/15 演説で『多数派の専制』『宗教と神の名を利用する暴君』を批判。世界の紛争・暴力への無関心の蔓延に警鐘。米国出身初の教皇、改革路線継承。",
+      "sources": ["Nikkei Tier 1 + AFPBB 配信"],
+      "region": "europe_vatican",
+      "topic_category": "religion_politics"
+    },
+    {
+      "event_id": "covered_005",
+      "source_origin": "golden_set_v1.1",
+      "title": "ブラジル ルラ政権、アマゾン開催の COP30 で狙うグローバルサウス主導役",
+      "summary": "ルラ大統領肝煎りでブラジル政府がアマゾン開催 COP30 でグローバルサウスの主導役を狙う。NHK が森林破壊現場 (アマゾン) を直接取材報道。森林伐採・森林火災が継続、温暖化加速が森林伐採措置を上回る状況。",
+      "sources": ["NHK Tier 1 + Nikkei Tier 1 + President Tier 4"],
+      "region": "americas_brazil",
+      "topic_category": "environment_diplomacy"
+    },
+    {
+      "event_id": "covered_006",
+      "source_origin": "golden_set_v1.1",
+      "title": "NVIDIA 株が半年ぶり最高値更新 衰えぬ AI 需要、循環投資にはリスク",
+      "summary": "米半導体 Nvidia 株が 4/27 一時 4% 高 216.83 ドル、2025 年 10 月以来約半年ぶり最高値更新。時価総額 5.3 兆ドル (約 840 兆円)。AI 設備投資ブーム継続、ただし循環投資のリスクも指摘。",
+      "sources": ["Nikkei Tier 1 + Bloomberg JP Tier 2"],
+      "region": "americas_global",
+      "topic_category": "economic_tech_markets"
+    },
+    {
+      "event_id": "covered_007",
+      "source_origin": "golden_set_v1.1",
+      "title": "ナイジェリアで 100 人拉致 過激派襲撃、死者多数か",
+      "summary": "2026 年 3 月 4 日、ナイジェリア北東部ボルノ州で武装集団が集落を襲撃、女性・子ども含む 100 人以上を拉致。ボコ・ハラムが幹部殺害への報復として犯行声明。共同通信配信を東京新聞・秋田魁新報等が掲載。",
+      "sources": ["Tokyo Shimbun Tier 1 + 共同通信 Tier 2"],
+      "region": "africa",
+      "topic_category": "terrorism_kidnapping"
+    },
+    {
+      "event_id": "covered_008",
+      "source_origin": "golden_set_v1.1",
+      "title": "マリ 軍事政権に反政府勢力が一斉攻撃 暫定国防相死亡",
+      "summary": "2026 年 4 月 25-27 日、マリでアザワド解放戦線 (FLA、トゥアレグ反乱勢力) と JNIM (アルカイダ系) が連携して国内複数地域を一斉攻撃。サディオ・カマラ国防相がカティ自宅の車爆弾攻撃で死亡 (本人 + 第二夫人 + 孫 2 人)。2012 年攻勢以来最大の試練。",
+      "sources": ["NHK Tier 1 + Jiji Tier 2 + 共同通信配信"],
+      "region": "africa",
+      "topic_category": "terrorism_geopolitical_conflict"
+    },
+    {
+      "event_id": "covered_009",
+      "source_origin": "golden_set_v1.1",
+      "title": "インド・パキスタン カシミール 緊張 (4 月 22 日テロ攻撃 + 5 月 7-10 日 Operation Sindoor)",
+      "summary": "2026 年 4 月 22 日カシミール・パハルガムでテロ攻撃、観光客含む 26 名死亡 (TRF が犯行声明)。インドが 5/7 Operation Sindoor として PoK の 9 拠点をラファール・自爆ドローン等で精密攻撃。5/10 トランプ仲介で停戦合意。1 ヶ月後の現在も緊張継続、両国とも核保有国。",
+      "sources": ["NHK Tier 1 + Newsweek Japan Tier 4"],
+      "region": "asia",
+      "topic_category": "geopolitical_conflict_terrorism"
+    },
+    {
+      "event_id": "covered_010",
+      "source_origin": "golden_set_v1.1",
+      "title": "イエメン・フーシ派、イスラエルに弾道ミサイル発射し『イラン支援』を公式表明",
+      "summary": "2026 年 3 月 28 日、イエメンのフーシ派がイスラエルに対し弾道ミサイル発射、米イスラエル・イラン交戦への『初の軍事介入』として参戦。フーシ派幹部ブハイティ氏が『イランへの支援は明確・公的・明示的』と表明、イラン・ヒズボラとの共同作戦と主張。",
+      "sources": ["Bloomberg JP Tier 2 + Jiji Tier 2 + Newsweek Japan Tier 4"],
+      "region": "middle_east",
+      "topic_category": "geopolitical_conflict_proxy_war"
+    },
+    {
+      "event_id": "cls-7bd1406438b6",
+      "source_origin": "trial_run_7K_2026-05-01",
+      "title": "Palestine football appeals Fifa decision to do nothing about Israeli clubs in illegal settlements",
+      "summary": "パレスチナサッカー協会 (PFA) が、イスラエル入植地クラブを放置する FIFA の決定を不服とし CAS へ提訴。FIFA は『政治的に複雑』として 15 年間判断を先送り、2026 年 W 杯共催国カナダのビザ発給拒否など地政学的対立に発展。試運転 7-K Slot-1 で動画化 (修正前 F-13.B で has_jp_coverage=False 判定)、F-trial-run-post-fix WebSearch 後追いで jiji.com Tier 2 関連報道済みと判明 = stream_2_candidate パターン。",
+      "sources": ["Middle_East_Eye (en/GB/middle_east)"],
+      "region": "middle_east_sports",
+      "topic_category": "sports_geopolitics"
+    },
+    {
+      "event_id": "cls-33b4f4960bf9_7K",
+      "source_origin": "trial_run_7K_2026-05-01",
+      "title": "Gaza was the scandal that should have ended Keir Starmer's political career",
+      "summary": "英国スターマー首相が駐米大使ピーター・マンデルソン氏の任命プロセス (マンデルソン・サガ) を巡り窮地。中東メディアは、人事疑惑よりもガザ情勢でのイスラエル無条件支援こそ本来の政治的致命傷であるべきだと批判。英国による監視飛行や F-35 部品供給継続が『誠実さ』と国際法遵守の矛盾を露呈。試運転 7-K Slot-2 で動画化 (修正前 F-13.B で False 判定)、F-trial-run-post-fix WebSearch 後追いで Nikkei Tier 1 + Bloomberg JP Tier 2 + Jiji Tier 2 で広範報道済みと判明 = stream_2_candidate パターン (golden_set blind_005 と同じ事象)。",
+      "sources": ["Middle_East_Eye (en/GB/middle_east) — opinion"],
+      "region": "europe_uk",
+      "topic_category": "political_moral_critique"
+    },
+    {
+      "event_id": "cls-204a683f73ee_7K",
+      "source_origin": "trial_run_7K_2026-05-01",
+      "title": "In Gaza, life flickers as power cuts shatter livelihoods and healthcare",
+      "summary": "ガザ地区では 2023 年の電力遮断以降、ジェネレーターの老朽化と部品不足により、医療と経済が『完全な暗黒』の淵にある。イスラエルによる制限で潤滑油価格が 100 倍に暴騰し、中小企業の 9 割が廃業の危機に直面するなど、単なる物不足を超えた産業破壊が進んでいる。試運転 7-K Slot-3 で動画化、F-trial-run-post-fix WebSearch 後追いで 2026-04 時点の特定角度 (産業破壊・社会変容) は日本主要メディア未報道と判明 = 真の blind_spot 判定は妥当 (golden_set blind_004 と同じ事象だが時間軸の異なるエントリ)。",
+      "sources": ["Middle_East_Eye (en/GB/middle_east)"],
+      "region": "middle_east",
+      "topic_category": "humanitarian_structural_collapse"
+    },
+    {
+      "event_id": "cls-6be4fc09d9ed",
+      "source_origin": "trial_run_2026-05-07",
+      "title": "'Insider trading': Oil and stocks jolt on news of US-Iran deal as some cry 'manipulation'",
+      "summary": "米イラン合意ニュース直前に原油・株式市場で異常取引、インサイダー疑惑。Axios 報道の 70 分前に約 9.2 億ドルの原油ショートが構築され、報道直後に約 1.25 億ドルの利益が出たと推計される。海外の市場関係者・政治家が『外交情報を金融商品化した国家規模のインサイダー取引』『TACO トレード』として警鐘を鳴らす一方、日本主要メディアは外交ニュースとしての扱いに留まる。",
+      "sources": ["Middle_East_Eye (en/GB/middle_east)"],
+      "region": "americas_global",
+      "topic_category": "economic_political_corruption"
+    },
+    {
+      "event_id": "cls-0c7fa7c667d6",
+      "source_origin": "trial_run_2026-05-07",
+      "title": "Russian man sets himself on fire at war memorial on anniversary of Ukraine invasion, authorities suppress news of it",
+      "summary": "ウクライナ侵攻 3 周年当日 (2025 年 2 月 24 日) にロシアのカリーニングラードで 37 歳男性アレクサンダー・オクネフ氏が『1200 名の親衛隊員記念碑』で焼身自殺。ロシア当局が報道を即時削除して隠蔽したと独立系メディア iStories + エストニア Delfi + リトアニア LRT + Meduza の共同調査が報道。日本主要メディアはマクロな戦況・プーチン発言・経済制裁中心で本事件は未報道。",
+      "sources": ["Meduza (ru/RU/russia)"],
+      "region": "russia_ukraine",
+      "topic_category": "russia_internal_protest_suppression"
+    },
+    {
+      "event_id": "cls-a4132ec7d949",
+      "source_origin": "trial_run_2026-05-07",
+      "title": "Legal complaint filed by Palestine activists against Met Police chief over synagogue remarks",
+      "summary": "ロンドン警視庁マーク・ローリー総監が、パレスチナ支持デモの主催者がシナゴーグ近くを行進する意図があったと示唆する発言を The Times / ITV News に行ったことに対し、パレスチナ連帯キャンペーン (PSC) 等が MOPAC に正式な法的苦情を申し立てた。デモルートは事前に警察と協議・合意済みで、団体側は『警察の中立性を著しく損ない、参加者を反ユダヤ主義として不当に貶める』と批判。英国の親パレスチナ運動と治安当局の緊張、表現の自由とヘイトクライム対策の境界線問題。",
+      "sources": ["Middle_East_Eye (en/GB/middle_east)"],
+      "region": "europe_uk",
+      "topic_category": "civil_liberties_protest_policing"
+    }
+  ]
+}
