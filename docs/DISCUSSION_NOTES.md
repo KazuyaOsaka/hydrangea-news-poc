@@ -14,6 +14,167 @@
 
 ## 未分類 (Active)
 
+### 2026-05-07: 台本表現:特定角度未報道のナレーション課題 (F-particular-angle-design レビューで派生)
+
+**背景**:
+F-particular-angle-design (2026-05-07) で 25 件 LLM アノテーション結果をカズヤがレビューした際、
+系統 1 と判定された事象のうち blind_002/004/009 のような「広範事件は日本主要メディアで報道済み、
+特定角度のみ未報道」というパターンで、台本に「日本では報じられていない」と書くと嘘になる
+違和感が指摘された。
+
+**カズヤの哲学的制約**:
+- 言い回しを個別に指定するプロンプトルールは作りたくない (= ルール累積で全体劣化)
+- article_writer.py は触りたくない (= 不変原則 1、記事クオリティの核心)
+- LLM の知性に期待する設計を維持したい
+
+**解決方向性 (議論中)**:
+particular_angle メタデータを script_writer.py 新ルートに渡し、LLM が自分で言い回しを選択する設計。
+具体的には:
+- jp_coverage_status: 完全黙殺 / 広範のみ報道 / 解釈差
+- core_question: 特定角度の核心
+- differentiation_from_mainstream: 解釈差の内容
+これらを台本生成 LLM に渡すと、LLM が:
+- 完全黙殺 → 「日本では報じられなかった」
+- 広範のみ報道 → 「日本でも取り上げられたが、◯◯という構造には触れていない」
+- 解釈差 → 「日本のメディアは××と捉えたが、海外では△△と批判されている」
+を文脈に応じて選択できる想定。
+
+**自動化前提**:
+- F-particular-angle-redesign で 1.5 分類確定 (jp_coverage_status の細分化)
+- F-stream-2-filter-design で stream_2 候補に解説価値メタデータ付与
+- F-jp-coverage-tune で jp_coverage_status のメタデータ自動付与
+これらが揃った段階で script_writer.py 新ルートに particular_angle メタデータを統合する設計。
+
+**Phase A.5-3b 手動 PoC での扱い**:
+1 本目の素材 (Insider trading 候補) で実際に試行錯誤しながら表現を確立する。
+カズヤがプロンプト微調整しながら最適解を探る運用。
+バッチ化はせず PoC 内で吸収。
+
+**ベストプラクティス調査**:
+台本生成 LLM への構造化メタデータ入力の最新事例 (世界のベストプラクティス) を
+Phase A.5-3b 着手前に web search で調査する想定。
+
+**ステータス**: `Active` (Phase A.5-3b 手動 PoC で実装試行、F-particular-angle-redesign + F-stream-2-filter-design + F-jp-coverage-tune 完了後に自動化)
+
+**出典**:
+- F-particular-angle-design レビュー (2026-05-07、カズヤ指摘)
+- annotations.json blind_002/004/009 の判定差分
+
+### 2026-05-07: 系統 1.5 分類追加の検討 (F-particular-angle-design レビューで派生)
+
+**背景**:
+F-particular-angle-design (2026-05-07) で 25 件レビュー時、カズヤから「一部報道だけど観点不足
+っていう 1.5 分類儲けてもいいのかもしれない」と提案。現状の 3 分類 (系統 1 / 系統 2 / 対象外)
+だと、系統 1 の中に「完全空白」と「広範のみ報道、特定角度未報道」が混在し、台本 LLM が
+判断に迷う構造的問題がある。
+
+**4 分類提案**:
+- 系統 1 (silence_gap): 広範事件も特定角度も両方未報道
+- 系統 1.5 (perspective_gap, 新規): 広範事件は報道済み + 特定角度のみ未報道
+- 系統 2 (framing_inversion): 特定角度は報道済みだが解釈差
+- 動画化対象外: 特定角度が報道済みかつ解釈も同じ
+
+**メリット**:
+- 台本表現の分類別ルールが明確化 (系統 1 / 1.5 / 2 で別表現)
+- 25 件アノテーション分布が可視化される (系統 1 完全黙殺 6 件 + 系統 1.5 約 5 件 + 系統 2: 13 件 + 対象外: 1 件)
+- F-13.B 二段階クエリ生成 (広範事件クエリ + 特定角度クエリ) の責務が明確化
+- F-stream-2-filter-design の責務範囲が縮まる (系統 2 のみ担当)
+
+**対処方針**:
+F-particular-angle-redesign を新規バッチとして追加。本バッチ (F-particular-angle-design)
+は 3 分類のまま完了させ、別バッチで 4 分類化を対処する設計。理由は:
+- F-particular-angle-design のスコープ拡張は「勝手にスコープ広げない」原則違反
+- 1.5 分類化は PARTICULAR_ANGLE_DEFINITION.md 改訂 + annotations.json 再分類が必要 (独立した責務)
+- 別バッチで「動くものを壊さない」設計
+
+**想定工数**: 2-3 時間 (PARTICULAR_ANGLE_DEFINITION.md 改訂 + annotations.json LLM 再抽出 or 手動再分類 + DISCUSSION_NOTES + DECISION_LOG 更新)
+
+**ステータス**: `Active` (F-particular-angle-redesign で対処予定、F-stream-2-filter-design + F-jp-coverage-tune の前提となる)
+
+**出典**:
+- F-particular-angle-design レビュー (2026-05-07、カズヤ提案)
+- annotations.json 25 件の系統分布実態
+
+### 2026-05-07: Hydrangea 動画化候補の系統分布実態 (F-particular-angle-design レビューで観察)
+
+**背景**:
+F-particular-angle-design (2026-05-07) のレビューで、カズヤから「直近で日本のメディアが完全に
+黙殺したり報道規制するみたいなニュースはなかったってことなんだね」という観察が提示された。
+データに基づいて整理した結果、Hydrangea が動画化する典型は実は完全黙殺ではなく、系統 2 や
+系統 1.5 が中心であることが判明。
+
+**25 件の分布実態 (LLM 推定 + カズヤ観察)**:
+| 分類 | 件数 | 比率 | 特徴 |
+|---|---|---|---|
+| 完全黙殺 (系統 1) | 約 6 件 | 約 24% | Hydrangea ど真ん中、ただし少数派 |
+| 広範のみ報道 (系統 1.5、4 分類化後に確定) | 約 5 件 | 約 20% | blind_002/004/009 等 |
+| 解釈差 (系統 2) | 約 13 件 | 約 52% | covered 系列が中心 |
+| 動画化対象外 | 1 件 | 4% | NVIDIA 株 |
+
+**完全黙殺 6 件の特徴**:
+- blind_001 (Ukrainian forces civilian casualties) → 西側プロパガンダ整合バイアス
+- blind_003 (US-Israel intervention frees Israeli-Turkish) → 米イスラエル同盟の影
+- blind_007 (Putin ally superyacht) → 制裁突破の限界露呈
+- blind_010 (Israel endless war fuelled) → MEE オピニオン論考
+- 試運転 ロシア焼身 → 報道規制 (ロシア国内 + 西側両方)
+- 試運転 Met Police → Palestine activists vs Met Police chief
+
+これらは全て **Hydrangea コアミッション 4 軸の第 2 軸 (外交・経済・利害関係面、米国忖度・西側
+同盟関係)** ど真ん中。完全黙殺は「ど真ん中だが少数派」というのが現実。
+
+**カズヤの確認**:
+F-1 EditorialMissionFilter で「日本人が知るべき」フィルタは既に機能している (試運転 18/364 通過、
+通過率 5%)。25 件アノテーションは全て F-1 通過済みの「Hydrangea が取り上げるべき」事象。
+ローカルすぎる出来事は弾かれている。
+
+**含意**:
+- F-stream-2-filter-design は約 13 件の系統 2 候補を処理する責務
+- F-jp-coverage-tune は二段階クエリ生成で系統 1 完全黙殺と系統 1.5 広範報道の区別を機械化する責務
+- Phase A.5-3b 手動 PoC では系統 1.5 の表現課題が中心になる可能性
+
+**ステータス**: `Resolved (記録済み)` (現状の設計が問題ないことが確認された、参考データとして保存)
+
+**出典**:
+- F-particular-angle-design レビュー (2026-05-07、カズヤ観察 + Claude 補正)
+- annotations.json 25 件の実データ
+- F-trial-run-post-fix 試運転 18/364 通過実績
+
+### 2026-05-07: covered_002 確定:米ロ停戦は系統 2、日本忖度パターン (F-particular-angle-design レビューで確定)
+
+**背景**:
+F-particular-angle-design (2026-05-07) のレビューで covered_002 (米ロ停戦電話会談、
+トランプ 20 項目交渉) について、Claude (claude.ai) が「トランプ批判は欧米メインストリームでも
+普通にされてる、視聴者にとって新鮮な角度か?」と懸念を提示し、stream_2 から動画化対象外への
+格下げを示唆した。これに対しカズヤは「日本は忖度している良い例だからこれは取り扱うに値する」
+と判断、Claude の意見を撤回。
+
+**カズヤ判断の根拠**:
+- 欧米メインストリーム (NYT 等): トランプ独断外交を批判する
+- 日本主要メディア (日経 / NHK 等): 「停戦の可能性」を中立報道、深掘りしない
+- これは米国忖度 (Hydrangea 4 軸第 2 軸) の典型例
+- Hydrangea の視聴者は日本人で、日本メディアの忖度こそが取り扱う対象
+
+**Claude 反省**:
+元の評価「欧米でも報道されてるから視聴者に新鮮じゃない」は視点を西側中心で捉えていた。
+Hydrangea ミッションは「日本人視聴者にとっての知識ギャップ」であり、欧米基準ではない。
+意見を撤回し、LLM 判定 (stream_2_framing_inversion) で確定。
+
+**確定**:
+- covered_002 → stream_2_framing_inversion (LLM 判定維持)
+- annotations.json 修正なし
+- 米ロ停戦事象は Hydrangea 動画化候補として有効
+
+**含意**:
+- Claude (claude.ai) のレビュー判断にも視点バイアスのリスクがある
+- カズヤレビューが「日本人視聴者基準」を保持する役割を持つ
+- 今後のレビューでも Hydrangea ミッションの「日本人視聴者中心性」を意識する必要
+
+**ステータス**: `Resolved` (covered_002 は stream_2 で確定、Claude 視点バイアス事例として記録)
+
+**出典**:
+- F-particular-angle-design レビュー (2026-05-07、カズヤ vs Claude 議論)
+- annotations.json covered_002 詳細
+
 ### 2026-05-07: 特定角度抽出の LLM 限界観察 (F-particular-angle-design で観察)
 
 **背景**:
