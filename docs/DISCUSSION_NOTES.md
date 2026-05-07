@@ -1,6 +1,6 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-07 (F-particular-angle-design 完了、「特定角度」概念正典化 + 25 件 LLM アノテーション完了時点)
+最終更新: 2026-05-08 (F-particular-angle-redesign 完了、3 分類 → 4 分類化 + 系統 1.5 perspective_gap 新設 + 台本表現ガイドライン正典化、4 エントリ更新)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -13,6 +13,54 @@
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-08: 4 分類化で stream_2 = 0 件 / stream_1_5 = 20 件 という想定外分布 — LLM 集約バイアスか必然か (F-particular-angle-redesign で観察)
+
+**背景**:
+F-particular-angle-redesign (2026-05-08) で 25 件を 4 分類版で LLM 再分類した結果、
+LLM 推定段階で **stream_2 = 0 件** (想定 13 件) / **stream_1_5 = 20 件** (想定 5 件)
+という想定外分布が観測された。3 分類版で stream_2 だった 13 件全て + stream_1 だった
+7 件が新分類で stream_1_5 に集約された。
+
+**LLM の reasoning は技術的に整合**:
+- covered_002 (米ロ停戦): 「広範事件であるトランプ・プーチン接触は日本でも報道済みだが、
+  既存 G7 合意を破壊するという特定角度の構造的影響は日本主要メディアで深掘り未報道」
+- blind_007 (Putin ヨット): 「広範事件であるロシア大富豪ヨットのホルムズ通過自体が
+  日本で未報道、特定角度 (制裁網無効化の構造分析) も未報道 → 両方未報道で stream_1」
+
+**論点**:
+(a) **LLM 集約バイアス説**: LLM は「特定角度の解釈差 (stream_2) を識別する」より
+「特定角度の不在 (stream_1_5) を識別する」方が易しいため、迷ったら stream_1_5 を選ぶ
+傾向。プロンプト改善で stream_2 識別を強化する余地あり。
+
+(b) **必然的帰結説**: 海外メディアの特定角度 (例: MEE オピニオン記事の構造分析) は、
+その視点自体が日本主要メディアで報道されていないことが多い。同じ視点を日本メディアが
+取り上げて、かつ異なる解釈で論じるケース (= 厳密な stream_2) は実態として稀。3 分類版
+の stream_2 = 「広範事件レベルでの解釈差」だったため数が多く見えたが、4 分類化で正しく
+『特定角度レベル』に絞ると 0 になるのはむしろ正しい構造化。
+
+**Hydrangea コアミッションへの影響**:
+- (a) 説なら → プロンプトを微調整して stream_2 識別を強化、F-stream-2-filter-design は
+  当初想定通りの規模で実装
+- (b) 説なら → F-stream-2-filter-design は **責務範囲縮小** (stream_2 候補が極小、
+  小規模実装で済む) + F-jp-coverage-tune の二段階クエリ生成が **より優先**
+
+**カズヤレビューで判別する**:
+F-particular-angle-redesign Task E (カズヤレビュー) で stream_2 に再分類されるケースが
+何件あるかで判断:
+- 0 件 → (b) 説支持、F-stream-2-filter-design 縮小
+- 1-2 件 → (a) と (b) のハイブリッド、F-stream-2-filter-design はミニマル実装
+- 5+ 件 → (a) 説支持、F-stream-2-filter-design は当初想定通り
+
+**ステータス**: `Active (要カズヤ判別)` — F-particular-angle-redesign Task E カズヤ
+レビュー後に判明、後続バッチ (F-stream-2-filter-design / F-jp-coverage-tune) の
+スコープ判断材料
+
+**出典**:
+- F-particular-angle-redesign 完了 (2026-05-08)
+- `docs/runs/F-particular-angle-redesign/REPORT.md` セクション 4 + 9
+- `docs/runs/F-particular-angle-redesign/reclassification_diff.json` (stream_2 → stream_1_5 の 13 件遷移)
+- `docs/runs/F-particular-angle-design/annotations.json` (4 分類版、各 event の reasoning に broad_event / particular_angle 報道状態が明記)
 
 ### 2026-05-07: 台本表現:特定角度未報道のナレーション課題 (F-particular-angle-design レビューで派生)
 
@@ -54,11 +102,23 @@ particular_angle メタデータを script_writer.py 新ルートに渡し、LLM
 台本生成 LLM への構造化メタデータ入力の最新事例 (世界のベストプラクティス) を
 Phase A.5-3b 着手前に web search で調査する想定。
 
-**ステータス**: `Active` (Phase A.5-3b 手動 PoC で実装試行、F-particular-angle-redesign + F-stream-2-filter-design + F-jp-coverage-tune 完了後に自動化)
+**ステータス更新 (2026-05-08, F-particular-angle-redesign 完了時)**: `Active` (一部 Resolved)。
+F-particular-angle-redesign (2026-05-08) で **メタデータ構造の正典化が完了**:
+`docs/PARTICULAR_ANGLE_DEFINITION.md` 新サブセクション 3.5「系統別の台本表現の方向性」で
+particular_angle_metadata 構造 (stream_classification + core_question +
+differentiation_from_mainstream + hydrangea_axis_alignment) を確定。LLM への強制ルールは
+書かず例示に留める設計哲学を明文化。残作業は (a) 具体的な言い回しの最適化 (Phase A.5-3b
+手動 PoC で 1 本作りながら試行錯誤、Active のまま) + (b) F-jp-coverage-tune で
+particular_angle_metadata の機械生成を実装 (二段階クエリ生成と一体化)。
+
+**ステータス**: `Active` (Phase A.5-3b 手動 PoC で言い回し最適化、F-jp-coverage-tune で
+メタデータ自動付与、F-stream-2-filter-design 完了後に script_writer.py 新ルートに統合)
 
 **出典**:
 - F-particular-angle-design レビュー (2026-05-07、カズヤ指摘)
-- annotations.json blind_002/004/009 の判定差分
+- F-particular-angle-redesign 完了 (2026-05-08、メタデータ構造の正典化)
+- `docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 3.5 (台本表現ガイドライン)
+- annotations.json blind_002/004/009 の判定差分 (4 分類化後は全て stream_1_5)
 
 ### 2026-05-07: 系統 1.5 分類追加の検討 (F-particular-angle-design レビューで派生)
 
@@ -89,11 +149,16 @@ F-particular-angle-redesign を新規バッチとして追加。本バッチ (F-
 
 **想定工数**: 2-3 時間 (PARTICULAR_ANGLE_DEFINITION.md 改訂 + annotations.json LLM 再抽出 or 手動再分類 + DISCUSSION_NOTES + DECISION_LOG 更新)
 
-**ステータス**: `Active` (F-particular-angle-redesign で対処予定、F-stream-2-filter-design + F-jp-coverage-tune の前提となる)
+**実績工数 (2026-05-08 補正)**: 約 5-6 時間 (PARTICULAR_ANGLE_DEFINITION.md 改訂 + scripts/reclassify_annotations.py 新規 + Gemini API 503 高負荷で再分類実行 1:36 hr + per-call timeout + incremental save の追加 + scripts/finalize_annotations.py 改修 + scripts/generate_review_draft_v2.py 新規 + REPORT 統合 + ドッグフーディング)。Gemini API 高負荷耐性の追加実装が想定外コスト。
+
+**ステータス**: ★ **Resolved (F-particular-angle-redesign / 2026-05-08 で実施完了、Task E カズヤレビュー待ち)**。
+4 分類化を実施し、`docs/PARTICULAR_ANGLE_DEFINITION.md` を 4 分類版に大幅改訂、25 件アノテーションを 4 分類で再分類した。LLM 推定段階の分布は **stream_1=4 / stream_1_5=20 / stream_2=0 / out_of_scope=1** で、想定値 (stream_1≈6 / stream_1_5≈5 / stream_2≈13 / out_of_scope=1) と大きく乖離。stream_1_5 が想定外に多い (20 件) 結果は LLM の集約バイアスか 4 分類定義の必然的帰結かをカズヤレビューで判別する必要があり、F-stream-2-filter-design の責務スコープ縮小判断にも影響する論点として残る。
 
 **出典**:
 - F-particular-angle-design レビュー (2026-05-07、カズヤ提案)
-- annotations.json 25 件の系統分布実態
+- F-particular-angle-redesign 完了 (2026-05-08)
+- `docs/runs/F-particular-angle-redesign/REPORT.md` セクション 4 (分布実測値) + 9 (想定外結果の解釈)
+- annotations.json 25 件の 4 分類分布実態
 
 ### 2026-05-07: Hydrangea 動画化候補の系統分布実態 (F-particular-angle-design レビューで観察)
 
@@ -103,40 +168,66 @@ F-particular-angle-design (2026-05-07) のレビューで、カズヤから「�
 データに基づいて整理した結果、Hydrangea が動画化する典型は実は完全黙殺ではなく、系統 2 や
 系統 1.5 が中心であることが判明。
 
-**25 件の分布実態 (LLM 推定 + カズヤ観察)**:
-| 分類 | 件数 | 比率 | 特徴 |
-|---|---|---|---|
-| 完全黙殺 (系統 1) | 約 6 件 | 約 24% | Hydrangea ど真ん中、ただし少数派 |
-| 広範のみ報道 (系統 1.5、4 分類化後に確定) | 約 5 件 | 約 20% | blind_002/004/009 等 |
-| 解釈差 (系統 2) | 約 13 件 | 約 52% | covered 系列が中心 |
-| 動画化対象外 | 1 件 | 4% | NVIDIA 株 |
+**25 件の分布実態 (★ F-particular-angle-redesign / 2026-05-08 で 4 分類実測値に更新)**:
 
-**完全黙殺 6 件の特徴**:
+3 分類版 (F-particular-angle-design / 2026-05-07):
+| 分類 | 件数 | 比率 |
+|---|---|---|
+| stream_1_silence_gap | 11 件 | 44% |
+| stream_2_framing_inversion | 13 件 | 52% |
+| out_of_scope | 1 件 | 4% |
+
+4 分類版 LLM 推定 (F-particular-angle-redesign / 2026-05-08):
+| 分類 | 件数 | 比率 | 想定値 (バッチ仕様) | 差異 |
+|---|---|---|---|---|
+| 系統 1 (silence_gap) | 4 件 | 16% | 約 6 件 | -2 |
+| 系統 1.5 (perspective_gap) ★ NEW | **20 件** | **80%** | 約 5 件 | **+15** |
+| 系統 2 (framing_inversion) | **0 件** | **0%** | 約 13 件 | **-13** |
+| 動画化対象外 | 1 件 | 4% | 1 件 | 0 |
+
+**4 分類実測の含意 (2026-05-08 追加)**: stream_1_5 が圧倒的多数 (80%)、stream_2 が
+0 件という想定外結果は LLM が 4 分類定義を厳密適用した結果で、海外メディアの特定
+角度は『日本主流メディアと同じフレームでは報道されない』ケースが多い構造を可視化。
+カズヤレビューで stream_2 が増えるか、LLM の集約バイアスによるものかを判別する。
+
+**4 分類版 stream_1 (silence_gap) 4 件の特徴 (2026-05-08 確定)**:
 - blind_001 (Ukrainian forces civilian casualties) → 西側プロパガンダ整合バイアス
 - blind_003 (US-Israel intervention frees Israeli-Turkish) → 米イスラエル同盟の影
 - blind_007 (Putin ally superyacht) → 制裁突破の限界露呈
-- blind_010 (Israel endless war fuelled) → MEE オピニオン論考
-- 試運転 ロシア焼身 → 報道規制 (ロシア国内 + 西側両方)
-- 試運転 Met Police → Palestine activists vs Met Police chief
+- 試運転 cls-0c7fa7c667d6 (ロシア焼身) → 報道規制 (ロシア国内 + 西側両方)
 
-これらは全て **Hydrangea コアミッション 4 軸の第 2 軸 (外交・経済・利害関係面、米国忖度・西側
-同盟関係)** ど真ん中。完全黙殺は「ど真ん中だが少数派」というのが現実。
+3 分類版で stream_1 だった blind_010 / 試運転 cls-204a683f73ee_7K (Gaza 7-K) /
+cls-6be4fc09d9ed (Insider trading) / cls-a4132ec7d949 (Met Police) は 4 分類化で
+stream_1_5 に移動した。これらは 4 分類定義に厳密に従うと「広範事件は日本でも
+報道済み (= 米イラン対立 / ガザ電力危機 / 米イラン合意 / Palestine デモ)、
+特定角度のみ未報道」という構造に該当する。完全黙殺の核は **米国・イスラエル・
+ロシアへの忖度** ど真ん中で、4 分類化後は **24% → 16% に縮小** した。
 
 **カズヤの確認**:
 F-1 EditorialMissionFilter で「日本人が知るべき」フィルタは既に機能している (試運転 18/364 通過、
 通過率 5%)。25 件アノテーションは全て F-1 通過済みの「Hydrangea が取り上げるべき」事象。
 ローカルすぎる出来事は弾かれている。
 
-**含意**:
-- F-stream-2-filter-design は約 13 件の系統 2 候補を処理する責務
-- F-jp-coverage-tune は二段階クエリ生成で系統 1 完全黙殺と系統 1.5 広範報道の区別を機械化する責務
-- Phase A.5-3b 手動 PoC では系統 1.5 の表現課題が中心になる可能性
+**含意 (★ 2026-05-08 更新)**:
+- F-stream-2-filter-design の **責務範囲縮小可能性**: LLM 推定段階で stream_2 = 0 件
+  なので、当初想定の「13 件の系統 2 候補を処理」から大幅縮小する可能性。カズヤレビュー
+  結果次第で実装スコープ判断 (1-2 件なら新規 LLM 解説価値判定 1 段のみで済む)
+- F-jp-coverage-tune の **優先度上昇**: 二段階クエリ生成 (広範事件クエリ + 特定角度
+  クエリ) で系統 1 完全黙殺 vs 系統 1.5 広範報道を機械的に判別する責務、本バッチで
+  真値 25 件 (broad_event_jp_coverage + particular_angle_jp_coverage 別フィールド)
+  が整備されたため設計確度が向上、F-stream-2-filter-design より優先される構造に
+- Phase A.5-3b 手動 PoC の **重要性が増す**: stream_1_5 が圧倒的多数なので、表現
+  課題は「事件は報じられたが角度が欠落」を視聴者の違和感無く伝える文体を確立する
+  ことが核心。`PARTICULAR_ANGLE_DEFINITION.md` セクション 3.5 のメタデータ構造を
+  script_writer.py 新ルートに渡し、LLM が自律選択する設計を 1 本作りながら検証
 
-**ステータス**: `Resolved (記録済み)` (現状の設計が問題ないことが確認された、参考データとして保存)
+**ステータス**: `Resolved (記録済み + 4 分類実測で更新済み)` (F-particular-angle-redesign / 2026-05-08 で 4 分類分布が確定、F-stream-2-filter-design + F-jp-coverage-tune の責務範囲再定義の根拠データに発展)
 
 **出典**:
 - F-particular-angle-design レビュー (2026-05-07、カズヤ観察 + Claude 補正)
-- annotations.json 25 件の実データ
+- F-particular-angle-redesign 完了 (2026-05-08、4 分類分布実測)
+- `docs/runs/F-particular-angle-redesign/REPORT.md` セクション 4-6 (分布 + 顕著な変更パターン)
+- `docs/runs/F-particular-angle-design/annotations.json` (4 分類版上書き、25 件の実データ)
 - F-trial-run-post-fix 試運転 18/364 通過実績
 
 ### 2026-05-07: covered_002 確定:米ロ停戦は系統 2、日本忖度パターン (F-particular-angle-design レビューで確定)
