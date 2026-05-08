@@ -1,0 +1,259 @@
+{
+  "version": "1.0",
+  "batch": "F-particular-angle-redesign-extension",
+  "task": "Task D: add_sontaku_signals",
+  "generated_at": "2026-05-08T08:47:02.845193+00:00",
+  "started_at": "2026-05-08T08:38:31.243123+00:00",
+  "llm_model": "gemini-analysis-tier-extended",
+  "total_events": 25,
+  "summary": {
+    "total": 25,
+    "level_distribution": {
+      "high": 7,
+      "low": 1,
+      "none": 3,
+      "medium": 14,
+      "unknown": 0
+    },
+    "type_distribution": {
+      "diplomatic": 20,
+      "domestic": 1,
+      "media_industry": 1,
+      "null": 3,
+      "unknown": 0
+    },
+    "extraction_confidence_distribution": {
+      "high": 23,
+      "low": 0,
+      "medium": 2,
+      "unknown": 0
+    }
+  },
+  "entries": [
+    {
+      "event_id": "blind_001",
+      "title": "Ukrainian Forces Wounded, Killed 1,725 Civilians in Q1 2026",
+      "level": "high",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "blind_002",
+      "title": "Israel's top Jewish religious body 'refuses to condemn' smashing of Jesus statue",
+      "level": "medium",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "blind_003",
+      "title": "US-Israel intervention frees Israeli-Turkish citizen held for serving in Israeli army",
+      "level": "medium",
+      "type": "diplomatic",
+      "extraction_confidence": "medium",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "blind_004",
+      "title": "In Gaza, life flickers as power cuts shatter livelihoods and healthcare",
+      "level": "medium",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "blind_005",
+      "title": "Gaza was the scandal that should have ended Keir Starmer's political career",
+      "level": "high",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "blind_007",
+      "title": "Putin ally's $500 million Russian superyacht sails through Hormuz despite US blockade",
+      "level": "medium",
+      "type": "diplomatic",
+      "extraction_confidence": "medium",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "blind_008",
+      "title": "Israel accused of using 'water as a weapon' against Palestinians in Gaza",
+      "level": "high",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "blind_009",
+      "title": "The real reason Iran and the US cannot end the war: Money",
+      "level": "medium",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "blind_010",
+      "title": "Israel's policy of endless war is fuelled by the crisis of Zionism",
+      "level": "high",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "covered_001",
+      "title": "ホルムズ海峡めぐりアメリカの対イラン封鎖始まる イランは反発",
+      "level": "high",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "covered_002",
+      "title": "米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』",
+      "level": "high",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "covered_003",
+      "title": "米中 関税協議 / 通商交渉 (2026 年 4 月)",
+      "level": "high",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "covered_004",
+      "title": "ローマ教皇『多数派の専制』を警告 民主主義に危機感",
+      "level": "medium",
+      "type": "domestic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "covered_005",
+      "title": "ブラジル ルラ政権、アマゾン開催の COP30 で狙うグローバルサウス主導役",
+      "level": "medium",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "covered_006",
+      "title": "NVIDIA 株が半年ぶり最高値更新 衰えぬ AI 需要、循環投資にはリスク",
+      "level": "none",
+      "type": null,
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "covered_007",
+      "title": "ナイジェリアで 100 人拉致 過激派襲撃、死者多数か",
+      "level": "none",
+      "type": null,
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "covered_008",
+      "title": "マリ 軍事政権に反政府勢力が一斉攻撃 暫定国防相死亡",
+      "level": "none",
+      "type": null,
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "covered_009",
+      "title": "インド・パキスタン カシミール 緊張 (4 月 22 日テロ攻撃 + 5 月 7-10 日 Operation Sindoor)",
+      "level": "medium",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "covered_010",
+      "title": "イエメン・フーシ派、イスラエルに弾道ミサイル発射し『イラン支援』を公式表明",
+      "level": "medium",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "cls-7bd1406438b6",
+      "title": "Palestine football appeals Fifa decision to do nothing about Israeli clubs in illegal settlements",
+      "level": "medium",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "cls-33b4f4960bf9_7K",
+      "title": "Gaza was the scandal that should have ended Keir Starmer's political career",
+      "level": "medium",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "cls-204a683f73ee_7K",
+      "title": "In Gaza, life flickers as power cuts shatter livelihoods and healthcare",
+      "level": "medium",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "cls-6be4fc09d9ed",
+      "title": "'Insider trading': Oil and stocks jolt on news of US-Iran deal as some cry 'manipulation'",
+      "level": "medium",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "cls-0c7fa7c667d6",
+      "title": "Russian man sets himself on fire at war memorial on anniversary of Ukraine invasion, authorities suppress news of it",
+      "level": "low",
+      "type": "media_industry",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    },
+    {
+      "event_id": "cls-a4132ec7d949",
+      "title": "Legal complaint filed by Palestine activists against Met Police chief over synagogue remarks",
+      "level": "medium",
+      "type": "diplomatic",
+      "extraction_confidence": "high",
+      "success": true,
+      "error": null
+    }
+  ]
+}

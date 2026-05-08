@@ -3322,3 +3322,181 @@ incremental save + timeout 追加 → 第 2 試行で完走、というスクリ
   - `docs/DISCUSSION_NOTES.md` (「2026-05-07: 系統 1.5 分類追加の検討」を Resolved 化、「2026-05-07: 台本表現課題」「2026-05-07: 動画化候補の系統分布実態」を 4 分類版データで更新)
 - 関連: F-particular-angle-design (前バッチ、3 分類版を確立 + DISCUSSION_NOTES 4 エントリ追加で本バッチの起点)、F-stream-2-filter-design (★ 本バッチ後カズヤレビュー結果で責務スコープ判断)、F-jp-coverage-tune (★ 本バッチで二段階クエリ生成の真値整備、優先度上昇)
 
+
+
+---
+
+## 2026-05-08: F-particular-angle-redesign-extension — 系統名 1/1.5/2 → 1/2/3 リネーム + 忖度シグナル独立化 + クラウド誤り 9 記録
+
+### 背景
+
+F-particular-angle-redesign 完了直後の Task E カズヤレビュー過程で、
+カズヤから本質的な指摘が 3 件提示された:
+
+1. **命名整理**: 「1.5 という命名は時間的経緯の痕跡で、定常状態の命名としては
+   不適切。1.5 じゃなくてそれが 2 で、今までの 2 が 3」
+2. **忖度シグナルの独立化**: 「忖度・報道規制・黙殺の構造」を系統判定に
+   組み込むと MECE が崩れる。系統判定は『報道状態』軸のみで MECE 化し、
+   忖度シグナルは別軸 (メタデータフィールド) で扱うべき
+3. **各論コントロール回避**: ジレンマ解説等のルール追加は記事品質劣化の
+   リスク、article_writer.py / script_writer.py の自由度阻害、LLM の知性
+   発揮を抑制。ドキュメント化せず LLM に委ねる
+
+これらを反映するため F-particular-angle-redesign の **拡張作業** として
+本バッチを実施。新規 commit + push で対応、コード変更なし
+(src/ tests/ configs/ への変更なし)。
+
+### 議論
+
+#### 命名整理 (1/1.5/2 → 1/2/3)
+
+カズヤ提案: 「1.5 じゃなくてそれが 2 で、今までの 2 が 3」。F-particular-angle-redesign
+の 4 分類は時間的経緯 (3 分類 → 4 分類) で命名されたため「1.5」という非定常
+ラベルが残った。定常状態に至った 4 分類体系では命名も整理し、純粋な順序
+ラベル (1/2/3) に統一する。系統 3 (旧 2、framing_inversion) は本来の意味
+(評価フレーム対立 + 忖度シグナル) を担う系統として正典化。
+
+#### 忖度シグナルの独立化 (sontaku_signals)
+
+カズヤ提案: 「忖度・報道規制・黙殺の構造を系統判定に組み込むと MECE が崩れる」。
+F-particular-angle-redesign 直後の議論で、系統 3 の判定基準として「ジレンマ
+解説」「忖度明示」のような各論ルールを追加する案が浮上したが、これは
+クラウド誤り 9 (各論コントロールへの誘惑) の典型例。代わりに sontaku_signals
+を **系統判定とは独立な別軸メタデータ** として正典化し、Step 4 (系統 3 判定)
+の追加軸に組み込む設計を採用。これにより:
+- 系統判定は『報道状態』軸のみで MECE
+- 忖度シグナルは F-1 EditorialMissionFilter (動画化価値) +
+  F-stream-2-filter-design 第二段階 (解説価値) で参照される独立軸として運用
+- Hydrangea コアミッション「忖度・報道規制をぶち壊す」と直接整合する事象を
+  3 系統横断で識別可能
+
+#### クラウド誤り 9 (各論コントロールへの誘惑) 記録
+
+レビュー過程で観察された「具体的指針 (視聴者ファースト 3 原則 / ジレンマ
+解説 / 忖度明示 / 台本表現ルール) を追加したくなる傾向」を、再発防止策と
+してクラウド誤り 9 に登録。CLAUDE.md にクラウド誤りセクションを新設 +
+DISCUSSION_NOTES に詳細エントリ追加 + PARTICULAR_ANGLE_DEFINITION.md
+セクション 3.7 で「LLM の知性に委ねる」設計哲学を正典化。
+
+### 決定
+
+#### Task A: PARTICULAR_ANGLE_DEFINITION.md 改訂
+
+- 系統名 1/1.5/2 → 1/2/3 にリネーム (機械的置換 + 関連プロセ修正)
+- 新サブセクション 1.2 (命名整理経緯) + 1.3 (忖度シグナル独立化経緯)
+- セクション 3 改訂: 4 分類定義を新命名で記述、Step 3-4 改良 (Step 3 =
+  「日本メディアが特定角度を語っているか」、Step 4 = 「評価対立 + 忖度
+  シグナル」)
+- 新サブセクション 3.5 (MECE 判別基準明示) + 3.6 (sontaku_signals 構造定義
+  + 系統判定との関係 + 後続バッチでの参照)
+- 既存 3.5 (系統別の台本表現の方向性) を 3.7 にリナンバー、メタデータ
+  構造に sontaku_signals 追加 + クラウド誤り 9 への参照追加
+
+#### Task B: scripts リネーム + 修正
+
+- reclassify_annotations.py / generate_review_draft_v2.py /
+  finalize_annotations.py の系統名リネーム
+- reclassify_annotations.py の LLM プロンプトに改良版 Step 0-4 + MECE
+  判別基準の核心を反映
+- generate_review_draft_v2.py の `_stream_label` を新命名 + 旧名併記に更新
+
+#### Task C: annotations.json 系統名リネーム + schema_version 更新
+
+- `estimated_stream` 値の機械的置換 (25 件中 20 件、
+  `stream_1_5_perspective_gap` → `stream_2_perspective_gap`、未使用の旧
+  `stream_2_framing_inversion` → `stream_3_framing_inversion`)
+- schema_version 2.0 → 2.1、`previous_schema_version=2.0` 記録
+- `legacy_stream_classification_v1` フィールド内の値は変更しない (3 分類版
+  の歴史的記録として保持)
+
+#### Task D: scripts/add_sontaku_signals.py 新規作成 + 25 件推定生成
+
+- 新規スクリプト (per-call timeout 90s + incremental save + resume) で
+  25 件分の sontaku_signals を LLM 推定生成
+- annotations.json 各 event に `sontaku_signals` フィールド付与 +
+  `kazuya_review.sontaku_signals_revised` スロット追加
+- `extension_log.json` に level / type / extraction_confidence 分布記録
+
+#### Task E: クラウド誤り 9 記録
+
+- CLAUDE.md にクラウド誤りセクション新設 + 誤り 9 本文を記載
+  (誤り / 動機 / 害 / 正しい設計 / カズヤ哲学 / 運用ルール)
+- DISCUSSION_NOTES に新エントリ追加 (Resolved、再発防止策確立)
+- 系統 3 (旧系統 2) の典型パターン (日本-海外の評価対立) も新エントリ追加
+  (Active、Phase A.5-3b で参照)
+
+#### Task F: 統合レポート + ドッグフーディング
+
+- REPORT.md にセクション 11 (拡張作業) 追加
+- DECISION_LOG (本エントリ) + FUTURE_WORK (拡張作業反映) +
+  DISCUSSION_NOTES (3 エントリ) + CURRENT_STATE 全置換更新
+
+#### 不変原則例外適用
+
+なし (新規 scripts + docs + CLAUDE.md のみ、src/ tests/ configs/ への変更
+なし)。
+
+### 結果
+
+#### 後続バッチへの影響
+
+- **F-jp-coverage-tune**: 二段階クエリ生成 (広範事件 + 特定角度) で系統 1
+  vs 系統 2 を機械判別する設計の前提が整備 (annotations.json schema 2.1 +
+  sontaku_signals 真値で精度評価可能)。優先度は本バッチで再確認: ★最優先
+- **F-stream-2-filter-design**: 系統 3 (旧系統 2) のみ担当 + sontaku_signals
+  を解説価値判定の追加軸として参照する設計。stream_3 候補が極小 (0 件)
+  想定だが、カズヤレビュー結果次第で再評価。系統 3 候補が 1-2 件なら小規模
+  実装で済む
+- **Phase A.5-3b 手動 PoC**: `particular_angle_metadata + sontaku_signals`
+  を `script_writer.py` 新ルートに渡し、LLM が言い回しを自律選択する設計
+  を 1 本作りながら検証
+
+#### Task E (★ 旧、4 分類版カズヤレビュー) の状態
+
+新分類体系 (1/2/3) + sontaku_signals メタデータ付きで実施。本拡張バッチ
+完了後にカズヤがレビュー → finalize_annotations.py --schema-version 2.0
+実行 → 後続バッチ判断、というフロー。
+
+#### LLM 推定段階の sontaku_signals 分布 (25 件、本拡張バッチ実測値)
+
+- level: high=7 / medium=14 / low=1 / none=3
+- type: diplomatic=20 / domestic=1 / media_industry=1 / null=3
+- extraction_confidence: high=23 / medium=2 / low=0
+- 実行時間: 約 9 分 (success=25 / error=0、timeout 警告 1 件 + 後続リトライで成功)
+- LLM モデル: gemini-analysis-tier-extended (analysis Tier 階層 +
+  max_output_tokens=4096)
+- 詳細は `docs/runs/F-particular-angle-redesign/extension_log.json` および
+  `docs/runs/F-particular-angle-design/annotations.json` の各 event の
+  `sontaku_signals` フィールドを参照。本バッチでは LLM 推定値として整備し、
+  カズヤレビュー後に `kazuya_review.sontaku_signals_revised` で確定。
+- 観察: type=diplomatic が 20 件と圧倒的多数。Hydrangea 入力 RSS 41 媒体
+  (MEE, Meduza, Al Jazeera 等) が外交・地政学事象を中心に扱うため、忖度
+  シグナルも外交的忖度が中心という構造的整合 (記録のみ、F-stream-2-filter-design
+  着手時の参考材料)。
+
+#### 不変原則違反
+
+なし (新規 scripts + docs + CLAUDE.md のみ、src/ tests/ configs/ への変更
+なし)。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規追加:
+  - `scripts/add_sontaku_signals.py` (LLM ベース sontaku_signals 推定スクリプト、resume + incremental save + per-call timeout)
+  - `docs/runs/F-particular-angle-redesign/extension_log.json` (拡張作業ログ + level / type / confidence 分布)
+- 改修:
+  - `docs/PARTICULAR_ANGLE_DEFINITION.md` (命名 1/2/3 + 1.2 / 1.3 / 3.5 / 3.6 / 3.7 サブセクション + Step 3-4 改良)
+  - `scripts/reclassify_annotations.py` (命名リネーム + LLM プロンプト改良版 Step 0-4)
+  - `scripts/generate_review_draft_v2.py` (命名リネーム + ラベル更新)
+  - `scripts/finalize_annotations.py` (命名リネーム)
+  - `docs/runs/F-particular-angle-design/annotations.json` (schema_version 2.0 → 2.1、25 件中 20 件 estimated_stream 値リネーム + sontaku_signals フィールド付与 + sontaku_signals_revised スロット追加)
+  - `CLAUDE.md` (クラウド誤りセクション新設 + 誤り 9 記載 + 最終更新日)
+  - `docs/runs/F-particular-angle-redesign/REPORT.md` (セクション 11 拡張作業追加)
+- 更新:
+  - `docs/CURRENT_STATE.md` (全置換更新、F-particular-angle-redesign-extension 完了反映)
+  - `docs/DECISION_LOG.md` (本エントリ追加)
+  - `docs/FUTURE_WORK.md` (拡張バッチを完了済みに移動、後続バッチ前提を更新)
+  - `docs/DISCUSSION_NOTES.md` (新規エントリ 2 件: クラウド誤り 9 + 系統 3 典型パターン、既存 1 エントリを Resolved 化)
+- 関連: F-particular-angle-redesign (前バッチ、4 分類化を確立)、F-jp-coverage-tune (★ 拡張バッチで sontaku_signals 真値整備で設計確度向上)、F-stream-2-filter-design (★ 拡張バッチで系統 3 + sontaku_signals 設計が確定)
+
