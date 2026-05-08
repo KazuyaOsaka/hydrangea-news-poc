@@ -1,6 +1,6 @@
 # Hydrangea — 意思決定ログ (DECISION_LOG)
 
-最終更新: 2026-05-07 (F-trial-run-post-fix 完了、Phase A.5-3a-verify ゲート完了)
+最終更新: 2026-05-08 (F-extension-followup 完了、stream_3=0 件 (c) 仮説追記 + sontaku_signals サンプル設計バイアス記録 + finalize_annotations.py の sontaku_signals 対応)
 
 このドキュメントは Hydrangea プロジェクトにおける重要な意思決定の履歴を記録する。
 コードや設定の「結果」ではなく、「なぜそうなったか」の判断プロセスを残すことが目的。
@@ -3499,4 +3499,159 @@ DISCUSSION_NOTES に詳細エントリ追加 + PARTICULAR_ANGLE_DEFINITION.md
   - `docs/FUTURE_WORK.md` (拡張バッチを完了済みに移動、後続バッチ前提を更新)
   - `docs/DISCUSSION_NOTES.md` (新規エントリ 2 件: クラウド誤り 9 + 系統 3 典型パターン、既存 1 エントリを Resolved 化)
 - 関連: F-particular-angle-redesign (前バッチ、4 分類化を確立)、F-jp-coverage-tune (★ 拡張バッチで sontaku_signals 真値整備で設計確度向上)、F-stream-2-filter-design (★ 拡張バッチで系統 3 + sontaku_signals 設計が確定)
+
+---
+
+## 2026-05-08: F-extension-followup — stream_3=0 件 (c) 仮説追記 + sontaku_signals サンプル設計バイアス記録 + finalize_annotations.py の sontaku_signals 対応
+
+### 背景
+
+F-particular-angle-redesign-extension (2026-05-08, commit `6a8efc4` / merge
+`2c9ee96`) のクラウドレビューで本質的な指摘が 3 件浮上した:
+
+1. **指摘 1 (sontaku_signals type 分布のサンプル設計バイアス)**: 25 件中
+   `type=diplomatic` が 20 件 (80%) と圧倒的多数。DECISION_LOG /
+   FUTURE_WORK では「Hydrangea 入力 RSS 41 媒体が外交・地政学事象中心」と
+   いう構造的整合の **説明** で済まされていたが、これは整合の説明であって
+   検証ではない。25 件のサンプル (golden_set 19 + 試運転 6) はもともと海外
+   メディア発の事象が中心で、日本メディア起点の `domestic` 忖度
+   (政治家・上級国民) や `media_industry` 忖度 (記者クラブ・ジャニーズ系)
+   はサンプル設計上ほぼ拾えない構造。将来の系統 3 候補 (処理水放出 /
+   入管法改正 / 辺野古 / ジャニーズ) の type 分布を過小評価する可能性。
+
+2. **指摘 2 (stream_3 = 0 件問題の (c) サンプル選定バイアス説)**:
+   DISCUSSION_NOTES の既存エントリ「2026-05-08: 4 分類化で stream_3 = 0 件 /
+   stream_2 = 20 件 という想定外分布」では仮説 (a) LLM 集約バイアス説 /
+   (b) 必然的帰結説のみ記録されていたが、前チャットでカズヤから第 3 仮説が
+   提起されていた: **(c) サンプル選定バイアス説** — 25 件のサンプルは大半が
+   「海外メディア独自視点 (= 系統 2 perspective_gap)」事象で、日本メディアと
+   海外メディアが同じ角度で対立評価する事象 (= 真の系統 3 framing_inversion)
+   はサンプルに偶然含まれていなかった可能性が高い。extension では構造論点
+   としては Resolved 扱いだったが、(c) が真ならこれは「LLM 判定の問題」でも
+   「4 分類定義の問題」でもなく、**入力データセットの構造的問題**。
+
+3. **指摘 3 (Task E 着手前の finalize_annotations.py の sontaku_signals
+   対応確認)**: annotations.json に `kazuya_review.sontaku_signals_revised`
+   スロット (null) が追加されたが、Task E カズヤレビュー時の修正粒度が
+   定義されていない。`scripts/finalize_annotations.py` が schema 2.0 で
+   `sontaku_signals` をどう扱うかを Task E 着手前に確認が必要。
+
+これらを反映するため本フォローアップバッチを実施。docs 追記 + scripts 最小
+修正、src/ tests/ configs/ への変更なし。
+
+### 議論
+
+#### Task A (DISCUSSION_NOTES 追記 + 新規エントリ)
+
+既存 stream_3=0 件エントリの ステータスは extension で「Resolved (構造的
+整理完了)」と記載されていたが、(c) 仮説が論点として残ることを明示するため
+ステータスを `Active (要カズヤ判別 + サンプル拡充検討)` に降格し、(c) 仮説
+本文と Task E カズヤレビュー時の判別フローを追加。新規エントリ
+「sontaku_signals type 分布のサンプル設計バイアス」を追加し、現サンプルの
+整備自体は問題ないが、Phase A.5-3b 第二作 + F-1 EditorialMissionFilter
+設計時に再評価することを記録。
+
+#### Task B (finalize_annotations.py の sontaku_signals 対応確認)
+
+確認結果は **(c) 未対応** (schema 2.0 で `sontaku_signals` /
+`sontaku_signals_revised` 両フィールドが完全にスルーされる)。
+
+確認した範囲:
+- `_resolve_final()` (lines 68-93): `particular_angle` /
+  `stream_classification` のみ resolve、`sontaku_signals` 未参照
+- `build_stream_classification()` (lines 159-196): event 出力に
+  `sontaku_signals` 含まれず
+- `update_golden_set()` (lines 199-298): entry 更新に `sontaku_signals`
+  含まれず
+- `build_annotation_diff()` (lines 96-156): `sontaku_signals_revised`
+  カウント欠落
+
+Task B-4 の方針に沿い、最小修正で対応:
+- `_resolve_final()` に `final_sontaku_signals` /
+  `final_sontaku_signals_source` 追加 (null → LLM 推定値継承、object →
+  全フィールド上書き、フィールド単位 partial merge は未実装)
+- `build_stream_classification()` の event 出力に sontaku_signals 反映
+- `update_golden_set()` で schema 2.0 のときのみ entry に sontaku_signals
+  反映 + meta に `final_sontaku_signals_source` 記録
+- `build_annotation_diff()` に `sontaku_signals_revised_count` 追加 +
+  diff entry に `sontaku_signals_revised` フラグ追加
+
+既存関数のシグネチャ・戻り値構造は維持 (新キー追加のみ、既存キーは不変)。
+Hydrangea ミッション中核機構 (F-13.B / F-1 / F-2 / F-5 / F-13 隠れ層) には
+触れず、scripts 配下の最終化スクリプトのみ修正。
+
+#### Task C (BATCH_PROTOCOL Task 1-5 ドッグフーディング)
+
+extension 完了直後で BATCH_PROTOCOL の運用ループを継続。新規緊急度
+追加なし (Phase A.5-3b で再評価する論点として DISCUSSION_NOTES に既に記録)。
+
+### 決定
+
+- **Task A**: DISCUSSION_NOTES の既存 stream_3=0 件エントリに (c)
+  サンプル選定バイアス説を追記、ステータスを Resolved → Active に降格、
+  「カズヤレビューで判別する」セクションに (c) の判別フロー追加。新規
+  エントリ「2026-05-08: sontaku_signals type 分布のサンプル設計バイアス」
+  追加 (Active、Phase A.5-3b 第二作 + F-1 設計時に再評価)。
+- **Task B**: `scripts/finalize_annotations.py` を最小修正、schema 2.0 で
+  sontaku_signals を全 4 関数で扱えるように追加 (null → LLM 継承 / object →
+  全上書き、フィールド単位 partial merge は未実装)。
+- **Task C**: DECISION_LOG (本エントリ) + FUTURE_WORK (本バッチを完了済みに
+  追加) + DISCUSSION_NOTES (Task A で実施済み) + CURRENT_STATE (全置換更新)
+  をドッグフーディング。
+
+#### 不変原則例外適用
+
+なし (docs 追記 + scripts/finalize_annotations.py の最小修正のみ、src/
+tests/ configs/ への変更なし、既存関数のシグネチャ・戻り値構造は維持で
+不変原則 3 例外条件遵守)。
+
+### 結果
+
+#### 後続バッチへの影響
+
+- **F-particular-angle-redesign Task E** (4 分類版 + sontaku_signals 込み
+  カズヤレビュー): finalize_annotations.py の sontaku_signals 対応が完了
+  したため、カズヤがレビュー後に `--schema-version 2.0` で実行すれば
+  golden_set + stream_classification.json + annotation_diff.json の全てに
+  sontaku_signals が反映される。`kazuya_review.sontaku_signals_revised` の
+  修正粒度は「null = LLM 推定値継承 / object = 全フィールド上書き」で、
+  フィールド単位の partial merge は実装しない (Phase A.5-3b 実運用時に
+  カズヤが手で全フィールド書く運用で支障なし)。
+- **Phase A.5-3b 第二作**: 系統 3 事象 (処理水放出 / 辺野古 等、引き継ぎ
+  v3 でカズヤ提案) を意図的にサンプルに含めることで、sontaku_signals type
+  分布の偏りと stream_3=0 件問題の (c) 仮説検証を兼ねる根拠に発展。
+- **F-1 EditorialMissionFilter** (将来検討): sontaku_signals
+  `level=high/medium` を優先採点する設計時、type 分布の偏りが優先度判定の
+  歪みを生むリスクがあるため、本エントリを設計レビュー時に参照する。
+
+#### 整合性検証
+
+- baseline テスト数: **1345 passed 維持**
+  (`python -m pytest tests/ -x --tb=short -q` 実行、101.01s)
+- スクリプト動作確認 (実 annotations.json で smoke test):
+  `_resolve_final` で `final_sontaku_signals` 解決、source=`llm_estimate` /
+  diff summary に `sontaku_signals_revised_count=0` (全 25 件 null)、
+  classification 出力に sontaku_signals 反映確認、counts は extension 値と
+  完全一致 (`stream_1=4 / stream_2=20 / stream_3=0 / out=1`)。
+- 不変原則違反: なし
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 改修:
+  - `docs/DISCUSSION_NOTES.md` (1 エントリ更新 [stream_3=0 件 + (c) 仮説] +
+    1 エントリ新規 [sontaku_signals type 分布バイアス] + ヘッダ最終更新日付)
+  - `scripts/finalize_annotations.py` (sontaku_signals 対応最小修正、
+    `_resolve_final` / `build_annotation_diff` /
+    `build_stream_classification` / `update_golden_set` の 4 関数に追加)
+- 更新:
+  - `docs/CURRENT_STATE.md` (全置換更新、F-extension-followup 完了反映)
+  - `docs/DECISION_LOG.md` (本エントリ追加)
+  - `docs/FUTURE_WORK.md` (本バッチを完了済みに追加)
+- 関連: F-particular-angle-redesign-extension (前バッチ、本フォローアップの
+  発火元)、F-particular-angle-redesign Task E (★ 4 分類版 + sontaku_signals
+  込みカズヤレビュー、本フォローアップで finalize_annotations.py の対応が
+  完了)、Phase A.5-3b 第二作 (★ 系統 3 + domestic/media_industry サンプル
+  拡充の根拠に本エントリを参照)、F-1 EditorialMissionFilter (将来、
+  sontaku_signals type 分布バイアスを設計レビュー時に参照)
 

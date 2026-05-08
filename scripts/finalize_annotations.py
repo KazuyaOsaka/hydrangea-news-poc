@@ -69,13 +69,18 @@ def _resolve_final(annotation: dict) -> dict:
     """annotation 1 件分から最終値 (LLM 出力 ∪ カズヤレビュー上書き) を解決する。
 
     schema_version に依存しない (同じ kazuya_review 構造を扱う)。
+    sontaku_signals_revised は null → LLM 推定値継承 / object → 全フィールド上書き
+    の単純ロジック (フィールド単位 partial merge は未実装、F-extension-followup で
+    最小対応として追加)。
     """
     pa = annotation.get("particular_angle") or {}
     sce = annotation.get("stream_classification_estimate") or {}
     review = annotation.get("kazuya_review") or {}
+    ss = annotation.get("sontaku_signals")
 
     pa_revised = review.get("particular_angle_revised")
     sc_revised = review.get("stream_classification_revised")
+    ss_revised = review.get("sontaku_signals_revised")
 
     final_pa = pa_revised if pa_revised is not None else pa
     if isinstance(sc_revised, str) and sc_revised.strip():
@@ -85,10 +90,19 @@ def _resolve_final(annotation: dict) -> dict:
         final_stream = sce.get("estimated_stream")
         final_stream_source = "llm_estimate"
 
+    if ss_revised is not None:
+        final_ss = ss_revised
+        final_ss_source = "kazuya_review"
+    else:
+        final_ss = ss
+        final_ss_source = "llm_estimate"
+
     return {
         "final_particular_angle": final_pa,
         "final_stream_classification": final_stream,
         "final_stream_source": final_stream_source,
+        "final_sontaku_signals": final_ss,
+        "final_sontaku_signals_source": final_ss_source,
         "review_note": review.get("review_note"),
     }
 
@@ -97,6 +111,7 @@ def build_annotation_diff(annotations: list[dict]) -> dict:
     """LLM 出力 vs カズヤレビュー後の差分集計を構築する。"""
     pa_revised_count = 0
     stream_revised_count = 0
+    ss_revised_count = 0
     review_notes_count = 0
     diffs: list[dict] = []
 
@@ -107,21 +122,25 @@ def build_annotation_diff(annotations: list[dict]) -> dict:
             isinstance(review.get("stream_classification_revised"), str)
             and review["stream_classification_revised"].strip()
         )
+        ss_revised = review.get("sontaku_signals_revised") is not None
         note = review.get("review_note")
 
         if pa_revised:
             pa_revised_count += 1
         if stream_revised:
             stream_revised_count += 1
+        if ss_revised:
+            ss_revised_count += 1
         if note:
             review_notes_count += 1
 
-        if pa_revised or stream_revised or note:
+        if pa_revised or stream_revised or ss_revised or note:
             diffs.append({
                 "event_id": ann.get("event_id"),
                 "title": ann.get("title"),
                 "particular_angle_revised": pa_revised,
                 "stream_classification_revised": stream_revised,
+                "sontaku_signals_revised": ss_revised,
                 "review_note": note,
                 "llm_stream": (ann.get("stream_classification_estimate") or {}).get(
                     "estimated_stream"
@@ -136,6 +155,7 @@ def build_annotation_diff(annotations: list[dict]) -> dict:
         "summary": {
             "particular_angle_revised_count": pa_revised_count,
             "stream_classification_revised_count": stream_revised_count,
+            "sontaku_signals_revised_count": ss_revised_count,
             "review_notes_count": review_notes_count,
             "fully_unmodified_count": len(annotations)
             - sum(
@@ -149,6 +169,7 @@ def build_annotation_diff(annotations: list[dict]) -> dict:
                     )
                     and (ann.get("kazuya_review") or {})["stream_classification_revised"].strip()
                 )
+                or (ann.get("kazuya_review") or {}).get("sontaku_signals_revised") is not None
                 or (ann.get("kazuya_review") or {}).get("review_note")
             ),
         },
@@ -182,6 +203,8 @@ def build_stream_classification(
             "source_origin": ann.get("source_origin"),
             "particular_angle": resolved["final_particular_angle"],
             "final_stream_source": resolved["final_stream_source"],
+            "sontaku_signals": resolved["final_sontaku_signals"],
+            "final_sontaku_signals_source": resolved["final_sontaku_signals_source"],
             "review_note": resolved["review_note"],
         })
 
@@ -246,10 +269,13 @@ def update_golden_set(
             resolved = _resolve_final(ann)
             entry["particular_angle"] = resolved["final_particular_angle"]
             entry["stream_classification"] = resolved["final_stream_classification"]
+            if schema_version == "2.0":
+                entry["sontaku_signals"] = resolved["final_sontaku_signals"]
             entry["particular_angle_meta"] = {
                 "source": batch_label,
                 "schema_version": schema_version,
                 "final_stream_source": resolved["final_stream_source"],
+                "final_sontaku_signals_source": resolved["final_sontaku_signals_source"],
                 "review_note": resolved["review_note"],
                 "applied_at": datetime.now(timezone.utc).isoformat(),
             }

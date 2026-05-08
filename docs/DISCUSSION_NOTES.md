@@ -1,6 +1,8 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-08 (F-particular-angle-redesign-extension 完了、系統名 1/1.5/2 → 1/2/3 リネーム + 忖度シグナル独立化 + クラウド誤り 9 追加、3 エントリ更新 + 2 エントリ新規)
+最終更新: 2026-05-08 (F-extension-followup 完了、stream_3=0 件問題に
+(c) サンプル選定バイアス説追記 + sontaku_signals type 分布バイアス新規エントリ追加、
+1 エントリ更新 + 1 エントリ新規)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -137,6 +139,17 @@ LLM 推定段階で **stream_2 = 0 件** (想定 13 件) / **stream_1_5 = 20 件
 の stream_2 = 「広範事件レベルでの解釈差」だったため数が多く見えたが、4 分類化で正しく
 『特定角度レベル』に絞ると 0 になるのはむしろ正しい構造化。
 
+(c) **サンプル選定バイアス説 (★ 前チャットでカズヤ提起、F-extension-followup で
+追記)**: 25 件のサンプルは golden_set 19 件 + 試運転 6 件で、大半が「海外メディア
+独自視点 (= 系統 2 perspective_gap、つまり日本で角度自体が論じられていない)」
+事象。日本メディアと海外メディアが同じ角度で対立評価する事象 (= 真の系統 3
+framing_inversion) はサンプルに偶然含まれていなかった可能性が高い。系統 3 の
+典型パターン例 (処理水放出 / 入管法改正 / 辺野古 / ジャニーズ問題) は、現状 25 件
+サンプルでは構造的に拾えない (RSS 41 媒体が海外メディア中心で、日本国内メディアの
+論調は入力に含まれない)。本仮説が真なら、stream_3 = 0 件は「LLM 判定の問題」でも
+「4 分類定義の問題」でもなく、**入力データセットの構造的問題**。根本治療は
+「系統 3 候補を意図的に追加した拡張ゴールデンセット」になる。
+
 **Hydrangea コアミッションへの影響**:
 - (a) 説なら → プロンプトを微調整して stream_2 識別を強化、F-stream-2-filter-design は
   当初想定通りの規模で実装
@@ -145,10 +158,16 @@ LLM 推定段階で **stream_2 = 0 件** (想定 13 件) / **stream_1_5 = 20 件
 
 **カズヤレビューで判別する**:
 F-particular-angle-redesign Task E (カズヤレビュー) で stream_2 に再分類されるケースが
-何件あるかで判断:
+何件あるかで判断 ((a)/(b) の判別):
 - 0 件 → (b) 説支持、F-stream-2-filter-design 縮小
 - 1-2 件 → (a) と (b) のハイブリッド、F-stream-2-filter-design はミニマル実装
 - 5+ 件 → (a) 説支持、F-stream-2-filter-design は当初想定通り
+
+(c) 仮説の判別: カズヤレビューで stream_3 に再分類されるケースが何件あるかと、
+Phase A.5-3b 第二作で系統 3 事象 (例: 処理水放出 / 辺野古) を意図的に追加して
+系統 3 サンプルを拡充できるかを併せて評価する。Task E カズヤレビューで stream_3
+件数が依然 0 件 ((a)/(b) 判定で説明できない場合) なら (c) サンプル選定バイアス説の
+証拠が強まる。
 
 **2026-05-08 命名整理 (F-particular-angle-redesign-extension)**:
 本エントリ内の系統名は **本エントリ作成時の命名 (1/1.5/2)** で記述されて
@@ -162,9 +181,13 @@ F-particular-angle-redesign Task E (カズヤレビュー) で stream_2 に再�
 新命名で読み替えると、LLM 推定段階分布は
 `stream_1=4 / stream_2=20 / stream_3=0 / out=1`。
 
-**ステータス**: `Resolved (記録済み + 命名整理 + 忖度シグナル独立化で
-構造的整理完了)` — F-particular-angle-redesign-extension (2026-05-08)
-で本論点に対する構造的解は 3 つ:
+**ステータス**: `Active (要カズヤ判別 + サンプル拡充検討)` —
+F-particular-angle-redesign-extension (2026-05-08) で構造論点 (a) (b) は
+Resolved 化したが、(c) サンプル選定バイアス説は構造論点として **Active のまま
+残す**。F-extension-followup (2026-05-08) で (c) 仮説追記 + 件数論点は
+Task E カズヤレビュー後に判別。
+
+extension で実施した構造的解 3 つ:
 (1) 命名 1/2/3 に整理して系統 3 = framing_inversion を本来の意味に正典化
 (2) sontaku_signals を別軸メタデータとして独立化、Step 4 の追加判定軸に
     組み込み (= 評価フレーム対立 **かつ** 忖度シグナル level=high/medium
@@ -174,14 +197,61 @@ F-particular-angle-redesign Task E (カズヤレビュー) で stream_2 に再�
     設計に統一
 
 カズヤレビュー時の系統 3 件数は依然として後続バッチのスコープ判断材料に
-なるが、本エントリ自体は構造論点として Resolved。
+なる。(c) 仮説が真なら Phase A.5-3b 第二作で意図的に系統 3 候補事象を
+追加する根本治療が必要。
 
 **出典**:
 - F-particular-angle-redesign 完了 (2026-05-08)
 - F-particular-angle-redesign-extension 完了 (2026-05-08)
+- F-extension-followup (2026-05-08、(c) 仮説追記)
+- 前チャット引き継ぎプロンプト v3 (カズヤ提起の (c) サンプル選定バイアス説)
 - `docs/runs/F-particular-angle-redesign/REPORT.md` セクション 4 + 9
 - `docs/runs/F-particular-angle-redesign/reclassification_diff.json`
 - `docs/runs/F-particular-angle-design/annotations.json` (schema_version 2.1)
+
+### 2026-05-08: sontaku_signals type 分布のサンプル設計バイアス (F-extension-followup で記録)
+
+**背景**:
+F-particular-angle-redesign-extension (2026-05-08) の sontaku_signals LLM 推定で、
+25 件中 `type=diplomatic` が 20 件 (80%) と圧倒的多数を占める分布が観測された。
+DECISION_LOG / FUTURE_WORK では「Hydrangea 入力 RSS 41 媒体 (MEE, Meduza, Al Jazeera 等)
+が外交・地政学事象中心という構造的整合」と説明されているが、これは整合の **説明**
+であって、検証ではない。
+
+**指摘**:
+25 件のサンプル (golden_set 19 + 試運転 6) はもともと **海外メディア発の事象** が
+中心。日本メディア起点の以下の type 候補事象は、サンプル設計上ほぼ拾えない構造:
+- `domestic` 忖度 (政治家・上級国民): 例 — 政治家スキャンダルへの忖度、上級官僚への
+  記者クラブ忖度、司法判断への配慮
+- `media_industry` 忖度 (記者クラブ・芸能スポーツ業界): 例 — ジャニーズ問題の長年放置、
+  電通・博報堂への配慮、特定スポーツ団体への配慮
+
+引き継ぎ v3 で明示された系統 3 (framing_inversion) 候補 (処理水放出 / 入管法改正 /
+辺野古 / ジャニーズ) のうち、辺野古 / ジャニーズは `domestic` / `media_industry`
+寄りの忖度が背景。
+
+**含意**:
+- 現サンプルでの sontaku_signals 整備は問題なし (= 25 件範囲内では type=diplomatic
+  が真の分布として整合)
+- ただし、将来の系統 3 候補の type 分布を過小評価する可能性あり
+- F-1 EditorialMissionFilter で `level=high/medium` の事象を優先採点する将来設計時、
+  type 分布の偏りが優先度判定の歪みを生むリスク
+
+**対処方針**:
+- 即対処は不要 (= 現サンプルでの整備は問題ない、論点として可視化するだけで良い)
+- Phase A.5-3b 第二作 (系統 3 事象、引き継ぎ v3 で「処理水放出 / 辺野古 等」が
+  カズヤ提案) で意図的に `domestic` / `media_industry` 候補を含める
+- F-1 EditorialMissionFilter 着手時 (将来検討) に再評価し、サンプル拡充の必要性を判断
+
+**ステータス**: `Active` (Phase A.5-3b 第二作 + F-1 EditorialMissionFilter
+設計時に再評価)
+
+**出典**:
+- F-particular-angle-redesign-extension sontaku_signals 推定結果 (2026-05-08)
+- 前チャット引き継ぎプロンプト v3 (系統 3 候補 4 件のカズヤ提案)
+- `docs/runs/F-particular-angle-redesign/extension_log.json` (type 分布詳細)
+- `docs/runs/F-particular-angle-design/annotations.json` (各 event の
+  sontaku_signals フィールド)
 
 ### 2026-05-07: 台本表現:特定角度未報道のナレーション課題 (F-particular-angle-design レビューで派生)
 
