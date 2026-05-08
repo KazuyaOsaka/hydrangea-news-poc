@@ -31,8 +31,8 @@ def _stream_label(stream: str | None) -> str:
         return "(unknown)"
     mapping = {
         "stream_1_silence_gap": "系統 1 (silence_gap)",
-        "stream_1_5_perspective_gap": "系統 1.5 (perspective_gap) ★ NEW",
-        "stream_2_framing_inversion": "系統 2 (framing_inversion)",
+        "stream_2_perspective_gap": "系統 2 (perspective_gap、★ 旧名: 系統 1.5)",
+        "stream_3_framing_inversion": "系統 3 (framing_inversion、★ 旧名: 系統 2)",
         "out_of_scope": "動画化対象外",
     }
     return mapping.get(stream, stream)
@@ -139,7 +139,7 @@ def main() -> int:
         new = (ann.get("stream_classification_estimate") or {}).get("estimated_stream")
         if old and new and old != new:
             spotlight_changed.append((i, ann))
-            if new == "stream_1_5_perspective_gap":
+            if new == "stream_2_perspective_gap":
                 spotlight_into_1_5.append((i, ann))
 
     out: list[str] = []
@@ -159,12 +159,12 @@ def main() -> int:
     dist = summary.get("stream_classification_estimate_distribution", {})
     out.append(f"- stream_1_silence_gap: {dist.get('stream_1_silence_gap', 0)} 件")
     out.append(
-        f"- stream_1_5_perspective_gap (★ NEW): "
-        f"{dist.get('stream_1_5_perspective_gap', 0)} 件"
+        f"- stream_2_perspective_gap (★ NEW): "
+        f"{dist.get('stream_2_perspective_gap', 0)} 件"
     )
     out.append(
-        f"- stream_2_framing_inversion: "
-        f"{dist.get('stream_2_framing_inversion', 0)} 件"
+        f"- stream_3_framing_inversion: "
+        f"{dist.get('stream_3_framing_inversion', 0)} 件"
     )
     out.append(f"- out_of_scope: {dist.get('out_of_scope', 0)} 件")
     out.append(f"- unknown: {dist.get('unknown', 0)} 件")
@@ -176,7 +176,7 @@ def main() -> int:
     out.append("各 event について以下を確認してください:")
     out.append("")
     out.append("1. `stream_classification_estimate` (4 分類版) が妥当か")
-    out.append("   - 系統 1 (両方未報道) / 系統 1.5 (広範のみ報道) / 系統 2 (解釈差) / 対象外")
+    out.append("   - 系統 1 (両方未報道) / 系統 2 (広範のみ報道、★ 旧 1.5) / 系統 3 (解釈差、★ 旧 2) / 対象外")
     out.append("2. 3 分類版からの変更がある場合、その変更が妥当か")
     out.append("3. 必要に応じて `particular_angle` も再評価 (4 分類化に伴う改訂が必要なら)")
     out.append("")
@@ -198,7 +198,7 @@ def main() -> int:
         out.append("")
         if spotlight_into_1_5:
             out.append(
-                f"### 系統 1.5 (perspective_gap) への移動: {len(spotlight_into_1_5)} 件"
+                f"### 系統 2 (perspective_gap、★ 旧 1.5) への移動: {len(spotlight_into_1_5)} 件"
             )
             out.append("")
             for i, ann in spotlight_into_1_5:
@@ -207,7 +207,7 @@ def main() -> int:
                 ).get("estimated_stream")
                 out.append(
                     f"- Event {i}: `{ann.get('event_id')}` ({ann.get('title')})"
-                    f" — `{old}` → `stream_1_5_perspective_gap`"
+                    f" — `{old}` → `stream_2_perspective_gap`"
                 )
             out.append("")
 
@@ -215,7 +215,7 @@ def main() -> int:
             (i, a)
             for i, a in spotlight_changed
             if (a.get("stream_classification_estimate") or {}).get("estimated_stream")
-            != "stream_1_5_perspective_gap"
+            != "stream_2_perspective_gap"
         ]
         if other_transitions:
             out.append(f"### その他の変更: {len(other_transitions)} 件")

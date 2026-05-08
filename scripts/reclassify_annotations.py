@@ -5,8 +5,14 @@
 旧 3 分類の判定値は `legacy_stream_classification_v1` フィールドにバックアップ
 する。`kazuya_review` フィールドは 4 分類版で初めてレビューするためリセット。
 
-判定基準は docs/PARTICULAR_ANGLE_DEFINITION.md セクション 3 (4 分類版、Step 1-4 論理フロー)
+判定基準は docs/PARTICULAR_ANGLE_DEFINITION.md セクション 3 (4 分類版、命名 1/2/3、
+Step 0-4 論理フロー、★ F-particular-angle-redesign-extension で Step 3-4 を改良)
 に従う。
+
+★ F-particular-angle-redesign-extension (2026-05-08) で系統名 1/1.5/2 → 1/2/3 に
+リネーム済み。`_VALID_STREAMS_V2` および LLM プロンプト内の系統名は新命名で
+記述されている (`stream_2_perspective_gap` = 旧 `stream_1_5_perspective_gap`、
+`stream_3_framing_inversion` = 旧 `stream_2_framing_inversion`)。
 
 Usage:
     python scripts/reclassify_annotations.py \\
@@ -54,8 +60,8 @@ logger = get_logger("reclassify_annotations")
 
 _VALID_STREAMS_V2 = {
     "stream_1_silence_gap",
-    "stream_1_5_perspective_gap",
-    "stream_2_framing_inversion",
+    "stream_2_perspective_gap",
+    "stream_3_framing_inversion",
     "out_of_scope",
 }
 
@@ -70,32 +76,45 @@ _PROMPT_TEMPLATE = """\
 事象そのもの (= 広範事件) ではなく、その事象内で海外メディアが強調している
 構造分析角度の 1 ピース。
 
-# 4 分類の定義 (★ 3 分類から 4 分類へ更新)
+# 4 分類の定義 (★ 命名 1/2/3、F-particular-angle-redesign-extension で命名整理)
 - **stream_1_silence_gap**: 広範事件も特定角度も両方、日本主要メディアで未報道。
   完全な情報空白。
-- **stream_1_5_perspective_gap (NEW)**: 広範事件は日本主要メディアで報道済み
-  だが、特定角度のみ未報道。事件本体は取り上げられたが構造分析角度が欠落。
-- **stream_2_framing_inversion**: 特定角度も日本主要メディアで報道済みだが、
-  解釈・フレーミング・優先順位が日本/西側 vs 海外/東側で異なる。
-- **out_of_scope**: 特定角度が日本主要メディアで報道済みかつ解釈も同じ、
-  または 4 軸該当性が無い (動画化対象外)。
+- **stream_2_perspective_gap**: 広範事件は日本主要メディアで報道済み
+  だが、特定角度については日本メディアが何も語っていない / 触れていない。
+  事件本体は取り上げられたが構造分析角度が欠落 (旧 stream_1_5)。
+- **stream_3_framing_inversion**: 広範事件も報道済み + 日本メディアもこの
+  特定角度について何かを語っているが、解釈・フレーミング・優先順位が
+  日本/西側 vs 海外/東側で対立 (旧 stream_2)。
+- **out_of_scope**: 報道差なし、または 4 軸該当性なし、または評価フレーム
+  対立はあるが忖度シグナルが弱く解説価値が薄い (動画化対象外)。
 
-# 系統判定の論理フロー (★ Step 2 と Step 3 を分離)
+# 系統判定の論理フロー (★ Step 0-4、F-particular-angle-redesign-extension で Step 3-4 改良)
+- **Step 0**: 特定角度を抽出 (本スクリプトでは `particular_angle` として
+  既に抽出済み)
 - **Step 1**: 特定角度が Hydrangea 4 軸 (制度・システム / 外交・経済・利害関係 /
   個人・権力者 / 関心領域・地政学的死角) のいずれかに該当するか?
   - No → out_of_scope
   - Yes ↓
 - **Step 2**: **広範事件** (= 事象そのもの) が日本主要メディアで報道済みか?
-  - No → 広範事件未報道フラグを保持して Step 3 へ
-  - Yes → 広範事件報道済みフラグを保持して Step 3 へ
-- **Step 3**: **特定角度** (= 海外メディアが独自に掘った視点) が日本主要
-  メディアで報道済みか?
-  - No (Step 2 で広範事件も未報道) → stream_1_silence_gap
-  - No (Step 2 で広範事件は報道済み) → stream_1_5_perspective_gap ★ NEW
+  - No (両方未報道) → stream_1_silence_gap
   - Yes ↓
-- **Step 4**: 解釈・フレーミング・優先順位が日本/西側 vs 海外/東側で異なるか?
-  - No → out_of_scope (単に同じ内容が報道済み)
-  - Yes → stream_2_framing_inversion
+- **Step 3 (改)**: 日本メディアはこの **特定角度** について何かを語っているか?
+  - No (角度の不在 = 触れていない / 言及なし) → stream_2_perspective_gap
+  - Yes (語られている) ↓
+- **Step 4 (改)**: 日本メディアと海外メディアの **評価フレームが対立**、かつ
+  「忖度・報道規制・黙殺」の構造的シグナルがあるか?
+  - No → out_of_scope (報道済み + 解釈差なし、または忖度シグナルなしで
+    単発の専門解釈差に留まる)
+  - Yes → stream_3_framing_inversion
+
+# MECE 判別の核心 (★ F-particular-angle-redesign-extension で明示)
+- 系統 2 vs 系統 3 の判別: 「日本メディアはこの特定角度について何かを語って
+  いるか?」がコア。
+  - 何も語っていない / 触れていない → 系統 2 (perspective_gap)
+  - 語っているが評価が海外と対立 → 系統 3 (framing_inversion)
+- 中立報道の境界事例: 判定者の解釈に依存するため、迷ったら系統 2 にデフォルト
+  し、忖度シグナル level (別軸メタデータ、本スクリプトでは推定しない) で
+  間接的に区別する設計とする (level 高 = 系統 3 寄り、低 = 系統 2 寄り)。
 
 # 入力
 event_id: {event_id}
@@ -116,7 +135,7 @@ legacy_reasoning: {legacy_reasoning}
 ```json
 {{
   "stream_classification_estimate": {{
-    "estimated_stream": "stream_1_silence_gap / stream_1_5_perspective_gap / stream_2_framing_inversion / out_of_scope のいずれか",
+    "estimated_stream": "stream_1_silence_gap / stream_2_perspective_gap / stream_3_framing_inversion / out_of_scope のいずれか",
     "reasoning": "判定根拠 (★ 必須: 広範事件報道状態 + 特定角度報道状態の両方を明記、3-4 文)",
     "confidence": "high / medium / low",
     "broad_event_jp_coverage": "reported / unreported / unknown (広範事件の日本主要メディア報道状態)",
@@ -134,8 +153,9 @@ legacy_reasoning: {legacy_reasoning}
   **特定角度の日本主要メディア報道状態** の両方を必ず明記してください。
   これは F-jp-coverage-tune の二段階クエリ生成設計の基準データになります。
 - 旧 3 分類版の判定値は参考であり、必ずしもそれに沿う必要はありません。
-  4 分類化に伴って分類が変わるケース (特に stream_1 → stream_1_5、
-  stream_2 → out_of_scope) を積極的に検討してください。
+  4 分類化に伴って分類が変わるケース (特に旧 stream_1 → 新
+  stream_2_perspective_gap、旧 stream_2_framing_inversion → out_of_scope)
+  を積極的に検討してください。
 - confidence は厳密に判定してください。広範事件 / 特定角度の報道状態の判断が
   困難な場合は medium / low を返してください。
 """
@@ -707,14 +727,14 @@ def main() -> int:
 
     # 異常検知 (記録のみ、勝手に再実行しない)
     streams = summary_after["stream_classification_estimate_distribution"]
-    if streams.get("stream_1_5_perspective_gap", 0) == 0 and len(annotations) >= 5:
+    if streams.get("stream_2_perspective_gap", 0) == 0 and len(annotations) >= 5:
         logger.warning(
-            "⚠ stream_1_5_perspective_gap が 0 件: 4 分類化が機能していない可能性。"
+            "⚠ stream_2_perspective_gap が 0 件: 4 分類化が機能していない可能性。"
             "本バッチでは記録のみ、prompt 再調整は行いません。"
         )
-    if streams.get("stream_1_5_perspective_gap", 0) >= 15:
+    if streams.get("stream_2_perspective_gap", 0) >= 15:
         logger.warning(
-            "⚠ stream_1_5_perspective_gap が 15 件以上: 過剰判定の可能性。"
+            "⚠ stream_2_perspective_gap が 15 件以上: 過剰判定の可能性。"
             "本バッチでは記録のみ、prompt 再調整は行いません。"
         )
     if diff["summary"]["changed_count"] == 0 and len(annotations) >= 5:

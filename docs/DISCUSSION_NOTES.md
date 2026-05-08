@@ -1,6 +1,6 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-08 (F-particular-angle-redesign 完了、3 分類 → 4 分類化 + 系統 1.5 perspective_gap 新設 + 台本表現ガイドライン正典化、4 エントリ更新)
+最終更新: 2026-05-08 (F-particular-angle-redesign-extension 完了、系統名 1/1.5/2 → 1/2/3 リネーム + 忖度シグナル独立化 + クラウド誤り 9 追加、3 エントリ更新 + 2 エントリ新規)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -14,7 +14,105 @@
 
 ## 未分類 (Active)
 
-### 2026-05-08: 4 分類化で stream_2 = 0 件 / stream_1_5 = 20 件 という想定外分布 — LLM 集約バイアスか必然か (F-particular-angle-redesign で観察)
+### 2026-05-08: クラウド誤り 9 — 各論コントロールへの誘惑 (F-particular-angle-redesign-extension で記録)
+
+**背景**:
+F-particular-angle-redesign Task E カズヤレビュー過程で、Claude Code (本
+チャット) およびクラウドが「視聴者ファースト 3 原則」「ジレンマ解説」
+「忖度明示」「系統別台本表現ルール」等の **具体的指針** をプロンプトや
+ドキュメントに追加したくなる傾向が観察された。動機は善意 (品質保証 +
+Hydrangea ミッション徹底) だが、ルール累積で全体劣化を招く。
+
+**カズヤ哲学** (2026-05-08):
+> いまは各論をコントロールしたくない。記事の質の悪化避けたいから。これは、
+> 分析フェーズの LLM に期待って感じ。
+
+**害**:
+- ルール累積で LLM の自由度が削られ、全体品質が下がる経験則 (F-12-B-1
+  NG リスト方式廃止と同根)
+- `article_writer.py` / `script_writer.py` の自由度阻害 (不変原則 1-2 と
+  整合)
+- LLM の知性発揮を抑制 (= Hydrangea のコアバリューのひとつ「LLM の知性に
+  委ねる」と矛盾)
+
+**正しい設計**:
+- メタデータ構造の正典化 (例: `particular_angle_metadata` +
+  `sontaku_signals`)
+- LLM の知性に委ねる
+- 4 軸メタデータ + sontaku_signals メタデータで動機担保
+  (= 各論ルールではなく、構造データを LLM に渡す)
+
+**実装事例** (本バッチで適用):
+- 系統判定ルールに「ジレンマ解説」「忖度明示」を組み込む案 → 却下
+- 代わりに `sontaku_signals` を別軸メタデータとして独立化
+  (PARTICULAR_ANGLE_DEFINITION.md セクション 3.6)
+- 台本表現は `particular_angle_metadata + sontaku_signals` を
+  `script_writer.py` 新ルートに渡し、LLM が自律選択する設計を維持
+  (PARTICULAR_ANGLE_DEFINITION.md セクション 3.7)
+
+**運用ルール**:
+- 台本表現や記事品質の課題を見つけたら、まず **メタデータ構造** で表現
+  できないか検討する (= LLM に判断材料を増やす)
+- ルール追加で対処したくなったら、本誤り 9 を思い出す
+- カズヤ承認なしに「具体的言い回しルール」をプロンプトに加えない
+
+**類似誤り**:
+- クラウド誤り 1 (NG リスト・Tier 分類で機械制御提案、2026-05-02): 同根
+- クラウド誤り 2 (「これを真似ろ」テンプレ過剰押し付け、2026-05-02): 同根
+- クラウド誤り 6 (過剰拡張性の罠、2026-05-03): 別系統の善意の誤り
+
+**ステータス**: `Resolved (記録済み + 防止策確立)` —
+`CLAUDE.md` クラウド誤りセクションに本誤りを記載 (本バッチで導入)、
+`docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 3.7 で「LLM の知性に
+委ねる」設計哲学を正典化。新チャット移行時の最重要参照対象。
+
+**出典**:
+- F-particular-angle-redesign Task E カズヤレビュー (2026-05-08)
+- F-particular-angle-redesign-extension 完了 (2026-05-08)
+- `CLAUDE.md` クラウド誤りセクション
+- `docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 3.6 / 3.7
+
+### 2026-05-08: 系統 3 (旧系統 2) の典型パターン:日本-海外の評価対立 (カズヤ提起、F-particular-angle-redesign-extension で記録)
+
+**背景**:
+F-particular-angle-redesign Task E レビュー過程でカズヤから「系統 2
+(現命名: 系統 3 framing_inversion) の典型パターンは日本-海外の **評価
+対立**」と提起された。F-particular-angle-redesign で LLM 推定段階の
+分布が stream_1=4 / stream_2=20 / stream_3=0 / out=1 となり、系統 3
+候補が 0 件だった件への解釈軸の整理。
+
+**カズヤの整理**:
+- 系統 3 = 日本主要メディアと海外メディアが同じ特定角度について
+  **評価が対立** している事象
+- 「中立報道」(日本側が事実報道に留まり評価表明しない) は系統 3 ではなく
+  系統 2 寄り (= 角度の不在)
+- 評価対立の構造的背景には **忖度シグナル** (sontaku_signals) が必須
+  (= 単発の専門解釈差は系統 3 ではなく out_of_scope)
+
+**Phase A.5-3b 手動 PoC への影響**:
+- 系統 3 の素材を手動 PoC に組み入れる場合は、評価対立 + 忖度シグナル
+  level=high/medium のものを選定
+- 系統 3 候補が極小 (0 件) 想定だが、F-jp-coverage-tune の二段階クエリ
+  生成で系統 1 vs 系統 2 を機械判別した後、(報道済み) 候補に対して
+  F-stream-2-filter-design が解釈差 + 忖度シグナルで系統 3 候補を救出
+  する設計
+
+**論点**:
+- 25 件中 0 件の系統 3 を増やすには、入力 RSS 41 媒体の選定 +
+  particular_angle 抽出プロンプトの改良で「日本でも語られる角度」を
+  優先抽出する余地あり (将来検討)
+- カズヤレビューで stream_3 に再分類されるケースが何件あるかで、
+  F-stream-2-filter-design の責務スコープが再評価される
+
+**ステータス**: `Active` (Phase A.5-3b 手動 PoC + F-stream-2-filter-design
+着手時に参照する評価軸の整理)
+
+**出典**:
+- F-particular-angle-redesign Task E カズヤレビュー (2026-05-08)
+- `docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 3.5 (MECE 判別基準) +
+  3.6 (sontaku_signals) で正典化
+
+### 2026-05-08: 4 分類化で stream_3 = 0 件 / stream_2 = 20 件 という想定外分布 — LLM 集約バイアスか必然か (F-particular-angle-redesign で観察、★ 2026-05-08 命名 1/2/3 に整理)
 
 **背景**:
 F-particular-angle-redesign (2026-05-08) で 25 件を 4 分類版で LLM 再分類した結果、
@@ -52,15 +150,38 @@ F-particular-angle-redesign Task E (カズヤレビュー) で stream_2 に再�
 - 1-2 件 → (a) と (b) のハイブリッド、F-stream-2-filter-design はミニマル実装
 - 5+ 件 → (a) 説支持、F-stream-2-filter-design は当初想定通り
 
-**ステータス**: `Active (要カズヤ判別)` — F-particular-angle-redesign Task E カズヤ
-レビュー後に判明、後続バッチ (F-stream-2-filter-design / F-jp-coverage-tune) の
-スコープ判断材料
+**2026-05-08 命名整理 (F-particular-angle-redesign-extension)**:
+本エントリ内の系統名は **本エントリ作成時の命名 (1/1.5/2)** で記述されて
+いるが、F-particular-angle-redesign-extension で **1/2/3** に
+リネームされた。読み替え:
+- `stream_1_silence_gap` (系統 1) → 不変
+- `stream_1_5` / `stream_1_5_perspective_gap` (旧系統 1.5) →
+  `stream_2_perspective_gap` (新系統 2)
+- `stream_2_framing_inversion` (旧系統 2) → `stream_3_framing_inversion`
+  (新系統 3)
+新命名で読み替えると、LLM 推定段階分布は
+`stream_1=4 / stream_2=20 / stream_3=0 / out=1`。
+
+**ステータス**: `Resolved (記録済み + 命名整理 + 忖度シグナル独立化で
+構造的整理完了)` — F-particular-angle-redesign-extension (2026-05-08)
+で本論点に対する構造的解は 3 つ:
+(1) 命名 1/2/3 に整理して系統 3 = framing_inversion を本来の意味に正典化
+(2) sontaku_signals を別軸メタデータとして独立化、Step 4 の追加判定軸に
+    組み込み (= 評価フレーム対立 **かつ** 忖度シグナル level=high/medium
+    が系統 3 の必須条件)
+(3) MECE 判別基準を明示 (PARTICULAR_ANGLE_DEFINITION.md セクション 3.5)
+    して、境界事例の判定者依存を sontaku_signals.level で間接区別する
+    設計に統一
+
+カズヤレビュー時の系統 3 件数は依然として後続バッチのスコープ判断材料に
+なるが、本エントリ自体は構造論点として Resolved。
 
 **出典**:
 - F-particular-angle-redesign 完了 (2026-05-08)
+- F-particular-angle-redesign-extension 完了 (2026-05-08)
 - `docs/runs/F-particular-angle-redesign/REPORT.md` セクション 4 + 9
-- `docs/runs/F-particular-angle-redesign/reclassification_diff.json` (stream_2 → stream_1_5 の 13 件遷移)
-- `docs/runs/F-particular-angle-design/annotations.json` (4 分類版、各 event の reasoning に broad_event / particular_angle 報道状態が明記)
+- `docs/runs/F-particular-angle-redesign/reclassification_diff.json`
+- `docs/runs/F-particular-angle-design/annotations.json` (schema_version 2.1)
 
 ### 2026-05-07: 台本表現:特定角度未報道のナレーション課題 (F-particular-angle-design レビューで派生)
 

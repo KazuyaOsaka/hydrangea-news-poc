@@ -54,13 +54,13 @@ logger = get_logger("finalize_annotations")
 
 _VALID_STREAMS_V1 = (
     "stream_1_silence_gap",
-    "stream_2_framing_inversion",
+    "stream_3_framing_inversion",
     "out_of_scope",
 )
 _VALID_STREAMS_V2 = (
     "stream_1_silence_gap",
-    "stream_1_5_perspective_gap",
-    "stream_2_framing_inversion",
+    "stream_2_perspective_gap",
+    "stream_3_framing_inversion",
     "out_of_scope",
 )
 
@@ -264,7 +264,7 @@ def update_golden_set(
     changelog_summary = (
         "F-particular-angle-redesign (2026-05-07): 3 分類 → 4 分類化に伴い、"
         "各 entry の stream_classification を 4 分類対応 (stream_1_silence_gap / "
-        "stream_1_5_perspective_gap / stream_2_framing_inversion / out_of_scope) に更新。"
+        "stream_2_perspective_gap / stream_3_framing_inversion / out_of_scope) に更新。"
         "particular_angle_meta.schema_version=2.0 を付与。"
         "試運転 6 件は本ファイルに統合せず stream_classification.json で全 25 件管理する責務分離は維持。"
         if schema_version == "2.0"
