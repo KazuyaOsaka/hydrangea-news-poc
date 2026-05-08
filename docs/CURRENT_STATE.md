@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-08 (F-particular-angle-redesign-extension 完了、Phase A.5-3a-verify ゲート完了後の 3 つ目のバッチ、系統名 1/1.5/2 → 1/2/3 リネーム + 忖度シグナル独立化 + クラウド誤り 9 記録 + Step 3-4 改良 + MECE 判別基準明示)
+最終更新: 2026-05-08 (F-extension-followup 完了、Phase A.5-3a-verify ゲート完了後の 4 つ目のバッチ、stream_3=0 件 (c) サンプル選定バイアス仮説追記 + sontaku_signals type 分布バイアス記録 + finalize_annotations.py の sontaku_signals 対応最小修正)
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -33,6 +33,18 @@ Hydrangea のコアミッションは **2 系統並立** で、片方だけで�
 (各論コントロールへの誘惑) を CLAUDE.md / DISCUSSION_NOTES に記録** を実施。
 忖度シグナルは系統判定とは独立な軸として F-1 EditorialMissionFilter +
 F-stream-2-filter-design 第二段階で参照される設計に整理された。
+
+★ 2026-05-08 (F-extension-followup) で extension クラウドレビュー指摘 3 件を
+反映: (1) stream_3=0 件問題に **(c) サンプル選定バイアス説** を追記
+(DISCUSSION_NOTES の既存エントリのステータスを Resolved → Active に降格、25 件
+サンプルが海外メディア独自視点中心で真の系統 3 候補が偶然含まれていなかった
+可能性を論点化)、(2) **sontaku_signals type 分布のサンプル設計バイアス** を
+DISCUSSION_NOTES 新規エントリとして記録 (type=diplomatic 20 件偏重は現サンプル
+範囲では整合だが `domestic` / `media_industry` はサンプル設計上ほぼ拾えない
+構造、F-1 EditorialMissionFilter 設計時に再評価)、(3) `scripts/finalize_annotations.py`
+の sontaku_signals 対応 (4 関数最小修正、null → LLM 推定値継承 / object → 全
+フィールド上書き、Task E カズヤレビュー後の `--schema-version 2.0` 実行で
+sontaku_signals が反映される状態を確立)。
 
 ### 系統 1 (silence_gap): 完全な情報空白 — 広範事件も特定角度も日本主要メディアで未報道
 
@@ -137,29 +149,26 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。japan_ath
 
 ## 1. リポジトリ状態
 
-- **main HEAD コミット**: `6b9a1fb` (拡張バッチ未マージ、feature/F-particular-angle-redesign-extension 上で作業)
+- **main HEAD コミット**: `2c9ee96` (F-particular-angle-redesign-extension マージ後、F-extension-followup は feature ブランチ作業中)
 - **直近 5 件のコミットログ**:
   ```
+  2c9ee96 Merge branch 'feature/F-particular-angle-redesign-extension'
+  6a8efc4 feat: rename stream_1_5/2/2 → 1/2/3 + add sontaku_signals metadata + record claude_error_9 (F-particular-angle-redesign extension, Task A-F complete, Task E kazuya review pending with new schema)
   6b9a1fb Merge branch 'feature/F-particular-angle-redesign'
   e789b2f feat: 4-classification (stream_1 / stream_1.5 / stream_2 / out_of_scope) for particular_angle, reclassify 25 events, update PARTICULAR_ANGLE_DEFINITION with narrative guidelines (F-particular-angle-redesign, Task A-D + F + G complete, Task E kazuya review pending)
   c469084 Merge branch 'feature/F-particular-angle-design-followup'
-  576204e docs: add 4 entries from F-particular-angle-design review (script narration challenge / 1.5 classification proposal / classification distribution / covered_002 confirmation)
-  edca8e6 Merge branch 'feature/F-particular-angle-design'
   ```
-- **baseline テスト数**: `1345 passed` (本拡張バッチで src/ tests/ configs/ への変更
-  なし、`docs/PARTICULAR_ANGLE_DEFINITION.md` 改訂 (命名 1/2/3 + 1.2/1.3/3.5/3.6/3.7
-  サブセクション) + `scripts/add_sontaku_signals.py` 新規 + 3 scripts (`reclassify_annotations.py`
-  / `generate_review_draft_v2.py` / `finalize_annotations.py`) 命名リネーム +
-  `docs/runs/F-particular-angle-design/annotations.json` schema 2.0 → 2.1 + sontaku_signals
-  付与 + `docs/runs/F-particular-angle-redesign/extension_log.json` 新規 + `CLAUDE.md`
-  クラウド誤りセクション新設 + `docs/` 既存ドキュメント更新のみ、テスト影響なし、
-  baseline 維持)
+- **baseline テスト数**: `1345 passed` (本フォローアップバッチで src/ tests/ configs/ への
+  変更なし、`docs/DISCUSSION_NOTES.md` 1 エントリ更新 + 1 エントリ新規 + ヘッダ更新 +
+  `scripts/finalize_annotations.py` の sontaku_signals 対応最小修正 (4 関数、既存
+  シグネチャ・戻り値構造維持、新キー追加のみ) + `docs/CURRENT_STATE.md` `docs/DECISION_LOG.md`
+  `docs/FUTURE_WORK.md` の本バッチ反映のみ、テスト影響なし、baseline 維持)
 
 ## 2. 現在のフェーズ
 
 - **Phase**: Phase A.5-3a-verify **完了** ★ 1-A〜1-D''' 全完了で Phase A.5-3a-verify ゲート完了 (2026-05-07)
-- **進行中バッチ**: なし (F-particular-angle-redesign-extension 完了直後、Task E (4 分類版 + sontaku_signals 込み) カズヤレビュー待ち)
-- **次バッチ候補と推奨** (★F-particular-angle-redesign-extension / 2026-05-08 で更新):
+- **進行中バッチ**: なし (F-extension-followup 完了直後、F-particular-angle-redesign Task E (4 分類版 + sontaku_signals 込み) カズヤレビュー待ち)
+- **次バッチ候補と推奨** (★F-extension-followup / 2026-05-08 で更新):
   - **1st (★最優先): F-jp-coverage-tune** (二段階クエリ生成 + 真値 25 件整備済み + sontaku_signals 真値整備済み + 系統 1 vs 系統 2 機械判別、本拡張バッチで設計確度更に向上、3-5 時間)
   - **2nd: F-stream-2-filter-design** (★ **責務スコープ要再評価**、系統 3 = 0 件想定外結果のためカズヤレビュー後に判断、1-2 件なら小規模実装 + sontaku_signals.level を解説価値判定の追加軸に組み込む設計で済む)
   - **3rd: Phase A.5-3b 手動 PoC 着手準備** (image-prompt-spec を 3b 最初の作業に組み込み、系統 2 80% という分布を踏まえた言い回し最適化 + sontaku_signals 込みのメタデータ受け渡しが PoC の核心)
@@ -199,6 +208,7 @@ F-particular-angle-design は **ゲート完了後の 1 つ目のバッチ**で�
 | 1-E | F-particular-angle-design | ✅ 完了 (2026-05-07) | ゲート完了後の 1 つ目のバッチ、「特定角度」概念正典化 + 25 件 LLM アノテーション (3 分類版) |
 | 1-F | F-particular-angle-redesign | ✅ **完了 (2026-05-08)** | ゲート完了後の 2 つ目のバッチ、3 分類 → 4 分類化 + 系統 1.5 perspective_gap 新設 + 台本表現ガイドライン正典化、Task E カズヤレビュー待ち |
 | 1-F' | F-particular-angle-redesign-extension | ✅ **完了 (2026-05-08)** | ゲート完了後の 3 つ目のバッチ、系統名 1/1.5/2 → 1/2/3 リネーム + sontaku_signals 別軸メタデータ独立化 + クラウド誤り 9 記録 + Step 3-4 改良 + MECE 判別基準明示 (Task E カズヤレビューは引き続き待ち、拡張後の新分類 + sontaku_signals 込みで実施) |
+| 1-F'' | F-extension-followup | ✅ **完了 (2026-05-08)** | ゲート完了後の 4 つ目のバッチ、extension クラウドレビュー指摘 3 件反映 = stream_3=0 件 (c) サンプル選定バイアス仮説追記 + sontaku_signals type 分布バイアス記録 + finalize_annotations.py の sontaku_signals 対応最小修正 (Task E カズヤレビューは引き続き待ち、本バッチで finalize_annotations の sontaku_signals 4 関数対応が完了) |
 | 1-G | F-jp-coverage-tune | ★最優先着手 OK | 二段階クエリ生成 + 系統 1 vs 系統 2 機械判別、本バッチで真値 25 件 + sontaku_signals 整備済み、優先度最上位 |
 | 1-H | F-stream-2-filter-design | ★ 責務スコープ要再評価 | 系統 3 = 0 件想定外 + sontaku_signals.level を追加軸に組み込む設計、カズヤレビュー後に判断、1-2 件なら小規模実装 |
 | 2 | F-verify-perspective | 並走候補 | axis 分布集計 (3b/3c 中) |
@@ -229,7 +239,8 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 
 | 試運転 | バッチ | 動画化率 | 主要観察 |
 |---|---|---|---|
-| **2026-05-08** | **F-particular-angle-redesign-extension** | (試運転なし、docs + scripts + LLM 推定) | 系統名 1/1.5/2 → 1/2/3 リネーム (annotations.json 25 件中 20 件 estimated_stream 値更新、schema_version 2.0 → 2.1) + sontaku_signals 25 件 LLM 推定 (level: high=7 / medium=14 / low=1 / none=3、type: diplomatic=20 / domestic=1 / media_industry=1 / null=3、extraction_confidence: high=23 / medium=2 / low=0、約 9 分で完走)。クラウド誤り 9 (各論コントロールへの誘惑) を CLAUDE.md / DISCUSSION_NOTES に記録。Step 3-4 改良 + MECE 判別基準明示で構造論点としては Resolved 化、件数論点はカズヤレビュー後の F-stream-2-filter-design スコープ判断材料として残る。 |
+| **2026-05-08** | **F-extension-followup** | (試運転なし、docs 追記 + scripts/finalize_annotations.py 最小修正) | extension クラウドレビュー指摘 3 件反映: (1) DISCUSSION_NOTES の stream_3=0 件エントリに **(c) サンプル選定バイアス説** を追記 (前チャットでカズヤ提起、ステータスを Resolved → Active に降格、根本治療は系統 3 候補事象 (処理水放出 / 入管法改正 / 辺野古 / ジャニーズ) を意図的に追加した拡張ゴールデンセット)。(2) 新規エントリ「sontaku_signals type 分布のサンプル設計バイアス」追加 (type=diplomatic 20 件偏重は現サンプル整合だが `domestic` / `media_industry` はサンプル設計上ほぼ拾えない、F-1 EditorialMissionFilter 設計時に再評価)。(3) `scripts/finalize_annotations.py` の sontaku_signals 対応 = (c) 未対応 → 4 関数最小修正 (`_resolve_final` / `build_stream_classification` / `update_golden_set` / `build_annotation_diff`)、既存シグネチャ・戻り値構造維持で新キー追加のみ、null → LLM 継承 / object → 全上書き、フィールド単位 partial merge は未実装。Task E カズヤレビュー後の `--schema-version 2.0` 実行で sontaku_signals が反映される状態を確立。 |
+| 2026-05-08 | F-particular-angle-redesign-extension | (試運転なし、docs + scripts + LLM 推定) | 系統名 1/1.5/2 → 1/2/3 リネーム (annotations.json 25 件中 20 件 estimated_stream 値更新、schema_version 2.0 → 2.1) + sontaku_signals 25 件 LLM 推定 (level: high=7 / medium=14 / low=1 / none=3、type: diplomatic=20 / domestic=1 / media_industry=1 / null=3、extraction_confidence: high=23 / medium=2 / low=0、約 9 分で完走)。クラウド誤り 9 (各論コントロールへの誘惑) を CLAUDE.md / DISCUSSION_NOTES に記録。Step 3-4 改良 + MECE 判別基準明示で構造論点としては Resolved 化、件数論点はカズヤレビュー後の F-stream-2-filter-design スコープ判断材料として残る。 |
 | 2026-05-08 | F-particular-angle-redesign | (試運転なし、docs + LLM 再分類) | 25 件 4 分類化 LLM 再判定: 系統 1=4 (16%) / 系統 2 (旧 1.5)=20 (80%) / 系統 3 (旧 2)=0 (0%) / out_of_scope=1 (4%)。系統 3 = 0 件、系統 2 = 20 件 という **想定外分布** が観測 (想定: 系統 1≈6 / 系統 2≈5 / 系統 3≈13 / out_of_scope=1)。LLM が 4 分類定義を厳密適用した結果として技術的に整合する判定だが、LLM 集約バイアスか必然的帰結かはカズヤレビューで判別。Gemini API 503 高負荷で実行時間 1:36 hr (Tier 1→2→3 フォールバック多発)、per-call timeout 90s + incremental save + resume 追加で完走 (success=25 / error=0)。 |
 | 2026-05-07 | F-particular-angle-design | (試運転なし、docs + LLM アノテーション) | LLM (Gemini analysis Tier) で 25 件特定角度抽出: extraction_confidence (high=22 / medium=3 / low=0)、stream 推定 (3 分類版: 系統 1=11 / 系統 2=13 / 対象外=1)、errors=0。max_output_tokens=2000 で JSON 途中切断 (試行 1-2 で 6-7 件失敗) を覚知 → 4096 への拡張で 0 errors。golden_set v1.1 stream_2_candidate メタ付き 4 件のうち 3 件が LLM では stream_1 に分類された差分が観測され、判定対象を「広範事件」vs「特定角度」で取ると結論が変わる構造を可視化。 |
 | 2026-05-07 | F-trial-run-post-fix | 1/3 動画化 (Slot-1 のみ) + 3 articles | 修正後 F-13.B が本番で機能 (excluded_count 1/10/3 非ゼロでドメイン抽出層が稼働)、3 Slot 全 has_jp_coverage=False、防衛機構 5 層全機能、WebSearch 後追いで Slot-1 (Insider trading) は Tier 1-2 報道済み = Recall miss (F-jp-coverage-tune の対象)、過去 7-K 動画 3 件のうち 2 件が typical stream_2_candidate パターンと判明 |
@@ -345,6 +356,14 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
   本番試運転 + 過去判定後追い (F-trial-run-post-fix) を必須段階として組み込み、
   F-particular-angle-design / F-particular-angle-redesign では src/ tests/ configs/
   一切変更せず docs + scripts のみ
+- **「整合の説明であって検証ではない」** (F-extension-followup / 2026-05-08
+  記録、★ サンプル設計バイアス検出原則) — sontaku_signals type=diplomatic
+  20 件偏重を「Hydrangea 入力 RSS 41 媒体が外交・地政学事象中心」と説明する
+  のは整合の説明であって、サンプル設計バイアスの検証ではない。25 件サンプル
+  自体が海外メディア発の事象中心で `domestic` / `media_industry` 候補が
+  サンプル設計上ほぼ拾えない構造であることを明示。stream_3=0 件問題にも
+  同型の (c) サンプル選定バイアス仮説を適用、F-1 EditorialMissionFilter +
+  Phase A.5-3b 第二作で意図的にサンプルを拡充する設計に発展
 
 ## 8. 関連ドキュメントへの導線
 
@@ -374,22 +393,30 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
  バッチ**で系統名 1/1.5/2 → 1/2/3 リネーム + 忖度シグナル (sontaku_signals)
  を別軸メタデータとして独立化 + Step 3-4 改良 + MECE 判別基準明示 +
  クラウド誤り 9 (各論コントロールへの誘惑) を CLAUDE.md / DISCUSSION_NOTES に
- 記録。LLM 推定段階の 4 分類分布は stream_1=4 / stream_2=20 / stream_3=0 /
- out_of_scope=1 (★ stream_3 = 0 件、stream_2 = 20 件 という想定外結果は構造論点
- としては Resolved 化、件数論点はカズヤレビューで判別する論点として残る)。
- sontaku_signals 25 件 LLM 推定分布: level high=7 / medium=14 / low=1 / none=3、
- type diplomatic=20 / domestic=1 / media_industry=1 / null=3、extraction_confidence
- high=23 / medium=2 / low=0。Task E (カズヤレビュー、新分類 1/2/3 +
- sontaku_signals 込み) 待ちで、レビュー後に `scripts/finalize_annotations.py
- --schema-version 2.0` で最終化される。本拡張バッチは src/ tests/ configs/
- 一切変更なし (新規 scripts/add_sontaku_signals.py + 3 scripts 命名リネーム +
- docs 改訂 + annotations.json schema 2.1 + sontaku_signals 付与 + CLAUDE.md
- クラウド誤りセクション新設 + docs/runs/F-particular-angle-redesign/extension_log.json
- 新規)、baseline 1345 passed 維持。
- ★ Project Knowledge 最新化リマインダ: 本拡張バッチ完了で F-jp-coverage-tune 着手の
- 前提が完全に整ったため (4 分類 1/2/3 + sontaku_signals 真値 25 件)、新チャット移行前に
- カズヤが手動で claude.ai の Project Knowledge を **必須最新化** することを推奨
- (BATCH_PROTOCOL の Project Knowledge 運用ルールに従う、
- `docs/PARTICULAR_ANGLE_DEFINITION.md` の 1/2/3 命名版 + `CLAUDE.md` のクラウド誤り
- セクション新設版を新規アップロード対象に含めること)。
+ 記録。F-extension-followup (2026-05-08) は **ゲート完了後の 4 つ目のバッチ**で
+ extension クラウドレビュー指摘 3 件を反映: stream_3=0 件問題に **(c) サンプル
+ 選定バイアス仮説** を追記 (DISCUSSION_NOTES エントリのステータスを Resolved
+ → Active に降格)、新規エントリ「sontaku_signals type 分布のサンプル設計
+ バイアス」追加 (`domestic` / `media_industry` がサンプル設計上ほぼ拾えない
+ 構造を可視化、F-1 EditorialMissionFilter 設計時に再評価)、`scripts/finalize_annotations.py`
+ の sontaku_signals 対応最小修正 (4 関数 = `_resolve_final` /
+ `build_stream_classification` / `update_golden_set` / `build_annotation_diff`、
+ 既存シグネチャ・戻り値構造維持で新キー追加のみ、null → LLM 継承 / object →
+ 全上書き、フィールド単位 partial merge は未実装)。LLM 推定段階の 4 分類分布は
+ stream_1=4 / stream_2=20 / stream_3=0 / out_of_scope=1 (★ stream_3 = 0 件
+ 想定外結果は構造論点としては Resolved 化したが、(c) サンプル選定バイアス仮説
+ が論点として残る)。sontaku_signals 25 件 LLM 推定分布: level high=7 / medium=14
+ / low=1 / none=3、type diplomatic=20 / domestic=1 / media_industry=1 /
+ null=3、extraction_confidence high=23 / medium=2 / low=0。Task E (カズヤレビュー、
+ 新分類 1/2/3 + sontaku_signals 込み) 待ちで、レビュー後に
+ `scripts/finalize_annotations.py --schema-version 2.0` で最終化される。
+ 本フォローアップバッチは src/ tests/ configs/ 一切変更なし (DISCUSSION_NOTES
+ 1 エントリ更新 + 1 エントリ新規 + ヘッダ更新 + finalize_annotations.py の
+ sontaku_signals 対応最小修正 + CURRENT_STATE / DECISION_LOG / FUTURE_WORK 更新)、
+ baseline 1345 passed 維持。
+ ★ Project Knowledge 最新化リマインダ: 本フォローアップバッチ完了で
+ F-jp-coverage-tune 着手の前提が更に整理されたため (Task E カズヤレビュー後即
+ finalize 実行可能 + sontaku_signals サンプル設計バイアス論点を可視化)、新チャット
+ 移行前にカズヤが手動で claude.ai の Project Knowledge を **必須最新化** することを
+ 推奨 (BATCH_PROTOCOL の Project Knowledge 運用ルールに従う)。
  過去の経緯は DECISION_LOG.md / FUTURE_WORK.md / DISCUSSION_NOTES.md を参照。*
