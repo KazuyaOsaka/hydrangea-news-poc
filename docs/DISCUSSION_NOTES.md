@@ -1,8 +1,8 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-08 (F-extension-followup 完了、stream_3=0 件問題に
-(c) サンプル選定バイアス説追記 + sontaku_signals type 分布バイアス新規エントリ追加、
-1 エントリ更新 + 1 エントリ新規)
+最終更新: 2026-05-08 (F-task-e-finalize 完了、Task E カズヤレビュー結果反映 +
+finalize_annotations.py 実行 + 4 つの運用原則 + 1 つの構造的問題を docs 化、
+1 エントリ更新 + 4 エントリ新規)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -169,6 +169,29 @@ Phase A.5-3b 第二作で系統 3 事象 (例: 処理水放出 / 辺野古) を�
 件数が依然 0 件 ((a)/(b) 判定で説明できない場合) なら (c) サンプル選定バイアス説の
 証拠が強まる。
 
+**(c) 仮説の証拠強化 (★ F-task-e-finalize / 2026-05-08 で追記)**:
+F-particular-angle-redesign Task E カズヤレビュー (2026-05-08) で 25 件全件を
+横断レビューした結果、(c) サンプル選定バイアス仮説の **強い証拠** が確認された:
+
+- カズヤレビューを経ても新たに `stream_3_framing_inversion` に再分類される件は
+  **0 件** だった (= 25 件全件 LLM 推定値そのまま採用、`kazuya_review.*_revised`
+  全件 null)
+- 25 件中 perspective_gap が 20 件 (80%) に集中したのは、サンプルが「海外
+  メディア独自視点」事象中心で、**日本メディア起点の評価軸を持つ事象 (= 真の
+  系統 3 候補)** が偶然含まれていなかったため
+- 引き継ぎ v3 でカズヤが提案した系統 3 候補 (処理水放出 / 入管法改正 / 辺野古
+  / ジャニーズ) は、いずれも日本メディアが明確な評価軸を持っている事象だが、
+  RSS 41 媒体 (海外発のみ) では構造的に拾えない
+
+→ **stream_3 = 0 件は LLM 判定の問題でも 4 分類定義の問題でもなく、入力
+データセットの構造的問題** であることが、レビュー結果で裏付けられた。
+
+**根本治療** (Phase A.5-3b 第二作で実施想定):
+- 系統 3 候補事象 (処理水放出 / 辺野古 等) を意図的に追加した拡張ゴールデン
+  セット
+- (c) 仮説の最終検証 + sontaku_signals type=domestic / media_industry の
+  実例追加も兼ねる
+
 **2026-05-08 命名整理 (F-particular-angle-redesign-extension)**:
 本エントリ内の系統名は **本エントリ作成時の命名 (1/1.5/2)** で記述されて
 いるが、F-particular-angle-redesign-extension で **1/2/3** に
@@ -181,11 +204,9 @@ Phase A.5-3b 第二作で系統 3 事象 (例: 処理水放出 / 辺野古) を�
 新命名で読み替えると、LLM 推定段階分布は
 `stream_1=4 / stream_2=20 / stream_3=0 / out=1`。
 
-**ステータス**: `Active (要カズヤ判別 + サンプル拡充検討)` —
-F-particular-angle-redesign-extension (2026-05-08) で構造論点 (a) (b) は
-Resolved 化したが、(c) サンプル選定バイアス説は構造論点として **Active のまま
-残す**。F-extension-followup (2026-05-08) で (c) 仮説追記 + 件数論点は
-Task E カズヤレビュー後に判別。
+**ステータス**: `Active (要サンプル拡充、Phase A.5-3b 第二作で根本治療)` —
+F-task-e-finalize (2026-05-08) で (c) 仮説の証拠が裏付けられた。構造論点は
+Resolved、件数論点は Phase A.5-3b 第二作のサンプル拡充で根本治療する。
 
 extension で実施した構造的解 3 つ:
 (1) 命名 1/2/3 に整理して系統 3 = framing_inversion を本来の意味に正典化
@@ -252,6 +273,169 @@ DECISION_LOG / FUTURE_WORK では「Hydrangea 入力 RSS 41 媒体 (MEE, Meduza,
 - `docs/runs/F-particular-angle-redesign/extension_log.json` (type 分布詳細)
 - `docs/runs/F-particular-angle-design/annotations.json` (各 event の
   sontaku_signals フィールド)
+
+### 2026-05-08: sontaku_signals は嘘をつかない設計、疑わしきは低く見積もる 運用原則 (F-task-e-finalize で確立)
+
+**背景**:
+F-particular-angle-redesign-extension Task E カズヤレビュー (2026-05-08) で、
+sontaku_signals.level の判定方針について議論が発生。当初クラウドが「同パターン
+事象で level がバラついているのは LLM の判定揺れだから揃えるべき」「低く見積も
+ると本丸を取りこぼすリスク」を主張したが、カズヤから本質的な反論があった:
+
+> Hydrangea のメディアとしてのリスクは嘘をつくことだよね?だとすると、取りこぼ
+> したほうが安全じゃない?
+
+**確立した原則**:
+- sontaku_signals は **真値データ** であって、過大主張は信頼性損失のリスク
+  (= 「Hydrangea = 何でも忖度認定する陰謀論メディア」というレッテルを避ける)
+- level=high 妥当の reasoning が立てづらいなら `medium`、medium が立てづらい
+  なら `low` / `none` に下げる
+- 取りこぼしリスクは F-1 EditorialMissionFilter の採点側で寛容に扱えば
+  カバーできる (= 採点と真値の責務分離)
+
+**含意**:
+- カズヤレビューでは「level を高めに揃える」誘惑を排除し、LLM 推定値を
+  尊重する (= 「LLM の知性に委ねる」原則とも整合)
+- 過大主張による信頼性損失は、Hydrangea のメディアとしての存立基盤を毀損する
+  ため、設計原則として明文化する価値がある
+
+**ステータス**: `Resolved (運用原則として確立)` — 今後の sontaku_signals 関連
+バッチ (F-1 EditorialMissionFilter / F-stream-2-filter-design 第二段階) で
+本原則を参照する
+
+**出典**:
+- F-particular-angle-redesign Task E カズヤレビュー (2026-05-08) [B-3]
+- カズヤ発言: 「Hydrangea のメディアとしてのリスクは嘘をつくことだよね?
+  だとすると、取りこぼしたほうが安全じゃない?」
+
+### 2026-05-08: 「LLM の知性に委ねる」原則 — カズヤレビューは検証であって 置き換えではない (F-task-e-finalize で確立)
+
+**背景**:
+F-particular-angle-redesign Task E カズヤレビュー過程で、カズヤから以下の
+補足があった:
+
+> Hydrangea のポイントの一つに LLM の膨大な知識による評価とか判定があるから、
+> 一定 LLM を信用したいから
+
+これを受けて、カズヤレビューの位置付けが明確化された。
+
+**確立した原則**:
+> **「カズヤレビューは LLM 判定の検証であって、置き換えではない」**
+
+具体的な運用:
+- カズヤが明確に LLM の誤判定を見つけたら → 修正
+- カズヤが「どれもあり得る / 判別不能」なら → LLM 推定を採用 (= LLM の知識
+  に委ねる)
+- これは **クラウド誤り 9 (各論コントロールへの誘惑)** と同根の哲学 =
+  「LLM の知性に委ねる」
+
+**含意**:
+- Hydrangea の根幹は「LLM の膨大な知識による評価・判定」を信頼すること
+- 人間 (カズヤ) のバイアスや限定的知識で LLM 判定を上書きする方向には進まない
+- カズヤレビューの責務は「LLM が明確に間違っている件のフィルタリング」のみ
+- これは sontaku_signals だけでなく、particular_angle / stream_classification
+  / 4 軸該当性すべての判定で適用される
+
+**実装事例 (Task E カズヤレビュー、2026-05-08)**:
+- 25 件全件 LLM 推定値そのまま採用 (`kazuya_review.*_revised` 全件 null)
+- B-5 covered_004 (ローマ教皇)、B-7 covered_010 (フーシ派)、C-3 cls-0c7fa7c667d6
+  (ロシア焼身) はカズヤ「判別困難」→ LLM 推定維持
+
+**ステータス**: `Resolved (Hydrangea コアバリューとして明文化)` — 今後の
+カズヤレビュー全般 (Phase A.5-3b 手動 PoC 含む) で本原則を適用
+
+**出典**:
+- F-particular-angle-redesign Task E カズヤレビュー (2026-05-08) [B-5/B-6]
+- カズヤ発言: 「Hydrangea のポイントの一つに LLM の膨大な知識による評価とか
+  判定があるから、一定 LLM を信用したいから」
+- 関連: クラウド誤り 9 (各論コントロールへの誘惑) — 「LLM の知性に委ねる」
+  設計哲学
+
+### 2026-05-08: 「観点の選択的欠落 = 忖度」判定軸 — 主要扱い事象なのに特定 角度だけ抜ける場合の解釈 (F-task-e-finalize で確立)
+
+**背景**:
+F-particular-angle-redesign Task E カズヤレビューで、blind_009 (Iran-US 戦争
+長期化、革命防衛隊の経済利権) の sontaku_signals.type 判定でクラウドが「専門
+ニッチでリソース不足」とカズヤに提示したが、カズヤから本質的な反論があった:
+
+> いや、これは明確に忖度だと思う。忖度というよりは暴くべき観点を暴いていない
+> というか、『戦争経済』や利権構造を深掘り (しないこと)
+
+**確立した判定軸**:
+日本メディアが「報じない」理由を区別する基準として以下を採用する:
+
+- **真の「リソース不足」(level=none / type=null)**:
+  - 遠隔地のローカル国内問題で、日本メディアが現地取材リソースを持たない
+  - 例: covered_007 (ナイジェリア拉致 = ナイジェリア国内統治不全)、
+    covered_008 (マリ国防相暗殺 = マリ国内政情)
+  - 日本でも主要事象として扱われていない場合
+- **「観点の選択的欠落」= 忖度 (level=medium 以上)**:
+  - **国際的に主要扱いの事象** (日本メディアでも主要ニュース化されている)
+  - **なのに、特定の角度だけ抜け落ちる** (= 観点の選択的欠落)
+  - 抜け落ちる角度が「権力構造に切り込む観点」であるほど忖度が強い
+  - 例: blind_009 (中東情勢は主要扱いだが、戦争を経済構造として解剖する
+    観点が欠落)、covered_005 (COP30 は NHK 等が現地取材まで行っているが、
+    西側 vs グローバルサウスの構造的対立観点が欠落)
+
+**含意**:
+- 「忖度」の定義を「特定国・人物への外交的配慮」だけに限定しない
+- 「権力構造・戦争構造・利権構造に踏み込まない」全般を含める
+- これにより、Hydrangea コアミッション「忖度・報道規制をぶち壊す」の射程が
+  明確化 (= 構造分析角度の選択的欠落こそが本丸)
+
+**実装事例 (Task E カズヤレビュー、2026-05-08)**:
+- B-4 blind_009 → 「戦争経済の利権構造を深掘りしない」= 忖度として
+  level=medium 維持
+- B-6 covered_005 → 「グローバルサウス主導の構造分析を深掘りしない」= 同型
+- B-7 covered_010 → 「フーシ派の主体性を深掘りしない」= 同型
+- B-8 cls-a4132ec7d949 → 「治安当局トップの中立性問題を深掘りしない」= 同型
+
+**ステータス**: `Resolved (判定軸として確立)` — 今後の sontaku_signals 判定 +
+F-1 EditorialMissionFilter 設計 + Phase A.5-3b 台本表現でこの判定軸を参照
+
+**出典**:
+- F-particular-angle-redesign Task E カズヤレビュー (2026-05-08) [B-4]
+- カズヤ発言: 「これは明確に忖度だと思う。暴くべき観点を暴いていない」
+
+### 2026-05-08: 試運転と golden_set の重複サンプリング問題 — 25 件中 2 ペア重複、独立件数は実質 23 件 (F-task-e-finalize で発覚)
+
+**背景**:
+F-particular-angle-redesign Task E カズヤレビュー過程で、annotations.json の
+25 件を横断レビューした結果、**同一 MEE 記事を異なる経路で 2 回サンプリング
+している** 重複が 2 ペア発覚した。
+
+**重複事象**:
+- **ペア 1**: blind_005 (golden_set 由来) ⇄ cls-33b4f4960bf9_7K (試運転 7-K
+  由来) — 共に "Gaza was the scandal that should have ended Keir Starmer's
+  political career" (英スターマー首相マンデルソン人事スキャンダル + ガザ加担
+  対比)
+- **ペア 2**: blind_004 (golden_set 由来) ⇄ cls-204a683f73ee_7K (試運転 7-K
+  由来) — 共に "In Gaza, life flickers as power cuts shatter livelihoods and
+  healthcare" (ガザ電力危機・潤滑油 100 倍暴騰)
+
+**含意**:
+- 25 件中 4 件が実質 2 件相当 = **独立サンプル件数は 23 件**
+- F-jp-coverage-tune の二段階クエリ生成精度評価で、同一事象を 2 回計算する
+  ノイズになる
+- F-stream-2-filter-design の真値として使うとき、独立件数を誤認するリスク
+- LLM の判定揺れも観察可能: ペア 1 は level が違う
+  (blind_005=high / cls-33b4f4960bf9_7K=medium)、ペア 2 は揃っている
+  (両方 medium) — これ自体は揃える必要なし (= データの実態として記録)
+
+**対処方針**:
+- 即対処は不要 (削除や統合はせず、両方とも annotations.json に残す)
+- 後続バッチ (F-jp-coverage-tune / F-stream-2-filter-design) で真値として
+  使うときに、本エントリを参照して独立件数を正しく扱う
+- 将来検討: 試運転と golden_set で重複事象がある場合の検出ルールを定めるか、
+  `source_origin` で重複検出する小機能を `finalize_annotations.py` に
+  入れるかは Phase A.5-3b 着手前に判断
+
+**ステータス**: `Active` (後続バッチで参照する論点として残す、即対処なし)
+
+**出典**:
+- F-particular-angle-redesign Task E カズヤレビュー (2026-05-08) [C-1/C-2]
+- `docs/runs/F-particular-angle-design/annotations.json` blind_005 /
+  cls-33b4f4960bf9_7K / blind_004 / cls-204a683f73ee_7K
 
 ### 2026-05-07: 台本表現:特定角度未報道のナレーション課題 (F-particular-angle-design レビューで派生)
 

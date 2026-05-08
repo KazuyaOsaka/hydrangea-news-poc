@@ -1,6 +1,7 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-08 (F-extension-followup 完了、stream_3=0 件 (c) 仮説追記 + sontaku_signals type 分布バイアス記録 + finalize_annotations.py の sontaku_signals 対応最小修正)
+最終更新: 2026-05-08 (F-task-e-finalize 完了、Task E カズヤレビュー結果反映 +
+finalize_annotations.py 実行)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -466,6 +467,46 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **Task E カズヤレビュー結果反映 + finalize_annotations.py 実行 + 4 運用
+  原則 docs 化 (F-task-e-finalize)** (F-task-e-finalize / 2026-05-08 完了)
+  - 発生バッチ: F-particular-angle-redesign Task E (4 分類版 + sontaku_signals
+    込みカズヤレビュー、25 件) がクラウド対話形式で完了。25 件全件 LLM 推定
+    値そのまま採用 (= `kazuya_review.*_revised` 全件 null)、4 つの運用原則
+    確立 + 1 つの構造的問題発覚 + (c) サンプル選定バイアス仮説の証拠強化を
+    反映するための統合バッチ。
+  - 対応内容: (Step 1) `python scripts/finalize_annotations.py
+    --schema-version 2.0 ...` 実行で `annotation_diff.json` /
+    `stream_classification.json` / `golden_set.json` 生成更新。25 件全件
+    `final_stream_source=llm_estimate` /
+    `final_sontaku_signals_source=llm_estimate`。(Step 2) DISCUSSION_NOTES
+    に新規 4 エントリ追加 (運用原則 3 件 + 重複問題 1 件) + 既存 1 エントリ
+    追記 ((c) 仮説証拠強化、ステータス Active 維持で根本治療を Phase A.5-3b
+    第二作に明示) + REPORT.md セクション 12 (Task E カズヤレビュー実施結果)
+    追加 + DECISION_LOG / FUTURE_WORK / CURRENT_STATE のドッグフーディング。
+    コード変更ゼロ、`finalize_annotations.py` は既存スクリプトの実行のみ。
+  - 重要な発見 / 観察: (1) **「LLM の知性に委ねる」原則の実証**: 25 件全件
+    LLM 推定値そのまま採用 = カズヤ哲学「LLM の膨大な知識による評価・判定を
+    信用したい」と整合。(2) **「観点の選択的欠落 = 忖度」判定軸の確立**:
+    主要扱い事象なのに特定角度だけ抜ける = リソース不足ではなく忖度、これに
+    より Hydrangea コアミッションの射程が明確化。(3) **(c) サンプル選定
+    バイアス仮説の裏付け**: stream_3 に再分類される件は 0 件、根本治療は
+    Phase A.5-3b 第二作のサンプル拡充。(4) **試運転 / golden_set 重複問題**:
+    25 件中 2 ペア (4 件) が同一 MEE 記事の重複 = 独立件数は実質 23 件。
+  - 残課題: F-jp-coverage-tune ★最優先着手 OK (真値 25 件 + sontaku_signals
+    真値整備完了)。F-stream-2-filter-design は stream_3 = 0 件確定で小規模
+    実装の可能性が高い、Phase A.5-3b 第二作のサンプル拡充後に再評価。
+    Phase A.5-3b 第二作で系統 3 事象 (処理水放出 / 辺野古 等) のサンプル
+    拡充検討 — (c) 仮説検証 + 系統 3 台本表現試行錯誤を兼ねる。F-1
+    EditorialMissionFilter 着手時に本バッチの 4 運用原則を設計レビューで参照。
+  - 関連ファイル: `docs/runs/F-particular-angle-design/annotation_diff.json`
+    (新規)、`docs/runs/F-particular-angle-design/stream_classification.json`
+    (新規)、`docs/runs/F-verify-jp-coverage/golden_set.json` (更新)、
+    `docs/runs/F-verify-jp-coverage/golden_set_v1.1.json` (バックアップ自動
+    生成)、`docs/DISCUSSION_NOTES.md` (新規 4 エントリ + 既存 1 エントリ
+    追記 + ヘッダ更新)、`docs/runs/F-particular-angle-redesign/REPORT.md`
+    (セクション 12 追加)、`docs/CURRENT_STATE.md` `docs/DECISION_LOG.md`
+    `docs/FUTURE_WORK.md` (本バッチ反映)
 
 - **stream_3=0 件 (c) 仮説追記 + sontaku_signals type 分布バイアス記録 + finalize_annotations.py の sontaku_signals 対応 (F-extension-followup)** (F-extension-followup / 2026-05-08 完了)
   - 発生バッチ: F-particular-angle-redesign-extension (2026-05-08, commit `6a8efc4` / merge `2c9ee96`) のクラウドレビューで指摘された 3 件 (sontaku_signals type 分布のサンプル設計バイアス / stream_3=0 件問題の (c) サンプル選定バイアス説 / Task E 着手前の finalize_annotations.py の sontaku_signals 対応確認) を反映するためのフォローアップ。

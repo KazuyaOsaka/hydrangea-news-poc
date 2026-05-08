@@ -1,8 +1,8 @@
 {
-  "version": "1.3",
+  "version": "1.1",
   "created_at": "2026-05-03T06:21:15Z",
-  "last_updated_at": "2026-05-08",
-  "last_update_batch": "F-particular-angle-redesign",
+  "last_updated_at": "2026-05-04",
+  "last_update_batch": "F-verify-jp-coverage-golden-fix",
   "next_batch": "F-verify-jp-coverage-measure",
   "f13b_source_commit": "b61d3f5dc2cd538ad4b72ddde38c8f1edfeca946",
   "f13b_source_path": "src/triage/jp_coverage_verifier.py",
@@ -39,11 +39,7 @@
       "expected_has_jp_coverage": false,
       "expected_tier": null,
       "source_run": "F-13.B trial run (2026-05-01 cached)",
-      "f13b_prior_verdict": {
-        "has_jp_coverage": false,
-        "matched_tier": null,
-        "cached_at": "2026-05-01T15:15:37"
-      },
+      "f13b_prior_verdict": {"has_jp_coverage": false, "matched_tier": null, "cached_at": "2026-05-01T15:15:37"},
       "topic_category": "geopolitical_information_warfare",
       "region": "russia_ukraine",
       "volume_in_jp": "low",
@@ -51,28 +47,7 @@
       "manual_verification_urls": [
         "https://www.nids.mod.go.jp/publication/commentary/pdf/commentary430.pdf (NIDS、WL外、参考)",
         "https://www.nikkei.com/article/DGXZQOGR102CF0Q3A211C2000000/ (Nikkei、ロシア兵力増強、ロシア側主張ではない)"
-      ],
-      "particular_angle": {
-        "core_question": "グローバルサウスのメディアが、西側諸国が黙殺する「ウクライナ軍による民間人殺傷」という具体的な統計を提示し、戦争被害の報じられ方における情報の非対称性を問題視している。",
-        "differentiation_from_mainstream": "日本や欧米の主要メディアはロシアによる加害のみを強調し、ウクライナ側の攻撃による民間人被害を「プロパガンダ」として一律に排除する傾向があるが、本記事は被害者の実数と加害主体を明確に指摘している。",
-        "hydrangea_axis_alignment": "2. 外交・経済・利害関係面：特定国（米国・ウクライナ）への忖度や同盟関係上の利害により、ウクライナ側に不都合な事実が報道されない構造があるため。",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_1_silence_gap",
-      "sontaku_signals": {
-        "level": "high",
-        "type": "diplomatic",
-        "reasoning": "日本の主要メディアは政府の親ウクライナ・親米方針に同調し、ウクライナ軍による加害情報を一律に「ロシアのプロパガンダ」として排除する構造的なバイアスが存在する。このため、グローバルサウスが注視する情報の非対称性が日本の報道空間では黙殺される傾向にある。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439617+00:00"
-      }
+      ]
     },
     {
       "id": "blind_002",
@@ -83,11 +58,7 @@
       "expected_has_jp_coverage": true,
       "expected_tier": "tier_1_newspaper",
       "source_run": "F-13.B trial run (2026-05-01 cached)",
-      "f13b_prior_verdict": {
-        "has_jp_coverage": false,
-        "matched_tier": null,
-        "cached_at": "2026-05-01T15:15:14"
-      },
+      "f13b_prior_verdict": {"has_jp_coverage": false, "matched_tier": null, "cached_at": "2026-05-01T15:15:14"},
       "topic_category": "religion_political_structural",
       "region": "middle_east",
       "volume_in_jp": "high_for_broad_event_low_for_specific_angle",
@@ -100,34 +71,9 @@
       "stream_2_candidate": {
         "broad_event_jp_coverage": "朝日・日経で像破壊本体を報道済み、Newsweek JP T4 も処分・拘禁関連を報道",
         "specific_angle_unreported_in_jp": "イスラエル最高宗教権威『ラビ庁』が軍からの非難要請を拒否した、軍と宗教界の宗教的シオニズム融合という構造分析角度",
-        "interpretation_value": [
-          "cultural_context",
-          "political_intent",
-          "media_divergence"
-        ],
+        "interpretation_value": ["cultural_context", "political_intent", "media_divergence"],
         "decided_at": "2026-05-04",
         "note": "F-stream-2-filter-design 実装時に系統 2 ターゲット候補として再評価。ラビ庁拒否は日本では報道されないが、イスラエル国内の宗教的右傾化を理解する鍵となる構造的事象。"
-      },
-      "particular_angle": {
-        "core_question": "イスラエルの最高宗教権威（ラビ庁）が兵士による聖像破壊の非難を拒否した事実を、軍と宗教的過激主義の融合の象徴として問題視している。",
-        "differentiation_from_mainstream": "日本の主流メディアは「戦地での不祥事」という事象レベルの報道に終始しているが、本記事はイスラエル国内の宗教権力構造が軍の逸脱を正当化し始めている構造的変化を強調している。",
-        "hydrangea_axis_alignment": "3. 個人・権力者面。イスラエルの公的宗教権威という権力主体が、軍事行動における倫理的・国際法的な一線を越える行為を事実上容認している実態を突いているため。",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "medium",
-        "type": "diplomatic",
-        "reasoning": "日本の主要メディアはイスラエルとの外交的配慮や宗教的文脈の複雑さを避ける傾向があり、軍の不祥事を個別の逸脱として処理し、公的宗教権威の関与という構造的問題への踏み込みを控えるバイアスが働いている。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439621+00:00"
       }
     },
     {
@@ -139,37 +85,12 @@
       "expected_has_jp_coverage": false,
       "expected_tier": null,
       "source_run": "F-13.B trial run (2026-05-01 cached) + F-12-B-1 試運転",
-      "f13b_prior_verdict": {
-        "has_jp_coverage": false,
-        "matched_tier": null,
-        "cached_at": "2026-05-01T15:14:09"
-      },
+      "f13b_prior_verdict": {"has_jp_coverage": false, "matched_tier": null, "cached_at": "2026-05-01T15:14:09"},
       "topic_category": "geopolitical_individual_risk",
       "region": "middle_east",
       "volume_in_jp": "none",
       "manual_verification_note": "WebSearch で『米イスラエル 隠密作戦 トルコ 二重国籍 兵士 救出 NHK 日経』を検索 → NHK / Nikkei / Asahi いずれもこの事件を報道確認できず。Tier 1-4 全てで未報道。Web 検証結果と F-13.B 過去判定が一致 (両方 False)。",
-      "manual_verification_urls": [],
-      "particular_angle": {
-        "core_question": "SNS上の活動家によるOSINT（公開情報調査）が法執行の端緒となり、それが国家間の外交カードや超法規的な隠密作戦へと発展する「個人の地政学的リスク」と「司法の武器化」を問題視している。",
-        "differentiation_from_mainstream": "欧米主流メディアが「敵対的国家からの自国民救出」という人道的・英雄的側面を強調するのに対し、本記事はSNS監視による摘発の構造的危うさと、大国による主権侵害に近い介入の是非を強調している。",
-        "hydrangea_axis_alignment": "4. 関心領域・地政学的死角 (中東地域におけるSNS発の新たな紛争形態や、トルコ・イスラエル間の複雑な法執行リスクに対する日本メディアの関心の低さ)",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_1_silence_gap",
-      "sontaku_signals": {
-        "level": "medium",
-        "type": "diplomatic",
-        "reasoning": "同盟国である米国やイスラエルによる他国の法執行を軽視するような隠密作戦は、日本政府が掲げる「法の支配」のレトリックと矛盾するため、外交的配慮から批判的な文脈での報道を避けて黙殺する構造的バイアスが働いている可能性がある。",
-        "extraction_confidence": "medium"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439623+00:00"
-      }
+      "manual_verification_urls": []
     },
     {
       "id": "blind_004",
@@ -180,11 +101,7 @@
       "expected_has_jp_coverage": true,
       "expected_tier": "tier_1_newspaper",
       "source_run": "F-13.B trial run (2026-05-01 cached)",
-      "f13b_prior_verdict": {
-        "has_jp_coverage": false,
-        "matched_tier": null,
-        "cached_at": "2026-05-01T12:06:37"
-      },
+      "f13b_prior_verdict": {"has_jp_coverage": false, "matched_tier": null, "cached_at": "2026-05-01T12:06:37"},
       "topic_category": "humanitarian_structural_collapse",
       "region": "middle_east",
       "volume_in_jp": "high_for_broad_event_low_for_specific_angle",
@@ -196,33 +113,9 @@
       "stream_2_candidate": {
         "broad_event_jp_coverage": "東京新聞でシファ病院突入記事、CNN.co.jp でガザ電力危機関連報道",
         "specific_angle_unreported_in_jp": "潤滑油 1L 14 → 1,500 シェケル (100 倍) 暴騰、中小企業 9 割廃業危機、ケーキ店主の生活破綻、ジェネレーター燃料に食用油転用といった『社会インフラの物理的解体』『分散型サバイバル経済への変質』という具体的データ + 構造分析角度",
-        "interpretation_value": [
-          "economic_impact",
-          "cultural_context"
-        ],
+        "interpretation_value": ["economic_impact", "cultural_context"],
         "decided_at": "2026-05-04",
         "note": "F-stream-2-filter-design 実装時に系統 2 ターゲット候補として再評価。日本の戦闘・人道危機報道では『戦闘の推移』『死傷者数』を伝えるが、社会経済構造の物理的解体という生活実感への着地は欠落。"
-      },
-      "particular_angle": {
-        "core_question": "ガザにおけるジェネレーター用潤滑油の100倍以上の価格高騰が、単なる戦災を超えた「社会インフラの物理的かつ組織的な解体」を招いている現状を問題視している。",
-        "differentiation_from_mainstream": "日本や欧米の主要メディアが「空爆による被害」や「食料・水不足」という包括的な人道危機を報じる中、本記事は「潤滑油」という極めて具体的な物資の枯渇が中小企業の9割を廃業に追い込み、医療の最後の砦を崩壊させている構造を詳述している。",
-        "hydrangea_axis_alignment": "4. 関心領域・地政学的死角 (中東情勢において、戦闘の推移や政治的対立ではなく、現地の経済・生活基盤がどのように微細な物資の遮断によって破壊されているかというミクロな視点は、日本の報道では死角となっているため)",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "medium",
-        "type": "diplomatic",
-        "reasoning": "日本の主要メディアはガザ情勢を人道危機として報じるものの、イスラエルによる封鎖が「社会インフラの組織的解体」を意図しているという踏み込んだ構造分析は、同盟国である米国への配慮や外交的中立性を優先して抑制する傾向がある。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439625+00:00"
       }
     },
     {
@@ -234,11 +127,7 @@
       "expected_has_jp_coverage": true,
       "expected_tier": "tier_1_newspaper",
       "source_run": "F-13.B trial run (2026-05-01 cached)",
-      "f13b_prior_verdict": {
-        "has_jp_coverage": false,
-        "matched_tier": null,
-        "cached_at": "2026-05-01T12:06:13"
-      },
+      "f13b_prior_verdict": {"has_jp_coverage": false, "matched_tier": null, "cached_at": "2026-05-01T12:06:13"},
       "topic_category": "political_moral_critique",
       "region": "europe_uk",
       "volume_in_jp": "high_for_broad_event_low_for_specific_angle",
@@ -251,34 +140,9 @@
       "stream_2_candidate": {
         "broad_event_jp_coverage": "Nikkei T1 + 時事 T2 + Bloomberg JP T2 でマンデルソン人事スキャンダル本体を報道済み",
         "specific_angle_unreported_in_jp": "英国によるガザ向け F-35 部品継続供給、キプロス・アクロティリ基地からの監視飛行情報共有といった『英国の構造的なイスラエル軍事支援』こそが本来の道徳的スキャンダルだという批判フレーム",
-        "interpretation_value": [
-          "political_intent",
-          "media_divergence",
-          "geopolitical"
-        ],
+        "interpretation_value": ["political_intent", "media_divergence", "geopolitical"],
         "decided_at": "2026-05-04",
         "note": "F-stream-2-filter-design 実装時に系統 2 ターゲット候補として再評価。西側主流メディア (含む日本) はマンデルソン氏のエプスタイン氏との関係性に焦点、ガザ支援継続の構造問題はフレームから外れる。系統 2 視点で扱うべき。"
-      },
-      "particular_angle": {
-        "core_question": "中東メディアは、スターマー首相の真のスキャンダルは国内の人事問題ではなく、ガザでのイスラエル支援（基地利用や部品供給）という道徳的・軍事的加担であるべきだと主張している。",
-        "differentiation_from_mainstream": "日本や英米の主要メディアは人事手続きや国内政治の倫理性を中心に報じているが、本記事はガザ情勢への加担という国際法・人道的な「道徳的負債」を最大の政治的失点として強調している。",
-        "hydrangea_axis_alignment": "2. 外交・経済・利害関係面：イスラエルへの無条件支援という特定国への忖度や軍事的協力が、国内政治スキャンダルよりも重大な問題として扱われない構造を指摘しているため。",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "high",
-        "type": "diplomatic",
-        "reasoning": "日本の主要メディアは米英の報道枠組みを追従する傾向が極めて強く、同盟国によるイスラエルへの軍事協力や道徳的負債を「スキャンダル」として正面から扱うことは、外交的配慮から構造的に忌避されるため。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439627+00:00"
       }
     },
     {
@@ -298,28 +162,7 @@
       "manual_verification_urls": [
         "https://news.yahoo.co.jp/articles/d1730f6f47e97b93023f8b6f23826322c25257f4 (Yahoo!=excluded)",
         "https://news.yahoo.co.jp/pickup/6577911 (Yahoo!=excluded)"
-      ],
-      "particular_angle": {
-        "core_question": "米イラン対立で緊張が高まり商船の通航も制限されるホルムズ海峡において、なぜ制裁対象であるロシア大富豪のヨットが「特権的」な通過を許されたのか、その背後にある露イランの地政学的結託を問題視している。",
-        "differentiation_from_mainstream": "日本や欧米の主流メディアは「制裁による資産差押えの成功」を好んで報じるが、本記事は西側の封鎖網が機能しない「空白地帯」での制裁逃れの成功と、米国主導の秩序に対する挑戦という不都合な側面に焦点を当てている。",
-        "hydrangea_axis_alignment": "2. 外交・経済・利害関係面：米国主導の制裁・封鎖網が、特定国（ロシア・イラン）の戦略的利害一致によって無効化されている構造を浮き彫りにしているため。",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_1_silence_gap",
-      "sontaku_signals": {
-        "level": "medium",
-        "type": "diplomatic",
-        "reasoning": "日本の主要メディアはG7・米国主導の対露制裁が有効であるという前提に立つ傾向があり、ロシアとイランの結託による制裁網の無効化や米国の封鎖能力の限界を強調する報道は、政府の外交方針への配慮から抑制される構造がある。",
-        "extraction_confidence": "medium"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439628+00:00"
-      }
+      ]
     },
     {
       "id": "blind_008",
@@ -338,28 +181,7 @@
       "manual_verification_urls": [
         "https://www.msf.or.jp/news/press/detail/pse20260428nt.html (MSF JP、WL外、参考)",
         "https://www.arabnews.jp/article/middle-east/article_175641/ (Arab News JP、WL外)"
-      ],
-      "particular_angle": {
-        "core_question": "国境なき医師団や国連が、イスラエルによるガザの水インフラの90%破壊を単なる戦闘の副産物ではなく、住民への「水を武器とした集団的懲罰」および国際法違反として告発している点。",
-        "differentiation_from_mainstream": "日本や欧米の主流メディアが「紛争による物資不足や人道危機」という受動的な枠組みで報じるのに対し、本記事はイスラエルによる「生存基盤の意図的な破壊と兵器化」という能動的な加害構造を強調している。",
-        "hydrangea_axis_alignment": "2. 外交・経済・利害関係面 (特定国忖度: イスラエル): 日本の主要メディアはイスラエルを明確な加害者として描く「武器化」や「集団的懲罰」といった強い告発表現を避ける傾向があるため。",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "high",
-        "type": "diplomatic",
-        "reasoning": "日本の主要メディアは、米国との同盟関係や外交的配慮から、イスラエルの行為を「集団的懲罰」や「兵器化」といった国際法上の加害責任を問う強い表現で報じることを避ける構造的な傾向がある。事象を「人道危機」という受動的な枠組みに留めることで、同盟国の支持対象であるイスラエルへの直接的な批判を抑制する忖度が働いている。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439630+00:00"
-      }
+      ]
     },
     {
       "id": "blind_009",
@@ -383,34 +205,9 @@
       "stream_2_candidate": {
         "broad_event_jp_coverage": "Bloomberg JP T2 でイラン-米国和平合意難航を報道、SPF/JBpress/中東調査会等のシンクタンクが地政学的解説",
         "specific_angle_unreported_in_jp": "イラン革命防衛隊が制裁網下の闇経済から得る既得権益と、それが戦争継続の構造的動機になっているという『継戦の経済的合理性』分析角度",
-        "interpretation_value": [
-          "economic_impact",
-          "political_intent",
-          "geopolitical"
-        ],
+        "interpretation_value": ["economic_impact", "political_intent", "geopolitical"],
         "decided_at": "2026-05-04",
         "note": "F-stream-2-filter-design 実装時に系統 2 ターゲット候補として再評価。日本主要紙の社説・解説は『核合意』『地政学』中心、制裁経済の構造的継戦動機分析は欠落。"
-      },
-      "particular_angle": {
-        "core_question": "イラン革命防衛隊などの権力主体が、制裁下の影の経済や利権を維持するために、米国との対立状態を意図的に継続させているという経済的動機を問題視している。",
-        "differentiation_from_mainstream": "日本や欧米の主要メディアが地政学的緊張や核開発、宗教的対立を主因として報じるのに対し、本記事は「戦争経済」による内部利権の分配構造という経済的側面に焦点を当てている。",
-        "hydrangea_axis_alignment": "3. 個人・権力者面：イラン革命防衛隊という特定の権力組織が、国家の利益よりも自組織の経済的利権を優先して紛争を長期化させている構造を指摘しているため。",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "medium",
-        "type": "diplomatic",
-        "reasoning": "日本の主要メディアは米国や国際機関の公式見解に基づいた地政学的枠組みを優先する傾向があり、イラン内部の『戦争経済』や利権構造といった複雑な経済的動機を深掘りすることは外交的配慮や取材慣行により抑制されている。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439635+00:00"
       }
     },
     {
@@ -427,29 +224,9 @@
       "region": "middle_east",
       "volume_in_jp": "none",
       "manual_verification_note": "WebSearch で『Israel Zionism crisis endless war MEE 日本 報道』を検索 → MEE 原文・Jewish Voice for Liberation・Counterpunch・Al Jazeera・Haaretz 等の英語ソースのみ。日本語報道は確認できず (Tier 1-4 全て不在、WL外含めても日本語ソース 0 件)。シオニズム構造批判のオピニオンは日本主要紙ではほぼ扱わない領域。Web 検証結果から expected_has_jp_coverage=False と判定。",
-      "manual_verification_urls": [],
-      "particular_angle": {
-        "core_question": "イスラエルが「終わらない戦争」を追求する動機を、単なる安全保障や政権維持ではなく、シオニズムという国家プロジェクト自体の構造的・歴史的な行き詰まり（危機）に求める視点。",
-        "differentiation_from_mainstream": "主流メディアが「対テロ戦争」や「自衛権」の枠組みで事象を捉えるのに対し、本記事はイラン・パペ等の歴史学者の議論を引き、シオニズム体制が崩壊を免れるために戦争を必要としているという内部崩壊の論理を強調している。",
-        "hydrangea_axis_alignment": "2. 外交・経済・利害関係面: 特定国忖度 (イスラエル)。理由: シオニズムの根源的批判は、日本を含む西側メディアにおいてイスラエルへの外交的配慮やタブー視から極めて扱われにくい領域であるため。",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "high",
-        "type": "diplomatic",
-        "reasoning": "日本の主要メディアは米国との同盟関係や国際的な配慮から、イスラエルの国家理念であるシオニズムそのものへの根源的批判を避ける傾向が極めて強く、構造的な黙殺状態にあると言える。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439637+00:00"
-      }
+      "manual_verification_urls": []
     },
+
     {
       "id": "covered_001",
       "event_id": "synthetic-2026-04-trump-hormuz-blockade",
@@ -467,28 +244,7 @@
         "https://news.web.nhk/newsweb/na/na-k10015106881000 (NHK Tier 1)",
         "https://www.jiji.com/jc/v8?id=202604hormuz-team (Jiji Tier 2)",
         "https://www.saga-s.co.jp/articles/-/1689826 (佐賀新聞、共同通信配信、Tier 2 wire service 経由)"
-      ],
-      "particular_angle": {
-        "core_question": "米国による封鎖の正当性根拠とされる「和平交渉決裂」の裏側にある米国の非妥協的な前提条件と、海上封鎖が国際法上の「開戦事由」になり得る危険性および第三国への経済的打撃を問題視している。",
-        "differentiation_from_mainstream": "日本主要メディアは「米イランの緊張激化」という二国間対立の枠組みで事実関係を追認しているが、本視点は米国の覇権的行動が招く国際的な経済・法的リスクという構造的側面に焦点を当てている。",
-        "hydrangea_axis_alignment": "2. 外交・経済・利害関係面 (特定国忖度: 米国政府・CENTCOM の発表に基づいた安全保障フレームへの偏り)",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "high",
-        "type": "diplomatic",
-        "reasoning": "日米同盟への配慮から、日本の主要メディアは米国による軍事行動の国際法上の違法性や覇権的側面を批判的に報じることを避ける構造的バイアスが強く働いている。米国政府やCENTCOMの公式発表を追認する安全保障フレームが優先され、第三国への影響や米国の非妥協性といった多角的な視点が黙殺されやすい構造がある。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439639+00:00"
-      }
+      ]
     },
     {
       "id": "covered_002",
@@ -507,28 +263,7 @@
         "https://www.nikkei.com/article/DGXZQOGR16DSQ0W5A510C2000000/ (Nikkei Tier 1)",
         "https://news.web.nhk/newsweb/na/na-k10015096231000 (NHK Tier 1: 復活祭 32 時間停戦)",
         "https://www.nikkei.com/article/DGKKZO88640570T10C25A5FF8000/ (Nikkei Tier 1)"
-      ],
-      "particular_angle": {
-        "core_question": "トランプ氏がバイデン政権をバイパスしてプーチン氏と直接「20項目の具体的条件」を交渉していることの、既存のG7合意や国際協調枠組みに対する破壊的影響と外交的正当性の是非。",
-        "differentiation_from_mainstream": "日本メディアは「停戦合意の可能性」という事実関係を中立的または静観的に報じているが、海外メディアはこれが「西側諸国の結束」という既存フレームを根底から覆すトランプ流の独断外交（ディール）による現状変更であることを強調している。",
-        "hydrangea_axis_alignment": "2. 外交・経済・利害関係面: 米国（現政権）への忖度や既存の同盟重視の姿勢から、トランプ・ロシア間の直接交渉が持つ「既存秩序の破壊」という側面への踏み込んだ分析が不足しているため。",
-        "extraction_confidence": "medium"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "high",
-        "type": "diplomatic",
-        "reasoning": "日本の主要メディアは日米同盟の安定と現職のバイデン政権との関係を重視するため、トランプ氏による既存の国際秩序やG7の結束を破壊しかねない独断外交を批判的に報じることを避ける傾向がある。また、将来のトランプ政権復帰の可能性への配慮から、踏み込んだ分析を控える構造的な外交的忖度が働いている。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439644+00:00"
-      }
+      ]
     },
     {
       "id": "covered_003",
@@ -547,28 +282,7 @@
         "https://www.nikkei.com/article/DGXZQOGM097LT0Z00C25A5000000/ (Nikkei Tier 1: 米中閣僚級協議開始)",
         "https://www.nikkei.com/article/DGXZQOUA093SZ0Z00C25A6000000/ (Nikkei Tier 1: 日本後回し懸念)",
         "https://www.nikkei.com/article/DGXZQOGN0208J0S5A500C2000000/ (Nikkei Tier 1: 合意枠組み案)"
-      ],
-      "particular_angle": {
-        "core_question": "米国が「関税停止」という一時的な猶予を交渉カードとして利用し、日本を含む同盟国を対中包囲網の従順なツールとして固定化・属国化させようとしている構造的意図。",
-        "differentiation_from_mainstream": "日本メディア（日経等）は「交渉が後回しにされる」という実務的・戦術的な懸念を強調するが、海外の批判的視点は「米国による多国間秩序の私物化と同盟国への経済的威圧」という戦略的・本質的な力学を強調している。",
-        "hydrangea_axis_alignment": "2. 外交・経済・利害関係面 (米国への配慮から、日本の主流メディアが米国の強硬な通商政策を『同盟国への主権侵害』や『経済的威圧』と表現できないバイアス)",
-        "extraction_confidence": "medium"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "high",
-        "type": "diplomatic",
-        "reasoning": "日本の主要メディアは日米同盟への配慮から、米国の通商政策を「経済的威圧」や「主権侵害」といった本質的な批判的語彙で報じることを避け、実務的な交渉の遅れという戦術的側面に矮小化する構造的傾向がある。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439645+00:00"
-      }
+      ]
     },
     {
       "id": "covered_004",
@@ -585,28 +299,7 @@
       "manual_verification_urls": [
         "https://www.nikkei.com/article/DGXZQOGM154DL0V10C26A4000000/ (Nikkei Tier 1: 多数派専制警告)",
         "https://www.nikkei.com/article/DGKKZO88569240Z00C25A5FF8000/ (Nikkei Tier 1: 新教皇就任)"
-      ],
-      "particular_angle": {
-        "core_question": "米国出身の改革派教皇が、民主主義の形式を悪用する「多数派の専制」や、権力維持のために宗教を道具化する政治指導者の正当性を、宗教的権威の頂点からいかに解体・批判しているか。",
-        "differentiation_from_mainstream": "日本メディアは復活祭の慣例的な「平和への祈り」という宗教行事の文脈で報じているが、海外メディアはこれを特定の政治的潮流（ポピュリズムや宗教ナショナリズム）に対する具体的かつ構造的な権力批判として分析している。",
-        "hydrangea_axis_alignment": "3. 個人・権力者面: 宗教や神の名を盾に権力を振るう政治家・指導者（暴君）の欺瞞を、教皇という最高位の権威が直接的に告発・問題視しているため。",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "medium",
-        "type": "domestic",
-        "reasoning": "教皇による「宗教の政治利用」への批判は、国内における宗教と政治の癒着という極めて敏感な論点に波及する恐れがあるため、日本の主要メディアは意図的に論点を抽象化し、無難な「平和への祈り」として処理する構造的バイアスが働いている。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439647+00:00"
-      }
+      ]
     },
     {
       "id": "covered_005",
@@ -625,28 +318,7 @@
         "https://www.nikkei.com/article/DGXZQOGN0800F0Y5A101C2000000/ (Nikkei Tier 1: COP30 グローバルサウス)",
         "https://www.nikkei.com/article/DGXZQOGN2203B0S4A820C2000000/ (Nikkei Tier 1: アマゾン火災煙)",
         "https://president.jp/articles/-/30265 (President Tier 4)"
-      ],
-      "particular_angle": {
-        "core_question": "ブラジルが COP30 を単なる環境保護の場ではなく、西側主導の気候秩序に対するグローバルサウスの「交渉力強化」と「経済的主権」を確立するための地政学的レバレッジとしてどう利用しているか。",
-        "differentiation_from_mainstream": "日本メディア（NHK等）は「アマゾンの森林破壊」という環境危機の現状や国内対策の成否を主眼に置くが、本視点は「既存の国際金融・環境枠組みに対するグローバルサウス側の構造的反発と主導権争い」という政治的文脈を強調する。",
-        "hydrangea_axis_alignment": "4. 関心領域・地政学的死角 (南米・グローバルサウスの政治的意図や国際秩序への挑戦に対する日本メディアの分析的関心の低さ)",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "medium",
-        "type": "diplomatic",
-        "reasoning": "日本メディアは気候変動を「環境保護」の文脈で報じる傾向が強く、G7の一員として西側主導の国際秩序に異を唱えるグローバルサウス側の地政学的・経済的主権の主張を深く掘り下げることは、外交的配慮から抑制される構造がある。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439649+00:00"
-      }
+      ]
     },
     {
       "id": "covered_006",
@@ -665,28 +337,7 @@
         "https://www.nikkei.com/article/DGXZQOGN196390Z10C26A2000000/ (Nikkei Tier 1: 26日決算発表)",
         "https://www.bloomberg.com/jp/news/articles/2026-02-25/TB1AM6T9NJLT00 (Bloomberg JP Tier 2: 4Q強気見通し)",
         "https://www.bloomberg.com/jp/news/articles/2026-02-26/TB35XEKIJHA700 (Bloomberg JP Tier 2: AIバブル懸念)"
-      ],
-      "particular_angle": {
-        "core_question": "AIブームによるNVIDIAの時価総額拡大の裏で、投資家が将来的な需要減退や半導体特有の「循環投資（シリコンサイクル）」のリスクをどのように警戒しているか。",
-        "differentiation_from_mainstream": "日経新聞やBloomberg JPといった日本の主流メディアが既に「最高値更新」と「循環投資のリスク」の両面を報じており、既存報道との視点の差分や隠された構造的分析は見当たらない。",
-        "hydrangea_axis_alignment": "該当なし。通常の市場動向および経済リスクの分析であり、メディアの報道規制や特定権力への忖度といったHydrangeaの4軸には合致しない。",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "out_of_scope",
-      "sontaku_signals": {
-        "level": "none",
-        "type": null,
-        "reasoning": "NVIDIAの株価動向や半導体サイクルは一般的な経済・市場ニュースであり、国内主要メディアもリスクを含めて詳細に報じているため、報道規制や構造的な忖度は存在しない。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439650+00:00"
-      }
+      ]
     },
     {
       "id": "covered_007",
@@ -704,28 +355,7 @@
         "https://www.tokyo-np.co.jp/article/473282 (Tokyo Shimbun Tier 1)",
         "https://www.sakigake.jp/news/article/20260307CO0033/ (秋田魁新報、共同通信配信、Tier 2 wire service 経由)",
         "https://www.cnn.co.jp/world/35219377.html (CNN.co.jp、WL外、関連 160 人拉致)"
-      ],
-      "particular_angle": {
-        "core_question": "ナイジェリア政府が多額の国防予算を投じながら、なぜボルノ州での大規模拉致を長年防げないのかという「国家の安全保障機能の構造的不全」と「地方住民の見捨てられ感」。",
-        "differentiation_from_mainstream": "日本メディアは「過激派による悲劇的な事件」という事実関係を強調するが、海外・現地メディアは軍内部の汚職や情報漏洩、および政府による地方警備の優先順位の低さを構造的問題として批判している。",
-        "hydrangea_axis_alignment": "4. 関心領域・地政学的死角 (アフリカ・グローバルサウスにおける構造的な治安悪化と統治不全への関心の低さ)",
-        "extraction_confidence": "medium"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "none",
-        "type": null,
-        "reasoning": "アフリカの治安問題における構造的要因の不報は、報道規制や特定勢力への配慮ではなく、地理的・心理的距離に伴う関心の低さや取材リソースの制約に起因するものである。日本政府や国内企業、主要な外交関係を毀損する内容を含まないため、構造的な忖度は認められない。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439652+00:00"
-      }
+      ]
     },
     {
       "id": "covered_008",
@@ -743,28 +373,7 @@
         "https://news.web.nhk/newsweb/na/na-k10015109641000 (NHK Tier 1)",
         "https://www.jiji.com/jc/article?k=20260427048789a&g=afp (Jiji Tier 2)",
         "https://www.okinawatimes.co.jp/articles/-/1825694 (沖縄タイムス、共同通信配信、Tier 2 wire service 経由)"
-      ],
-      "particular_angle": {
-        "core_question": "親露派の急先鋒である国防相の暗殺と、本来敵対する世俗派トゥアレグ勢力とアルカイダ系組織の「異例の共闘」が、ロシア（ワグネル）依存の安全保障モデルの致命的な破綻をいかに証明しているか。",
-        "differentiation_from_mainstream": "日本メディアは「国防相死亡」という事実と治安悪化を速報するに留まるが、本視点は「ロシアを後ろ盾とした軍事政権の統治正当性の崩壊」と「反政府勢力の戦術的統合」という構造的変化を強調している。",
-        "hydrangea_axis_alignment": "4. 関心領域・地政学的死角 (サヘル地域における複雑な勢力図の変化や、ロシア依存の帰結という深層分析は日本の報道では極めて希薄であるため)",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "none",
-        "type": null,
-        "reasoning": "サヘル地域の情勢は日本の主要メディアにとって地理的・関心的に遠い専門ニッチな領域であり、報道の希薄さは構造的な忖度や規制ではなく、単なるリソース不足や優先順位の低さに起因するため。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439653+00:00"
-      }
+      ]
     },
     {
       "id": "covered_009",
@@ -781,28 +390,7 @@
       "manual_verification_urls": [
         "https://www.web.nhk/tv/an/kokusaihoudou/pl/series-tep-8M689W8RVX/ep/VR5Y11629N (NHK Tier 1: 国際報道特集)",
         "https://www.newsweekjapan.jp/wada/2025/05/post-8.php (Newsweek Japan Tier 4)"
-      ],
-      "particular_angle": {
-        "core_question": "核保有国間でのドローン・精密攻撃（Operation Sindoor）の常態化と、トランプ氏による非伝統的な仲介が、南アジアの安全保障構造をいかに根本から変容させているか。",
-        "differentiation_from_mainstream": "日本メディアが「遠方の紛争と停戦」という表層的な事実追認に終始する一方、本視点は軍事技術の質的変化と、既存の国際協調枠組みを排した個人的仲介がもたらす地政学的リスクを深掘りしている。",
-        "hydrangea_axis_alignment": "4. 関心領域・地政学的死角 (南アジアにおける核抑止の変容や、地域紛争の構造変化に対する日本メディアの分析的関心の低さ)",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "medium",
-        "type": "diplomatic",
-        "reasoning": "Quadの重要パートナーであるインドへの配慮やトランプ氏再選の可能性を背景に、核保有国間の軍事衝突の常態化や非伝統的仲介がもたらす構造的リスクの深掘りを避け、表面的な事実追認に留める外交的忖度が働いている。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439657+00:00"
-      }
+      ]
     },
     {
       "id": "covered_010",
@@ -821,28 +409,7 @@
         "https://www.jiji.com/jc/article?k=2026032800441&g=int (Jiji Tier 2)",
         "https://www.newsweekjapan.jp/headlines/world/2026/03/592133.php (Newsweek Japan Tier 4)",
         "https://www.nikkei.com/article/DGXZQOGR27BHT0X20C26A3000000/ (Nikkei Tier 1: 同件のフーシ参戦)"
-      ],
-      "particular_angle": {
-        "core_question": "フーシ派が単なる「ガザ連帯」の枠組みを超え、イランへの軍事支援を「公的かつ明示的」に宣言したことで、中東の「抵抗の弧」が単なる代理勢力の集まりから、相互に防衛し合う「軍事同盟」へと変質した点を問題視している。",
-        "differentiation_from_mainstream": "日本や欧米の主要メディアはフーシ派を「イランの操り人形（プロキシ）」として受動的に描きがちだが、本記事はフーシ派がイランを救済・支援する主体として自らを定義し、対等な共同作戦を展開しているという主体的側面を強調している。",
-        "hydrangea_axis_alignment": "4. 関心領域・地政学的死角 (中東の非国家主体が持つ独自の政治的意志や、イランとの関係性が「一方的な支援」から「相互的な同盟」へ移行している構造的変化は、日本の主流メディアでは見落とされがちな死角であるため)",
-        "extraction_confidence": "high"
-      },
-      "stream_classification": "stream_2_perspective_gap",
-      "sontaku_signals": {
-        "level": "medium",
-        "type": "diplomatic",
-        "reasoning": "日本の主要メディアは米国主導の「イラン＝黒幕、フーシ派＝操り人形」という地政学的構図を維持する傾向があり、フーシ派の主体的意志や対等な同盟関係という分析は、同盟国である米国のナラティブとの乖離を避けるために抑制されやすい。",
-        "extraction_confidence": "high"
-      },
-      "particular_angle_meta": {
-        "source": "F-particular-angle-redesign",
-        "schema_version": "2.0",
-        "final_stream_source": "llm_estimate",
-        "final_sontaku_signals_source": "llm_estimate",
-        "review_note": null,
-        "applied_at": "2026-05-08T18:03:04.439659+00:00"
-      }
+      ]
     }
   ],
   "diversity_check": {
@@ -937,12 +504,5 @@
       "結果を docs/runs/F-verify-jp-coverage/measurement_result.json に保存"
     ],
     "kazuya_review_gate": "★完了済み (2026-05-04 F-verify-jp-coverage-golden-fix で全件確定)。即着手可能。"
-  },
-  "v1_3_changelog": {
-    "summary": "F-particular-angle-redesign (2026-05-07): 3 分類 → 4 分類化に伴い、各 entry の stream_classification を 4 分類対応 (stream_1_silence_gap / stream_2_perspective_gap / stream_3_framing_inversion / out_of_scope) に更新。particular_angle_meta.schema_version=2.0 を付与。試運転 6 件は本ファイルに統合せず stream_classification.json で全 25 件管理する責務分離は維持。",
-    "schema_version": "2.0",
-    "entries_updated_count": 19,
-    "not_found_in_annotations": [],
-    "previous_version": "1.1"
   }
 }

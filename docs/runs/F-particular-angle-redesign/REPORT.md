@@ -508,6 +508,83 @@ python scripts/finalize_annotations.py \
 
 ---
 
+## 12. Task E カズヤレビュー実施結果 (F-task-e-finalize / 2026-05-08)
+
+### 12.1 レビュー方式
+
+クラウド (claude.ai 側) との **対話形式** で 25 件全件を横断レビュー。クラウド
+が観点 A (stream_classification) / B (particular_angle) / C (sontaku_signals)
+/ D (横断的気づき) で論点を整理し、3 カテゴリに分類:
+
+- **[A] 即承認** (12 件): LLM 推定値で問題なし、流し見で OK
+- **[B] 要判断** (8 件): 境界事例、カズヤの判断が必要
+- **[C] 修正推奨** (5 件): 明確な問題あり、修正候補あり
+
+### 12.2 レビュー結果
+
+**25 件全件、`kazuya_review.*_revised` フィールドは null のまま** (= LLM
+推定値そのまま正本化)。カテゴリ別:
+
+- [A] 12 件: 全件 LLM 推定どおり
+- [B] 8 件: 全件 LLM 推定どおり (B-3 重複事象は揃えず両方 LLM 推定維持)
+- [C] 5 件: 4 件 LLM 推定どおり + 1 件は重複問題として記録のみ
+
+詳細は `docs/DISCUSSION_NOTES.md` 関連エントリ参照。
+
+### 12.3 確立された運用原則 (4 件、F-task-e-finalize で docs 化)
+
+1. **「揃える必然性なし」原則**: LLM が同パターンで違う level を返したら、
+   それは判定揺れではなくデータの実態
+2. **「sontaku_signals は嘘をつかない設計、疑わしきは低く見積もる」運用原則**:
+   過大主張は信頼性損失のリスク、取りこぼしは採点側で寛容にカバー
+3. **「LLM の知性に委ねる」原則**: カズヤが判別不能なら LLM 推定を採用、
+   Hydrangea コアバリュー
+4. **「観点の選択的欠落 = 忖度」判定軸**: 主要扱い事象なのに特定角度だけ
+   抜ける場合は、リソース不足ではなく忖度
+
+### 12.4 発覚した構造的問題 (1 件)
+
+- **試運転と golden_set の重複サンプリング**: 25 件中 2 ペア (4 件) が
+  同一 MEE 記事の重複 = 独立件数は実質 23 件
+  - blind_005 ⇄ cls-33b4f4960bf9_7K
+  - blind_004 ⇄ cls-204a683f73ee_7K
+- 後続バッチで真値として使うとき独立件数を誤認するリスク、本バッチでは
+  記録のみ
+
+### 12.5 (c) サンプル選定バイアス仮説の証拠強化
+
+F-extension-followup で記録した (c) 仮説は、本レビュー結果で裏付けられた:
+- カズヤレビューを経ても stream_3 に再分類される件は 0 件
+- 25 件のサンプルは「海外メディア独自視点」事象中心で、日本メディア起点の
+  評価軸を持つ事象 (= 真の系統 3 候補) が偶然含まれていなかった
+- 根本治療は Phase A.5-3b 第二作のサンプル拡充 (処理水放出 / 辺野古 等)
+
+### 12.6 finalize_annotations.py 実行結果
+
+`python scripts/finalize_annotations.py --schema-version 2.0 ...` 実行で
+以下を生成:
+- `docs/runs/F-particular-angle-design/annotation_diff.json`:
+  `fully_unmodified_count=25` (全件 LLM 推定維持)
+- `docs/runs/F-particular-angle-design/stream_classification.json`:
+  counts は LLM 推定分布と完全一致 (`stream_1=4 / stream_2=20 / stream_3=0
+  / out=1`)
+- `docs/runs/F-verify-jp-coverage/golden_set.json`: 19 件更新 (試運転由来
+  6 件は対象外)、各 event に `final_sontaku_signals_source=llm_estimate`
+
+### 12.7 後続バッチへの含意
+
+- **F-jp-coverage-tune** (★最優先): 真値 25 件 + sontaku_signals 真値整備
+  完了 + 重複問題の認識共有で、二段階クエリ生成の精度評価が可能な状態
+- **F-stream-2-filter-design** (★ 責務スコープ要再評価): stream_3 = 0 件
+  確定により小規模実装で済む可能性が高い、Phase A.5-3b 第二作のサンプル
+  拡充後に再評価
+- **Phase A.5-3b 第二作**: 系統 3 事象 (処理水放出 / 辺野古 等) のサンプル
+  拡充で (c) 仮説検証 + 系統 3 台本表現の試行錯誤を兼ねる
+- **F-1 EditorialMissionFilter** (将来検討): sontaku_signals.level=high/medium
+  を優先採点する設計時、本バッチの 4 つの運用原則を設計レビューで参照
+
+---
+
 *このレポートは F-particular-angle-redesign (2026-05-07 〜 2026-05-08) +
 拡張作業 F-particular-angle-redesign-extension (2026-05-08) の実行結果を
 記録したもの。Task E (カズヤレビュー) 待ちで一旦停止し、レビュー後に
