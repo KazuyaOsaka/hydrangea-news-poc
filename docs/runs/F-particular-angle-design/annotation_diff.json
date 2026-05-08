@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-05-08T18:03:04.434010+00:00",
+  "total_events": 25,
+  "summary": {
+    "particular_angle_revised_count": 0,
+    "stream_classification_revised_count": 0,
+    "sontaku_signals_revised_count": 0,
+    "review_notes_count": 0,
+    "fully_unmodified_count": 25
+  },
+  "diffs": []
+}

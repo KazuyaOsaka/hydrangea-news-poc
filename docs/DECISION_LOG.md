@@ -1,6 +1,8 @@
 # Hydrangea — 意思決定ログ (DECISION_LOG)
 
-最終更新: 2026-05-08 (F-extension-followup 完了、stream_3=0 件 (c) 仮説追記 + sontaku_signals サンプル設計バイアス記録 + finalize_annotations.py の sontaku_signals 対応)
+最終更新: 2026-05-08 (F-task-e-finalize 完了、Task E カズヤレビュー結果反映 +
+finalize_annotations.py 実行 + 4 運用原則 + 重複問題 + (c) 仮説証拠強化を
+docs 化)
 
 このドキュメントは Hydrangea プロジェクトにおける重要な意思決定の履歴を記録する。
 コードや設定の「結果」ではなく、「なぜそうなったか」の判断プロセスを残すことが目的。
@@ -3654,4 +3656,129 @@ tests/ configs/ への変更なし、既存関数のシグネチャ・戻り値�
   完了)、Phase A.5-3b 第二作 (★ 系統 3 + domestic/media_industry サンプル
   拡充の根拠に本エントリを参照)、F-1 EditorialMissionFilter (将来、
   sontaku_signals type 分布バイアスを設計レビュー時に参照)
+
+## 2026-05-08: F-task-e-finalize — Task E カズヤレビュー結果反映 + finalize_annotations.py 実行 + 4 運用原則 docs 化
+
+### 背景
+
+F-particular-angle-redesign-extension (2026-05-08, commit `6a8efc4` / merge
+`2c9ee96`) + F-extension-followup (2026-05-08, commit `038c298` / merge
+`1311cd0`) を経て、Task E (4 分類版 + sontaku_signals 込みのカズヤレビュー、
+25 件) がクラウド (claude.ai 側) との対話形式で完了した。
+
+レビュー結果は **25 件全件 LLM 推定値そのまま採用** (= `kazuya_review.*_revised`
+フィールドは全件 null のまま)。これは Hydrangea のコアバリューのひとつ
+「LLM の知性に委ねる」と整合する結果で、レビュー過程で 4 つの運用原則と
+1 つの構造的問題が確立された:
+
+1. 「揃える必然性なし」原則
+2. 「sontaku_signals は嘘をつかない設計、疑わしきは低く見積もる」運用原則
+3. 「LLM の知性に委ねる」原則
+4. 「観点の選択的欠落 = 忖度」判定軸
+
+加えて構造的な問題が 1 件発覚: **試運転と golden_set の重複サンプリング**
+(25 件中 2 ペア = 4 件が同一 MEE 記事の重複、独立件数は実質 23 件)。
+
+さらに、レビュー結果は F-extension-followup で記録した **(c) サンプル選定
+バイアス仮説の証拠強化** にもなった (= カズヤレビュー後も stream_3 は 0 件)。
+
+これらを反映するため本バッチを実施。Step 1: `finalize_annotations.py
+--schema-version 2.0` で 25 件全件最終化。Step 2: 4 運用原則 + 1 構造的問題 +
+(c) 仮説証拠強化を docs 化。
+
+### 議論
+
+#### Step 1 (finalize_annotations.py 実行)
+
+`python scripts/finalize_annotations.py --schema-version 2.0 \
+  --input docs/runs/F-particular-angle-design/annotations.json \
+  --output-diff docs/runs/F-particular-angle-design/annotation_diff.json \
+  --output-classification docs/runs/F-particular-angle-design/stream_classification.json \
+  --update-golden-set docs/runs/F-verify-jp-coverage/golden_set.json` を実行。
+F-extension-followup で sontaku_signals 対応最小修正済みのため、schema 2.0 で
+全 25 件処理されること自体は確認済みの動作だが、Task E カズヤレビュー結果
+(全件 null) が既に annotations.json に反映されている状態での最終化が本ステップ。
+
+#### Step 2 (docs 化)
+
+DISCUSSION_NOTES に新規 4 エントリ追加 (運用原則 3 件 + 重複問題 1 件) +
+既存「stream_3=0 件」エントリに (c) 仮説証拠強化を追記、ステータスを
+`Active (要サンプル拡充、Phase A.5-3b 第二作で根本治療)` に更新。
+F-particular-angle-redesign/REPORT.md にセクション 12 (Task E カズヤレビュー
+実施結果) 追加。DECISION_LOG / FUTURE_WORK / CURRENT_STATE のドッグフーディング。
+
+### 決定
+
+- **Step 1**: finalize_annotations.py を schema 2.0 で実行、25 件全件
+  `final_stream_source=llm_estimate` / `final_sontaku_signals_source=llm_estimate`
+  で最終化。golden_set 19 件更新 (v1.1 → v1.3、試運転由来 6 件は対象外)。
+- **Step 2**: DISCUSSION_NOTES 新規 4 エントリ + 既存 1 エントリ追記 +
+  REPORT.md セクション 12 追加 + ドッグフーディング。コード変更ゼロ
+  (既存スクリプトの実行のみ)。
+- 4 つの運用原則は今後のカズヤレビュー全般 + sontaku_signals 関連バッチ +
+  F-1 EditorialMissionFilter 設計時に参照する設計原則として明文化。
+- 重複サンプリング問題は即対処せず、後続バッチ (F-jp-coverage-tune /
+  F-stream-2-filter-design) で真値として使うときに参照する論点として残す。
+
+#### 不変原則例外適用
+
+なし (docs 追記 + 既存 scripts の実行のみ、src/ tests/ configs/ への変更なし、
+不変原則 1-5 完全遵守)。
+
+### 結果
+
+#### 後続バッチへの影響
+
+- **F-jp-coverage-tune** (★最優先): 真値 25 件 + sontaku_signals 真値整備
+  完了 + 重複問題の認識共有で、二段階クエリ生成の精度評価が可能な状態。
+- **F-stream-2-filter-design** (★ 責務スコープ要再評価): stream_3 = 0 件
+  確定により小規模実装で済む可能性が高い、Phase A.5-3b 第二作のサンプル拡充後
+  に再評価が望ましい。
+- **Phase A.5-3b 第二作**: 系統 3 事象 (処理水放出 / 辺野古 等) のサンプル
+  拡充で (c) 仮説検証 + 系統 3 台本表現の試行錯誤を兼ねる。
+- **F-1 EditorialMissionFilter** (将来検討): 4 つの運用原則を設計レビュー時
+  に参照。特に「sontaku_signals は嘘をつかない設計、疑わしきは低く見積もる」
+  原則は採点側の寛容な扱いの設計根拠になる。
+
+#### 整合性検証
+
+- baseline テスト数: **1345 passed 維持**
+  (`python -m pytest tests/ -x --tb=no -q` 実行、134.60s)
+- finalize_annotations.py 実行結果:
+  - `annotation_diff.json`: `fully_unmodified_count=25`、各種
+    `*_revised_count=0`
+  - `stream_classification.json`: counts は LLM 推定分布と完全一致
+    (`stream_1=4 / stream_2=20 / stream_3=0 / out=1`)、各 event に
+    `final_stream_source=llm_estimate` /
+    `final_sontaku_signals_source=llm_estimate` 付与
+  - `golden_set.json`: 19 件更新 (v1.1 → v1.3)、各 entry に `particular_angle`
+    / `stream_classification` / `sontaku_signals` / `particular_angle_meta`
+    付与
+- 不変原則違反: なし
+- 試運転由来 6 件は golden_set 対象外で変更なし (= 責務分離維持)
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 改修:
+  - `docs/DISCUSSION_NOTES.md` (新規 4 エントリ + 既存 1 エントリ追記 +
+    ヘッダ最終更新日付)
+  - `docs/runs/F-particular-angle-redesign/REPORT.md` (セクション 12 追加)
+- 生成 (新規):
+  - `docs/runs/F-particular-angle-design/annotation_diff.json`
+  - `docs/runs/F-particular-angle-design/stream_classification.json`
+  - `docs/runs/F-verify-jp-coverage/golden_set_v1.1.json` (バックアップ、
+    finalize_annotations.py が自動生成)
+- 更新:
+  - `docs/runs/F-verify-jp-coverage/golden_set.json` (v1.1 → v1.3、19 件更新)
+  - `docs/CURRENT_STATE.md` (全置換更新、F-task-e-finalize 完了反映)
+  - `docs/DECISION_LOG.md` (本エントリ追加)
+  - `docs/FUTURE_WORK.md` (本バッチを完了済みに追加)
+- 関連: F-extension-followup (前バッチ、本バッチの発火元 = Task E 着手前
+  整備)、F-particular-angle-redesign Task E (本バッチで結果反映完了)、
+  F-jp-coverage-tune (★最優先、本バッチで真値整備が完了で着手 OK)、
+  F-stream-2-filter-design (★責務スコープ要再評価、本バッチで stream_3 = 0
+  件が確定)、Phase A.5-3b 第二作 (★ 系統 3 + domestic/media_industry サンプル
+  拡充、(c) 仮説の根本治療)、F-1 EditorialMissionFilter (将来、4 運用原則を
+  設計レビュー時に参照)
 
