@@ -1,0 +1,33 @@
+# covered_006
+timestamp: 2026-05-09T19:45:25.799198
+elapsed_seconds: 6.85
+
+## Truth
+  expected_stream: out_of_scope
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: reported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_1_silence_gap
+  broad_jp_coverage: False
+  angle_jp_coverage: None
+  broad_matched_tier: None
+  angle_matched_tier: None
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: NVIDIA 株が半年ぶり最高値更新 衰えぬ AI 需要、循環投資にはリスク 日本 報道
+  angle_query: None
+
+## Results
+  broad: {"urls": ["https://hatena.ne.jp", "https://investing.com", "https://investing.com", "https://investing.com", "https://phemex.com", "https://youtube.com", "https://news-channel-matome.com", "https://ismedia.jp", "https://youtube.com", "https://youtube.com"], "matched_urls": [], "excluded_urls": ["https://hatena.ne.jp", "https://phemex.com", "https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": null}
+  angle: None
+
+## Hits
+  jp_media_hits_broad: []
+  jp_media_hits_angle: []
+  excluded_count_broad: 5
+  excluded_count_angle: 0

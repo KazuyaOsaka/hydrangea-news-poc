@@ -1,8 +1,8 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-08 (F-task-e-finalize 完了、Task E カズヤレビュー結果反映 +
-finalize_annotations.py 実行 + 4 つの運用原則 + 1 つの構造的問題を docs 化、
-1 エントリ更新 + 4 エントリ新規)
+最終更新: 2026-05-09 (F-jp-coverage-tune 完了 verdict=fail、Grounding API 構造的
+限界が本バッチで明確化 + stream_3 過剰検出の定義レベル限界が観察、新規 2 エントリ +
+既存 1 エントリ追記 (重複サンプリング問題に独立 23 件評価結果の補足))
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -15,6 +15,98 @@ finalize_annotations.py 実行 + 4 つの運用原則 + 1 つの構造的問題�
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-09: Grounding API の構造的限界 — 1 クエリ 5-10 chunk + WL 外で上位埋まる + 0 URL 返却 (F-jp-coverage-tune で発覚)
+
+**内容**:
+F-jp-coverage-tune (2026-05-09) で `verify_two_stage` 二段階クエリ生成を独立
+23 件で精度測定した結果、verdict=fail (Recall covered 42.11% / Precision blind
+26.67% / F1 0.5926 / Tier 一致率 62.50%、(c) dateRestrict プロンプト埋め込み
+除去で +10.53pp 改善後)。FN 13 件の broad 検索結果分析で、**Grounding API の
+構造的限界** が支配的な FN 要因として明確化:
+
+1. **1 クエリあたり 5-10 chunk しか返さない** (Gemini Grounding API 仕様)
+2. **上位ヒットが WL 外で埋まる**: 観測された頻出 WL 外ドメイン =
+   `youtube.com×6` / `hatena.ne.jp×3` / `chosunonline.com×2` (韓国メディア!)
+   / `msf.or.jp×2` / `nippon.com×2` / `note.com×2` / `reddit.com×2` /
+   `chiba-tv.com×2` / `forbesjapan.com×1` / `afpbb.com×1`。本来あるべき大手 WL
+   ドメイン (NHK / 朝日 / 日経 / 読売等) が上位に入らないケースが多発。
+3. **0 URL 返却ケース複数**: covered_005 (ブラジル COP30) / cls-0c7fa7c667d6
+   (ロシア焼身) / cls-a4132ec7d949 (Met Police) で Grounding 検索結果ゼロ。
+   日本語タイトル + 「日本 報道」接尾辞では検索エンジンが過剰絞込している
+   可能性 (broad query 仮説)。
+
+これは `verify_two_stage` 固有ではなく **F-13.B 全体の構造的課題**。
+F-trial-run-post-fix (2026-05-07) DISCUSSION_NOTES「F-13.B Grounding 検索クエリ
+品質問題 — 英語タイトルクエリでの youtube.com 偏重」と同型の問題で、本バッチで
+**日本語タイトル / 系統 2 候補にも一般化** されることが確認された。
+
+**論点と対応案 (F-jp-coverage-tune-followup の検討候補)**:
+- (p) **Grounding API 複数クエリ並列発行 + 結果統合** ★最有力候補: 1 イベント
+  に対して複数の異なるクエリ表現 (元タイトル / 短縮タイトル / WL ドメイン名
+  ヒント混入クエリ / 英→日翻訳クエリ) を並列発行し、結果を WL マッチングで
+  マージ。Grounding API 1 クエリの 5-10 chunk 制限を「複数クエリで疑似的に
+  拡張」する戦略。期待: Recall covered 60-80% に到達可能。
+- (q) **検索 API 変更検討**: Google Custom Search / Bing Search 等への移行。
+  dateRestrict / num=10 / siteSearch 等のパラメータが API レベルで supported
+  される利点。検証コスト + コスト見積もり要。
+- (r) **WL ドメイン拡張検討**: 観測された頻出 WL 外ドメインのうち真の WL 候補
+  (`forbesjapan.com` / `nippon.com` / `afpbb.com` 等) を Tier 4 等に追加。厳密
+  な追加基準 (発行元独立性 / 取材規模 / 大手認知) で議論。
+
+**出典**:
+- F-jp-coverage-tune バッチプロンプト + 完了レポート (2026-05-09)
+- `docs/runs/F-jp-coverage-tune/measurement_result.json` (post-tuning) +
+  `measurement_result_pre_tuning.json` (Step 4 前ベースライン)
+- 23 件の per-event ログ (`docs/runs/F-jp-coverage-tune/logs/`)
+- F-trial-run-post-fix (2026-05-07) DISCUSSION_NOTES 関連エントリ
+
+**ステータス**: `Active` (★ F-jp-coverage-tune-followup ★最優先で 対応案 (p)
+を最有力候補に検討、決定後 DECISION_LOG に昇格)。
+
+---
+
+### 2026-05-09: stream_3 過剰検出 — URL ドメインマッチが特定角度の粒度を区別できない定義レベルの限界 (F-jp-coverage-tune で観察)
+
+**内容**:
+F-jp-coverage-tune (2026-05-09) post-tuning 結果で、stream_2 truth 18 件中
+**6 件が stream_3_candidate と誤判定** された。誤判定された 6 件
+(blind_002 / blind_009 / covered_001 / covered_002 / covered_004 / covered_009)
+は、いずれも angle 検索で WL ヒット (diamond.jp / yomiuri.co.jp /
+newsweekjapan.jp / asahi.com) が発生したが、真値は「特定角度は未報道」。
+
+**根本原因 (定義レベルの限界)**:
+- LLM truth は「特定角度を扱った記事 ≠ 広範事件のついでに触れた記事」と
+  **厳格に区別** している (例: `covered_002` = 米ロ首脳停戦の特定角度として
+  「トランプがバイデン政権をバイパスして直接交渉、G7 合意に破壊的影響」を
+  抽出 → 真値「日本では深掘り未報道」)。
+- 一方 `verify_two_stage._match_whitelist` は **ドメインヒット粒度しか見ない**
+  ため、yomiuri.co.jp の何らかの記事がヒットすれば「報道済み」確定。
+- 結果: angle 検索は LLM 生成クエリで広範事件全般にもマッチする粒度になり、
+  WL 大手ドメインが「広範事件のついで報道」をヒットして stream_3 と誤判定。
+
+**Pre-tuning vs Post-tuning の比較**:
+- Pre-tuning (dateRestrict プロンプト埋め込み有り): stream_3 過剰検出 3 件
+- Post-tuning (dateRestrict プロンプト埋め込み除去): stream_3 過剰検出 6 件
+- = dateRestrict 解除で angle 検索の recall も上がり、WL ヒット件数増加 → 過剰
+  検出も増加。トレードオフが存在。
+
+**対応案 (F-jp-coverage-tune-followup の (s) 副次論点)**:
+- angle 検索結果に対する **LLM 解説価値判定** の追加: 単なる WL マッチでは
+  確定せず、その記事内容が `particular_angle.core_question` を実際に扱って
+  いるか LLM が判定 (= F-stream-2-filter-design の責務範囲とも重なる、責務
+  境界の整理が必要)
+- WL マッチング後に記事タイトル / スニペットを取得して LLM で再評価する 2 段
+  構成 (Grounding API は記事タイトルを返すので、それを再評価入力にできる)
+
+**出典**:
+- F-jp-coverage-tune バッチプロンプト + 完了レポート (2026-05-09)
+- post-tuning 6 件の per-event ログ (`docs/runs/F-jp-coverage-tune/logs/`)
+
+**ステータス**: `Active` (★ 本バッチスコープ外の定義レベル限界、F-jp-coverage-tune-followup
+の (s) 副次論点 + F-stream-2-filter-design 責務境界整理時に再評価)。
+
+---
 
 ### 2026-05-08: クラウド誤り 9 — 各論コントロールへの誘惑 (F-particular-angle-redesign-extension で記録)
 
@@ -429,6 +521,15 @@ F-particular-angle-redesign Task E カズヤレビュー過程で、annotations.
 - 将来検討: 試運転と golden_set で重複事象がある場合の検出ルールを定めるか、
   `source_origin` で重複検出する小機能を `finalize_annotations.py` に
   入れるかは Phase A.5-3b 着手前に判断
+
+**追記 (2026-05-09, F-jp-coverage-tune 完了時)**: 本エントリの方針通り
+F-jp-coverage-tune の精度測定で **独立 23 件** (= cls-33b4f4960bf9_7K /
+cls-204a683f73ee_7K を除外、blind_005 / blind_004 を採用) を採用した。
+`scripts/measure_two_stage_accuracy.py` の `EXCLUDED_DUPLICATE_EVENT_IDS`
+セットでハードコード除外。post-tuning 結果 (Recall covered 42.11% / verdict=fail)
+は独立 23 件ベースで計算済み = 後続 F-jp-coverage-tune-followup でも同方針
+継承する想定。本エントリは Active 維持 (= F-stream-2-filter-design 着手時にも
+参照する論点として残す)。
 
 **ステータス**: `Active` (後続バッチで参照する論点として残す、即対処なし)
 

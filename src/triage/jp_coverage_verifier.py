@@ -34,10 +34,12 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+import time
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from src.shared.logger import get_logger
 
@@ -206,6 +208,38 @@ class JpCoverageResult:
     error: Optional[str] = None
     cached: bool = False
     cached_at: Optional[str] = None
+
+
+@dataclass
+class TwoStageVerifyResult:
+    """F-jp-coverage-tune (2026-05-09): 二段階クエリ生成による系統判定結果。
+
+    既存 JpCoverageResult とは別 dataclass にして責務分離。
+    verify_two_stage() メソッド専用の戻り値型。
+
+    stream の値:
+        - "stream_1_silence_gap": 広範事件で日本未報道 (検索 2 はスキップ)
+        - "stream_2_perspective_gap": 広範事件は日本報道済み + 特定角度は未報道
+        - "stream_3_candidate": 両方とも日本報道済み (= F-stream-2-filter-design 行き)
+        - "unknown": 検索失敗 (graceful fallback、error_message セット)
+    """
+
+    stream: str
+    broad_query: str
+    broad_results: Optional[dict] = None
+    angle_query: Optional[str] = None
+    angle_results: Optional[dict] = None
+    broad_jp_coverage: bool = False
+    angle_jp_coverage: Optional[bool] = None
+    jp_media_hits_broad: list[str] = field(default_factory=list)
+    jp_media_hits_angle: list[str] = field(default_factory=list)
+    broad_matched_tier: Optional[str] = None
+    angle_matched_tier: Optional[str] = None
+    excluded_count_broad: int = 0
+    excluded_count_angle: int = 0
+    angle_query_fallback_reason: Optional[str] = None
+    error_message: Optional[str] = None
+    elapsed_seconds: float = 0.0
 
 
 class JpCoverageVerifier:
@@ -477,3 +511,398 @@ class JpCoverageVerifier:
                 conn.commit()
         except sqlite3.OperationalError as exc:
             logger.warning(f"[JpCoverageVerifier] cache save failed: {exc}")
+
+    # ── F-jp-coverage-tune (2026-05-09): 二段階クエリ生成 ─────────────────────
+    #
+    # 既存 verify() / _build_search_query / _search_with_grounding /
+    # _filter_excluded / _match_whitelist は完全維持。本セクションは
+    # 不変原則 3 例外条件 4 つ全部 (バグ修正ではない設計拡張 / 既存メソッド完全
+    # 維持 / baseline 1345 passed 維持 / カズヤ承認済) を満たす拡張。
+
+    def verify_two_stage(
+        self,
+        candidate: dict[str, Any],
+        particular_angle: dict[str, Any],
+        *,
+        timeout_seconds: float = 90.0,
+        date_restrict_days: int = 60,
+        analysis_llm_client: Any = None,
+    ) -> TwoStageVerifyResult:
+        """二段階クエリ生成による系統判別 (F-jp-coverage-tune / 2026-05-09)。
+
+        F-13.B 既存 verify() は「広範事件のみ」を確認する設計のため、海外
+        メディア独自の特定角度のみ未報道 (= 系統 2 perspective_gap) を全件
+        「報道済み」と誤判定する構造的限界があった。本メソッドは **広範事件
+        クエリ + 特定角度クエリ** の 2 段階で日本報道有無を機械判別する。
+
+        Flow:
+            Step 1: 広範事件クエリで日本報道確認 (大手メディア WL マッチング)
+            Step 2 (Step 1 で報道済みのときのみ): 特定角度クエリで再確認
+
+        判定:
+            - Step 1 で日本未報道 → stream_1_silence_gap (Step 2 スキップ)
+            - Step 1 で報道済み + Step 2 で未報道 → stream_2_perspective_gap
+            - 両方とも報道済み → stream_3_candidate
+            - 検索失敗 → unknown (graceful fallback、error_message セット)
+
+        Args:
+            candidate: 候補事象 dict (`title`, `summary` or `summary_excerpt`,
+                       任意で `publish_date`)
+            particular_angle: 特定角度 dict (`core_question` 必須)
+            timeout_seconds: 各 LLM/検索呼び出しの per-call timeout (デフォルト 90s)
+            date_restrict_days: 過去何日以内の報道を対象とするか (デフォルト 60)
+            analysis_llm_client: 角度クエリ生成用 LLM クライアント。None なら
+                                 `get_analysis_llm_client()` で遅延生成 (テスト
+                                 では mock を注入)
+
+        Returns:
+            TwoStageVerifyResult
+        """
+        start = time.time()
+
+        broad_query = self._build_broad_query(candidate)
+
+        try:
+            broad_urls = self._search_with_grounding_two_stage(
+                broad_query,
+                date_restrict_days=date_restrict_days,
+                timeout_seconds=timeout_seconds,
+            )
+        except Exception as exc:
+            logger.warning(
+                f"[JpCoverageVerifier] verify_two_stage broad search failed: "
+                f"{type(exc).__name__}: {exc}"
+            )
+            return TwoStageVerifyResult(
+                stream="unknown",
+                broad_query=broad_query,
+                error_message=f"broad_search_error: {type(exc).__name__}: {exc}",
+                elapsed_seconds=time.time() - start,
+            )
+
+        broad_filtered, broad_excluded = self._filter_excluded(broad_urls)
+        broad_matched_urls, broad_matched_domains, broad_matched_tier = (
+            self._match_whitelist(broad_filtered)
+        )
+        broad_jp_coverage = bool(broad_matched_urls)
+
+        broad_results = {
+            "urls": broad_urls,
+            "matched_urls": broad_matched_urls,
+            "excluded_urls": broad_excluded,
+            "matched_tier": broad_matched_tier,
+        }
+
+        if not broad_jp_coverage:
+            # 系統 1 確定。検索 2 はスキップ (= API コール削減)。
+            logger.info(
+                f"[JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap "
+                f"(broad未報道、Step 2 skip)"
+            )
+            return TwoStageVerifyResult(
+                stream="stream_1_silence_gap",
+                broad_query=broad_query,
+                broad_results=broad_results,
+                broad_jp_coverage=False,
+                jp_media_hits_broad=broad_matched_domains,
+                broad_matched_tier=broad_matched_tier,
+                excluded_count_broad=len(broad_excluded),
+                elapsed_seconds=time.time() - start,
+            )
+
+        # Step 2: 特定角度クエリ生成 + 検索
+        angle_query, fallback_reason = self._build_angle_query(
+            candidate,
+            particular_angle,
+            analysis_llm_client=analysis_llm_client,
+            timeout_seconds=timeout_seconds,
+        )
+
+        try:
+            angle_urls = self._search_with_grounding_two_stage(
+                angle_query,
+                date_restrict_days=date_restrict_days,
+                timeout_seconds=timeout_seconds,
+            )
+        except Exception as exc:
+            logger.warning(
+                f"[JpCoverageVerifier] verify_two_stage angle search failed: "
+                f"{type(exc).__name__}: {exc}"
+            )
+            return TwoStageVerifyResult(
+                stream="unknown",
+                broad_query=broad_query,
+                broad_results=broad_results,
+                angle_query=angle_query,
+                broad_jp_coverage=True,
+                jp_media_hits_broad=broad_matched_domains,
+                broad_matched_tier=broad_matched_tier,
+                excluded_count_broad=len(broad_excluded),
+                angle_query_fallback_reason=fallback_reason,
+                error_message=f"angle_search_error: {type(exc).__name__}: {exc}",
+                elapsed_seconds=time.time() - start,
+            )
+
+        angle_filtered, angle_excluded = self._filter_excluded(angle_urls)
+        angle_matched_urls, angle_matched_domains, angle_matched_tier = (
+            self._match_whitelist(angle_filtered)
+        )
+        angle_jp_coverage = bool(angle_matched_urls)
+
+        stream = (
+            "stream_3_candidate" if angle_jp_coverage else "stream_2_perspective_gap"
+        )
+
+        angle_results = {
+            "urls": angle_urls,
+            "matched_urls": angle_matched_urls,
+            "excluded_urls": angle_excluded,
+            "matched_tier": angle_matched_tier,
+        }
+
+        logger.info(
+            f"[JpCoverageVerifier] verify_two_stage stream={stream} "
+            f"(broad_jp={broad_jp_coverage}, angle_jp={angle_jp_coverage}, "
+            f"broad_tier={broad_matched_tier}, angle_tier={angle_matched_tier})"
+        )
+
+        return TwoStageVerifyResult(
+            stream=stream,
+            broad_query=broad_query,
+            broad_results=broad_results,
+            angle_query=angle_query,
+            angle_results=angle_results,
+            broad_jp_coverage=True,
+            angle_jp_coverage=angle_jp_coverage,
+            jp_media_hits_broad=broad_matched_domains,
+            jp_media_hits_angle=angle_matched_domains,
+            broad_matched_tier=broad_matched_tier,
+            angle_matched_tier=angle_matched_tier,
+            excluded_count_broad=len(broad_excluded),
+            excluded_count_angle=len(angle_excluded),
+            angle_query_fallback_reason=fallback_reason,
+            elapsed_seconds=time.time() - start,
+        )
+
+    def _build_broad_query(self, candidate: dict[str, Any]) -> str:
+        """広範事件クエリを生成 (既存 _build_search_query を candidate dict に
+        対応させる薄いラッパ)。
+
+        既存 verify() が使っている `_build_search_query(title, summary)` を
+        そのまま流用する。`candidate` dict の `summary` / `summary_excerpt`
+        どちらにも対応する。
+        """
+        title = candidate.get("title", "") or ""
+        summary = (
+            candidate.get("summary")
+            or candidate.get("summary_excerpt")
+            or ""
+        )
+        return self._build_search_query(title, summary)
+
+    def _build_angle_query(
+        self,
+        candidate: dict[str, Any],
+        particular_angle: dict[str, Any],
+        *,
+        analysis_llm_client: Any = None,
+        timeout_seconds: float = 90.0,
+    ) -> tuple[str, Optional[str]]:
+        """`particular_angle.core_question` から日本語の特定角度検索クエリを
+        LLM で生成する。
+
+        プロンプト設計指針 (本実装で採用):
+            - 6-15 単語程度の短いクエリ
+            - 日本語キーワード中心 (英語タイトルそのまま使わない)
+            - 固有名詞 + 角度キーワードの組み合わせ
+            - 出力は単一行の検索クエリ文字列のみ (JSON / 説明文不可)
+
+        Returns:
+            (query_string, fallback_reason)
+            - LLM 成功 → (LLM 出力, None)
+            - LLM 失敗 / フォーマット違反 → (簡易フォールバッククエリ,
+              "<理由>")
+        """
+        title = candidate.get("title", "") or ""
+        core_question = particular_angle.get("core_question", "") or ""
+
+        if not core_question:
+            return self._fallback_angle_query(candidate, particular_angle), "no_core_question"
+
+        if analysis_llm_client is None:
+            try:
+                from src.llm.factory import get_analysis_llm_client
+
+                analysis_llm_client = get_analysis_llm_client()
+            except Exception as exc:
+                logger.warning(
+                    f"[JpCoverageVerifier] _build_angle_query: failed to load "
+                    f"analysis_llm_client ({type(exc).__name__}: {exc})"
+                )
+                analysis_llm_client = None
+
+        if analysis_llm_client is None:
+            return (
+                self._fallback_angle_query(candidate, particular_angle),
+                "no_llm_client",
+            )
+
+        prompt = (
+            "あなたは日本のニュース報道を Google で検索する専門家です。\n"
+            "以下のニュース事象と「特定角度」(海外メディアが独自に掘った構造分析\n"
+            "の視点) について、その特定角度のみが日本のメディアで報道されている\n"
+            "かを Google で確認するための短い日本語検索クエリを 1 つ作ってください。\n\n"
+            f"# 元タイトル (英語可)\n{title}\n\n"
+            f"# 特定角度 (core_question)\n{core_question}\n\n"
+            "# 制約\n"
+            "- 出力は単一行の検索クエリ文字列のみ (JSON も説明文も付けない)\n"
+            "- 6-15 単語程度の日本語キーワードで構成する\n"
+            "- 固有名詞 (人名 / 国名 / 組織名等) + 角度キーワードの組み合わせ\n"
+            "- 広範な事件報道全般がヒットする粒度ではなく、その特定角度に絞った\n"
+            "  検索結果が出る粒度にする\n"
+            "- 「site:」演算子は使わない\n\n"
+            "検索クエリ:"
+        )
+
+        try:
+            raw_output = self._call_with_timeout(
+                lambda: analysis_llm_client.generate(prompt),
+                timeout_seconds,
+            )
+        except Exception as exc:
+            logger.warning(
+                f"[JpCoverageVerifier] _build_angle_query LLM failed, "
+                f"using fallback: {type(exc).__name__}: {exc}"
+            )
+            return (
+                self._fallback_angle_query(candidate, particular_angle),
+                f"llm_error: {type(exc).__name__}",
+            )
+
+        if not isinstance(raw_output, str):
+            return (
+                self._fallback_angle_query(candidate, particular_angle),
+                "llm_non_string_output",
+            )
+
+        # 単一行に正規化
+        query = raw_output.strip().split("\n", 1)[0].strip()
+        # 余計な接頭辞を除去 (`検索クエリ: xxx` で返ってくるケース対策)
+        query = re.sub(r"^[「『\"\'`]?(検索クエリ|クエリ|Query|query)[:：]\s*", "", query)
+        query = query.strip("「」『』\"' \t`")
+
+        # フォーマットチェック: JSON / コードブロック / 空文字は fallback
+        if not query or query.startswith("{") or query.startswith("```"):
+            logger.warning(
+                f"[JpCoverageVerifier] _build_angle_query bad format, "
+                f"using fallback: raw={raw_output[:80]!r}"
+            )
+            return (
+                self._fallback_angle_query(candidate, particular_angle),
+                "bad_format",
+            )
+
+        return query, None
+
+    def _fallback_angle_query(
+        self,
+        candidate: dict[str, Any],
+        particular_angle: dict[str, Any],
+    ) -> str:
+        """LLM 失敗時の簡易フォールバッククエリ。
+
+        candidate.title + particular_angle.core_question 先頭 20 文字 で構成。
+        """
+        title = (candidate.get("title", "") or "").strip()
+        core = (particular_angle.get("core_question", "") or "").strip()
+        snippet = core[:20]
+        parts = [p for p in [title, snippet] if p]
+        return " ".join(parts) if parts else (title or "")
+
+    def _search_with_grounding_two_stage(
+        self,
+        query: str,
+        *,
+        date_restrict_days: int = 60,
+        timeout_seconds: float = 90.0,
+    ) -> list[str]:
+        """二段階用 Grounding 検索 (per-call timeout)。
+
+        既存 `_search_with_grounding` は変更せず、新規バリアントとして実装。
+
+        F-jp-coverage-tune Step 4 (2026-05-09) で **dateRestrict プロンプト
+        埋め込みを除去**: Gemini Grounding API は dateRestrict パラメータを
+        直接サポートしないため、当初プロンプト本文に過去 N 日制約を埋め込んで
+        いたが、Step 3 精度測定で broad search の under-recall (Recall covered
+        31.58%) が dateRestrict プロンプト埋め込みの副作用 (= LLM が日付情報
+        のない記事を一律弾く / 検索結果ゼロ多発) に起因する仮説を検証する目的で、
+        プロンプトから日付制約を撤去。`date_restrict_days` パラメータ自体は
+        後方互換のため残置 (Grounding API 公式サポート時の再導入を想定)。
+        """
+        if self.gemini_client is None:
+            raise RuntimeError("gemini_client is not configured")
+
+        from google.genai import types
+
+        # date_restrict_days は受け取るが、プロンプト本文には埋め込まない (副作用回避)
+        _ = date_restrict_days  # noqa: F841 — back-compat 用、将来 API サポート時に再導入
+
+        prompt = (
+            f"次のニュースが日本のメディアで報道されているか、"
+            f"日本語の Web 検索で確認してください。\n\n"
+            f"検索クエリ: {query}\n\n"
+            f"日本のメディア (新聞、テレビ局、通信社等) の記事 URL を中心に確認してください。"
+        )
+
+        def _do_call() -> list[str]:
+            response = self.gemini_client.models.generate_content(
+                model=self.model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    tools=[types.Tool(google_search=types.GoogleSearch())],
+                ),
+            )
+
+            urls: list[str] = []
+            redirect_urls: list[str] = []
+            candidates = getattr(response, "candidates", None) or []
+            if candidates:
+                metadata = getattr(candidates[0], "grounding_metadata", None)
+                if metadata is not None:
+                    chunks = getattr(metadata, "grounding_chunks", None) or []
+                    for chunk in chunks:
+                        domain = _extract_domain_from_chunk(chunk)
+                        if domain:
+                            urls.append(f"https://{domain}")
+                        web = getattr(chunk, "web", None)
+                        if web is not None:
+                            uri = getattr(web, "uri", None)
+                            if uri:
+                                redirect_urls.append(uri)
+
+            logger.debug(
+                f"[JpCoverageVerifier] two_stage Grounding returned {len(urls)} domains "
+                f"(redirect_urls={len(redirect_urls)}, query={query!r})"
+            )
+            return urls
+
+        return self._call_with_timeout(_do_call, timeout_seconds)
+
+    @staticmethod
+    def _call_with_timeout(callable_: Callable[[], Any], timeout_seconds: float) -> Any:
+        """同期関数を per-call timeout 付きで実行する。
+
+        ThreadPoolExecutor.future.result(timeout=N) で実装。timeout 超過時
+        はワーカースレッドはバックグラウンドで動き続けるが (Python の
+        GIL/協調キャンセルの制約)、メインフローは即座に TimeoutError として
+        graceful fallback できる。
+        """
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(callable_)
+            try:
+                return future.result(timeout=timeout_seconds)
+            except FutureTimeoutError as exc:
+                future.cancel()
+                raise TimeoutError(
+                    f"call exceeded timeout={timeout_seconds}s"
+                ) from exc

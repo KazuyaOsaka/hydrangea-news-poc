@@ -1,0 +1,33 @@
+# covered_002
+timestamp: 2026-05-09T19:44:19.241637
+elapsed_seconds: 33.49
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_1_newspaper
+  angle_matched_tier: tier_1_newspaper
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: 米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』 日本 報道
+  angle_query: トランプ プーチン 20項目の具体的条件 バイデン政権バイパス G7合意 破壊的影響 外交的正当性
+
+## Results
+  broad: {"urls": ["https://yomiuri.co.jp", "https://yomiuri.co.jp", "https://khb-tv.co.jp", "https://ksb.co.jp", "https://newsweekjapan.jp", "https://lurahjepang.com"], "matched_urls": ["https://yomiuri.co.jp", "https://yomiuri.co.jp", "https://newsweekjapan.jp"], "excluded_urls": [], "matched_tier": "tier_1_newspaper"}
+  angle: {"urls": ["https://youtube.com", "https://ismedia.jp", "https://fnn.jp", "https://youtube.com", "https://youtube.com", "https://jetro.go.jp", "https://asahi.com", "https://spf.org", "https://u-tokyo.ac.jp", "https://arabnews.jp", "https://youtube.com", "https://fnn.jp", "https://youtube.com", "https://jiia.or.jp"], "matched_urls": ["https://asahi.com"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_1_newspaper"}
+
+## Hits
+  jp_media_hits_broad: ['newsweekjapan.jp', 'yomiuri.co.jp']
+  jp_media_hits_angle: ['asahi.com']
+  excluded_count_broad: 0
+  excluded_count_angle: 5
