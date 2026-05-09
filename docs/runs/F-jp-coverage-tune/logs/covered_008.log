@@ -1,0 +1,33 @@
+# covered_008
+timestamp: 2026-05-09T19:45:58.771756
+elapsed_seconds: 27.74
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_2_perspective_gap
+  broad_jp_coverage: True
+  angle_jp_coverage: False
+  broad_matched_tier: tier_1_newspaper
+  angle_matched_tier: None
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: マリ 軍事政権に反政府勢力が一斉攻撃 暫定国防相死亡 日本 報道
+  angle_query: マリ 国防相 暗殺 トゥアレグ アルカイダ 異例の共闘 ロシア ワグネル 依存 破綻
+
+## Results
+  broad: {"urls": ["https://hatena.ne.jp", "https://daily.co.jp", "https://fnn.jp", "https://yomiuri.co.jp", "https://afpbb.com", "https://asahi.co.jp", "https://livedoor.com", "https://livedoor.com", "https://gaitameonline.com", "https://fsight.jp"], "matched_urls": ["https://yomiuri.co.jp"], "excluded_urls": ["https://hatena.ne.jp"], "matched_tier": "tier_1_newspaper"}
+  angle: {"urls": ["https://afpbb.com", "https://nippon.com", "https://hatena.ne.jp", "https://livedoor.com", "https://youtube.com", "https://ameblo.jp", "https://hatena.ne.jp", "https://note.com", "https://gaitameonline.com", "https://chiba-tv.com", "https://youtube.com", "https://youtube.com", "https://tufs.ac.jp", "https://livedoor.biz"], "matched_urls": [], "excluded_urls": ["https://hatena.ne.jp", "https://youtube.com", "https://ameblo.jp", "https://hatena.ne.jp", "https://note.com", "https://youtube.com", "https://youtube.com"], "matched_tier": null}
+
+## Hits
+  jp_media_hits_broad: ['yomiuri.co.jp']
+  jp_media_hits_angle: []
+  excluded_count_broad: 1
+  excluded_count_angle: 7

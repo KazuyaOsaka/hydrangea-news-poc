@@ -1,0 +1,33 @@
+# covered_001
+timestamp: 2026-05-09T19:43:45.751174
+elapsed_seconds: 21.18
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_1_newspaper
+  angle_matched_tier: tier_1_newspaper
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: ホルムズ海峡めぐりアメリカの対イラン封鎖始まる イランは反発 日本 報道
+  angle_query: ホルムズ海峡 アメリカ 封鎖 和平交渉 決裂 前提条件 国際法 開戦事由 第三国 経済的打撃
+
+## Results
+  broad: {"urls": ["https://khb-tv.co.jp", "https://khb-tv.co.jp", "https://ksb.co.jp", "https://tokyonewsmedia.com", "https://ktv.jp", "https://fnn.jp", "https://youtube.com", "https://yomiuri.co.jp", "https://yomiuri.co.jp", "https://yomiuri.co.jp", "https://jetro.go.jp"], "matched_urls": ["https://yomiuri.co.jp", "https://yomiuri.co.jp", "https://yomiuri.co.jp"], "excluded_urls": ["https://youtube.com"], "matched_tier": "tier_1_newspaper"}
+  angle: {"urls": ["https://worldtimes.co.jp", "https://youtube.com", "https://ktv.jp", "https://youtube.com", "https://yomiuri.co.jp", "https://note.com", "https://businessinsider.jp", "https://ssri-j.com", "https://diamond.jp", "https://u-tokyo.ac.jp", "https://rocket-boys.co.jp", "https://livedoor.com", "https://fsight.jp"], "matched_urls": ["https://yomiuri.co.jp", "https://diamond.jp"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://note.com"], "matched_tier": "tier_1_newspaper"}
+
+## Hits
+  jp_media_hits_broad: ['yomiuri.co.jp']
+  jp_media_hits_angle: ['diamond.jp', 'yomiuri.co.jp']
+  excluded_count_broad: 1
+  excluded_count_angle: 3

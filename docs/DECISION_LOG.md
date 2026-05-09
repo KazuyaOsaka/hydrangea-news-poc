@@ -1,8 +1,9 @@
 # Hydrangea — 意思決定ログ (DECISION_LOG)
 
-最終更新: 2026-05-08 (F-task-e-finalize 完了、Task E カズヤレビュー結果反映 +
-finalize_annotations.py 実行 + 4 運用原則 + 重複問題 + (c) 仮説証拠強化を
-docs 化)
+最終更新: 2026-05-09 (F-jp-coverage-tune 完了、verify_two_stage 二段階クエリ
+生成実装 + 独立 23 件精度測定 + (c) dateRestrict プロンプト埋め込み除去 1 回
+チューニング + verdict=fail 確定で Grounding API 構造的限界が明確化 +
+F-jp-coverage-tune-followup を ★最優先として FUTURE_WORK 追加)
 
 このドキュメントは Hydrangea プロジェクトにおける重要な意思決定の履歴を記録する。
 コードや設定の「結果」ではなく、「なぜそうなったか」の判断プロセスを残すことが目的。
@@ -3782,3 +3783,208 @@ F-particular-angle-redesign/REPORT.md にセクション 12 (Task E カズヤレ
   拡充、(c) 仮説の根本治療)、F-1 EditorialMissionFilter (将来、4 運用原則を
   設計レビュー時に参照)
 
+
+
+---
+
+## 2026-05-09: F-jp-coverage-tune — F-13.B 二段階クエリ生成改修 (Phase A.5-3a-verify 1-G)
+
+### 背景
+
+F-task-e-finalize (2026-05-08) で Task E カズヤレビュー結果反映が完了し、Phase
+A.5-3a-verify ゲート完了後の 5 連続バッチ (F-particular-angle-design /
+-redesign / -extension / -followup / -task-e-finalize) を経て F-jp-coverage-tune
+着手の前提が完全に整った: 真値 25 件 (独立 23 件、重複 2 ペア) + sontaku_signals
+真値整備済み + 4 運用原則確立 + (c) サンプル選定バイアス仮説の証拠強化。
+
+F-trial-run-post-fix (2026-05-07) の WebSearch 後追いで判明した F-13.B の
+**構造的限界**:
+- F-13.B は「事件本体のみ」を Google 検索で確認している
+- しかし真値 25 件のうち 20 件 (= 80%) が系統 2 (perspective_gap) =
+  「事件本体は日本でも報道済みだが、特定角度のみ未報道」
+- F-13.B は事件本体の報道有無しか見ないため、系統 2 を全部「報道済み」と誤判定し、
+  Hydrangea で扱うべき系統 2 事象を全部弾いてしまう
+
+→ F-13.B の改修ではなく、**新メソッド `verify_two_stage()` を追加して二段階
+クエリ生成で系統判別する** 設計に転換する。
+
+### 議論
+
+カズヤとのバッチプロンプト設計で 7 論点 + API エラー耐性 + 中間チェックポイント
+方式 + チューニング上限を確定:
+
+1. **LLM モデル**: `get_analysis_llm_client()` 流用 (gemini-analysis-tier-extended、
+   Tier 階層フォールバック自動継承)
+2. **大手メディア判定**: 既存 `JP_MEDIA_WHITELIST` 27 ドメイン + `_extract_domains()`
+   再利用 (新規実装不要)
+3. **過去事象除外**: Google API の `dateRestrict=d60` (過去 60 日) + 候補 publish_date
+   ±60 日フィルタ
+4. **検索回数**: 条件分岐 — 検索 1 (広範事件) で日本未報道なら検索 2 スキップ →
+   系統 1 確定。報道済みなら検索 2 (特定角度) 実施
+5. **信頼サイト**: WL 全 27 ドメインそのまま使用、`site:` 演算子は Google API クエリ
+   長制限を見て判断 (本実装では使用しない)
+6. **コード改修方針**: ★ 案 (B) 新メソッド `verify_two_stage()` 追加方式 (既存
+   `verify()` 完全不変)、不変原則 3 例外条件 4 つ全部 (バグ修正ではない設計拡張 /
+   既存メソッド完全維持 / baseline 維持 / カズヤ承認済) を満たす
+7. **精度評価**: 独立 23 件 (重複 2 ペア除外、blind_005/blind_004 採用、
+   cls-33b4f4960bf9_7K/cls-204a683f73ee_7K 除外)
+
+**API エラー耐性**: レベル 2 + graceful fallback (per-call timeout 90s +
+incremental save + resume + ログファイル書き出し + 完了済み event_id 記録 +
+graceful fallback で `verdict=unknown` として処理継続)
+
+**戻り値**: 新 dataclass `TwoStageVerifyResult` で `stream` フィールド =
+`stream_1_silence_gap` / `stream_2_perspective_gap` / `stream_3_candidate` /
+`unknown`
+
+**中間チェックポイント方式**: CP-1 (Step 1 完了時) + CP-2 (Step 3 完了時) で
+レポート提出 → カズヤ承認後に次 Step 着手。長時間実行バッチでカズヤ承認なしの
+暴走を防ぐ仕組み。
+
+**チューニング上限**: Step 4 で verdict=fail の場合、チューニング試行は **1 回のみ**。
+1 回の試行で verdict=pass にならなかった場合は別バッチに切り出す (= 「対症療法
+じゃなく根本治療」原則、無制限自走禁止)。
+
+### 決定
+
+#### 実装
+
+`src/triage/jp_coverage_verifier.py` に以下を **新規追加** (既存メソッド一切変更なし):
+
+- **`TwoStageVerifyResult` dataclass**: `stream` / `broad_query` / `angle_query` /
+  `broad_jp_coverage` / `angle_jp_coverage` / `jp_media_hits_broad` /
+  `jp_media_hits_angle` / `broad_matched_tier` / `angle_matched_tier` /
+  `excluded_count_broad` / `excluded_count_angle` / `angle_query_fallback_reason` /
+  `error_message` / `elapsed_seconds`
+- **`verify_two_stage(candidate, particular_angle, *, timeout_seconds, date_restrict_days, analysis_llm_client)`**:
+  二段階クエリ生成の本体メソッド。Step 1 で日本未報道なら Step 2 スキップ (=
+  API コール削減) + graceful fallback で検索失敗時は `stream="unknown"`
+- **`_build_broad_query(candidate)`**: 既存 `_build_search_query(title, summary)`
+  への薄いラッパ (= 既存ロジック完全流用)
+- **`_build_angle_query(candidate, particular_angle, *, analysis_llm_client, timeout_seconds)`**:
+  LLM (Flash 系) で `particular_angle.core_question` から短い日本語検索クエリを生成。
+  失敗時は簡易フォールバック (title + core_question 先頭 20 文字)。プロンプト
+  設計は「LLM の知性に委ねる」原則尊重 = 構造制約のみで具体的言い回しルールは
+  追加せず (クラウド誤り 9 回避)
+- **`_fallback_angle_query(candidate, particular_angle)`**: LLM 失敗時の簡易
+  フォールバック
+- **`_search_with_grounding_two_stage(query, *, date_restrict_days, timeout_seconds)`**:
+  二段階用 Grounding 検索 (per-call timeout)。
+- **`_call_with_timeout(callable, timeout_seconds)`**: ThreadPoolExecutor.future.result
+  で per-call timeout 実装
+
+#### 不変原則 3 例外条件 4 つ全部適用根拠
+
+1. ✅ **バグ修正ではなく設計拡張**: F-13.B の責務範囲拡大 (二段階クエリ生成の
+   新メソッド追加)
+2. ✅ **既存 `verify()` のシグネチャ・戻り値・挙動を完全維持**: `_build_search_query` /
+   `_search_with_grounding` / `_filter_excluded` / `_match_whitelist` 不変
+3. ✅ **既存テスト 1345 件全件通る**: baseline 維持 (1345 → 1364 passed、新規 19 件)
+4. ✅ **Hydrangea ミッション中核機構の修正、カズヤ承認済**: 本バッチプロンプト
+   自体がカズヤ承認のエビデンス
+
+#### Step 4 チューニング (1 回のみ実施): (c) dateRestrict プロンプト埋め込み除去
+
+CP-2 で 4 候補 (a-d) を提示し、カズヤ判断で **(c) dateRestrict プロンプト埋め込み
+除去** を採択。理由: (i) 仮説 #2 (最有力) を直接検証できる最小変更、(ii) 影響範囲
+最小 (`_search_with_grounding_two_stage` のプロンプト本文から日付制約文を削除する
+だけ)、(iii) 旧 F-13.B との比較可能性を維持できる、(iv) 「対症療法じゃなく根本治療」
+原則 = dateRestrict プロンプト埋め込みは設計レベルで無理があった撤回が筋。
+
+`date_restrict_days` パラメータ自体は後方互換のため残置 (Grounding API 公式
+サポート時の再導入を想定)。
+
+### 結果
+
+#### baseline 影響
+- baseline 1345 → **1364 passed** (新規 19 件追加、既存 1345 件全件維持)
+- 既存 `verify()` 不変性検証 OK (シグネチャ / 戻り値型 / 挙動)
+- 不変原則違反: なし
+
+#### 精度測定実行結果 (独立 23 件)
+
+| 指標 | Pre-tuning | Post-tuning | Δ | 閾値 | 判定 |
+|---|---|---|---|---|---|
+| Recall covered | 0.3158 (6/19) | **0.4211 (8/19)** | +0.1053 | ≥ 0.90 | ✗ |
+| Precision blind | 0.2353 (4/17) | **0.2667 (4/15)** | +0.0314 | ≥ 0.80 | ✗ |
+| F1 covered | 0.4800 | **0.5926** | +0.1126 | ≥ 0.85 | ✗ |
+| Tier 一致率 | 0.6667 (4/6) | **0.6250 (5/8)** | -0.0417 | ≥ 0.70 | ✗ |
+| Stream accuracy (informational) | 0.3182 (7/22) | **0.2727 (6/22)** | -0.0455 | — | — |
+
+**verdict: fail (pre/post 共通)**
+
+confusion: TP=8 / FP=0 / FN=11 / TN=4 (post-tuning)。graceful fallback 発火 0 件、
+unknown 0 件、全 23 件 stream 確定。total elapsed 322s (pre) / 341s (post)、
+平均 14-15s/件。
+
+#### dateRestrict 除去の効果分析
+
+- broad recall +10.53pp 改善 (covered_005 ブラジル COP30 が newsweekjapan.jp
+  ヒットで stream_2 確定など)
+- ただし旧 F-13.B 水準 (Recall 71.43%) には届かず → dateRestrict 副作用は仮説
+  通り部分的に効いていたが、**残る under-recall は Grounding API の構造的限界**
+  に起因することが本バッチで明確化
+- stream_3 過剰検出は 3 件 → 6 件に増加 (dateRestrict 解除で angle 検索の
+  recall も上がり WL ヒット件数増加、ただし真値「特定角度は未報道」と矛盾)
+
+#### Grounding API の構造的限界 (本バッチで発覚、F-jp-coverage-tune-followup 起案根拠)
+
+13 件の FN 分析で以下の構造的問題が明確化:
+1. **1 クエリあたり 5-10 chunk しか返さない** (Grounding API 仕様)
+2. **上位ヒットが WL 外で埋まる** (chiba-tv.com / hatena.ne.jp / msf.or.jp /
+   nippon.com / forbesjapan.com / afpbb.com 等が頻出、本来あるべき大手 WL
+   ドメイン (NHK / 朝日 / 日経 / 読売等) が上位に入らない)
+3. **0 URL 返却ケース複数発生** (covered_005 / cls-0c7fa7c667d6 /
+   cls-a4132ec7d949 等)
+4. **頻出 WL 外ドメイン**: youtube.com×6 / hatena.ne.jp×3 / chosunonline.com×2 /
+   msf.or.jp×2 / nippon.com×2 / note.com×2 / reddit.com×2 / chiba-tv.com×2 /
+   forbesjapan.com×1 / afpbb.com×1
+
+→ verify_two_stage に固有ではなく F-13.B 全体の課題。1 回のチューニングで
+verdict=pass に到達するのは構造的に困難なため、**F-jp-coverage-tune-followup**
+(★最優先) として別バッチで以下を議論:
+- (p) Grounding API の構造的限界対策 (複数クエリ並列発行 + 結果統合) ★最有力
+- (q) 検索 API 変更検討 (Google Custom Search 移行 等)
+- (r) WL ドメイン拡張検討 (forbesjapan.com / nippon.com / afpbb.com 追加)
+
+#### stream_3 過剰検出 (定義レベルの限界、本バッチスコープ外)
+
+post-tuning で 6 件 (blind_002 / blind_009 / covered_001 / covered_002 /
+covered_004 / covered_009) が真値「特定角度は未報道」だが angle 検索で
+diamond.jp / yomiuri.co.jp / newsweekjapan.jp / asahi.com がヒット → stream_3
+誤判定。LLM truth は「特定角度を扱った記事 ≠ 広範事件のついでに触れた記事」と
+厳格に区別するが、URL マッチング側はドメインヒット粒度しか見ないという定義レベル
+の限界。後続バッチで議論。
+
+#### 不変原則例外適用の根拠記録
+
+不変原則 3 (`src/triage/` 既存ファイル変更不可) に対し、例外条件 4 つ全部 (バグ
+修正ではない設計拡張 / 既存メソッド完全維持 / baseline 維持 / カズヤ承認済) を
+満たすことを確認した上で `src/triage/jp_coverage_verifier.py` への新メソッド +
+新 dataclass 追加を実施。既存 `verify()` のシグネチャ・戻り値・挙動は完全不変。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規ファイル:
+  - `tests/test_jp_coverage_verifier_two_stage.py` (19 件、新規)
+  - `scripts/measure_two_stage_accuracy.py` (新規)
+  - `docs/runs/F-jp-coverage-tune/measurement_result.json` (post-tuning 最終)
+  - `docs/runs/F-jp-coverage-tune/measurement_result_pre_tuning.json` (Step 4 前
+    のベースライン保存)
+  - `docs/runs/F-jp-coverage-tune/logs/<event_id>.log` × 23 件
+- 改修:
+  - `src/triage/jp_coverage_verifier.py` (新規 dataclass + 新規メソッド追加のみ、
+    既存メソッド完全不変、+約 290 行)
+  - `docs/CURRENT_STATE.md` (全置換更新、F-jp-coverage-tune 完了反映)
+  - `docs/DECISION_LOG.md` (本エントリ追加)
+  - `docs/FUTURE_WORK.md` (本バッチを完了済みに移動 + F-jp-coverage-tune-followup
+    を緊急度高に追加)
+  - `docs/DISCUSSION_NOTES.md` (新規 2 エントリ + 既存 1 エントリ再評価)
+- 関連: F-task-e-finalize (前バッチ、本バッチの真値整備が完了)、F-13.B
+  (本バッチで責務拡張 = 二段階クエリ生成)、F-jp-coverage-improve (本バッチで
+  例外条件 4 つの適用パターン継承)、F-jp-coverage-tune-followup (★最優先、
+  Grounding API 構造的限界対策で次バッチ起案)、F-stream-2-filter-design
+  (★責務スコープ要再評価、stream_3 = 0 件 + Phase A.5-3b 第二作のサンプル
+  拡充後に再評価)、Phase A.5-3b 第二作 (★ 系統 3 + domestic/media_industry
+  サンプル拡充、(c) 仮説の根本治療と並行)
