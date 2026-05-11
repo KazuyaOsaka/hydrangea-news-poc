@@ -1,0 +1,280 @@
+2026-05-11T13:50:04 [INFO] src.storage.db: DB initialized at /Users/kazuy/Desktop/hydrangea-news-poc/data/db/hydrangea.db
+2026-05-11T13:50:04 [INFO] __main__: === Job started (normalized/batch mode): cbe56961-05fd-4501-ae7a-2aa80dda4c5b ===
+2026-05-11T13:50:04 [INFO] __main__: [Budget] Initialized: mode=publish_mode, run_budget=150, day_budget=1000, day_calls_so_far=0, day_remaining=1000, publish_reserve_calls=15
+2026-05-11T13:50:04 [INFO] __main__: [Batch] Processing batch_id=20260511_044914 (47 raw, 47 normalized)
+2026-05-11T13:50:04 [INFO] src.storage.db: [Batch] 20260511_044914 → status=processing
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 7 articles from nhk_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 33 articles from nhk_politics_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 46 articles from nhk_economy_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 30 articles from nikkei_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 40 articles from asahi_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 0 articles from reuters_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 0 articles from apnews_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 39 articles from bbc_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 0 articles from bloomberg_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 9 articles from financialtimes_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 25 articles from aljazeera_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 24 articles from france24_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 0 articles from cna_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 42 articles from theguardian_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 18 articles from lemonde_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 0 articles from derspiegel_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 26 articles from elpais_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 50 articles from yonhap_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 50 articles from straitstimes_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 41 articles from timesofindia_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 25 articles from abcnewsau_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 20 articles from news24_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 50 articles from nytworld_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 6 articles from folhadespaulo_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 29 articles from buenosairestimes_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 20 articles from sydney_morning_herald_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 12 articles from guardian_australia_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 50 articles from the_hindustan_times_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 20 articles from middle_east_eye_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 14 articles from the_initium_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 19 articles from meduza_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 12 articles from il_sole_24_ore_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 25 articles from the_atlantic_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 11 articles from politico_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 0 articles from eurasianet_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 30 articles from telesur_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 1 articles from mada_masr_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 50 articles from yomiuri_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 50 articles from sankei_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 48 articles from tokyo_shimbun_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 33 articles from wion_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 12 articles from caixin_global_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 48 articles from mainichi_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 49 articles from kyodo_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 48 articles from jiji_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 20 articles from bloomberg_jp_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Loaded 47 articles from reuters_jp_20260511_044914_normalized.json
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [Batch] Total articles loaded for this batch: 1229
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] BBC: normalized=41 loaded=39 dropped=2 reasons={'duplicate_url': 2}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] Bloomberg_JP: normalized=50 loaded=20 dropped=30 reasons={'duplicate_url': 30}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] BuenosAiresTimes: normalized=50 loaded=29 dropped=21 reasons={'duplicate_url': 21}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] Caixin_Global: normalized=50 loaded=12 dropped=38 reasons={'duplicate_url': 38}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] DerSpiegel: normalized=20 loaded=0 dropped=20 reasons={'duplicate_url': 20}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] ElPais: normalized=50 loaded=26 dropped=24 reasons={'duplicate_url': 24}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] FolhaDeSPaulo: normalized=15 loaded=6 dropped=9 reasons={'duplicate_url': 9}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] Guardian_Australia: normalized=23 loaded=12 dropped=11 reasons={'duplicate_url': 11}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] JIJI: normalized=50 loaded=48 dropped=2 reasons={'duplicate_url': 2}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] Kyodo: normalized=50 loaded=49 dropped=1 reasons={'duplicate_url': 1}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] Mada_Masr: normalized=10 loaded=1 dropped=9 reasons={'duplicate_url': 9}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] Mainichi: normalized=50 loaded=48 dropped=2 reasons={'duplicate_url': 2}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] Meduza: normalized=30 loaded=19 dropped=11 reasons={'duplicate_url': 11}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] NHK_Economy: normalized=50 loaded=46 dropped=4 reasons={'duplicate_url': 4}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] NHK_Politics: normalized=44 loaded=33 dropped=11 reasons={'duplicate_url': 11}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] Politico: normalized=30 loaded=11 dropped=19 reasons={'duplicate_url': 19}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] Reuters_JP: normalized=50 loaded=47 dropped=3 reasons={'duplicate_url': 3}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] TheGuardian: normalized=45 loaded=42 dropped=3 reasons={'duplicate_url': 3}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] The_Initium: normalized=15 loaded=14 dropped=1 reasons={'duplicate_url': 1}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] Tokyo_Shimbun: normalized=50 loaded=48 dropped=2 reasons={'duplicate_url': 2}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: [SourceLoad] WION: normalized=50 loaded=33 dropped=17 reasons={'duplicate_url': 17}
+2026-05-11T13:50:04 [INFO] src.ingestion.event_builder: Articles by source: ABCNewsAU=25, AlJazeera=25, Asahi=40, BBC=39, Bloomberg_JP=20, BuenosAiresTimes=29, Caixin_Global=12, ElPais=26, FinancialTimes=9, FolhaDeSPaulo=6, France24=24, Guardian_Australia=12, Il_Sole_24_Ore=12, JIJI=48, Kyodo=49, LeMonde=18, Mada_Masr=1, Mainichi=48, Meduza=19, Middle_East_Eye=20, NHK=7, NHK_Economy=46, NHK_Politics=33, NYTWorld=50, News24=20, Nikkei=30, Politico=11, Reuters_JP=47, Sankei=50, StraitsTimes=50, Sydney_Morning_Herald=20, TeleSUR=30, TheGuardian=42, The_Atlantic=25, The_Hindustan_Times=50, The_Initium=14, TimesOfIndia=41, Tokyo_Shimbun=48, WION=33, Yomiuri=50, Yonhap=50
+2026-05-11T13:50:04 [INFO] src.triage.garbage_filter: [GarbageFilter] ステージ1 (静的): 1229件 → 791件 (除外 438件 / 内訳 length=13, category=0, date=425)
+2026-05-11T13:50:04 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 1/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:50:30 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 1: 通過 17 / 除外 13
+2026-05-11T13:50:30 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 2/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:50:51 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 2: 通過 13 / 除外 17
+2026-05-11T13:50:51 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 3/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:51:12 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 3: 通過 14 / 除外 16
+2026-05-11T13:51:12 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 4/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:51:32 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 4: 通過 14 / 除外 16
+2026-05-11T13:51:32 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 5/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:51:53 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 5: 通過 23 / 除外 7
+2026-05-11T13:51:53 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 6/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:52:19 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 6: 通過 25 / 除外 5
+2026-05-11T13:52:19 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 7/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:52:49 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 7: 通過 15 / 除外 15
+2026-05-11T13:52:49 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 8/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:53:09 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 8: 通過 16 / 除外 14
+2026-05-11T13:53:09 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 9/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:53:31 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 9: 通過 12 / 除外 18
+2026-05-11T13:53:31 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 10/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:53:53 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 10: 通過 26 / 除外 4
+2026-05-11T13:53:53 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 11/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:54:14 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 11: 通過 29 / 除外 1
+2026-05-11T13:54:14 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 12/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:54:40 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 12: 通過 14 / 除外 16
+2026-05-11T13:54:40 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 13/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:55:04 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 13: 通過 12 / 除外 18
+2026-05-11T13:55:04 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 14/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:55:50 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 14: 通過 15 / 除外 15
+2026-05-11T13:55:50 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 15/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:56:07 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 15: 通過 23 / 除外 7
+2026-05-11T13:56:07 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 16/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:56:28 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 16: 通過 13 / 除外 17
+2026-05-11T13:56:28 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 17/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:56:49 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 17: 通過 21 / 除外 9
+2026-05-11T13:56:49 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 18/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:57:11 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 18: 通過 22 / 除外 8
+2026-05-11T13:57:11 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 19/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:57:30 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 19: 通過 27 / 除外 3
+2026-05-11T13:57:30 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 20/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:57:51 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 20: 通過 23 / 除外 7
+2026-05-11T13:57:51 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 21/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:58:13 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 21: 通過 15 / 除外 15
+2026-05-11T13:58:13 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 22/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:58:36 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 22: 通過 12 / 除外 18
+2026-05-11T13:58:36 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 23/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:58:52 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 23: 通過 16 / 除外 14
+2026-05-11T13:58:52 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 24/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:59:10 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 24: 通過 17 / 除外 13
+2026-05-11T13:59:10 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 25/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T13:59:33 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 25: 通過 13 / 除外 17
+2026-05-11T13:59:33 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 26/27: 30件 → Tier 階層 LLM へ送信
+2026-05-11T14:00:00 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 26: 通過 15 / 除外 15
+2026-05-11T14:00:00 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 27/27: 11件 → Tier 階層 LLM へ送信
+2026-05-11T14:00:13 [INFO] src.triage.garbage_filter: [GarbageFilter] LLM Batch 27: 通過 7 / 除外 4
+2026-05-11T14:00:13 [INFO] src.triage.garbage_filter: [GarbageFilter] ステージ2 (LLM): 791件 → 469件 (除外 322件)
+2026-05-11T14:00:13 [INFO] src.triage.garbage_filter: [GarbageFilter] 完了: 1229件 → 469件 (静的除外 438件 / LLM除外 322件)
+2026-05-11T14:00:13 [INFO] src.ingestion.event_builder: BFS: 469 articles → 24 clusters (cross-lang edges: 155, rejected: {'weak_only_insufficient': 2513})
+2026-05-11T14:00:13 [INFO] src.ingestion.event_builder: Giant cluster detected: size=444, top_entities=[], top_keywords=[], top_tokens=[]
+2026-05-11T14:00:13 [INFO] src.ingestion.event_builder: Giant split L1 (min_shared=3): 444 → 160 sub-clusters (sizes: [255, 13, 5, 3, 3])
+2026-05-11T14:00:13 [INFO] src.ingestion.event_builder: Giant split L2 (min_shared=5): 255 → 67 sub-clusters (sizes: [151, 17, 12, 3, 3])
+2026-05-11T14:00:13 [INFO] src.ingestion.event_builder: Giant split L2 (min_shared=5): 13 → 11 sub-clusters (sizes: [3, 1, 1, 1, 1])
+2026-05-11T14:00:13 [INFO] src.ingestion.event_builder: Giant split L3 (min_shared=8): 151 → 21 sub-clusters (sizes: [112, 7, 5, 5, 4])
+2026-05-11T14:00:13 [INFO] src.ingestion.event_builder: Giant split L3 (min_shared=8): 17 → 15 sub-clusters (sizes: [2, 2, 1, 1, 1])
+2026-05-11T14:00:13 [INFO] src.ingestion.event_builder: Giant split L3 (min_shared=8): 12 → 12 sub-clusters (sizes: [1, 1, 1, 1, 1])
+2026-05-11T14:00:13 [WARNING] src.ingestion.event_builder: Giant cluster (112 articles) could not be fully split (levels=(3, 5, 8)): '米提案にイランが回答 トランプ大統領「受け入れられない」'
+2026-05-11T14:00:13 [INFO] src.ingestion.event_builder: After split: 304 clusters (detected=1, split=6)
+2026-05-11T14:00:14 [INFO] src.ingestion.event_builder: LLM post-merge: 41 JP × 260 EN = 10660 pairs → 31 after similarity pre-filter (top 2 per JP, skip_reasons={'not_top_k': 10578, 'low_similarity': 51})
+2026-05-11T14:00:14 [INFO] src.ingestion.event_builder: [PredicateGuard] 2 pairs rejected, 29 pairs → batch LLM
+2026-05-11T14:00:59 [INFO] src.ingestion.event_builder: [BatchMerge] same_event=0 related_but_distinct=4 different_event=25
+2026-05-11T14:00:59 [INFO] src.ingestion.event_builder: After LLM post-merge: 304 clusters
+2026-05-11T14:00:59 [INFO] src.ingestion.event_builder: Cross-lang clusters: 3 (JP+EN) → sources: ABCNewsAU=1, AlJazeera=5, Asahi=5, BBC=3, FinancialTimes=1, France24=5, Guardian_Australia=1, Il_Sole_24_Ore=2, JIJI=9, Kyodo=10, LeMonde=2, NHK=2, NHK_Economy=5, NYTWorld=4, Nikkei=1, Reuters_JP=7, Sankei=20, StraitsTimes=7, TheGuardian=1, The_Hindustan_Times=3, TimesOfIndia=7, Tokyo_Shimbun=8, WION=1, Yomiuri=13, Yonhap=1
+2026-05-11T14:01:00 [INFO] src.ingestion.event_builder: Built 304 events from normalized articles
+2026-05-11T14:01:00 [INFO] src.ingestion.event_builder: [TitleAudit] normalized→event: JP sources 134/134 with title, EN sources 335/335 with title
+2026-05-11T14:01:00 [INFO] src.ingestion.event_builder: Articles adopted (in events) by source: ABCNewsAU=10, AlJazeera=19, Asahi=21, BBC=15, BuenosAiresTimes=3, ElPais=4, FinancialTimes=9, France24=20, Guardian_Australia=5, Il_Sole_24_Ore=7, JIJI=9, Kyodo=19, LeMonde=12, Mainichi=1, Middle_East_Eye=20, NHK=2, NHK_Economy=13, NHK_Politics=2, NYTWorld=23, News24=12, Nikkei=5, Politico=3, Reuters_JP=15, Sankei=20, StraitsTimes=45, Sydney_Morning_Herald=4, TeleSUR=17, TheGuardian=14, The_Atlantic=6, The_Hindustan_Times=33, The_Initium=3, TimesOfIndia=15, Tokyo_Shimbun=8, WION=9, Yomiuri=19, Yonhap=27
+2026-05-11T14:01:00 [INFO] src.triage.appraisal: [Appraisal] #1 Perspective Inversion score=2.80 (pi=2.8 mbs=0.0 sw=2.1 ps=0.8 bsg=0.0): 米提案にイランが回答 トランプ大統領「受け入れられない」
+2026-05-11T14:01:00 [INFO] src.triage.appraisal: [Appraisal] #2 Perspective Inversion score=2.60 (pi=2.6 mbs=0.0 sw=2.1 ps=0.8 bsg=0.0): 原油先物が4ドル超上昇、米・イラン協議難航 ホルムズ海峡封鎖続く - Reute
+2026-05-11T14:01:00 [INFO] src.triage.appraisal: [Appraisal] #4 Media Blind Spot score=1.90 (pi=0.0 mbs=1.9 sw=1.6 ps=0.0 bsg=0.0): China expanding its industrial dominance
+2026-05-11T14:01:00 [INFO] src.triage.appraisal: [Appraisal] #5 Media Blind Spot score=1.90 (pi=0.0 mbs=1.9 sw=1.6 ps=0.0 bsg=0.0): Iranian official says response based on 
+2026-05-11T14:01:00 [INFO] src.triage.appraisal: [Appraisal] #8 Media Blind Spot score=1.90 (pi=0.0 mbs=1.9 sw=1.6 ps=0.0 bsg=0.0): Tehran says US proposal sought Iran’s su
+2026-05-11T14:01:00 [INFO] src.triage.appraisal: [Appraisal] #9 Blind Spot Global score=5.00 (pi=0.0 mbs=2.2 sw=1.6 ps=0.0 bsg=5.0): Iran demands sovereignty over Hormuz in 
+2026-05-11T14:01:00 [INFO] src.triage.appraisal: [Appraisal] #10 Media Blind Spot score=1.90 (pi=0.0 mbs=1.9 sw=1.6 ps=0.0 bsg=0.0): Iran seeks guarantees against future att
+2026-05-11T14:01:00 [INFO] src.triage.appraisal: [Appraisal] #13 Media Blind Spot score=1.90 (pi=0.0 mbs=1.9 sw=1.6 ps=0.0 bsg=0.0): Iran Threatens US Bases: 5 Dangerous War
+2026-05-11T14:01:00 [INFO] __main__: [Appraisal] Applied once for this run: top 15 appraised (total candidates=304)
+2026-05-11T14:01:00 [INFO] src.storage.db: [Pool] Upserted 304 events into recent_event_pool
+2026-05-11T14:01:00 [INFO] src.storage.db: [Pool] Expired 364 pool events older than 48 h
+2026-05-11T14:01:00 [INFO] __main__: [TitleAudit] pool→restored: 0 pool events — JP sources 0/0 with title, EN sources 0/0 with title
+2026-05-11T14:01:00 [INFO] __main__: [Pool] Combined candidate pool: current=304, pool=0, total=304, expired=0, suppressed=0, upgraded=0
+2026-05-11T14:01:00 [INFO] src.llm.model_registry: [ModelRegistry] models.list returned 50 models.
+2026-05-11T14:01:00 [INFO] src.llm.model_registry: [ModelRegistry] Requested judge model 'gemini-2.5-flash' confirmed available.
+2026-05-11T14:01:00 [INFO] src.llm.model_registry: [ModelRegistry] Judge model resolution cached: requested='gemini-2.5-flash', resolved='gemini-2.5-flash', reason='requested_model_available'
+2026-05-11T14:05:06 [INFO] src.triage.editorial_mission_filter: [EditorialMissionFilter] Step1 prescore stats: min=0.0, max=65.8, mean=25.53 | LLM scored=20 (failed=0) | Passed threshold (45.0): 20/304
+2026-05-11T14:05:06 [INFO] __main__: [EditorialMissionFilter] Applied: passed=20/304, rejected=284, llm_scored=20
+2026-05-11T14:05:06 [INFO] __main__: [EliteJudge] Filtered all_ranked: 304 → 20 (removed 284 rejected by EditorialMissionFilter)
+2026-05-11T14:05:06 [INFO] __main__: [EliteJudge] Capping candidates to top 10 of 20 (ELITE_JUDGE_CANDIDATE_LIMIT)
+2026-05-11T14:05:06 [INFO] src.llm.judge: [Judge] evaluate_cluster_buzz: title='8 Strong Warnings on Cuba Sovereignty Defense Amid US Threats'
+2026-05-11T14:05:20 [INFO] __main__: [EliteJudge] ✦ Adopted: 一点突破 (多極的視点: 9点) / Total: 35点 — 8 Strong Warnings on Cuba Sovereignty Defense Amid
+2026-05-11T14:05:20 [INFO] src.llm.judge: [Judge] evaluate_cluster_buzz: title='Iranian official says response based on regional consultations'
+2026-05-11T14:05:31 [INFO] __main__: [EliteJudge] ✦ Adopted: 一点突破 (多極的視点: 8点) / Total: 26点 — Iranian official says response based on regional c
+2026-05-11T14:05:31 [INFO] src.llm.judge: [Judge] evaluate_cluster_buzz: title='Tehran says US proposal sought Iran’s surrender'
+2026-05-11T14:05:49 [INFO] __main__: [EliteJudge] ✦ Adopted: 一点突破 (多極的視点: 9点) / Total: 37点 — Tehran says US proposal sought Iran’s surrender
+2026-05-11T14:05:49 [INFO] src.llm.judge: [Judge] evaluate_cluster_buzz: title='Iran demands sovereignty over Hormuz in counterproposal to US'
+2026-05-11T14:06:00 [INFO] __main__: [EliteJudge] ✦ Adopted: 一点突破 (多極的視点: 9点) / Total: 35点 — Iran demands sovereignty over Hormuz in counterpro
+2026-05-11T14:06:00 [INFO] src.llm.judge: [Judge] evaluate_cluster_buzz: title='Iran seeks guarantees against future attacks in US response, Tasnim reports'
+2026-05-11T14:06:09 [INFO] __main__: [EliteJudge] ✦ Adopted: 一点突破 (多極的視点: 7点) / Total: 26点 — Iran seeks guarantees against future attacks in US
+2026-05-11T14:06:09 [INFO] src.llm.judge: [Judge] evaluate_cluster_buzz: title='9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners'
+2026-05-11T14:06:22 [INFO] __main__: [EliteJudge] ✦ Adopted: 一点突破 (アンチ忖度: 9点) / Total: 39点 — 9,600 Detainees: Shocking Denunciation of Israel P
+2026-05-11T14:06:22 [INFO] src.llm.judge: [Judge] evaluate_cluster_buzz: title='Israeli PM says more work remains despite gains against Iran'
+2026-05-11T14:06:34 [INFO] __main__: [EliteJudge] ✦ Adopted: 一点突破 (アンチ忖度: 7点) / Total: 21点 — Israeli PM says more work remains despite gains ag
+2026-05-11T14:06:34 [INFO] src.llm.judge: [Judge] evaluate_cluster_buzz: title='Crude prices surge on fears of escalating Iran conflict'
+2026-05-11T14:06:46 [INFO] __main__: [EliteJudge] ✗ Skipped: 基準未達 (Total: 16点) — Crude prices surge on fears of escalating Iran con
+2026-05-11T14:06:46 [INFO] src.llm.judge: [Judge] evaluate_cluster_buzz: title='Lebanese PM says Bint Jbeil ‘has become a version of Gaza’'
+2026-05-11T14:06:58 [INFO] __main__: [EliteJudge] ✦ Adopted: 一点突破 (多極的視点: 9点) / Total: 30点 — Lebanese PM says Bint Jbeil ‘has become a version 
+2026-05-11T14:06:58 [INFO] src.llm.judge: [Judge] evaluate_cluster_buzz: title='Filmmakers slam BBC after Gaza documentary wins award despite being dropped'
+2026-05-11T14:07:14 [INFO] __main__: [EliteJudge] ✦ Adopted: 一点突破 (知的優越感: 10点) / Total: 39点 — Filmmakers slam BBC after Gaza documentary wins aw
+2026-05-11T14:07:14 [INFO] __main__: [EliteJudge] Gate 3 完了: 10件評価 → 採用 9 / 棄却 1 (total ranked: 304 → 9)
+2026-05-11T14:07:14 [INFO] __main__: [GeminiJudge] Model resolution: requested='gemini-2.5-flash', resolved='gemini-2.5-flash', reason='requested_model_available'
+2026-05-11T14:07:14 [INFO] src.triage.gemini_judge: [GeminiJudge] Using resolved model: 'gemini-2.5-flash'
+2026-05-11T14:07:14 [INFO] src.triage.gemini_judge: [GeminiJudge] Running judge for cls-add9caaa6506 (jp_sources=0, overseas_sources=1)
+2026-05-11T14:07:27 [INFO] src.triage.gemini_judge: [GeminiJudge] cls-add9caaa6506: class=insufficient_evidence, divergence=0.0, blind_spot=0.0, ijai=3.0, requires_more=True, hard_claims=False, authority_pair=[], retries=0
+2026-05-11T14:07:27 [INFO] src.triage.gemini_judge: [GeminiJudge] Using resolved model: 'gemini-2.5-flash'
+2026-05-11T14:07:27 [INFO] src.triage.gemini_judge: [GeminiJudge] Running judge for cls-da0a74aa712d (jp_sources=0, overseas_sources=1)
+2026-05-11T14:07:39 [INFO] src.triage.gemini_judge: [GeminiJudge] cls-da0a74aa712d: class=insufficient_evidence, divergence=0.0, blind_spot=3.0, ijai=10.0, requires_more=True, hard_claims=False, authority_pair=[], retries=0
+2026-05-11T14:07:39 [INFO] src.triage.gemini_judge: [GeminiJudge] Using resolved model: 'gemini-2.5-flash'
+2026-05-11T14:07:39 [INFO] src.triage.gemini_judge: [GeminiJudge] Running judge for cls-03892eab2072 (jp_sources=0, overseas_sources=1)
+2026-05-11T14:07:53 [INFO] src.triage.gemini_judge: [GeminiJudge] cls-03892eab2072: class=blind_spot_global, divergence=0.0, blind_spot=9.0, ijai=10.0, requires_more=True, hard_claims=False, authority_pair=[], retries=0
+2026-05-11T14:07:53 [INFO] __main__: [GeminiJudge] Viable slot-1 found in publish_mode (cls-03892eab2072 class=blind_spot_global) — stopping early to preserve publish reserve.
+2026-05-11T14:07:53 [INFO] __main__: [GeminiJudge] Judged 3 candidates: cls-add9caaa→insufficient_evidence(div=0.0), cls-da0a74aa→insufficient_evidence(div=0.0), cls-03892eab→blind_spot_global(div=0.0)
+2026-05-11T14:07:53 [INFO] __main__: [GeminiJudge] Reranking changed top-5: ['cls-add9caaa', 'cls-da0a74aa', 'cls-03892eab', 'cls-be46a424', 'cls-fd8bd120'] → ['cls-03892eab', 'cls-add9caaa', 'cls-be46a424', 'cls-fd8bd120', 'cls-6889e9e1']
+2026-05-11T14:07:53 [INFO] __main__: [EliteJudge→Slot1] Slot-1 決定 (total_score=39): 9,600 Detainees: Shocking Denunciation of Israel Prison Abus
+2026-05-11T14:07:53 [INFO] src.triage.coherence_gate: [CoherenceGate] PASSED cls-03892eab2072 (class=blind_spot_global, score=0.358, blacklist=[], diary=False, overlap=['direct_keyword:iran,proposal,sought,surrender', 'year_neutral'])
+2026-05-11T14:07:53 [INFO] src.triage.coherence_gate: [CoherenceGate] PASSED cls-da0a74aa712d (class=insufficient_evidence, score=0.365, blacklist=[], diary=False, overlap=['direct_keyword:based,consultations,iranian,official', 'year_neutral'])
+2026-05-11T14:07:53 [WARNING] __main__: [FinalSelection] F-5 fallback applied: event=cls-da0a74aa712d class=insufficient_evidence blind_spot=3.0 ijai=10.0 editorial_mission=86.0 → flagship 認定 (Hydrangea concept alignment)
+2026-05-11T14:07:53 [INFO] __main__: [FinalSelection] slot-1 corrected by judge: cls-6889e9e1c7ac → cls-03892eab2072 (judged_flagship:blind_spot_global:score=78.0:divergence=0.0)
+2026-05-11T14:07:53 [INFO] __main__: [Slot-1] 台本生成開始 (total_score=39): 9,600 Detainees: Shocking Denunciation of Israel Prison Abus
+2026-05-11T14:07:53 [INFO] __main__: [F-13.B] Slot-1 has 0 JP sources, verifying via Web search (major media only)
+2026-05-11T14:08:02 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] event=cls-6889e9e1c7ac has_jp_coverage=True tier=tier_2_wire_service matched=1 excluded=1
+2026-05-11T14:08:02 [INFO] __main__: [F-13.B] Slot-1 major media coverage found for cls-6889e9e1c7ac: tier=tier_2_wire_service, domains=['afpbb.com']. Continuing with divergence pattern.
+2026-05-11T14:08:02 [INFO] __main__: [AuthorityMention] Slot-1 computed pair: ['ベネズエラ政府系の国際テレビ局テレスール']
+2026-05-11T14:08:02 [INFO] src.generation.article_writer: Generating article for event [cls-6889e9e1c7ac] via provider=gemini
+2026-05-11T14:08:14 [INFO] src.generation.article_writer: Article generated via gemini: 1743 chars, retries=0
+2026-05-11T14:08:14 [INFO] __main__: Article saved: /Users/kazuy/Desktop/hydrangea-news-poc/data/output/cls-6889e9e1c7ac_article.md
+2026-05-11T14:08:14 [WARNING] src.generation.script_writer: [F-13] quality_floor_miss bypass: event_id=cls-6889e9e1c7ac, editorial_mission_score=86.0, judge_class=None, analysis_result=none
+2026-05-11T14:08:14 [INFO] src.generation.script_writer: Generating script for event [cls-6889e9e1c7ac] via provider=gemini
+2026-05-11T14:08:33 [INFO] src.generation.script_writer: [ScriptWriter] director_thought (attempt 1): 事象の本質は「国際人道法の形骸化と、特定国家への例外容認」です。target_enemyは、この不都合な構造を報じない大手メディア。武器[2]メディア批判を選んだ理由は、日本国内の『報道の沈黙』こそが視聴者にとっての盲点であり、知的好奇心を刺激するからです。loop_mechanismは、冒頭の衝撃的な数字に回帰するloop-3を採用し、情報の重みを強調します。
+2026-05-11T14:08:33 [INFO] src.generation.script_writer: [ScriptWriter] pattern='Media Critique' enemy='大手メディア' loop='loop-3'
+2026-05-11T14:08:33 [WARNING] src.generation.script_writer: [ScriptWriter] char validation FAILED (attempt 1/3): hook=23字 — retrying with correction prompt
+2026-05-11T14:08:46 [INFO] src.generation.script_writer: [ScriptWriter] director_thought (attempt 2): 事象の本質は「国際人道法の形骸化と、特定国家への例外容認」です。target_enemyは、この不都合な構造を報じない大手メディア。武器[2]メディア批判を選んだ理由は、日本国内の『報道の沈黙』こそが視聴者にとっての盲点であり、知的好奇心を刺激するからです。loop_mechanismは、冒頭の衝撃的な数字に回帰するloop-3を採用し、情報の重みを強調します。
+2026-05-11T14:08:46 [INFO] src.generation.script_writer: [ScriptWriter] pattern='Media Critique' enemy='大手メディア' loop='loop-3'
+2026-05-11T14:08:46 [INFO] src.generation.script_writer: [ScriptWriter] char validation passed (hook=18, setup=90, twist=179, punchline=87)
+2026-05-11T14:08:46 [INFO] src.generation.script_writer: Script generated via gemini: 4 sections, 80s total, retries=0
+2026-05-11T14:08:46 [INFO] __main__: Script saved: /Users/kazuy/Desktop/hydrangea-news-poc/data/output/cls-6889e9e1c7ac_script.json
+2026-05-11T14:08:46 [INFO] src.generation.video_payload_writer: Generating video payload for event [cls-6889e9e1c7ac]
+2026-05-11T14:08:46 [INFO] src.generation.video_payload_writer: Video payload generated: 4 scenes, 80s total, evidence=partial, safety=elevated
+2026-05-11T14:08:46 [INFO] __main__: Video payload saved: /Users/kazuy/Desktop/hydrangea-news-poc/data/output/cls-6889e9e1c7ac_video_payload.json
+2026-05-11T14:08:46 [INFO] src.generation.evidence_writer: Evidence saved: /Users/kazuy/Desktop/hydrangea-news-poc/data/output/cls-6889e9e1c7ac_evidence.json
+2026-05-11T14:08:46 [INFO] src.storage.db: Job [cbe56961-05fd-4501-ae7a-2aa80dda4c5b] saved to DB (status=completed)
+2026-05-11T14:08:46 [INFO] __main__: === Job completed: cbe56961-05fd-4501-ae7a-2aa80dda4c5b ===
+2026-05-11T14:08:46 [INFO] __main__: [Scheduler] Schedule saved: /Users/kazuy/Desktop/hydrangea-news-poc/data/output/daily_schedule.json (3 slots)
+2026-05-11T14:08:46 [INFO] src.storage.db: [Pool] Event cls-6889e9e1c7ac marked published; sibling fingerprints consumed
+2026-05-11T14:08:46 [INFO] __main__: [Pool] Slot-1 event cls-6889e9e1c7ac marked published.
+2026-05-11T14:08:46 [INFO] __main__: [Slot-2] 台本生成開始 (total_score=39): Filmmakers slam BBC after Gaza documentary wins award despit
+2026-05-11T14:08:46 [INFO] __main__: [F-13.B] Slot-2 has 0 JP sources, verifying via Web search (major media only)
+2026-05-11T14:08:52 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] event=cls-1a38c0ca8c99 has_jp_coverage=True tier=tier_2_wire_service matched=1 excluded=0
+2026-05-11T14:08:52 [INFO] __main__: [F-13.B] Slot-2 major media coverage found for cls-1a38c0ca8c99: tier=tier_2_wire_service, domains=['afpbb.com']. Continuing with divergence pattern.
+2026-05-11T14:08:52 [INFO] __main__: [AuthorityMention] Slot-2 computed pair: ['中東独立メディアのミドル・イースト・アイ (親パレスチナ)']
+2026-05-11T14:08:52 [INFO] src.generation.article_writer: Generating article for event [cls-1a38c0ca8c99] via provider=gemini
+2026-05-11T14:08:55 [WARNING] src.llm.factory: [TieredGemini] tier=1 model=gemini-3-flash-preview attempt=1/2 transient error — retrying in 15s: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand 
+2026-05-11T14:10:08 [INFO] src.llm.factory: [TieredGemini] Success: tier=1 model=gemini-3-flash-preview attempt=2/2
+2026-05-11T14:10:08 [INFO] src.generation.article_writer: Article generated via gemini: 2003 chars, retries=0
+2026-05-11T14:10:08 [INFO] __main__: Article saved: /Users/kazuy/Desktop/hydrangea-news-poc/data/output/cls-1a38c0ca8c99_article.md
+2026-05-11T14:10:08 [INFO] __main__: [F-16-A] Article-only mode for event_id=cls-1a38c0ca8c99: skipping script / video_payload / evidence generation.
+2026-05-11T14:10:08 [INFO] src.storage.db: Job [cbe56961-05fd-4501-ae7a-2aa80dda4c5b-s2] saved to DB (status=completed)
+2026-05-11T14:10:08 [INFO] __main__: [F-16-A] Slot-2 article-only mode (slot_idx=1 >= TOP_N_VIDEOS_PER_RUN=1); script + video skipped.
+2026-05-11T14:10:08 [INFO] __main__: [Scheduler] Schedule saved: /Users/kazuy/Desktop/hydrangea-news-poc/data/output/daily_schedule.json (3 slots)
+2026-05-11T14:10:08 [INFO] src.storage.db: [Pool] Event cls-1a38c0ca8c99 marked published; sibling fingerprints consumed
+2026-05-11T14:10:08 [INFO] __main__: [Pool] Slot-2 event cls-1a38c0ca8c99 marked published.
+2026-05-11T14:10:08 [INFO] __main__: [Slot-3] 台本生成開始 (total_score=37): Tehran says US proposal sought Iran’s surrender
+2026-05-11T14:10:08 [INFO] __main__: [F-13.B] Slot-3 judge requires_more_evidence=True (blind_spot=9.0, divergence=0.0). Proceeding with generation (rescue path abolished).
+2026-05-11T14:10:08 [INFO] __main__: [F-13.B] Slot-3 has 0 JP sources, verifying via Web search (major media only)
+2026-05-11T14:10:15 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] event=cls-03892eab2072 has_jp_coverage=True tier=tier_4_business matched=1 excluded=0
+2026-05-11T14:10:15 [INFO] __main__: [F-13.B] Slot-3 major media coverage found for cls-03892eab2072: tier=tier_4_business, domains=['nippon.com']. Continuing with divergence pattern.
+2026-05-11T14:10:15 [INFO] __main__: [AuthorityMention] Slot-3 computed pair: ['中東独立メディアのミドル・イースト・アイ (親パレスチナ)']
+2026-05-11T14:10:15 [INFO] src.generation.article_writer: Generating article for event [cls-03892eab2072] via provider=gemini
+2026-05-11T14:10:29 [INFO] src.generation.article_writer: Article generated via gemini: 1746 chars, retries=0
+2026-05-11T14:10:29 [INFO] __main__: Article saved: /Users/kazuy/Desktop/hydrangea-news-poc/data/output/cls-03892eab2072_article.md
+2026-05-11T14:10:29 [INFO] __main__: [F-16-A] Article-only mode for event_id=cls-03892eab2072: skipping script / video_payload / evidence generation.
+2026-05-11T14:10:29 [INFO] src.storage.db: Job [cbe56961-05fd-4501-ae7a-2aa80dda4c5b-s3] saved to DB (status=completed)
+2026-05-11T14:10:29 [INFO] __main__: [F-16-A] Slot-3 article-only mode (slot_idx=2 >= TOP_N_VIDEOS_PER_RUN=1); script + video skipped.
+2026-05-11T14:10:29 [INFO] __main__: [Scheduler] Schedule saved: /Users/kazuy/Desktop/hydrangea-news-poc/data/output/daily_schedule.json (3 slots)
+2026-05-11T14:10:29 [INFO] src.storage.db: [Pool] Event cls-03892eab2072 marked published; sibling fingerprints consumed
+2026-05-11T14:10:29 [INFO] __main__: [Pool] Slot-3 event cls-03892eab2072 marked published.
+2026-05-11T14:10:29 [INFO] __main__: [Archive] batch=20260511_044914 → /Users/kazuy/Desktop/hydrangea-news-poc/data/archive/20260511/20260511_044914 (94 files moved)
+2026-05-11T14:10:29 [INFO] src.storage.db: [Batch] 20260511_044914 → status=archived
+2026-05-11T14:10:29 [INFO] __main__: [Archive] batch=20260511_044914 archived successfully (94 files)
+2026-05-11T14:10:29 [INFO] __main__: [Debug] Artifacts written to /Users/kazuy/Desktop/hydrangea-news-poc/data/output/debug/ (source_load_report, cross_lang_merge_report, quality_floor_report, pool_upgrade_report)
+2026-05-11T14:10:29 [INFO] src.ingestion.discovery_audit: [DiscoveryAudit] Written: A=3 B=10 C=10 dominant_failure=source_intake
+2026-05-11T14:10:29 [INFO] __main__: [FinalSelection] Candidate report written: /Users/kazuy/Desktop/hydrangea-news-poc/data/output/latest_candidate_report.md
+2026-05-11T14:10:29 [INFO] __main__: Run summary saved: /Users/kazuy/Desktop/hydrangea-news-poc/data/output/run_summary.json
+2026-05-11T14:10:29 [INFO] src.budget: [Budget] === Run Summary === | mode=publish_mode | run_llm=39/150 | day_llm=39/1000 | day_runs=1 | day_publishes=3
+2026-05-11T14:10:29 [INFO] src.budget: [Budget] === Allocation === | run_budget_total=150 | reserved_for_script=1 | reserved_for_article=1 | available_for_cluster=148 | actually_used_by_cluster=2 | remaining_before_script=114 | remaining_before_article=112
+2026-05-11T14:10:29 [INFO] src.budget: [Budget] === Publish Reserve === | publish_reserve_calls=15 | exploration_calls_used=25 | day_remaining=961 | publish_reserve_preserved=True | stopped_due_to_reserve=False | slot1_budget_guaranteed=True
+
+完了: event_id=cls-6889e9e1c7ac, job_id=cbe56961-05fd-4501-ae7a-2aa80dda4c5b, status=completed
+  出力先: /Users/kazuy/Desktop/hydrangea-news-poc/data/output

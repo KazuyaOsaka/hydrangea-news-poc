@@ -19,6 +19,150 @@
 
 ## 未分類 (Active)
 
+### 2026-05-11: F-13.B WL ヒット品質問題 — matched_urls がベアドメインのみで記事レベル一致が不明 (F-trial-run-post-tune で観察)
+
+**背景**:
+F-trial-run-post-tune 本番試運転 (2026-05-11) で `JpCoverageVerifier.verify()`
+が 3 Slot 全件で has_jp_coverage=True を返却 (afpbb x2, nippon x1) したが、
+`jp_coverage_cache` に保存された `matched_urls` が全件で **ベアドメイン
+(`https://afpbb.com` / `https://nippon.com`)** のみ、記事レベルの URL
+(article path) が取得されていない:
+
+```
+cls-6889e9e1c7ac (Israel Prison Abuses): matched_urls=["https://afpbb.com"], tier_2
+cls-1a38c0ca8c99 (BBC Gaza documentary):  matched_urls=["https://afpbb.com"], tier_2
+cls-03892eab2072 (Tehran/Iran surrender): matched_urls=["https://nippon.com"], tier_4
+```
+
+**根本原因 (推測)**:
+- F-jp-coverage-improve (2026-05-07) のドメイン抽出層 (`_extract_domain_from_chunk`)
+  には 2 戦略あり: 戦略 1 (chunk.web.domain、SDK が空値を返すケース多い) → 戦略 2
+  (chunk.web.title でドメイン形式の文字列を識別、`afpbb.com` 等を識別)
+- 戦略 2 で `afpbb.com` を識別した時、`https://{domain}` 形式で WL マッチングに
+  供給するため、結果として matched_urls にはベアドメインしか入らない
+- F-jp-coverage-tune-followup (2026-05-09) で導入された `_domain_matches_hierarchy`
+  はドメイン文字列同士の階層判定で、article path は不要
+
+**重要な懸念 (誤陽性のリスク)**:
+- 「`afpbb.com` が当該事象 (Israel Prison Abuses) を実際に報道している」ことを
+  Grounding API は保証しない
+- Grounding がトピック関連で `afpbb.com` を chunk として返した事実までしか保証
+  されない
+- F-jp-coverage-tune-followup Step C 測定 (Recall covered 89.47% / Precision
+  blind 33.33%) も同じ抽出経路を経るため、ゴールデンセット 23 件評価でも同等の
+  誤陽性懸念がある可能性
+
+**論点**:
+- (a) **WebSearch 後追い検証**: Anthropic web search で本試運転 3 Slot +
+  ゴールデンセット 23 件の matched_domains が実際に当該事象を報道しているか
+  手作業 + WebSearch で確認 (F-trial-run-post-fix の past_videos_audit 構造を
+  踏襲)
+- (b) **Grounding chunk の生データダンプ**: `_search_with_grounding` /
+  `_search_with_grounding_two_stage` の chunk.web 配列を全件 JSON 保存して目視
+  確認、article path 取得失敗の根本原因 (SDK 不具合 / API 仕様 / Grounding 検索
+  品質) を切り分け
+- (c) **Grounding 検索クエリ品質改善**: 英語タイトル → 日本語キーワード抽出 +
+  article path 取得を促すクエリ設計 (`記事のタイトル + URL も含めて返してください`
+  系の指示)
+- (d) **WebSearch クローラの制約再確認**: F-trial-run-post-fix audit_caveat で
+  「Anthropic WebSearch は asahi.com / yomiuri.co.jp 等の主要紙への直接クロール
+  がブロックされる仕様」が記録されており、検証側にも制約あり
+
+**Hydrangea コアミッションへの影響**:
+- もし誤陽性が支配的なら、F-jp-coverage-tune-followup の Recall covered 89.47%
+  の信頼性が下がる
+- production-pipeline で全 Slot が divergence ルートに進行する現象も「真の
+  blind_spot が誤って divergence に流れている可能性」を含む
+- Phase A.5-3b 第一作着手判断の前に独立検証が望ましい
+
+**出典**:
+- F-trial-run-post-tune 試運転結果
+  (`docs/runs/F-trial-run-post-tune/trial_run_log.json` + `f13b_output_analysis.json`)
+- `jp_coverage_cache` 保存内容 (`SELECT matched_urls FROM jp_coverage_cache`)
+
+**ステータス**: `Active` (FUTURE_WORK 緊急度 高に「F-13.B WL ヒット品質の独立
+検証」エントリを新規追加、Phase A.5-3b 第一作着手判断と同時 or 直前で実施想定。
+独立検証で誤陽性が支配的と判明した場合は F-jp-coverage-tune-followup REPORT を
+v2 に更新 + Recall covered 89.47% の信頼性を再評価する必要が出る)
+
+---
+
+### 2026-05-11: production-pipeline と docs 概念整理の乖離 — verify_two_stage / particular_angle_metadata / sontaku_signals 全て本番未配線 (F-trial-run-post-tune で観察)
+
+**背景**:
+Phase A.5-3a-verify ゲート完了後の連続バッチ (F-particular-angle-design /
+-redesign / -extension / -followup / F-task-e-finalize / F-jp-coverage-tune /
+F-jp-coverage-tune-followup) で「特定角度」概念正典化 + 4 分類化 (系統 1/2/3)
++ sontaku_signals 別軸メタデータ独立化 + Step 3-4 改良 + MECE 判別基準明示 +
+verify_two_stage 二段階クエリ生成実装 + WL マッチング階層判定化 + WL 拡張
+30 ドメイン化が進んだ。docs 上では `docs/PARTICULAR_ANGLE_DEFINITION.md`
+セクション 3.7 で台本表現方向性も正典化済み。
+
+しかし F-trial-run-post-tune (2026-05-11) で実施した production 試運転で:
+
+- **`src/main.py:3187` は legacy `verify()` (broad-only) のみ呼び出し**で、
+  `verify_two_stage()` 系統 1/2/3 機械判別は本番未配線
+- **`particular_angle_metadata` は `src/` 配下 grep で 0 件**、本番未配線
+- **`sontaku_signals` も `src/` 配下 grep で 0 件**、本番未配線
+- Slot-1 (cls-6889e9e1c7ac、editorial_mission_score=86.0、Hydrangea ど真ん中)
+  で `analysis_result=null` + F-13 隠れ層 quality_floor_miss bypass 発火 = 新ルート
+  `generate_script_with_analysis` 未起動、旧ルートで台本生成
+
+これは「対症療法じゃなく根本治療」原則を踏襲しつつ概念設計を docs 上で先に
+正典化する戦略 (= F-particular-angle-design 系列の連続バッチ) の結果として
+理解できるが、本番運用への配線は別バッチ案件として残課題化されたまま。
+
+**論点**:
+- (a) **verify_two_stage 本番配線判断**: `src/main.py` を改修して
+  `verify_two_stage()` を呼び出すように切り替え、`particular_angle` 引数を
+  `analysis_result` から導出する変換層を実装。`TwoStageVerifyResult.stream`
+  値を `final_routing` ロジックに反映 (stream_1_silence_gap → blind_spot_global,
+  stream_2_perspective_gap → divergence pattern + 系統 2 ラベル, stream_3_candidate
+  → divergence pattern + 系統 3 ラベル, unknown → 既存挙動)
+- (b) **particular_angle_metadata 配線**: `src/shared/models.py` に
+  `ParticularAngleMetadata` Pydantic クラスを追加、`AnalysisResult` に optional
+  フィールド組み込み。`src/analysis/particular_angle_extractor.py` を新規追加
+  (`scripts/extract_particular_angle.py` のロジック移植、不変原則 4 例外条件要)
+- (c) **sontaku_signals 配線**: `SontakuSignals` Pydantic クラス + 抽出
+  ロジック追加、F-1 EditorialMissionFilter (動画化価値) + F-stream-2-filter-design
+  (解説価値) で参照する設計
+- (d) **`generate_script_with_analysis` 新ルートへの引数追加**: 新メタデータを
+  受け取る引数追加 + `configs/prompts/analysis/geo_lens/script_with_analysis.md`
+  プロンプト改修 (LLM の自律判断に委ねる設計、クラウド誤り 9 各論コントロール
+  回避)
+
+**Hydrangea コアミッションへの影響**:
+- 現状の production-pipeline は **Phase A.5-3a-verify gate 完了前 (2026-05-07
+  以前) の概念構造で稼働**
+- gate 完了後の概念整理 (4 分類化 + sontaku_signals 独立化 + 二段階クエリ生成)
+  は **本番運用に未反映**
+- F-stream-2-filter-design 着手時は本配線判断が前提条件になる可能性が高い
+- 「動くものを壊さない」哲学と「概念正典化先行 + 本番配線は段階的」戦略の整合
+  を維持しつつ、配線タイミングは Phase A.5-3b 第一作着手判断と同時 or 並走で
+  決定する必要
+
+**運用ルール (運営者へのリマインダ)**:
+- 新規バッチで `docs/PARTICULAR_ANGLE_DEFINITION.md` / `docs/CURRENT_STATE.md`
+  「コアミッション 2 系統並立」セクションを参照する際は、本エントリで指摘した
+  「docs 概念整理は最新だが本番未配線」点を念頭に置く
+- 「production-pipeline の挙動 = docs 概念整理通り」と誤解しないように
+  (= F-trial-run-post-tune で 3/3 Slot が divergence ルートに流れる現象は、
+  単純な機械判別レイヤーの欠如によるもので、docs 設計と矛盾しない)
+
+**出典**:
+- F-trial-run-post-tune 試運転結果
+  (`docs/runs/F-trial-run-post-tune/REPORT.md` + 5 件の json + 2 件の md)
+- `src/main.py:3170-3220` (F-13.B 呼び出し箇所、legacy verify() のみ使用)
+- `src/` 配下 grep 結果 (particular_angle_metadata / sontaku_signals 0 件)
+
+**ステータス**: `Active` (FUTURE_WORK 緊急度 高に 3 件 + 1 件のエントリを新規
+追加: (1) verify_two_stage 本番配線判断、(2) particular_angle_metadata +
+sontaku_signals 本番配線判断、(3) F-stream-2-filter-design 責務範囲再評価
+(本番運用視点反映)、(4) F-13.B WL ヒット品質の独立検証 — 関連性が高いため
+1 つのバッチ群として並走進行が望ましい)
+
+---
+
 ### 2026-05-09: Grounding API の構造的限界 — 主因 (WL マッチング欠陥 + WL 漏れ) は F-jp-coverage-tune-followup で解消、副因 (1 クエリ chunk 制限 + 政府系/研究機関偏重) のみ残存
 
 **内容**:
@@ -79,6 +223,15 @@ API の構造的限界** が支配的な FN 要因として明確化されてい
 で対応案 (p) 多クエリ並列発行を ★ カズヤ判断後に検討、Phase A.5-3b 第二作の
 サンプル拡充も並行)。
 
+**2026-05-11 追記 (F-trial-run-post-tune での観察)**:
+- 本番試運転 3 Slot 全件で has_jp_coverage=True (afpbb x2 + nippon x1 でヒット)、
+  excluded URLs は Slot-1 youtube 1 件のみ = **主因解消の本番証拠を確認**
+- F-trial-run-post-fix (2026-05-07、構造的不具合修正前直後) では 0/3、F-trial-run-post-tune
+  (2026-05-11、WL 整備後) では 3/3 で完全反転 = WL 整備の本番影響は想定以上
+- ただし **matched_urls がベアドメインのみ問題** (新規論点として別エントリ参照、
+  F-trial-run-post-tune で発覚) があり、Recall covered 89.47% も誤陽性を含む
+  可能性 → 独立検証が次バッチ案件として残課題化
+
 ---
 
 ### 2026-05-09: stream_3 過剰検出 — URL ドメインマッチが特定角度の粒度を区別できない定義レベルの限界 (F-jp-coverage-tune で観察)
@@ -130,6 +283,19 @@ newsweekjapan.jp / asahi.com) が発生したが、真値は「特定角度は�
 
 **ステータス**: `Active` (★ 本バッチスコープ外の定義レベル限界、F-jp-coverage-tune-followup
 の (s) 副次論点 + F-stream-2-filter-design 責務境界整理時に再評価)。
+
+**2026-05-11 追記 (F-trial-run-post-tune での観察)**:
+- production main.py:3187 は legacy `verify()` (broad-only) のみ呼び出し、
+  `verify_two_stage()` の二段階クエリ生成 + 系統 1/2/3 機械判別は **本番未配線**
+- production-pipeline 上で stream 機械判別は稼働しないため、stream_3 過剰検出
+  問題も本番では現れない (= ゴールデンセット 23 件精度測定特有の問題)
+- ただし、F-trial-run-post-tune では production verify() = has_jp_coverage=True
+  3/3 (= 全 Slot が divergence ルート進行) = Hydrangea ブランドメッセージ
+  消滅問題が本番で顕在化 = stream_3 過剰検出と同根の「URL ドメインマッチが
+  特定角度の粒度を区別できない」問題が、本番では『stream_3 過剰検出』ではなく
+  『blind_spot_global 系統が消滅』として現れる
+- F-stream-2-filter-design 責務範囲再評価で本観察を反映予定 (= verify_two_stage
+  本番配線 + LLM 解説価値判定の追加、本番運用視点での組み込み)
 
 ---
 
@@ -887,6 +1053,18 @@ WebSearch 後追いで明らかになった事実:
 
 **ステータス**: `昇格候補(FUTURE_WORK)` (F-jp-coverage-tune に統合可、本エントリは
 F-jp-coverage-tune 着手時の根拠データとして再利用)
+
+**2026-05-11 追記 (F-trial-run-post-tune での状況改善)**:
+- F-jp-coverage-tune-followup (2026-05-09) で WL マッチング階層判定化 + WL 拡張
+  3 ドメイン (afpbb / forbesjapan / nippon) 投入後、F-trial-run-post-tune 試運転
+  で **excluded_count が 23→1 件 (-22) と劇的減少、Slot-1 で youtube 1 件のみ**
+- has_jp_coverage=True が 3/3 になり、Grounding 検索クエリ品質問題は **WL 整備
+  経由で実質的に解消傾向** (= 検索クエリ自体は変えていないが、WL 拡張で受け
+  止められるようになった)
+- ただし matched_urls がベアドメインのみ問題 (別エントリ参照) が新規発覚した
+  ため、本問題と密接に関連 = 「Grounding が WL 内ドメインを返すようになった」
+  + 「ただしそれが記事レベルで一致しているかは別問題」という二層構造に
+
 
 ### 2026-05-04: 系統 1 (silence_gap) の判定基準明確化 — 「未報道理由の構造性」(4 軸)
 

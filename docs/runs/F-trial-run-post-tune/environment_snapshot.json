@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "batch": "F-trial-run-post-tune",
+  "generated_at": "2026-05-11T13:40:50+09:00",
+  "branch": "feature/F-trial-run-post-tune (created from main)",
+  "main_head_commit_full": "4062639d3519c85e95a7f08280d01675fc23e952",
+  "main_head_commit_short": "4062639",
+  "main_head_commit_message": "Merge branch 'feature/F-jp-coverage-tune-followup'",
+  "recent_commits": [
+    "4062639 Merge branch 'feature/F-jp-coverage-tune-followup'",
+    "84a678e feat: WL hierarchy match + WL extension 3 domains (F-jp-coverage-tune-followup, verdict=fail but Recall +47.36pp / F1 covered 0.8718 first threshold break, root cause resolved, 4 residual axes split)",
+    "82ce0d0 Merge branch 'feature/F-jp-coverage-tune'",
+    "beb4aa7 feat: F-13.B verify_two_stage two-stage query generation + 23-event accuracy measurement (F-jp-coverage-tune, verdict=fail, Grounding API structural limit identified, followup drafted)",
+    "e1ad637 Merge branch 'feature/F-task-e-finalize'"
+  ],
+  "baseline_tests": {
+    "collected_count": 1390,
+    "collection_time_seconds": 6.29,
+    "full_run_status": "pending (executed in background, captured in REPORT)"
+  },
+  "jp_coverage_cache_initial": {
+    "db_path": "data/db/hydrangea.db",
+    "table": "jp_coverage_cache",
+    "total_records": 9,
+    "distinct_event_ids": 9,
+    "note": "data/db/jp_coverage_cache.db は空ファイル (0 byte)、実体は hydrangea.db 内"
+  },
+  "env_vars": {
+    "AUDIO_RENDER_ENABLED": "(not set, default false)",
+    "VIDEO_RENDER_ENABLED": "(not set, default false)"
+  },
+  "git_status": "clean (working tree clean before branch creation)",
+  "untracked_files": [],
+  "verification": {
+    "branch_created_correctly": true,
+    "main_head_matches_handoff_expectation_4062639": true,
+    "audio_video_render_disabled_as_required": true,
+    "docs_runs_directory_created": true
+  }
+}
