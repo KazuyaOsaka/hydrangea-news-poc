@@ -1,0 +1,33 @@
+# covered_007
+timestamp: 2026-05-09T20:41:31.259268
+elapsed_seconds: 21.93
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_4_business
+  angle_matched_tier: tier_2_wire_service
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: ナイジェリアで 100 人拉致 過激派襲撃、死者多数か 日本 報道
+  angle_query: ナイジェリア ボルノ州 拉致 国防予算 安全保障 構造的 機能不全 住民 見捨てられ感
+
+## Results
+  broad: {"urls": ["https://saitama-np.co.jp", "https://nippon.com", "https://chiba-tv.com"], "matched_urls": ["https://nippon.com"], "excluded_urls": [], "matched_tier": "tier_4_business"}
+  angle: {"urls": ["https://murc.jp", "https://unicef.or.jp", "https://unicef.or.jp", "https://mofa.go.jp", "https://tokutenryoko.com", "https://mofa.go.jp", "https://afpbb.com", "https://mofa.go.jp", "https://coki.jp", "https://mainichi.co.jp"], "matched_urls": ["https://afpbb.com"], "excluded_urls": [], "matched_tier": "tier_2_wire_service"}
+
+## Hits
+  jp_media_hits_broad: ['nippon.com']
+  jp_media_hits_angle: ['afpbb.com']
+  excluded_count_broad: 0
+  excluded_count_angle: 0

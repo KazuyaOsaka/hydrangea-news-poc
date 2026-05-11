@@ -1,0 +1,33 @@
+# cls-a4132ec7d949
+timestamp: 2026-05-09T20:43:55.854385
+elapsed_seconds: 18.34
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: None
+  in_golden_set: False
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_2_wire_service
+  angle_matched_tier: tier_2_wire_service
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: Legal complaint filed by Palestine activists against Met Police chief over synagogue remarks 日本 報道
+  angle_query: ロンドン警視庁総監 パレスチナ支持団体 シナゴーグ発言 法的申し立て 警察の中立性 権力行使 正当性
+
+## Results
+  broad: {"urls": ["https://emb-japan.go.jp", "https://mofa.go.jp", "https://youtube.com", "https://arabnews.jp", "https://amnesty.or.jp", "https://afpbb.com", "https://youtube.com"], "matched_urls": ["https://afpbb.com"], "excluded_urls": ["https://youtube.com", "https://youtube.com"], "matched_tier": "tier_2_wire_service"}
+  angle: {"urls": ["https://afpbb.com", "https://afpbb.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://nippon.com", "https://chiba-tv.com", "https://youtube.com", "https://newsweekjapan.jp", "https://goal.com", "https://youtube.com"], "matched_urls": ["https://afpbb.com", "https://afpbb.com", "https://nippon.com", "https://newsweekjapan.jp"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_2_wire_service"}
+
+## Hits
+  jp_media_hits_broad: ['afpbb.com']
+  jp_media_hits_angle: ['afpbb.com', 'newsweekjapan.jp', 'nippon.com']
+  excluded_count_broad: 2
+  excluded_count_angle: 5

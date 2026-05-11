@@ -1,0 +1,33 @@
+# blind_009
+timestamp: 2026-05-09T20:38:49.971111
+elapsed_seconds: 26.12
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_2_wire_service
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_1_newspaper
+  angle_matched_tier: tier_1_newspaper
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: The real reason Iran and the US cannot end the war: Money 日本 報道
+  angle_query: イラン 革命防衛隊 米国 対立 意図的 継続 制裁 影の経済 利権 経済的動機
+
+## Results
+  broad: {"urls": ["https://arabnews.jp", "https://yomiuri.co.jp", "https://newsweekjapan.jp", "https://panewslab.com", "https://investing.com", "https://youtube.com", "https://benzinga.com", "https://newsweekjapan.jp", "https://youtube.com", "https://go2senkyo.com"], "matched_urls": ["https://yomiuri.co.jp", "https://newsweekjapan.jp", "https://newsweekjapan.jp"], "excluded_urls": ["https://youtube.com", "https://youtube.com"], "matched_tier": "tier_1_newspaper"}
+  angle: {"urls": ["https://sief.jp", "https://afpbb.com", "https://kiip.or.jp", "https://theletter.jp", "https://diamond.jp", "https://note.com", "https://youtube.com", "https://mainichi.jp", "https://newsweekjapan.jp", "https://agora-web.jp"], "matched_urls": ["https://afpbb.com", "https://diamond.jp", "https://mainichi.jp", "https://newsweekjapan.jp"], "excluded_urls": ["https://note.com", "https://youtube.com"], "matched_tier": "tier_1_newspaper"}
+
+## Hits
+  jp_media_hits_broad: ['newsweekjapan.jp', 'yomiuri.co.jp']
+  jp_media_hits_angle: ['afpbb.com', 'diamond.jp', 'mainichi.jp', 'newsweekjapan.jp']
+  excluded_count_broad: 2
+  excluded_count_angle: 2

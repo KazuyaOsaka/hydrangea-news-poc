@@ -87,6 +87,40 @@ def _normalize_domain(s: str) -> str:
     return s
 
 
+def _domain_matches_hierarchy(host: str, wl_domain: str) -> bool:
+    """ホストと WL 登録ドメインが「同 Tier ファミリー」かを階層判定する。
+
+    F-jp-coverage-tune-followup (2026-05-09): WL サブドメイン不一致対処。
+    Grounding API が返すドメイン (例: "fnn.jp") が WL 登録ドメイン
+    (例: "news.fnn.jp") と完全一致しない場合でも、ドメイン階層関係 (祖先 /
+    子孫) にあれば同 Tier 扱いとする。
+
+    マッチ条件 (どれか 1 つ満たせば True):
+        - 完全一致: host == wl_domain
+        - host が wl_domain のサブドメイン: host.endswith("." + wl_domain)
+        - wl_domain が host のサブドメイン: wl_domain.endswith("." + host)
+
+    過剰マッチ回避:
+        - TLD 共通だけのマッチ (例: 別ドメイン同士の "co.jp" 一致) は上記 3
+          条件に該当しないため False
+        - 文字列部分一致 (例: "not-nikkei.com" vs "nikkei.com") も "." 区切り
+          境界が無いため False
+    """
+    if not host or not wl_domain:
+        return False
+    h = host.strip().lower().lstrip(".")
+    w = wl_domain.strip().lower().lstrip(".")
+    if not h or not w:
+        return False
+    if h == w:
+        return True
+    if h.endswith("." + w):
+        return True
+    if w.endswith("." + h):
+        return True
+    return False
+
+
 def _extract_domain_from_chunk(chunk: Any) -> Optional[str]:
     """Grounding chunk から実ソースドメインを抽出する。
 
@@ -139,6 +173,9 @@ JP_MEDIA_WHITELIST: dict[str, list[str]] = {
         "jiji.com",
         "bloomberg.co.jp",
         "jp.reuters.com",
+        # F-jp-coverage-tune-followup (2026-05-09): AFP 通信日本版、独立した
+        # 国際通信社の日本ローカライズ拠点
+        "afpbb.com",
     ],
     # Tier 3: 大手テレビ局・ニュース番組
     "tier_3_broadcaster": [
@@ -159,6 +196,11 @@ JP_MEDIA_WHITELIST: dict[str, list[str]] = {
         "bunshun.jp",
         "business.nikkei.com",
         "globe.asahi.com",
+        # F-jp-coverage-tune-followup (2026-05-09): Forbes Japan (経済・国際
+        # ニュース) と nippon.com (笹川平和財団系の国際政治・社会論評)。
+        # 両者とも独立した日本メディアで取材リソース + 大手認知度あり。
+        "forbesjapan.com",
+        "nippon.com",
     ],
 }
 
@@ -417,18 +459,26 @@ class JpCoverageVerifier:
     def _match_whitelist(
         self, urls: list[str]
     ) -> tuple[list[str], list[str], Optional[str]]:
-        """ホワイトリストに一致する URL を抽出する。最高 Tier を判定。"""
+        """ホワイトリストに一致する URL を抽出する。最高 Tier を判定。
+
+        F-jp-coverage-tune-followup (2026-05-09): ドメイン階層判定に変更。
+        Grounding API が返すドメイン (例: "fnn.jp") と WL 登録ドメイン
+        (例: "news.fnn.jp") のサブドメイン不一致を `_domain_matches_hierarchy`
+        で吸収する (= WL 側に別名を膨張させずにマッチング側で吸収)。
+        """
         matched_urls: list[str] = []
         matched_domains: set[str] = set()
         highest_tier: Optional[str] = None
 
         for url in urls:
-            url_lower = url.lower()
+            host = _normalize_domain(url)
+            if not host:
+                continue
             url_matched = False
             for tier_name in _TIER_PRIORITY:
                 domains = JP_MEDIA_WHITELIST[tier_name]
                 for domain in domains:
-                    if domain in url_lower:
+                    if _domain_matches_hierarchy(host, domain):
                         if not url_matched:
                             matched_urls.append(url)
                             url_matched = True

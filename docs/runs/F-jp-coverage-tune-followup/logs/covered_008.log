@@ -1,0 +1,33 @@
+# covered_008
+timestamp: 2026-05-09T20:41:47.901366
+elapsed_seconds: 16.64
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_1_newspaper
+  angle_matched_tier: tier_2_wire_service
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: マリ 軍事政権に反政府勢力が一斉攻撃 暫定国防相死亡 日本 報道
+  angle_query: マリ 国防相 暗殺 トゥアレグ アルカイダ 異例の共闘 ワグネル 依存 破綻
+
+## Results
+  broad: {"urls": ["https://hatena.ne.jp", "https://saitama-np.co.jp", "https://saitama-np.co.jp", "https://yomiuri.co.jp", "https://afpbb.com", "https://nippon.com", "https://nippon.com", "https://fsight.jp"], "matched_urls": ["https://yomiuri.co.jp", "https://afpbb.com", "https://nippon.com", "https://nippon.com"], "excluded_urls": ["https://hatena.ne.jp"], "matched_tier": "tier_1_newspaper"}
+  angle: {"urls": ["https://afpbb.com", "https://novaist.jp", "https://hatena.ne.jp", "https://note.com", "https://gaitameonline.com"], "matched_urls": ["https://afpbb.com"], "excluded_urls": ["https://hatena.ne.jp", "https://note.com"], "matched_tier": "tier_2_wire_service"}
+
+## Hits
+  jp_media_hits_broad: ['afpbb.com', 'nippon.com', 'yomiuri.co.jp']
+  jp_media_hits_angle: ['afpbb.com']
+  excluded_count_broad: 1
+  excluded_count_angle: 2

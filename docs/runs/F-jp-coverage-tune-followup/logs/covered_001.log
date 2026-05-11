@@ -1,0 +1,33 @@
+# covered_001
+timestamp: 2026-05-09T20:39:21.357512
+elapsed_seconds: 24.01
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_3_broadcaster
+  angle_matched_tier: tier_2_wire_service
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: ホルムズ海峡めぐりアメリカの対イラン封鎖始まる イランは反発 日本 報道
+  angle_query: ホルムズ海峡 封鎖 アメリカ イラン 和平交渉 決裂 非妥協的 前提条件 国際法 開戦事由 第三国 経済的打撃
+
+## Results
+  broad: {"urls": ["https://fnn.jp", "https://fnn.jp", "https://ktv.jp", "https://youtube.com", "https://livedoor.com"], "matched_urls": ["https://fnn.jp", "https://fnn.jp"], "excluded_urls": ["https://youtube.com"], "matched_tier": "tier_3_broadcaster"}
+  angle: {"urls": ["https://afpbb.com", "https://worldtimes.co.jp", "https://youtube.com", "https://note.com", "https://arabnews.jp", "https://ksb.co.jp", "https://youtube.com", "https://youtube.com", "https://arabnews.jp", "https://nippon.com", "https://dlri.co.jp", "https://recordchina.co.jp"], "matched_urls": ["https://afpbb.com", "https://nippon.com"], "excluded_urls": ["https://youtube.com", "https://note.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_2_wire_service"}
+
+## Hits
+  jp_media_hits_broad: ['news.fnn.jp']
+  jp_media_hits_angle: ['afpbb.com', 'nippon.com']
+  excluded_count_broad: 1
+  excluded_count_angle: 4

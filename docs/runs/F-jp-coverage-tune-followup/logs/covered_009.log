@@ -1,0 +1,33 @@
+# covered_009
+timestamp: 2026-05-09T20:42:13.857525
+elapsed_seconds: 25.95
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_3_broadcaster
+  angle_matched_tier: tier_3_broadcaster
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: インド・パキスタン カシミール 緊張 (4 月 22 日テロ攻撃 + 5 月 7-10 日 Operation Sindoor) 日本 報道
+  angle_query: インド パキスタン カシミール Operation Sindoor ドローン 精密攻撃 核保有国 トランプ 仲介 安全保障構造 変容
+
+## Results
+  broad: {"urls": ["https://kyodo.co.jp", "https://jetro.go.jp", "https://fnn.jp", "https://youtube.com", "https://youtube.com", "https://ismedia.jp", "https://emb-japan.go.jp", "https://emb-japan.go.jp", "https://mofa.go.jp", "https://mofa.go.jp"], "matched_urls": ["https://fnn.jp"], "excluded_urls": ["https://youtube.com", "https://youtube.com"], "matched_tier": "tier_3_broadcaster"}
+  angle: {"urls": ["https://newsweekjapan.jp", "https://spf.org", "https://innovatopia.jp", "https://mod.go.jp", "https://youtube.com", "https://livedoor.com", "https://bs4.jp", "https://newsweekjapan.jp", "https://dotworld.press", "https://fnn.jp"], "matched_urls": ["https://newsweekjapan.jp", "https://newsweekjapan.jp", "https://fnn.jp"], "excluded_urls": ["https://youtube.com"], "matched_tier": "tier_3_broadcaster"}
+
+## Hits
+  jp_media_hits_broad: ['news.fnn.jp']
+  jp_media_hits_angle: ['news.fnn.jp', 'newsweekjapan.jp']
+  excluded_count_broad: 2
+  excluded_count_angle: 1

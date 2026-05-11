@@ -1,0 +1,33 @@
+# blind_003
+timestamp: 2026-05-09T20:37:03.981397
+elapsed_seconds: 19.35
+
+## Truth
+  expected_stream: stream_1_silence_gap
+  expected_broad_jp_coverage: unreported
+  expected_angle_jp_coverage: unreported
+  expected_tier: None
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_4_business
+  angle_matched_tier: tier_2_wire_service
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: US-Israel intervention frees Israeli-Turkish citizen held for serving in Israeli army 日本 報道
+  angle_query: エヤル・ヘヒト トルコ 拘束 SNS OSINT 活動家 司法の武器化 個人の地政学的リスク
+
+## Results
+  broad: {"urls": ["https://sudanindependent.com", "https://turkishminute.com", "https://turkishminute.com", "https://israelnationalnews.com", "https://middleeasteye.net", "https://ssri-j.com", "https://nippon.com", "https://kyodo.co.jp", "https://mofa.go.jp", "https://jiia.or.jp", "https://note.com", "https://youtube.com", "https://arabnews.jp", "https://trtnihongo.com"], "matched_urls": ["https://nippon.com"], "excluded_urls": ["https://note.com", "https://youtube.com"], "matched_tier": "tier_4_business"}
+  angle: {"urls": ["https://amnesty.or.jp", "https://emb-japan.go.jp", "https://afpbb.com", "https://newsweekjapan.jp", "https://ide.go.jp", "https://pasona-jobhub.co.jp", "https://keidanren.or.jp", "https://pwc.com", "https://jri.co.jp", "https://isz.co.jp", "https://agora-web.jp"], "matched_urls": ["https://afpbb.com", "https://newsweekjapan.jp"], "excluded_urls": [], "matched_tier": "tier_2_wire_service"}
+
+## Hits
+  jp_media_hits_broad: ['nippon.com']
+  jp_media_hits_angle: ['afpbb.com', 'newsweekjapan.jp']
+  excluded_count_broad: 2
+  excluded_count_angle: 0

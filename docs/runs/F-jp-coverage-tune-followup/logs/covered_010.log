@@ -1,0 +1,33 @@
+# covered_010
+timestamp: 2026-05-09T20:42:36.995472
+elapsed_seconds: 23.13
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_2_wire_service
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_4_business
+  angle_matched_tier: tier_2_wire_service
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: イエメン・フーシ派、イスラエルに弾道ミサイル発射し『イラン支援』を公式表明 日本 報道
+  angle_query: フーシ派 イラン 支援 公式表明 抵抗の弧 代理勢力 軍事同盟 相互防衛 変質
+
+## Results
+  broad: {"urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://nippon.com", "https://nippon.com", "https://benzinga.com", "https://diamond.jp", "https://arabnews.jp", "https://youtube.com", "https://youtube.com"], "matched_urls": ["https://nippon.com", "https://nippon.com", "https://diamond.jp"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_4_business"}
+  angle: {"urls": ["https://fnn.jp", "https://youtube.com", "https://arabnews.jp", "https://youtube.com", "https://afpbb.com", "https://donga.com", "https://ide.go.jp", "https://cmeps-j.net", "https://moomoo.com", "https://wikipedia.org", "https://wikipedia.org", "https://fsight.jp", "https://matsui.co.jp"], "matched_urls": ["https://fnn.jp", "https://afpbb.com"], "excluded_urls": ["https://youtube.com", "https://youtube.com"], "matched_tier": "tier_2_wire_service"}
+
+## Hits
+  jp_media_hits_broad: ['diamond.jp', 'nippon.com']
+  jp_media_hits_angle: ['afpbb.com', 'news.fnn.jp']
+  excluded_count_broad: 5
+  excluded_count_angle: 2

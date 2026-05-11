@@ -1,0 +1,33 @@
+# blind_008
+timestamp: 2026-05-09T20:38:23.847090
+elapsed_seconds: 21.90
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: None
+  in_golden_set: True
+
+## Predicted
+  stream: stream_2_perspective_gap
+  broad_jp_coverage: True
+  angle_jp_coverage: False
+  broad_matched_tier: tier_4_business
+  angle_matched_tier: None
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: Israel accused of using 'water as a weapon' against Palestinians in Gaza 日本 報道
+  angle_query: イスラエル ガザ 水インフラ 90% 破壊 国境なき医師団 国連 水を武器 集団的懲罰 国際法違反
+
+## Results
+  broad: {"urls": ["https://nicovideo.jp", "https://msf.or.jp", "https://prtimes.jp", "https://chiba-tv.com", "https://arabnews.jp", "https://newsweekjapan.jp", "https://note.com"], "matched_urls": ["https://newsweekjapan.jp"], "excluded_urls": ["https://note.com"], "matched_tier": "tier_4_business"}
+  angle: {"urls": ["https://prtimes.jp", "https://prtimes.jp", "https://msf.or.jp", "https://chiba-tv.com", "https://mapion.co.jp", "https://arabnews.jp", "https://arabnews.jp", "https://voi.id", "https://note.com"], "matched_urls": [], "excluded_urls": ["https://note.com"], "matched_tier": null}
+
+## Hits
+  jp_media_hits_broad: ['newsweekjapan.jp']
+  jp_media_hits_angle: []
+  excluded_count_broad: 1
+  excluded_count_angle: 1

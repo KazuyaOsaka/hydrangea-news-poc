@@ -1,0 +1,33 @@
+# blind_004
+timestamp: 2026-05-09T20:37:22.830094
+elapsed_seconds: 18.85
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_2_wire_service
+  angle_matched_tier: tier_1_newspaper
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: In Gaza, life flickers as power cuts shatter livelihoods and healthcare 日本 報道
+  angle_query: ガザ 発電機 潤滑油 100倍 価格高騰 社会インフラ 物理的 組織的 解体
+
+## Results
+  broad: {"urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://fnn.jp", "https://youtube.com", "https://afpbb.com", "https://afpbb.com", "https://savechildren.or.jp", "https://prtimes.jp", "https://prtimes.jp", "https://msf.or.jp"], "matched_urls": ["https://fnn.jp", "https://afpbb.com", "https://afpbb.com"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_2_wire_service"}
+  angle: {"urls": ["https://voi.id", "https://yomiuri.co.jp", "https://voi.id", "https://arabnews.jp", "https://diamond.jp", "https://toyokeizai.net", "https://nri.com", "https://youtube.com", "https://youtube.com", "https://mtolive.net", "https://note.com"], "matched_urls": ["https://yomiuri.co.jp", "https://diamond.jp", "https://toyokeizai.net"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://note.com"], "matched_tier": "tier_1_newspaper"}
+
+## Hits
+  jp_media_hits_broad: ['afpbb.com', 'news.fnn.jp']
+  jp_media_hits_angle: ['diamond.jp', 'toyokeizai.net', 'yomiuri.co.jp']
+  excluded_count_broad: 7
+  excluded_count_angle: 3
