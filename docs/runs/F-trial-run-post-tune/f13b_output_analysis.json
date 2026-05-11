@@ -1,0 +1,124 @@
+{
+  "version": "1.0",
+  "batch": "F-trial-run-post-tune",
+  "generated_at": "2026-05-11T14:30:00+09:00",
+  "source": "trial_run_log.json + jp_coverage_cache (今回試運転で新規追加 3 件 + 既存 9 件 = 計 12 件)",
+  "f13b_commit_basis": "4062639 (= main HEAD、F-jp-coverage-tune-followup マージ済み)",
+  "scope": {
+    "trial_run_invocations": 3,
+    "trial_run_slot_event_ids": ["cls-6889e9e1c7ac", "cls-1a38c0ca8c99", "cls-03892eab2072"],
+    "cache_records_before_trial": 9,
+    "cache_records_after_trial": 12
+  },
+  "production_path_clarification": {
+    "src_main_py_calls": "JpCoverageVerifier.verify() (broad-only) only — verify_two_stage は本番未配線",
+    "verify_two_stage_production_invocations": 0,
+    "verify_two_stage_production_status": "★ 本番未配線。src/main.py:3187 で verify() (broad-only) を呼び出す設計のまま。verify_two_stage は scripts/measure_two_stage_accuracy.py 等のテスト/計測用途のみで使用。",
+    "f_jp_coverage_tune_followup_production_effects": [
+      "★ _match_whitelist 階層判定化 (新規 _domain_matches_hierarchy) → verify() も verify_two_stage() も共通利用するため、本番 verify() に直接効く",
+      "★ JP_MEDIA_WHITELIST 30 ドメイン化 (afpbb.com Tier 2 / forbesjapan.com Tier 4 / nippon.com Tier 4 を追加) → verify() に直接効く",
+      "verify_two_stage() メソッドの新規追加は本番影響なし (テスト/計測用途のみ)"
+    ]
+  },
+  "has_jp_coverage_distribution": {
+    "true": 3,
+    "false": 0,
+    "error": 0
+  },
+  "matched_tier_distribution": {
+    "tier_1_newspaper": 0,
+    "tier_2_wire_service": 2,
+    "tier_3_broadcaster": 0,
+    "tier_4_business": 1,
+    "null (False 判定)": 0
+  },
+  "matched_domains_summary": {
+    "afpbb.com (Tier 2)": 2,
+    "nippon.com (Tier 4)": 1,
+    "forbesjapan.com (Tier 4)": 0,
+    "other_traditional_27_domains (nikkei.com / jiji.com / nhk.or.jp / asahi.com / 等)": 0
+  },
+  "excluded_domains_summary": {
+    "youtube.com": 1,
+    "note": "本試運転で excluded は Slot-1 の youtube.com 1 件のみ。Slot-2/Slot-3 は excluded 0 件 (= Grounding が WL 内ドメインを上位返却した結果と推測)"
+  },
+  "excluded_urls_count_distribution": {
+    "0": 2,
+    "1": 1
+  },
+  "matched_urls_observation": {
+    "all_matched_urls_are_bare_domain_only": true,
+    "matched_urls_observed": ["https://afpbb.com (× 2 Slot)", "https://nippon.com (× 1 Slot)"],
+    "concern": "★ 重要懸念: 全 3 件の matched_urls がベアドメイン (article path なし) のみ。これは Grounding API の chunk.web.title 由来抽出 (= F-jp-coverage-improve のドメイン抽出層が `youtube.com` のような文字列をドメイン形式として識別する戦略 2 と同じパス) で、個別記事 URL 取得には到達していない可能性が高い。`_domain_matches_hierarchy` の階層判定は 'afpbb.com' という文字列を WL の 'afpbb.com' とマッチさせて Tier 2 認定するが、これは『afpbb.com が当該事象を実際に報道している』ことを必ずしも意味しない。Grounding が当該事象との関連で afpbb.com / nippon.com を chunk として返したという事実までしか保証されない。",
+    "verification_status": "本バッチでは WebSearch 後追い検証は task 範囲外 (F-trial-run-post-fix と異なり、本バッチは試運転 + 分析のみ)。実 URL 解析は次バッチ案件として記録",
+    "implication": "★ Recall covered F-jp-coverage-tune-followup measurement (Step C) の 89.47% (TP=17/19) も同じ抽出経路を経ているため、ゴールデンセット測定値も同等の懸念がある可能性 = Phase A.5-3b 第二作のサンプル拡充時に afpbb / nippon 経由ヒットのケースを精査すべき"
+  },
+  "verify_two_stage_observations": {
+    "verify_two_stage_invocations_in_trial": 0,
+    "broad_query_invocations": 0,
+    "angle_query_invocations": 0,
+    "per_call_timeout_triggered": 0,
+    "graceful_fallback_unknown_count": 0,
+    "stream_machine_classification": {
+      "stream_1_silence_gap": 0,
+      "stream_2_perspective_gap": 0,
+      "stream_3_candidate": 0,
+      "unknown": "production verify() doesn't classify streams; all 3 slots routed via legacy verify() = broad-only without stream classification"
+    },
+    "stream_classification_status_clarification": "★ 重要: F-13.B 機械判別の系統 1/2/3 分類は verify_two_stage() 専用機能で、本番 verify() は『has_jp_coverage=True / False』の二値判定のみ。本試運転では全 3 Slot が verify() の has_jp_coverage=True で divergence ルート進行 = production-pipeline 上の機械判別系統分類は実施されていない。設計意図 (= Phase A.5-3a-verify gate 完了後の概念整理) と実装 (= verify_two_stage 未配線) には乖離あり。"
+  },
+  "interpretation": {
+    "wl_extension_production_impact_evaluation": {
+      "headline": "★★★ 本バッチ最大の発見: WL 拡張 3 ドメインのうち afpbb.com (Tier 2) + nippon.com (Tier 4) の 2 ドメインが本番試運転 3 Slot 全件にヒット = WL 拡張は本番運用において想定以上に強い影響",
+      "before_after": "F-trial-run-post-fix (2026-05-07): 3 Slot 全 has_jp_coverage=False、excluded=23 件全 youtube.com → F-trial-run-post-tune (本バッチ): 3 Slot 全 has_jp_coverage=True、afpbb x2 + nippon x1 でヒット",
+      "qualitative_change": "Hydrangea ブランドの『日本未報道事象』軸 (= blind_spot_global ルート) が機械判別で消滅。実質的に全 Slot が divergence (= 日本でも報道あり、海外との差を分析) ルートに流れる。これは F-stream-2-filter-design (系統 2 perspective_gap、解説価値判定) が未実装の現状では Hydrangea コアミッションが弱体化する可能性",
+      "trade_off_visible": "F-jp-coverage-tune-followup の Step C 測定で観察された Stream accuracy 27.27% → 9.09% の退行 (stream_3 過剰検出) が本番でも顕在化"
+    },
+    "wl_hits_quality_concerns": [
+      "matched_urls がベアドメインのみ = 記事レベル一致を Grounding API 内で確認できているか不明 (= 誤陽性のリスク)",
+      "Slot-1 (TeleSUR 発、Israel 刑務所 9,600 人虐待) が afpbb.com にヒット → afpbb 当該事象報道は不明、検証必要",
+      "Slot-2 (Middle East Eye 発、BBC ガザ documentary BAFTA 受賞) が afpbb.com にヒット → afpbb 当該事象報道は不明、検証必要",
+      "Slot-3 (Middle East Eye 発、Tehran says US proposal sought Iran's surrender) が nippon.com にヒット → nippon.com の Tier 4 認定は『Business 系』だが本事象は外交 (Tehran/Trump) なので categorical fit に違和感"
+    ],
+    "tier_appearance_rate": {
+      "tier_1_2": "3/3 中 2/3 (66.7%) = afpbb (Tier 2) × 2",
+      "tier_4": "3/3 中 1/3 (33.3%) = nippon (Tier 4) × 1",
+      "tier_3": "0/3"
+    },
+    "elapsed_time_per_invocation": {
+      "slot_1": 9,
+      "slot_2": 6,
+      "slot_3": 7,
+      "mean": 7.3,
+      "comparison_with_pre_fix": "F-trial-run-post-fix (7.7s) と F-trial-run-post-fix replay (8s) と同程度。WL 拡張で速度退行なし"
+    },
+    "structural_fix_status": {
+      "domain_extraction_layer_still_functional": true,
+      "evidence": "Slot-1 で excluded=1 (youtube.com) が確認されており、F-jp-coverage-improve のドメイン抽出層は本バッチでも稼働",
+      "wl_extension_layer_functional": true,
+      "wl_extension_evidence": "afpbb.com / nippon.com が _match_whitelist で Tier 認定された = F-jp-coverage-tune-followup の WL 30 ドメイン化 + _domain_matches_hierarchy 階層判定が本番稼働確認"
+    },
+    "production_observation_compared_with_step_c_measurement": [
+      "★ F-jp-coverage-tune-followup Step C 測定 (golden 23 件): Recall covered 89.47% / Precision blind 33.33% / Tier 一致率 30.77% / Stream accuracy 9.09%",
+      "★ 本バッチ試運転 (3 件、ゴールデンセット外): has_jp_coverage=True 3/3 (=Recall 観点では Step C と整合的)",
+      "★ ただし本バッチ 3 Slot は『Hydrangea が動画化を選んだ事象 = ある意味 truly notable』なので、stream_2 / stream_3 真値が高い可能性",
+      "★ Slot-1 (9,600 Detainees) のような Hydrangea ミッションど真ん中 (= 国際人権・忖度) が divergence ルートに流れる現象 = WL ヒット品質が低い場合の運用リスク顕在化"
+    ],
+    "concerns_for_next_batch": [
+      "★ WL ヒット品質の独立検証 (matched_urls がベアドメインのみという挙動の意味)",
+      "★ afpbb.com / nippon.com 経由ヒットの精査 (記事レベル一致しているか)",
+      "★ Stream accuracy 9.09% の主因 (stream_3 過剰検出) が本番運用にも影響することの確認",
+      "★ Hydrangea ブランドメッセージ (『日本では報道されない』) と本番運用 (全 Slot divergence) の乖離をどう扱うか"
+    ],
+    "next_batch_routing_implication": "F-stream-2-filter-design ★最優先化 (= 二段階フィルタで Slot-1 のような Hydrangea ど真ん中事象を救出する設計を、本番運用上必要)。F-jp-coverage-tune-followup-2 ((p) 多クエリ並列発行) は副作用リスク (= Precision blind さらに退行) があるため後回し or skip。Phase A.5-3b 第二作のサンプル拡充は WL ヒット品質検証も兼ねるべき"
+  },
+  "summary_for_report": {
+    "production_runtime_minutes": 20.4,
+    "f13b_invocations": 3,
+    "wl_hits": "3/3 (afpbb x2 + nippon x1)",
+    "wl_hits_source": "F-jp-coverage-tune-followup で追加した 3 ドメイン中 2 つ",
+    "verify_two_stage_in_production": "0 (本番未配線)",
+    "stream_machine_classification": "n/a (verify() は系統判別なし)",
+    "biggest_finding": "WL 拡張の本番影響が非常に強く、Hydrangea ブランドメッセージ (blind_spot_global ルート) が機械判別で消滅する副作用が観察された"
+  }
+}

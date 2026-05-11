@@ -1,0 +1,120 @@
+{
+  "version": "1.0",
+  "batch": "F-trial-run-post-tune",
+  "generated_at": "2026-05-11T14:35:00+09:00",
+  "scope": "本試運転で動画生成された Slot-1 のみが対象 (Slot-2/Slot-3 は F-16-A article-only モードで script 未生成)",
+  "scripts_audited": [
+    {
+      "slot_index": 1,
+      "event_id": "cls-6889e9e1c7ac",
+      "title": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners",
+      "channel_id": "geo_lens",
+      "primary_source": "TeleSUR (en/VE/latin_america, state_aligned)",
+      "hook_structure": {
+        "type": "数字提示型 + 詩的省略",
+        "text": "9,600人。今、消された人々の数。",
+        "char_count": 18,
+        "char_bounds_ok": "yes (8-22 範囲内)",
+        "comment": "9,600 という大きな数字を冒頭に置き、『消された人々の数』というシニカルな省略で問いを誘発する。視聴者の知的好奇心 (なぜ消された?) を刺激する構造"
+      },
+      "viewer_retention_peaks": {
+        "peak_3s": {
+          "text": "でも実は、そこには監視の届かない「闇」があります。",
+          "position_sec": 3,
+          "type": "問題提起 (闇 = 視覚的メタファー)"
+        },
+        "peak_7s": {
+          "text": "9,600人、テレスール",
+          "position_sec": 7,
+          "type": "数字+ソース提示 (TeleSUR が引用元、信頼性の足固め)"
+        },
+        "peak_15s": {
+          "text": "赤十字の監視すら操作されている異常事態",
+          "position_sec": 15,
+          "type": "中盤の最大衝撃ピーク (赤十字 = ICRC、国際機関への信頼破壊)"
+        },
+        "peak_30s": {
+          "text": "世界の柱が特定の国の前で無力化されている",
+          "position_sec": 30,
+          "type": "構造的問題提起 (国際秩序の二重基準を抽象化)"
+        }
+      },
+      "punchline_structure": {
+        "text": "綺麗事の裏で、監視の目は組織的に遮断されています。力を持つ者がルールを上書きし、弱者は闇に葬られる。あなたは、まだ世界が平等だと言えますか？この暗闇に消された、9,600人。",
+        "char_count": 87,
+        "char_bounds_ok": "yes (70-110 範囲内)",
+        "sinical_x_real_life_landing_match": "★ 達成 — シニカル: '綺麗事の裏で...組織的に遮断' + '力を持つ者がルールを上書きし、弱者は闇に葬られる' (世界秩序の二重基準)。視聴者生活実感への着地: 'あなたは、まだ世界が平等だと言えますか？' (直接的問いかけで視聴者の世界観に介入) + 'この暗闇に消された、9,600人' (hook 数字への loop-3 帰着で記憶定着)",
+        "structure_match_with_f12b1_extension_definition": "yes (シニカル × 視聴者の生活実感への着地)"
+      },
+      "ng_vocabulary_check": {
+        "ng_pattern_hits_in_final": "(no explicit NG list match logged)",
+        "char_validation_retries": 1,
+        "retry_reason": "[ScriptWriter] char validation FAILED (attempt 1/3): hook=23字 — retrying with correction prompt",
+        "retry_outcome": "[ScriptWriter] char validation passed (hook=18, setup=90, twist=179, punchline=87) on attempt 2",
+        "ng_vocab_assessment_in_final": "本文目視チェックでは陰謀論・扇動的表現・差別語等の NG パターンは検出されず。Hydrangea ブランド要件 (シニカル × 知性、情報密度で勝負) を満たす"
+      },
+      "char_bounds_compliance": {
+        "hook": "18字 (bound 8-22) ✅",
+        "setup": "90字 (bound 60-90) ✅ (上限ぴったり)",
+        "twist": "179字 (bound 150-220) ✅",
+        "punchline": "87字 (bound 70-110) ✅",
+        "all_in_bounds": true
+      },
+      "duration_compliance": {
+        "total_duration_sec": 80,
+        "estimated_duration_sec": 83,
+        "platform_profile": "shared (target 80, min 70, max 90)",
+        "in_target_range": "yes (80s = target で完全一致、estimated 83s も範囲 70-90 内)"
+      },
+      "analysis_result_usage": {
+        "analysis_result_present": false,
+        "analysis_result_value": "null",
+        "route_used": "旧ルート write_script (新ルート generate_script_with_analysis は未起動)",
+        "axis_diversity_used": "n/a (新ルート未起動のため selected_perspective.axis 等は不在)",
+        "appraisal_usage": "appraisal_cautions='[抑制] safety gate: en_only + low_jr=0' → [F-13] quality_floor_miss bypass で上書きして通過",
+        "framing_usage": "n/a (新ルート未起動)",
+        "implication": "★ 重要: 新ルート (generate_script_with_analysis) は本番未配線。Phase A.5-3a-verify gate 完了後の概念整理 (particular_angle_metadata / sontaku_signals / 4 軸メタデータ / axis 多様化) は全て本 Slot で未参照。台本品質は旧ルート + Media Critique パターンのみで構築されている"
+      },
+      "particular_angle_metadata_wiring_status": {
+        "wired_in_production": false,
+        "evidence": "src/ 配下 grep で particular_angle_metadata / sontaku_signals が検出されない (`grep -rn 'particular_angle_metadata\\|sontaku_signals' src/` = 0 matches)",
+        "status": "★ 未配線: F-particular-angle-redesign-extension (2026-05-08) で docs 上は正典化されたが、production-pipeline 上の wiring は未実施。次フェーズ (Phase A.5-3b 第二作 or 並走バッチ) で配線が必要",
+        "production_route_used": "write_script (legacy route、analysis_result=None で通過)",
+        "concern": "新ルート未配線のため、新分類体系 (4 分類 系統 1/2/3 + sontaku_signals) は production-pipeline 上では参照されない。LLM 自律判定による台本表現分岐 (PARTICULAR_ANGLE_DEFINITION.md セクション 3.7) も未稼働"
+      },
+      "pattern_selection": {
+        "selected_pattern": "Media Critique",
+        "rationale_director_thought": "事象の本質は「国際人道法の形骸化と、特定国家への例外容認」です。target_enemyは、この不都合な構造を報じない大手メディア。武器[2]メディア批判を選んだ理由は、日本国内の『報道の沈黙』こそが視聴者にとっての盲点であり、知的好奇心を刺激するからです。loop_mechanismは、冒頭の衝撃的な数字に回帰するloop-3を採用し、情報の重みを強調します。",
+        "target_enemy": "大手メディア",
+        "loop_mechanism": "loop-3",
+        "forbidden_patterns_check": "sources_en 存在 (TeleSUR) + global_view 存在 で forbidden 制約クリア、Media Critique 選択可"
+      },
+      "title_layer": {
+        "canonical_title": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners",
+        "platform_title": "日本では報道されない9,600 Detainees",
+        "hook_line": "海外では大きいが、日本では？",
+        "thumbnail_text": "日本で無報道",
+        "title_strength": "strong",
+        "title_style": "Media Critique",
+        "platform_title_concern": "★ '日本では報道されない9,600 Detainees' という platform_title は『日本未報道』を強調するが、F-13.B では has_jp_coverage=True (afpbb 経由) と判定された。タイトル文言と F-13.B 機械判別の乖離が顕在化。台本生成側は (1) 旧ルート + (2) appraisal_cautions=[抑制] bypass を経ているため、F-13.B の True 判定とは独立に『日本未報道』軸でタイトルが組まれた"
+      },
+      "hook_variants_diversity": {
+        "count": 3,
+        "types_present": ["A (数字ショック)", "B (固有名詞否定)", "D (逆説宣言)"],
+        "diversity_ok": "yes (3 タイプ)"
+      }
+    }
+  ],
+  "summary": {
+    "scripts_total": 1,
+    "scripts_with_all_bounds_compliance": 1,
+    "scripts_with_all_bounds_compliance_rate": "1/1 (100%)",
+    "scripts_with_punchline_definition_match": 1,
+    "scripts_using_new_route": 0,
+    "scripts_using_new_route_rate": "0/1 (新ルート未配線)",
+    "particular_angle_metadata_wired": false,
+    "sontaku_signals_wired": false,
+    "overall_quality_assessment": "Slot-1 台本は旧ルート + Media Critique で生成、字数/構造/punchline 定義/シニカル×着地 の全項目で合格。Hook の数字提示型 + 4 段階 peaks 構造 + loop-3 帰着で視聴維持の設計が明確。ただし新ルート (generate_script_with_analysis) は本番未配線で、Phase A.5-3a-verify gate 完了後の概念整理 (particular_angle_metadata + sontaku_signals + axis 多様性) は未参照状態。",
+    "first_video_candidate_evaluation": "★ Slot-1 は台本品質単独評価では『第一作として動画化可能なライン』に到達。Hydrangea ミッション (人権・忖度・メディア批判) + 数字インパクト + 構造的問題提起の 3 軸が揃っている。最終可否はカズヤ主観 (Task F の (5) 軸) に委ねる。"
+  }
+}

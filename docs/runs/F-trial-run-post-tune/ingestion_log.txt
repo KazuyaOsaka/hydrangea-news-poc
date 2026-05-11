@@ -1,0 +1,288 @@
+2026-05-11T13:49:14 [INFO] src.storage.db: DB initialized at /Users/kazuy/Desktop/hydrangea-news-poc/data/db/hydrangea.db
+2026-05-11T13:49:14 [INFO] __main__: [Batch] Starting ingestion batch_id=20260511_044914
+2026-05-11T13:49:14 [INFO] src.ingestion.rss_fetcher: Fetching NHK (https://www3.nhk.or.jp/rss/news/cat0.xml)
+2026-05-11T13:49:15 [INFO] src.ingestion.rss_fetcher:   → NHK: 7 entries (HTTP status=200)
+2026-05-11T13:49:15 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/nhk_20260511_044914.json
+2026-05-11T13:49:15 [INFO] src.ingestion.rss_fetcher: Fetching NHK_Politics (https://www3.nhk.or.jp/rss/news/cat4.xml)
+2026-05-11T13:49:15 [INFO] src.ingestion.rss_fetcher:   → NHK_Politics: 44 entries (HTTP status=200)
+2026-05-11T13:49:15 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/nhk_politics_20260511_044914.json
+2026-05-11T13:49:15 [INFO] src.ingestion.rss_fetcher: Fetching NHK_Economy (https://www3.nhk.or.jp/rss/news/cat6.xml)
+2026-05-11T13:49:15 [INFO] src.ingestion.rss_fetcher:   → NHK_Economy: 50 entries (HTTP status=200)
+2026-05-11T13:49:15 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/nhk_economy_20260511_044914.json
+2026-05-11T13:49:15 [INFO] src.ingestion.rss_fetcher: Fetching Nikkei (https://assets.wor.jp/rss/rdf/nikkei/news.rdf)
+2026-05-11T13:49:15 [INFO] src.ingestion.rss_fetcher:   → Nikkei: 30 entries (HTTP status=200)
+2026-05-11T13:49:15 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/nikkei_20260511_044914.json
+2026-05-11T13:49:15 [INFO] src.ingestion.rss_fetcher: Fetching Asahi (https://rss.asahi.com/rss/asahi/newsheadlines.rdf)
+2026-05-11T13:49:16 [INFO] src.ingestion.rss_fetcher:   → Asahi: 40 entries (HTTP status=200)
+2026-05-11T13:49:16 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/asahi_20260511_044914.json
+2026-05-11T13:49:16 [INFO] src.ingestion.rss_fetcher: Fetching Reuters (https://news.google.com/rss/search?q=when:24h+allinurl:reuters.com&ceid=US:en&hl=en-US&gl=US)
+2026-05-11T13:49:16 [WARNING] src.ingestion.rss_fetcher:   → Reuters: 0 entries (HTTP status=200) — feed URL が無効・廃止済みの可能性があります。sources.yaml を確認してください。
+2026-05-11T13:49:16 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/reuters_20260511_044914.json
+2026-05-11T13:49:16 [INFO] src.ingestion.rss_fetcher: Fetching APNews (https://news.google.com/rss/search?q=when:24h+allinurl:apnews.com&ceid=US:en&hl=en-US&gl=US)
+2026-05-11T13:49:16 [WARNING] src.ingestion.rss_fetcher:   → APNews: 0 entries (HTTP status=200) — feed URL が無効・廃止済みの可能性があります。sources.yaml を確認してください。
+2026-05-11T13:49:16 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/apnews_20260511_044914.json
+2026-05-11T13:49:16 [INFO] src.ingestion.rss_fetcher: Fetching BBC (http://feeds.bbci.co.uk/news/rss.xml)
+2026-05-11T13:49:17 [INFO] src.ingestion.rss_fetcher:   → BBC: 41 entries (HTTP status=302)
+2026-05-11T13:49:17 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/bbc_20260511_044914.json
+2026-05-11T13:49:17 [INFO] src.ingestion.rss_fetcher: Fetching Bloomberg (https://news.google.com/rss/search?q=when:24h+allinurl:bloomberg.com&ceid=US:en&hl=en-US&gl=US)
+2026-05-11T13:49:17 [WARNING] src.ingestion.rss_fetcher:   → Bloomberg: 0 entries (HTTP status=200) — feed URL が無効・廃止済みの可能性があります。sources.yaml を確認してください。
+2026-05-11T13:49:17 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/bloomberg_20260511_044914.json
+2026-05-11T13:49:17 [INFO] src.ingestion.rss_fetcher: Fetching FinancialTimes (https://www.ft.com/rss/home)
+2026-05-11T13:49:18 [INFO] src.ingestion.rss_fetcher:   → FinancialTimes: 9 entries (HTTP status=301)
+2026-05-11T13:49:18 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/financialtimes_20260511_044914.json
+2026-05-11T13:49:18 [INFO] src.ingestion.rss_fetcher: Fetching AlJazeera (https://www.aljazeera.com/xml/rss/all.xml)
+2026-05-11T13:49:18 [INFO] src.ingestion.rss_fetcher:   → AlJazeera: 25 entries (HTTP status=200)
+2026-05-11T13:49:18 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/aljazeera_20260511_044914.json
+2026-05-11T13:49:18 [INFO] src.ingestion.rss_fetcher: Fetching France24 (https://www.france24.com/en/rss)
+2026-05-11T13:49:19 [INFO] src.ingestion.rss_fetcher:   → France24: 24 entries (HTTP status=200)
+2026-05-11T13:49:19 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/france24_20260511_044914.json
+2026-05-11T13:49:19 [INFO] src.ingestion.rss_fetcher: Fetching CNA (https://news.google.com/rss/search?q=when:24h+allinurl:channelnewsasia.com&ceid=US:en&hl=en-US&gl=US)
+2026-05-11T13:49:19 [WARNING] src.ingestion.rss_fetcher:   → CNA: 0 entries (HTTP status=200) — feed URL が無効・廃止済みの可能性があります。sources.yaml を確認してください。
+2026-05-11T13:49:19 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/cna_20260511_044914.json
+2026-05-11T13:49:19 [INFO] src.ingestion.rss_fetcher: Fetching TheGuardian (https://www.theguardian.com/world/rss)
+2026-05-11T13:49:20 [INFO] src.ingestion.rss_fetcher:   → TheGuardian: 45 entries (HTTP status=200)
+2026-05-11T13:49:20 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/theguardian_20260511_044914.json
+2026-05-11T13:49:20 [INFO] src.ingestion.rss_fetcher: Fetching LeMonde (https://www.lemonde.fr/en/rss/une.xml)
+2026-05-11T13:49:20 [INFO] src.ingestion.rss_fetcher:   → LeMonde: 18 entries (HTTP status=200)
+2026-05-11T13:49:20 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/lemonde_20260511_044914.json
+2026-05-11T13:49:20 [INFO] src.ingestion.rss_fetcher: Fetching DerSpiegel (https://www.spiegel.de/international/index.rss)
+2026-05-11T13:49:21 [INFO] src.ingestion.rss_fetcher:   → DerSpiegel: 20 entries (HTTP status=200)
+2026-05-11T13:49:21 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/derspiegel_20260511_044914.json
+2026-05-11T13:49:21 [INFO] src.ingestion.rss_fetcher: Fetching ElPais (https://feeds.elpais.com/mrss-s/pages/ep/site/english.elpais.com/portada)
+2026-05-11T13:49:22 [INFO] src.ingestion.rss_fetcher:   → ElPais: 50 entries (HTTP status=200)
+2026-05-11T13:49:22 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/elpais_20260511_044914.json
+2026-05-11T13:49:22 [INFO] src.ingestion.rss_fetcher: Fetching Yonhap (https://en.yna.co.kr/RSS/news.xml)
+2026-05-11T13:49:22 [INFO] src.ingestion.rss_fetcher:   → Yonhap: 50 entries (HTTP status=200)
+2026-05-11T13:49:22 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/yonhap_20260511_044914.json
+2026-05-11T13:49:22 [INFO] src.ingestion.rss_fetcher: Fetching StraitsTimes (https://www.straitstimes.com/news/world/rss.xml)
+2026-05-11T13:49:22 [INFO] src.ingestion.rss_fetcher:   → StraitsTimes: 50 entries (HTTP status=200)
+2026-05-11T13:49:22 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/straitstimes_20260511_044914.json
+2026-05-11T13:49:22 [INFO] src.ingestion.rss_fetcher: Fetching TimesOfIndia (https://timesofindia.indiatimes.com/rssfeedstopstories.cms)
+2026-05-11T13:49:23 [INFO] src.ingestion.rss_fetcher:   → TimesOfIndia: 41 entries (HTTP status=200)
+2026-05-11T13:49:23 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/timesofindia_20260511_044914.json
+2026-05-11T13:49:23 [INFO] src.ingestion.rss_fetcher: Fetching ABCNewsAU (https://www.abc.net.au/news/feed/51120/rss.xml)
+2026-05-11T13:49:23 [INFO] src.ingestion.rss_fetcher:   → ABCNewsAU: 25 entries (HTTP status=200)
+2026-05-11T13:49:23 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/abcnewsau_20260511_044914.json
+2026-05-11T13:49:23 [INFO] src.ingestion.rss_fetcher: Fetching News24 (https://feeds.news24.com/articles/news24/TopStories/rss)
+2026-05-11T13:49:23 [INFO] src.ingestion.rss_fetcher:   → News24: 20 entries (HTTP status=301)
+2026-05-11T13:49:23 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/news24_20260511_044914.json
+2026-05-11T13:49:23 [INFO] src.ingestion.rss_fetcher: Fetching NYTWorld (https://rss.nytimes.com/services/xml/rss/nyt/World.xml)
+2026-05-11T13:49:24 [INFO] src.ingestion.rss_fetcher:   → NYTWorld: 50 entries (HTTP status=200)
+2026-05-11T13:49:24 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/nytworld_20260511_044914.json
+2026-05-11T13:49:24 [INFO] src.ingestion.rss_fetcher: Fetching FolhaDeSPaulo (https://feeds.folha.uol.com.br/internacional/en/rss091.xml)
+2026-05-11T13:49:26 [INFO] src.ingestion.rss_fetcher:   → FolhaDeSPaulo: 15 entries (HTTP status=200)
+2026-05-11T13:49:26 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/folhadespaulo_20260511_044914.json
+2026-05-11T13:49:26 [INFO] src.ingestion.rss_fetcher: Fetching BuenosAiresTimes (https://www.batimes.com.ar/feed)
+2026-05-11T13:49:27 [INFO] src.ingestion.rss_fetcher:   → BuenosAiresTimes: 50 entries (HTTP status=200)
+2026-05-11T13:49:27 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/buenosairestimes_20260511_044914.json
+2026-05-11T13:49:27 [INFO] src.ingestion.rss_fetcher: Fetching Sydney_Morning_Herald (https://www.smh.com.au/rss/feed.xml)
+2026-05-11T13:49:28 [INFO] src.ingestion.rss_fetcher:   → Sydney_Morning_Herald: 20 entries (HTTP status=200)
+2026-05-11T13:49:28 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/sydney_morning_herald_20260511_044914.json
+2026-05-11T13:49:28 [INFO] src.ingestion.rss_fetcher: Fetching Guardian_Australia (https://www.theguardian.com/australia-news/rss)
+2026-05-11T13:49:28 [INFO] src.ingestion.rss_fetcher:   → Guardian_Australia: 23 entries (HTTP status=200)
+2026-05-11T13:49:28 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/guardian_australia_20260511_044914.json
+2026-05-11T13:49:28 [INFO] src.ingestion.rss_fetcher: Fetching The_Hindustan_Times (https://www.hindustantimes.com/feeds/rss/world-news/rssfeed.xml)
+2026-05-11T13:49:28 [INFO] src.ingestion.rss_fetcher:   → The_Hindustan_Times: 50 entries (HTTP status=200)
+2026-05-11T13:49:28 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/the_hindustan_times_20260511_044914.json
+2026-05-11T13:49:28 [INFO] src.ingestion.rss_fetcher: Fetching Middle_East_Eye (https://www.middleeasteye.net/rss)
+2026-05-11T13:49:29 [INFO] src.ingestion.rss_fetcher:   → Middle_East_Eye: 20 entries (HTTP status=200)
+2026-05-11T13:49:29 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/middle_east_eye_20260511_044914.json
+2026-05-11T13:49:29 [INFO] src.ingestion.rss_fetcher: Fetching The_Initium (https://theinitium.com/rss/)
+2026-05-11T13:49:29 [INFO] src.ingestion.rss_fetcher:   → The_Initium: 15 entries (HTTP status=200)
+2026-05-11T13:49:29 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/the_initium_20260511_044914.json
+2026-05-11T13:49:29 [INFO] src.ingestion.rss_fetcher: Fetching Meduza (https://meduza.io/rss/en/all)
+2026-05-11T13:49:29 [INFO] src.ingestion.rss_fetcher:   → Meduza: 30 entries (HTTP status=200)
+2026-05-11T13:49:29 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/meduza_20260511_044914.json
+2026-05-11T13:49:29 [INFO] src.ingestion.rss_fetcher: Fetching Il_Sole_24_Ore (https://www.ilsole24ore.com/rss/mondo.xml)
+2026-05-11T13:49:30 [INFO] src.ingestion.rss_fetcher:   → Il_Sole_24_Ore: 12 entries (HTTP status=200)
+2026-05-11T13:49:30 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/il_sole_24_ore_20260511_044914.json
+2026-05-11T13:49:30 [INFO] src.ingestion.rss_fetcher: Fetching The_Atlantic (https://www.theatlantic.com/feed/all/)
+2026-05-11T13:49:31 [INFO] src.ingestion.rss_fetcher:   → The_Atlantic: 25 entries (HTTP status=200)
+2026-05-11T13:49:31 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/the_atlantic_20260511_044914.json
+2026-05-11T13:49:31 [INFO] src.ingestion.rss_fetcher: Fetching Politico (https://rss.politico.com/politics-news.xml)
+2026-05-11T13:49:31 [INFO] src.ingestion.rss_fetcher:   → Politico: 30 entries (HTTP status=200)
+2026-05-11T13:49:31 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/politico_20260511_044914.json
+2026-05-11T13:49:31 [INFO] src.ingestion.rss_fetcher: Fetching Eurasianet (https://eurasianet.org/rss.xml)
+2026-05-11T13:49:31 [WARNING] src.ingestion.rss_fetcher:   → Eurasianet: 0 entries (HTTP status=404) — feed URL が無効・廃止済みの可能性があります。sources.yaml を確認してください。
+2026-05-11T13:49:31 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/eurasianet_20260511_044914.json
+2026-05-11T13:49:31 [INFO] src.ingestion.rss_fetcher: Fetching TeleSUR (https://www.telesurenglish.net/rss/)
+2026-05-11T13:49:34 [INFO] src.ingestion.rss_fetcher:   → TeleSUR: 30 entries (HTTP status=301)
+2026-05-11T13:49:34 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/telesur_20260511_044914.json
+2026-05-11T13:49:34 [INFO] src.ingestion.rss_fetcher: Fetching Mada_Masr (https://www.madamasr.com/en/feed/)
+2026-05-11T13:49:35 [INFO] src.ingestion.rss_fetcher:   → Mada_Masr: 10 entries (HTTP status=200)
+2026-05-11T13:49:35 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/mada_masr_20260511_044914.json
+2026-05-11T13:49:35 [INFO] src.ingestion.rss_fetcher: Fetching Yomiuri (https://news.google.com/rss/search?q=site%3Ayomiuri.co.jp&hl=ja&gl=JP&ceid=JP%3Aja)
+2026-05-11T13:49:36 [INFO] src.ingestion.rss_fetcher:   → Yomiuri: 50 entries (HTTP status=200)
+2026-05-11T13:49:36 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/yomiuri_20260511_044914.json
+2026-05-11T13:49:36 [INFO] src.ingestion.rss_fetcher: Fetching Sankei (https://news.google.com/rss/search?q=site%3Asankei.com&hl=ja&gl=JP&ceid=JP%3Aja)
+2026-05-11T13:49:37 [INFO] src.ingestion.rss_fetcher:   → Sankei: 50 entries (HTTP status=200)
+2026-05-11T13:49:37 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/sankei_20260511_044914.json
+2026-05-11T13:49:37 [INFO] src.ingestion.rss_fetcher: Fetching Tokyo_Shimbun (https://news.google.com/rss/search?q=site%3Atokyo-np.co.jp&hl=ja&gl=JP&ceid=JP%3Aja)
+2026-05-11T13:49:37 [INFO] src.ingestion.rss_fetcher:   → Tokyo_Shimbun: 50 entries (HTTP status=200)
+2026-05-11T13:49:37 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/tokyo_shimbun_20260511_044914.json
+2026-05-11T13:49:37 [INFO] src.ingestion.rss_fetcher: Fetching WION (https://news.google.com/rss/search?q=site%3Awionews.com&hl=en-IN&gl=IN&ceid=IN%3Aen)
+2026-05-11T13:49:38 [INFO] src.ingestion.rss_fetcher:   → WION: 50 entries (HTTP status=200)
+2026-05-11T13:49:38 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/wion_20260511_044914.json
+2026-05-11T13:49:38 [INFO] src.ingestion.rss_fetcher: Fetching Caixin_Global (https://news.google.com/rss/search?q=site%3Acaixinglobal.com&hl=en&gl=US&ceid=US%3Aen)
+2026-05-11T13:49:39 [INFO] src.ingestion.rss_fetcher:   → Caixin_Global: 50 entries (HTTP status=302)
+2026-05-11T13:49:39 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/caixin_global_20260511_044914.json
+2026-05-11T13:49:39 [INFO] src.ingestion.rss_fetcher: Fetching Mainichi (https://news.google.com/rss/search?q=site%3Amainichi.jp&hl=ja&gl=JP&ceid=JP%3Aja)
+2026-05-11T13:49:39 [INFO] src.ingestion.rss_fetcher:   → Mainichi: 50 entries (HTTP status=200)
+2026-05-11T13:49:39 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/mainichi_20260511_044914.json
+2026-05-11T13:49:39 [INFO] src.ingestion.rss_fetcher: Fetching Kyodo (https://news.google.com/rss/search?q=site%3A47news.jp&hl=ja&gl=JP&ceid=JP%3Aja)
+2026-05-11T13:49:40 [INFO] src.ingestion.rss_fetcher:   → Kyodo: 50 entries (HTTP status=200)
+2026-05-11T13:49:40 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/kyodo_20260511_044914.json
+2026-05-11T13:49:40 [INFO] src.ingestion.rss_fetcher: Fetching JIJI (https://news.google.com/rss/search?q=site%3Ajiji.com&hl=ja&gl=JP&ceid=JP%3Aja)
+2026-05-11T13:49:41 [INFO] src.ingestion.rss_fetcher:   → JIJI: 50 entries (HTTP status=200)
+2026-05-11T13:49:41 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/jiji_20260511_044914.json
+2026-05-11T13:49:41 [INFO] src.ingestion.rss_fetcher: Fetching Bloomberg_JP (https://news.google.com/rss/search?q=site%3Abloomberg.co.jp&hl=ja&gl=JP&ceid=JP%3Aja)
+2026-05-11T13:49:42 [INFO] src.ingestion.rss_fetcher:   → Bloomberg_JP: 50 entries (HTTP status=200)
+2026-05-11T13:49:42 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/bloomberg_jp_20260511_044914.json
+2026-05-11T13:49:42 [INFO] src.ingestion.rss_fetcher: Fetching Reuters_JP (https://news.google.com/rss/search?q=site%3Ajp.reuters.com&hl=ja&gl=JP&ceid=JP%3Aja)
+2026-05-11T13:49:43 [INFO] src.ingestion.rss_fetcher:   → Reuters_JP: 50 entries (HTTP status=200)
+2026-05-11T13:49:43 [INFO] src.ingestion.rss_fetcher: Saved raw: data/raw/reuters_jp_20260511_044914.json
+2026-05-11T13:49:43 [INFO] __main__: [Batch] Fetched 47 source file(s)
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 7 items [NHK] → data/normalized/nhk_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 44 items [NHK_Politics] → data/normalized/nhk_politics_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [NHK_Economy] → data/normalized/nhk_economy_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 30 items [Nikkei] → data/normalized/nikkei_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 40 items [Asahi] → data/normalized/asahi_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 0 items [Reuters] → data/normalized/reuters_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 0 items [APNews] → data/normalized/apnews_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 41 items [BBC] → data/normalized/bbc_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 0 items [Bloomberg] → data/normalized/bloomberg_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 9 items [FinancialTimes] → data/normalized/financialtimes_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 25 items [AlJazeera] → data/normalized/aljazeera_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 24 items [France24] → data/normalized/france24_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 0 items [CNA] → data/normalized/cna_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 45 items [TheGuardian] → data/normalized/theguardian_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 18 items [LeMonde] → data/normalized/lemonde_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 20 items [DerSpiegel] → data/normalized/derspiegel_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [ElPais] → data/normalized/elpais_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [Yonhap] → data/normalized/yonhap_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [StraitsTimes] → data/normalized/straitstimes_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 41 items [TimesOfIndia] → data/normalized/timesofindia_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 25 items [ABCNewsAU] → data/normalized/abcnewsau_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 20 items [News24] → data/normalized/news24_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [NYTWorld] → data/normalized/nytworld_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 15 items [FolhaDeSPaulo] → data/normalized/folhadespaulo_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [BuenosAiresTimes] → data/normalized/buenosairestimes_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 20 items [Sydney_Morning_Herald] → data/normalized/sydney_morning_herald_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 23 items [Guardian_Australia] → data/normalized/guardian_australia_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [The_Hindustan_Times] → data/normalized/the_hindustan_times_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 20 items [Middle_East_Eye] → data/normalized/middle_east_eye_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 15 items [The_Initium] → data/normalized/the_initium_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 30 items [Meduza] → data/normalized/meduza_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 12 items [Il_Sole_24_Ore] → data/normalized/il_sole_24_ore_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 25 items [The_Atlantic] → data/normalized/the_atlantic_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 30 items [Politico] → data/normalized/politico_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 0 items [Eurasianet] → data/normalized/eurasianet_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 30 items [TeleSUR] → data/normalized/telesur_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 10 items [Mada_Masr] → data/normalized/mada_masr_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [Yomiuri] → data/normalized/yomiuri_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [Sankei] → data/normalized/sankei_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [Tokyo_Shimbun] → data/normalized/tokyo_shimbun_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [WION] → data/normalized/wion_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [Caixin_Global] → data/normalized/caixin_global_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [Mainichi] → data/normalized/mainichi_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [Kyodo] → data/normalized/kyodo_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [JIJI] → data/normalized/jiji_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [Bloomberg_JP] → data/normalized/bloomberg_jp_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: Normalized 50 items [Reuters_JP] → data/normalized/reuters_jp_20260511_044914_normalized.json
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer: === Batch 20260511_044914 Normalization Summary ===
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   ABCNewsAU            →  25 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   AlJazeera            →  25 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Asahi                →  40 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   BBC                  →  41 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Bloomberg_JP         →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   BuenosAiresTimes     →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Caixin_Global        →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   DerSpiegel           →  20 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   ElPais               →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   FinancialTimes       →   9 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   FolhaDeSPaulo        →  15 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   France24             →  24 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Guardian_Australia   →  23 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Il_Sole_24_Ore       →  12 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   JIJI                 →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Kyodo                →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   LeMonde              →  18 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Mada_Masr            →  10 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Mainichi             →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Meduza               →  30 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Middle_East_Eye      →  20 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   NHK                  →   7 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   NHK_Economy          →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   NHK_Politics         →  44 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   NYTWorld             →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   News24               →  20 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Nikkei               →  30 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Politico             →  30 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Reuters_JP           →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Sankei               →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   StraitsTimes         →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Sydney_Morning_Herald →  20 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   TeleSUR              →  30 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   TheGuardian          →  45 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   The_Atlantic         →  25 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   The_Hindustan_Times  →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   The_Initium          →  15 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   TimesOfIndia         →  41 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Tokyo_Shimbun        →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   WION                 →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Yomiuri              →  50 articles
+2026-05-11T13:49:43 [INFO] src.ingestion.normalizer:   Yonhap               →  50 articles
+2026-05-11T13:49:43 [INFO] __main__: [Batch] Normalized 47 file(s)
+2026-05-11T13:49:43 [INFO] __main__: [Batch] Articles: 1229 new, 240 duplicate(s) skipped
+2026-05-11T13:49:43 [INFO] src.storage.db: [Batch] Registered batch 20260511_044914: 47 raw, 47 normalized
+2026-05-11T13:49:43 [INFO] src.storage.db: [Dedup] Saved 1229 seen URLs to DB
+2026-05-11T13:49:43 [INFO] __main__: === Source Ingestion Summary ===
+2026-05-11T13:49:43 [INFO] __main__:   ABCNewsAU             fetched= 25  normalized= 25  [OK]
+2026-05-11T13:49:43 [WARNING] __main__:   APNews                fetched=  0  normalized=  0  [EMPTY]
+2026-05-11T13:49:43 [INFO] __main__:   AlJazeera             fetched= 25  normalized= 25  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Asahi                 fetched= 40  normalized= 40  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   BBC                   fetched= 41  normalized= 41  [OK]
+2026-05-11T13:49:43 [WARNING] __main__:   Bloomberg             fetched=  0  normalized=  0  [EMPTY]
+2026-05-11T13:49:43 [INFO] __main__:   Bloomberg_JP          fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   BuenosAiresTimes      fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [WARNING] __main__:   CNA                   fetched=  0  normalized=  0  [EMPTY]
+2026-05-11T13:49:43 [INFO] __main__:   Caixin_Global         fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   DerSpiegel            fetched= 20  normalized= 20  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   ElPais                fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [WARNING] __main__:   Eurasianet            fetched=  0  normalized=  0  [EMPTY]
+2026-05-11T13:49:43 [INFO] __main__:   FinancialTimes        fetched=  9  normalized=  9  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   FolhaDeSPaulo         fetched= 15  normalized= 15  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   France24              fetched= 24  normalized= 24  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Guardian_Australia    fetched= 23  normalized= 23  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Il_Sole_24_Ore        fetched= 12  normalized= 12  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   JIJI                  fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Kyodo                 fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   LeMonde               fetched= 18  normalized= 18  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Mada_Masr             fetched= 10  normalized= 10  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Mainichi              fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Meduza                fetched= 30  normalized= 30  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Middle_East_Eye       fetched= 20  normalized= 20  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   NHK                   fetched=  7  normalized=  7  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   NHK_Economy           fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   NHK_Politics          fetched= 44  normalized= 44  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   NYTWorld              fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   News24                fetched= 20  normalized= 20  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Nikkei                fetched= 30  normalized= 30  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Politico              fetched= 30  normalized= 30  [OK]
+2026-05-11T13:49:43 [WARNING] __main__:   Reuters               fetched=  0  normalized=  0  [EMPTY]
+2026-05-11T13:49:43 [INFO] __main__:   Reuters_JP            fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Sankei                fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   StraitsTimes          fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Sydney_Morning_Herald  fetched= 20  normalized= 20  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   TeleSUR               fetched= 30  normalized= 30  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   TheGuardian           fetched= 45  normalized= 45  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   The_Atlantic          fetched= 25  normalized= 25  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   The_Hindustan_Times   fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   The_Initium           fetched= 15  normalized= 15  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   TimesOfIndia          fetched= 41  normalized= 41  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Tokyo_Shimbun         fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   WION                  fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Yomiuri               fetched= 50  normalized= 50  [OK]
+2026-05-11T13:49:43 [INFO] __main__:   Yonhap                fetched= 50  normalized= 50  [OK]
+
+完了: batch_id=20260511_044914, raw=47 files, normalized=47 files, new=1229, skipped_duplicates=240

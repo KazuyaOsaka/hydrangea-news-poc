@@ -1,11 +1,10 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-09 (F-jp-coverage-tune-followup 完了 verdict=fail、ただし WL
-マッチング階層判定化 + WL 拡張 3 ドメインで Recall covered +47.36pp / F1 covered
-+27.92pp の大幅改善 + F1 covered 0.8718 で threshold 初突破、残課題 4 軸に分離
-して FUTURE_WORK 記録: (a) Recall 90% 突破 = F-jp-coverage-tune-followup-2 候補 /
-(b) Precision blind 母数問題 = Phase A.5-3b 第二作 / (c) Tier 一致率 = Grounding
-非決定性 / (d) Stream accuracy = stream_3 過剰検出)
+最終更新: 2026-05-11 (F-trial-run-post-tune 完了、F-jp-coverage-tune-followup 改修後の
+本番試運転 + 第一作題材ランク付け、3/3 で WL 拡張 (afpbb/nippon) ヒット = 本番影響の
+強さ確認 + 第一作最有力候補 Slot-1 cls-6889e9e1c7ac 機械スコア 10pt 確定、新規残課題
+3 件追加 = F-13.B WL ヒット品質検証 / verify_two_stage 本番配線判断 /
+particular_angle_metadata + sontaku_signals 本番配線判断)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -101,6 +100,40 @@ F-stream-2-filter-design 着手 OK 状態に。
 - ~~**F-jp-coverage-tune-followup** (★最優先、2026-05-09 完了、完了済みセクション参照)~~
 
 - ~~**F-jp-coverage-tune** (★最優先、2026-05-09 完了、完了済みセクション参照)~~
+
+- ~~**F-trial-run-post-tune** (★最優先、2026-05-11 完了、完了済みセクション参照)~~
+
+- **F-13.B WL ヒット品質の独立検証** ★高 (F-trial-run-post-tune / 2026-05-11 で観察)
+  - 背景: F-trial-run-post-tune 本番試運転で 3/3 has_jp_coverage=True 返却。ただし `matched_urls` が全て **ベアドメインのみ** (`https://afpbb.com` / `https://nippon.com` のみ、article path なし)。Grounding API の chunk.web.title 抽出経路で `afpbb.com` という文字列をドメイン形式として識別 + `_domain_matches_hierarchy` 階層判定で Tier 認定する仕組みが、「afpbb.com が当該事象を実際に報道している」ことを必ずしも保証しない (= 誤陽性リスク)。F-jp-coverage-tune-followup の Step C 測定 (Recall covered 89.47%) も同じ抽出経路を経ているため、ゴールデンセット測定値も同等の懸念がある可能性。
+  - 対応案: (a) WebSearch 後追い検証 (Anthropic web search で本試運転 3 Slot + ゴールデンセット 23 件の matched_domains が実際に報道しているか手作業 + WebSearch で確認)、(b) Grounding chunk の生データダンプ (`_search_with_grounding` / `_search_with_grounding_two_stage` の chunk.web 配列を全件 JSON 保存して目視確認)、(c) Grounding 検索クエリ品質改善 (英語タイトル → 日本語キーワード抽出 + article path 取得を促す)
+  - 検討時期: Phase A.5-3b 第一作着手判断と同時 (= Slot-1 cls-6889e9e1c7ac が真に divergence ルート妥当かどうか確認するため)
+  - 想定工数: 2-4 時間 (WebSearch 後追い + Grounding chunk ダンプ + 整理)
+  - 関連ファイル: `src/triage/jp_coverage_verifier.py` (`_extract_domain_from_chunk` 戦略 1/2)、`docs/runs/F-trial-run-post-tune/f13b_output_analysis.json` (本問題の記録)、`docs/runs/F-jp-coverage-tune-followup/measurement_result_step_c.json` (ゴールデンセット測定の同問題リスク)
+  - 関連: F-jp-coverage-tune-followup-2 (★ 多クエリ並列発行と同時検討可)、Phase A.5-3b 第一作起案 (本検証結果が前提条件になる可能性)
+
+- **verify_two_stage 本番配線判断** (F-trial-run-post-tune / 2026-05-11 で観察)
+  - 背景: F-jp-coverage-tune (2026-05-09) で `verify_two_stage()` 二段階クエリ生成メソッドが新規実装され、F-jp-coverage-tune-followup (2026-05-09) で `_match_whitelist` 階層判定化 + WL 拡張で機械精度が改善 (F1 covered 0.8718 で threshold 初突破) したが、**production main.py:3187 は legacy `verify()` (broad-only) のみ呼び出し** で本番未配線。F-trial-run-post-tune で stream_1/2/3 機械判別が production-pipeline 上で稼働しないことが確認された。
+  - 対応案: (a) `src/main.py` を改修して `verify_two_stage()` を呼び出すように切り替え (`particular_angle` 引数を analysis_result から導出する必要あり)、(b) `verify_two_stage()` 戻り値 (`TwoStageVerifyResult`) の `stream` 値を `final_routing` ロジックに反映 (stream_1_silence_gap → blind_spot_global, stream_2_perspective_gap → divergence pattern + 系統 2 ラベル, stream_3_candidate → divergence pattern + 系統 3 ラベル, unknown → 既存挙動)、(c) `analysis_result.selected_perspective` から `particular_angle.core_question` を抽出する変換層を実装、(d) F-stream-2-filter-design との関係整理 (= verify_two_stage 配線後、stream_3 候補に対する解説価値判定を F-stream-2-filter-design で行う設計)
+  - 検討時期: F-stream-2-filter-design 責務範囲再評価と同時 OR Phase A.5-3b 第一作着手後の並走バッチ
+  - 想定工数: 4-8 時間 (main.py 改修 + analysis_result → particular_angle 変換 + 既存 verify() からの段階的移行設計 + テスト + 試運転)
+  - 関連ファイル: `src/main.py` (3170-3220 行帯の F-13.B 呼び出し箇所、★ 不変原則対象外)、`src/triage/jp_coverage_verifier.py` (既存メソッド完全不変)、`src/shared/models.py` (`AnalysisResult` から `particular_angle` を導出する論理)、関連 docs (`docs/PARTICULAR_ANGLE_DEFINITION.md`)
+  - 関連: F-stream-2-filter-design (★ 配線後の系統 3 候補処理を担う)、Phase A.5-3b 第一作起案 (試運転で本配線効果を確認)、F-particular-angle-redesign-extension (4 分類化 + sontaku_signals 独立化の本番反映を兼ねる)
+
+- **particular_angle_metadata + sontaku_signals の本番配線判断** (F-trial-run-post-tune / 2026-05-11 で観察)
+  - 背景: F-particular-angle-redesign-extension (2026-05-08) で `particular_angle_metadata` (3 要素 + confidence) + `sontaku_signals` (level + type + extraction_confidence) を別軸メタデータとして正典化、`docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 3.7 で台本表現方向性も正典化したが、**src/ 配下 grep で 0 件 = 本番未配線**。F-trial-run-post-tune Slot-1 (cls-6889e9e1c7ac、editorial_mission_score=86.0、Hydrangea ど真ん中) でも `analysis_result=null` で旧ルート + F-13 隠れ層 bypass で台本生成 = 新ルート `generate_script_with_analysis` 未起動。
+  - 対応案: (a) `src/shared/models.py` に `ParticularAngleMetadata` + `SontakuSignals` Pydantic クラスを追加、`AnalysisResult` に optional フィールドとして組み込む (新規追加のみ、不変原則 4 例外条件適用要)、(b) `src/analysis/` 配下に LLM 抽出ロジック (`scripts/extract_particular_angle.py` のロジックを `src/analysis/particular_angle_extractor.py` に移植)、(c) `src/generation/script_writer.py` `generate_script_with_analysis` 新ルートの引数に追加、(d) `configs/prompts/analysis/geo_lens/script_with_analysis.md` に `particular_angle_metadata` + `sontaku_signals` を渡すプロンプト改修 (LLM の自律判断に委ねる設計、クラウド誤り 9 各論コントロール回避)
+  - 検討時期: verify_two_stage 本番配線と同時 OR Phase A.5-3b 第一作着手後の並走バッチ。F-stream-2-filter-design は本配線を前提に動作する設計が望ましい。
+  - 想定工数: 8-16 時間 (model 追加 + analysis 配線 + script_writer 新ルート改修 + プロンプト改修 + テスト + 試運転)
+  - 関連ファイル: `src/shared/models.py` (★ ★ AnalysisResult 拡張)、`src/analysis/particular_angle_extractor.py` (新規想定、`src/analysis/` 不変原則 4 例外要)、`src/generation/script_writer.py` (新ルート `generate_script_with_analysis` 拡張)、`configs/prompts/analysis/geo_lens/script_with_analysis.md` (プロンプト改修)、`docs/PARTICULAR_ANGLE_DEFINITION.md` (正典)
+  - 関連: F-particular-angle-redesign-extension (正典化バッチ)、verify_two_stage 本番配線判断 (関連 task)、F-stream-2-filter-design (本配線で sontaku_signals.level を参照する設計)
+
+- **F-stream-2-filter-design 責務範囲再評価 (本番運用視点反映)** (F-trial-run-post-tune / 2026-05-11 で論点強化)
+  - 背景: F-trial-run-post-tune で has_jp_coverage=True 3/3 = 全 Slot が divergence ルートに進行、blind_spot_global ルートが機械判別で消滅した。F-stream-2-filter-design は本来「系統 3 (framing_inversion) のみ + sontaku_signals.level を解説価値判定の追加軸として参照」というスコープに縮減されていたが、本番実挙動を踏まえると **Hydrangea ブランドメッセージ (『日本未報道』) の維持には F-stream-2-filter-design 二段階フィルタが不可欠** であることが顕在化。stream_3 過剰検出問題 ((d)) と合わせて責務範囲を再評価する必要あり。
+  - 対応案: F-stream-2-filter-design 着手時に、本バッチで観察された「divergence ルートに流れた Slot-1 (Hydrangea ど真ん中) を救出する仕組み」を責務範囲として組み込む。具体的には、divergence ルート上の事象に対しても「特定角度は日本未報道」判定を行い、F-1 EditorialMissionFilter の judgment を信頼する場合は blind_spot_global 様の処理に切り替えるロジック (= 二段階フィルタの第 1 段で broad coverage が判定された後、第 2 段で perspective_gap を判定する設計)
+  - 検討時期: F-stream-2-filter-design 着手判断と同時 (★ verify_two_stage 本番配線判断 + particular_angle_metadata 配線判断と密接に関連)
+  - 想定工数: F-stream-2-filter-design 本体 + 1-2 時間 (本観察事項の反映)
+  - 関連ファイル: F-stream-2-filter-design 範疇全般
+  - 関連: verify_two_stage 本番配線判断、particular_angle_metadata + sontaku_signals 配線判断、F-jp-coverage-tune-followup-2
 
 - **F-jp-coverage-tune-followup-2** ★候補 (F-jp-coverage-tune-followup / 2026-05-09 verdict=fail 残課題 (a) Recall 90% 突破 + (c) Tier 一致率 Grounding 非決定性、★ カズヤ判断後着手)
   - 背景: F-jp-coverage-tune-followup で WL マッチング階層判定化 + WL 拡張 3 ドメインで Recall covered 42.11% → **89.47%** (+47.36pp) 大幅改善 + F1 covered 0.5926 → **0.8718** で threshold 0.85 初突破。verdict は依然 fail だが、threshold 突破に一番近いのは Recall covered (0.53pp 不足)。残 FN 2 件のうち covered_003 (米中関税協議) は Grounding が政府系/研究機関/アグリゲータ偏重で日経・朝日等の主要メディアを引き当てられない典型ケースで、多クエリ並列発行で救済可能性が高い。
@@ -507,6 +540,89 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **F-jp-coverage-tune-followup マージ後の本番試運転 + Phase A.5-3b 第一作
+  題材候補ランク付け (F-trial-run-post-tune)** (F-trial-run-post-tune /
+  2026-05-11 完了)
+  - 発生バッチ: F-jp-coverage-tune-followup (2026-05-09 merge) で `_match_whitelist`
+    階層判定化 + WL 30 ドメイン化の大改修が入り、独立 23 件ゴールデンセット評価では
+    F1 covered 0.8718 で threshold 初突破まで到達。ただし **改修後の本番運用での
+    実挙動は未検証**だった。本バッチで試運転 + 防衛機構 5 層監査 + 拾われた Slot の
+    台本品質確認 + 第一作題材ランク付けの 4 角度を統合実施。「動くものを壊さない」
+    哲学 (= F-trial-run-post-fix 踏襲) で `src/` `tests/` `configs/` `scripts/`
+    全て不変、`docs/` のみ更新する設計。
+  - 対応内容: (Task A) ブランチ作成 + 環境スナップショット (main HEAD `4062639`、
+    baseline 1390 passed、jp_coverage_cache 9 records、AUDIO/VIDEO_RENDER_ENABLED
+    デフォルト false 確認)。(Task B) `python -m src.ingestion.run_ingestion` で
+    RSS 取得 (41 ソース中 40 成功、47 raw → 1229 new → 469 garbage 除去後)、
+    `python -m src.main --mode normalized` で試運転 (20.4 分、batch_id=20260511_044914、
+    job_id=cbe56961...、status=completed、3 Slot 選定 = Slot-1 cls-6889e9e1c7ac
+    "9,600 Detainees: Israel Prison Abuses" + Slot-2 cls-1a38c0ca8c99 "Filmmakers
+    slam BBC after Gaza documentary" + Slot-3 cls-03892eab2072 "Tehran says US
+    proposal sought Iran's surrender"、F-13.B 3 invocations 全 has_jp_coverage=True
+    で afpbb x2 + nippon x1 にヒット、F-trial-run-post-fix から完全反転)。
+    (Task C) `f13b_output_analysis.json` に試運転 3 invocations 集計 (True 3 /
+    False 0 / Error 0、WL 拡張ドメインのみがヒット、excluded URLs Slot-1 youtube
+    1 件のみ) + F-trial-run-post-fix との比較 (has_jp_coverage 0/3 → 3/3 完全反転)
+    + verify_two_stage 機械判別が本番未配線である状況の clarification を保存。
+    (Task D) `defense_layers_audit.json` に防衛機構 5 層発火状況保存 (F-1 20/304
+    通過 threshold 45.0、F-2 全通過、F-13.B 3 invocations 全 True、F-5 救済 1 件
+    (cls-da0a74aa712d、Top-3 選定外)、F-13 隠れ層 quality_floor_miss bypass 発火
+    1 件 (Slot-1、editorial_mission_score=86.0 + analysis_result=none で fired))、
+    all_5_layers_functional=true。(Task E) `script_quality_audit.json` に Slot-1
+    台本品質保存 (Hook 18字 数字提示型 / Setup 90字 / Twist 179字 / Punchline 87字
+    シニカル × 視聴者直接質問 + loop-3 帰着、全 char_bounds 内、NG 語彙ゼロ、
+    Pattern=Media Critique、total 80s、analysis_result=null で新ルート未起動 +
+    particular_angle_metadata/sontaku_signals 本番未配線も記録)。(Task F)
+    `first_video_candidate_ranking.{json,md}` に第一作題材 5 軸採点 (4 軸機械
+    + 1 軸カズヤ主観空欄)、機械スコア Slot-1 (10pt) > Slot-2 (6pt) > Slot-3 (5pt)、
+    Slot-1 が axis_1 (Hydrangea ミッション)=5 + axis_4 (台本品質、唯一 script
+    生成)=4 で大差勝ち。(Task G) 統合 REPORT.md + BATCH_PROTOCOL Task 1-5
+    ドッグフーディング。リグレッション影響なし (`src/` `tests/` `configs/`
+    `scripts/` `CLAUDE.md` 0 行変更、`docs/runs/F-trial-run-post-tune/` 新規 10
+    ファイル + `docs/` 既存 4 ファイル更新のみ、baseline 1390 passed 維持)。
+  - 重要な発見 / 観察:
+    (1) ★ **WL 拡張 3 ドメインのうち 2 つ (afpbb / nippon) が本番試運転 3 Slot
+    全件にヒット** = F-trial-run-post-fix から **完全反転** (0/3 → 3/3)。WL 拡張
+    の本番影響は想定以上に強い。
+    (2) ★ **matched_urls がベアドメインのみ** (3/3 で `https://afpbb.com` /
+    `https://nippon.com` のみ、article path なし) = Grounding chunk.web.title
+    抽出経路で識別された結果、記事レベル一致は不明 (= **誤陽性のリスク**)。
+    F-jp-coverage-tune-followup measurement Step C (Recall covered 89.47%) も
+    同じ抽出経路を経るため同等の懸念あり。FUTURE_WORK で「F-13.B WL ヒット品質
+    の独立検証」を新規追加。
+    (3) ★ **Hydrangea ブランドメッセージ (blind_spot_global) が機械判別で消滅**:
+    3/3 で has_jp_coverage=True → 全 Slot が divergence ルート。Slot-3 (judge
+    blind_spot_global 認定 score=9.0) と F-13.B (nippon Tier 4 でヒット) が
+    結論不一致。F-stream-2-filter-design 責務範囲再評価で対処方向性を整理。
+    (4) ★ **production-pipeline と docs 概念整理の乖離が顕在化**: src/main.py:3187
+    は legacy verify() (broad-only) のみ呼び出し、verify_two_stage / 系統 1/2/3
+    機械判別 / particular_angle_metadata / sontaku_signals 全て本番未配線
+    (src/ 配下 grep でヒット 0 件)。Slot-1 で `analysis_result=null` + F-13 隠れ層
+    quality_floor_miss bypass 発火 = 新ルート未起動。FUTURE_WORK で 3 件の本番
+    配線判断バッチを新規追加。
+    (5) ★ **Slot-1 cls-6889e9e1c7ac が第一作の最有力候補**: editorial_mission_score=86.0
+    (本試運転最高) + Hydrangea ど真ん中 (人権・忖度・systemic suppression) +
+    台本品質 axis_4=4pt + 唯一 video_payload 生成済み = 機械スコア 10pt で 2 位以下に
+    大差。最終判断はカズヤ axis_5 主観評価後。
+    (6) ★ **「動くものを壊さない」哲学の運用実証**: 本バッチは試運転 + 観察 +
+    記録に集中する性格で、`src/` `tests/` `configs/` `scripts/` 0 行変更、
+    `docs/` 配下のみ更新で完結。F-particular-angle-design 以降の連続バッチで
+    最も「観察と記録に集中」した性格。
+  - 残課題 (FUTURE_WORK 緊急度 高に追加): (1) F-13.B WL ヒット品質の独立検証 ★高
+    (matched_urls ベアドメイン問題、誤陽性リスク)、(2) verify_two_stage 本番配線
+    判断 (production-pipeline と docs 概念整理の乖離解消)、(3) particular_angle_metadata
+    + sontaku_signals 本番配線判断 (新ルート起動条件)、(4) F-stream-2-filter-design
+    責務範囲再評価 (本番運用視点反映)
+  - baseline 影響: 1390 → 1390 passed (0 件変更、src/ tests/ configs/ scripts/
+    全て不変、CLAUDE.md も不変、docs/ のみ更新)。
+  - 関連ファイル: `docs/runs/F-trial-run-post-tune/REPORT.md` (本バッチ統合
+    レポート)、`docs/runs/F-trial-run-post-tune/{environment_snapshot,trial_run_log,
+    f13b_output_analysis,defense_layers_audit,script_quality_audit,
+    first_video_candidate_ranking}.{json,md,txt}`、`docs/CURRENT_STATE.md`
+    (全置換更新)、`docs/DECISION_LOG.md` (本バッチエントリ追加)、
+    `docs/FUTURE_WORK.md` (本エントリ完了済み移動 + 新規残課題 4 件追加)、
+    `docs/DISCUSSION_NOTES.md` (新規 2 件追加 + 既存 3 件更新)
 
 - **WL マッチング階層判定化 + WL 拡張 3 ドメイン (verdict=fail のまま、ただし
   Recall covered +47.36pp / F1 covered +27.92pp 改善 + F1 covered 0.8718 で

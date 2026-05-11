@@ -1,0 +1,278 @@
+{
+  "version": "1.0",
+  "batch": "F-trial-run-post-tune",
+  "generated_at": "2026-05-11T14:25:00+09:00",
+  "main_head_commit": "4062639 (Merge branch 'feature/F-jp-coverage-tune-followup')",
+  "f13b_commit_basis": "4062639 (= main HEAD = F-jp-coverage-tune-followup マージ済み、_match_whitelist 階層判定 + WL 30 ドメイン対応)",
+  "branch": "feature/F-trial-run-post-tune",
+  "ingestion": {
+    "command": "python -m src.ingestion.run_ingestion",
+    "started_at": "2026-05-11T13:40:51+09:00",
+    "completed_at": "2026-05-11T13:49:43+09:00",
+    "elapsed_seconds": 532,
+    "batch_id": "20260511_044914",
+    "rss_sources_total": 41,
+    "rss_sources_success": 40,
+    "rss_sources_warning": 1,
+    "rss_sources_warning_detail": ["Reuters (en) → 0 entries (空)"],
+    "articles_collected_raw": 47,
+    "new_articles": 1229,
+    "duplicate_suppressed": 240
+  },
+  "execution": {
+    "mode": "normalized (Batch-based Success Archive)",
+    "command": "python -m src.main --mode normalized",
+    "started_at": "2026-05-11T13:50:04+09:00",
+    "completed_at": "2026-05-11T14:10:29+09:00",
+    "execution_time_seconds": 1225,
+    "execution_time_minutes": 20.4,
+    "status": "completed (exit code 0)",
+    "job_id": "cbe56961-05fd-4501-ae7a-2aa80dda4c5b",
+    "batch_id": "20260511_044914"
+  },
+  "comparison_with_f_trial_run_post_fix_5_07": {
+    "elapsed_minutes": "20.4 (本バッチ) vs 26.1 (F-trial-run-post-fix) = -5.7 分 (~22% 短縮)",
+    "elapsed_short_reason": "本バッチでは Slot-2/Slot-3 が article-only モードで script/video 生成スキップ + JpCoverageVerifier が WL ヒットで即決 + per_slot_search_call が短時間で終了"
+  },
+  "triage_layers": {
+    "articles_loaded_after_dedup_and_garbage": 469,
+    "garbage_filter_before": 1229,
+    "garbage_filter_after": 469,
+    "garbage_filter_removed": 760,
+    "garbage_filter_llm_batches": 27,
+    "clustering_events_built": 304,
+    "editorial_mission_filter": {
+      "candidates_evaluated": 304,
+      "prescore_top_n": 20,
+      "llm_scored": 20,
+      "llm_failed": 0,
+      "score_threshold": 45.0,
+      "candidates_passed": 20,
+      "candidates_rejected": 284,
+      "pass_rate": "20/304 (6.58%)",
+      "score_stats": {"min": 0.0, "max": 65.8, "mean": 25.53}
+    },
+    "gemini_judge": {
+      "judged_count": 3,
+      "publishability_class_counts": {
+        "insufficient_evidence": 2,
+        "blind_spot_global": 1
+      },
+      "top_blind_spot_global": "cls-03892eab2072 (Tehran says US proposal sought Iran's surrender, score=9.0)"
+    },
+    "f5_rescue": {
+      "rescue_triggered_count": 1,
+      "rescued_event_id": "cls-da0a74aa712d (insufficient_evidence → flagship via Hydrangea concept alignment, editorial_mission_score=86.0)",
+      "note": "F-5 救済が発火したが、本イベントは Top-3 Slot に最終選定されなかった (Slot-1 reranking で cls-03892eab が top に上がり、cls-da0a74aa が外れた)"
+    },
+    "elite_judge_reranking": {
+      "before": "['cls-add9caaa', 'cls-da0a74aa', 'cls-03892eab', 'cls-be46a424', 'cls-fd8bd120']",
+      "after": "['cls-03892eab', 'cls-add9caaa', 'cls-be46a424', 'cls-fd8bd120', 'cls-6889e9e1']",
+      "note": "Slot-1 was decided as cls-6889e9e1c7ac (corrected by judge note shown but actual generation used cls-6889e9e1c7ac per run_summary.generation_tracking.generated_event_id)"
+    },
+    "top_n_for_generation": 3
+  },
+  "slots": [
+    {
+      "slot_index": 1,
+      "event_id": "cls-6889e9e1c7ac",
+      "title": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners",
+      "summary_excerpt": "イスラエル刑務所での9,600人超のパレスチナ人虐待疑惑。ICRC訪問が操作されている可能性。",
+      "primary_source": "TeleSUR (en/VE/latin_america, state_aligned)",
+      "score": 74.05,
+      "primary_bucket": "coverage_gap",
+      "editorial_mission_score": 86.0,
+      "editorial_mission_breakdown_llm": {
+        "perspective_gap": 22.0,
+        "geopolitical_significance": 18.0,
+        "blindspot_severity": 14.0,
+        "political_intent": 9.0,
+        "hidden_power_dynamics": 9.0,
+        "economic_interests": 6.0,
+        "discussion_potential": 8.0,
+        "llm_reason": "日本で報じにくい人権問題と国際機関への操作は、視点ギャップとブラインドスポットが極めて大きい。地政学的・歴史的背景、政治的意図、力関係の解説余地も高く、日本人の国際情勢認識を深める上で重要。"
+      },
+      "judge_publishability_class": "not_judged (Slot-1 は judge 評価対象外、editorial_mission 単独で進行)",
+      "appraisal_type": null,
+      "appraisal_cautions": "[抑制] safety gate: en_only + low_jr=0",
+      "f1_editorial_mission_passed": true,
+      "f2_flagship_gate_passed": true,
+      "f13b_result": {
+        "has_jp_coverage": true,
+        "matched_tier": "tier_2_wire_service",
+        "matched_domains": ["afpbb.com"],
+        "matched_urls": ["https://afpbb.com"],
+        "matched_urls_count": 1,
+        "excluded_urls_count": 1,
+        "excluded_urls": ["https://youtube.com"],
+        "search_query": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners 日本 報道",
+        "error": null,
+        "cached": false,
+        "elapsed_seconds": 9,
+        "note": "afpbb.com は F-jp-coverage-tune-followup で新規追加された WL Tier 2 ドメイン。本来はベアドメイン (=記事 URL ではなく root path) なので Grounding chunk.web.title 経由の抽出と推測 (= 個別記事 URL 未取得、ドメイン参照のみ)"
+      },
+      "f5_rescue_triggered": false,
+      "f13_hidden_layer_quality_floor_bypass_triggered": true,
+      "f13_hidden_layer_reason": "[F-13] quality_floor_miss bypass: event_id=cls-6889e9e1c7ac, editorial_mission_score=86.0, judge_class=None, analysis_result=none (本領記事と認めた候補は appraisal の [抑制] を上書きして通過)",
+      "final_routing": "divergence pattern (Continuing per [F-13.B] Slot-1 major media coverage found log)",
+      "analysis_result_present": false,
+      "outputs_generated": ["article.md", "script.json", "video_payload.json", "evidence.json"],
+      "video_generation": "yes (slot_idx=0 < TOP_N_VIDEOS_PER_RUN=1)",
+      "script_metadata": {
+        "total_duration_sec": 80,
+        "estimated_duration_sec": 83,
+        "sections_count": 4,
+        "selected_pattern": "Media Critique",
+        "target_enemy": "大手メディア",
+        "loop_mechanism": "loop-3",
+        "title_strength": "strong",
+        "title_style": "Media Critique",
+        "platform_title": "日本では報道されない9,600 Detainees",
+        "char_validation_retries": 1
+      }
+    },
+    {
+      "slot_index": 2,
+      "event_id": "cls-1a38c0ca8c99",
+      "title": "Filmmakers slam BBC after Gaza documentary wins award despite being dropped",
+      "summary_excerpt": "BAFTA TV 賞を受賞したガザ医療従事者ドキュメンタリーを巡り、BBC が放送中止にしたとして製作陣が公的に非難。Channel 4 が代替放送。",
+      "primary_source": "Middle_East_Eye (en/GB/middle_east, bridge_source)",
+      "score": 68.2,
+      "primary_bucket": "geopolitics",
+      "editorial_mission_score": 77.0,
+      "editorial_mission_breakdown_llm": {
+        "perspective_gap": 22.0,
+        "geopolitical_significance": 15.0,
+        "blindspot_severity": 13.0,
+        "political_intent": 8.0,
+        "hidden_power_dynamics": 8.0,
+        "economic_interests": 3.0,
+        "discussion_potential": 8.0,
+        "llm_reason": "ガザ報道の視点ギャップ、主要メディアの自己検閲と権力構造、情報操作の可能性を解き明かす価値が高い。日本人視聴者のメディアリテラシーを刺激し、議論を誘発する。"
+      },
+      "judge_publishability_class": "not_judged",
+      "appraisal_type": null,
+      "appraisal_cautions": null,
+      "f1_editorial_mission_passed": true,
+      "f2_flagship_gate_passed": true,
+      "f13b_result": {
+        "has_jp_coverage": true,
+        "matched_tier": "tier_2_wire_service",
+        "matched_domains": ["afpbb.com"],
+        "matched_urls": ["https://afpbb.com"],
+        "matched_urls_count": 1,
+        "excluded_urls_count": 0,
+        "excluded_urls": [],
+        "search_query": "Filmmakers slam BBC after Gaza documentary wins award despite being dropped 日本 報道",
+        "error": null,
+        "cached": false,
+        "elapsed_seconds": 6
+      },
+      "f5_rescue_triggered": false,
+      "f13_hidden_layer_quality_floor_bypass_triggered": false,
+      "final_routing": "divergence pattern (Continuing per [F-13.B] Slot-2 major media coverage found log)",
+      "analysis_result_present": false,
+      "outputs_generated": ["article.md"],
+      "video_generation": "no (F-16-A article-only mode, slot_idx=1 >= TOP_N_VIDEOS_PER_RUN=1)"
+    },
+    {
+      "slot_index": 3,
+      "event_id": "cls-03892eab2072",
+      "title": "Tehran says US proposal sought Iran's surrender",
+      "summary_excerpt": "イラン国営テレビが、米国の和平案を『降伏要求』として拒否。最高指導者の死亡やイラン革命防衛隊指導部の損失への補償を要求。",
+      "primary_source": "Middle_East_Eye (en/GB/middle_east, bridge_source)",
+      "score": 77.95,
+      "primary_bucket": "tech_geopolitics",
+      "editorial_mission_score": 83.0,
+      "editorial_mission_breakdown_llm": {
+        "perspective_gap": 22.0,
+        "geopolitical_significance": 17.0,
+        "blindspot_severity": 12.0,
+        "political_intent": 9.0,
+        "hidden_power_dynamics": 8.0,
+        "economic_interests": 7.0,
+        "discussion_potential": 8.0,
+        "llm_reason": "イランの異例な主張が示す地政学的背景と国内政治の意図は、日本で報じられにくい。複雑な中東情勢理解に必須。"
+      },
+      "judge_publishability_class": "blind_spot_global",
+      "judge_result": {
+        "divergence_score": 0.0,
+        "blind_spot_global_score": 9.0,
+        "indirect_japan_impact_score_judge": 10.0,
+        "authority_signal_score": 6.0,
+        "publishability_class": "blind_spot_global",
+        "confidence": 0.9,
+        "requires_more_evidence": true,
+        "hard_claims_supported": false
+      },
+      "appraisal_type": "Media Blind Spot",
+      "appraisal_cautions": "gap_reasoning なし: 日英視点差の根拠は未言語化（仮説段階）。JP ビューなし: 日本での報道量が本当に薄いかは独立確認が必要",
+      "f1_editorial_mission_passed": true,
+      "f2_flagship_gate_passed": true,
+      "f13b_result": {
+        "has_jp_coverage": true,
+        "matched_tier": "tier_4_business",
+        "matched_domains": ["nippon.com"],
+        "matched_urls": ["https://nippon.com"],
+        "matched_urls_count": 1,
+        "excluded_urls_count": 0,
+        "excluded_urls": [],
+        "search_query": "Tehran says US proposal sought Iran's surrender 日本 報道",
+        "error": null,
+        "cached": false,
+        "elapsed_seconds": 7,
+        "note": "nippon.com は F-jp-coverage-tune-followup で新規追加された WL Tier 4 ドメイン。Tier 4 = business 系の補助ヒット (Tier 1-2 ではない)。本来は判定『Tier 1-2 で報道あり』が望ましい強度だが、Tier 4 の補助ヒットで has_jp_coverage=True 返却"
+      },
+      "f5_rescue_triggered": false,
+      "f13_hidden_layer_quality_floor_bypass_triggered": false,
+      "final_routing": "divergence pattern (Continuing per [F-13.B] Slot-3 major media coverage found log, ただし judge は blind_spot_global)",
+      "analysis_result_present": false,
+      "outputs_generated": ["article.md"],
+      "video_generation": "no (F-16-A article-only mode, slot_idx=2 >= TOP_N_VIDEOS_PER_RUN=1)"
+    }
+  ],
+  "outputs_generated": {
+    "scripts_count": 1,
+    "articles_count": 3,
+    "video_payloads_count": 1,
+    "evidence_count": 1,
+    "videos_count": 0,
+    "audios_count": 0
+  },
+  "budget_summary": {
+    "run_llm_calls": 39,
+    "run_llm_budget": 150,
+    "day_llm_calls": 39,
+    "day_llm_budget": 1000,
+    "publish_reserve_calls": 15,
+    "exploration_calls_used": 25,
+    "publish_reserve_preserved": true,
+    "stopped_due_to_reserve": false,
+    "slot1_budget_guaranteed": true
+  },
+  "summary": {
+    "f13b_invocations": 3,
+    "f13b_has_jp_coverage_true": 3,
+    "f13b_has_jp_coverage_false": 0,
+    "f13b_errors": 0,
+    "wl_hits_distribution": {
+      "afpbb.com (Tier 2)": 2,
+      "nippon.com (Tier 4)": 1
+    },
+    "compared_to_f_trial_run_post_fix": {
+      "has_jp_coverage_true_delta": "0→3 (+3、完全反転)",
+      "matched_tier_distribution_delta": "Tier 1-4 ヒット 0/6 → 3/3 (3/3 が WL 拡張 3 ドメイン afpbb/nippon のみ)",
+      "excluded_count_distribution_delta": "全 youtube.com 23 件 → youtube.com 1 件のみ (Slot-1)、Slot-2/3 は excluded 0 件",
+      "f5_rescue_delta": "0 件 → 1 件 (cls-da0a74aa712d、ただし最終 Slot 選定外)",
+      "f13_hidden_layer_delta": "0 件 → 1 件 (Slot-1、editorial_mission_score=86.0 で bypass)",
+      "all_3_slots_to_divergence_pattern": "blind_spot_global 3/3 → divergence 3/3 (= Hydrangea ブランドの『日本未報道』軸が機械判別で消滅)"
+    },
+    "verdict_critical_finding": "F-jp-coverage-tune-followup の WL 拡張 3 ドメイン (afpbb / forbesjapan / nippon) のうち 2 つ (afpbb / nippon) が本番試運転 3 Slot 全件にヒット = WL 拡張の本番影響が非常に大きい。ただし matched_urls がベアドメイン (https://afpbb.com / https://nippon.com のみ、article path なし) という点は、Grounding chunk.web.title 抽出の特性で本来の Tier 1/2 報道有無を厳密に判定できているかどうかは別途要検証 (= 誤陽性のリスク)。",
+    "carryover_concerns": [
+      "★ 重要 1: 本番 3/3 で has_jp_coverage=True ヒットしたが、matched_urls はベアドメインのみ。記事レベルの照合ができていない可能性 → Grounding 検索の出力品質を CRITERIA とすべき (= 本バッチ最大の懸念)",
+      "★ 重要 2: Slot-1 は editorial_mission_score=86 + Hydrangea ミッション軸 (perspective_gap=22) で最高点だが has_jp_coverage=True で divergence ルートに進行 → 本来 stream_2 (perspective_gap) として処理されるべきだが、現状はそのレイヤー (F-stream-2-filter-design) が未実装",
+      "★ 重要 3: F-13.B 既存 verify() = broad-only で系統判別なし。verify_two_stage の機械判別 (stream_1/2/3) は本番未配線 = 観察できる stream 分類は『常に unknown』。F-jp-coverage-tune-followup の改修は WL マッチング階層化 + WL 拡張のみで、verify_two_stage の本番投入は別バッチ案件",
+      "★ 重要 4: Slot-1 で analysis_result=none + F-13 quality_floor_miss bypass が fired = 新ルート generate_script_with_analysis ではなく旧ルートで script 生成 (= particular_angle_metadata / sontaku_signals は未配線)"
+    ]
+  }
+}
