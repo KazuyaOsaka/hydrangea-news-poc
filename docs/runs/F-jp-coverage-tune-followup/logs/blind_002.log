@@ -1,0 +1,33 @@
+# blind_002
+timestamp: 2026-05-09T20:36:44.628851
+elapsed_seconds: 24.16
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_1_newspaper
+  angle_matched_tier: tier_1_newspaper
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: Israel's top Jewish religious body 'refuses to condemn' smashing of Jesus statue 日本 報道
+  angle_query: イスラエル ラビ庁 兵士 イエス像破壊 非難拒否 宗教的過激主義 軍 融合
+
+## Results
+  broad: {"urls": ["https://yomiuri.co.jp", "https://livedoor.com", "https://afpbb.com", "https://nippon.com", "https://nippon.com", "https://youtube.com", "https://youtube.com", "https://joins.com", "https://joins.com", "https://gifu-np.co.jp", "https://fnn.jp", "https://christiantoday.co.jp", "https://itainews.com"], "matched_urls": ["https://yomiuri.co.jp", "https://afpbb.com", "https://nippon.com", "https://nippon.com", "https://fnn.jp"], "excluded_urls": ["https://youtube.com", "https://youtube.com"], "matched_tier": "tier_1_newspaper"}
+  angle: {"urls": ["https://yomiuri.co.jp", "https://youtube.com", "https://nippon.com", "https://livedoor.com", "https://arabnews.jp", "https://livedoor.com", "https://diamond.jp"], "matched_urls": ["https://yomiuri.co.jp", "https://nippon.com", "https://diamond.jp"], "excluded_urls": ["https://youtube.com"], "matched_tier": "tier_1_newspaper"}
+
+## Hits
+  jp_media_hits_broad: ['afpbb.com', 'news.fnn.jp', 'nippon.com', 'yomiuri.co.jp']
+  jp_media_hits_angle: ['diamond.jp', 'nippon.com', 'yomiuri.co.jp']
+  excluded_count_broad: 2
+  excluded_count_angle: 1

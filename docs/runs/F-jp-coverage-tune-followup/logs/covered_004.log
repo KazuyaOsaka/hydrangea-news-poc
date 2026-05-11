@@ -1,0 +1,33 @@
+# covered_004
+timestamp: 2026-05-09T20:40:22.103722
+elapsed_seconds: 26.06
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_2_wire_service
+  angle_matched_tier: tier_4_business
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: ローマ教皇『多数派の専制』を警告 民主主義に危機感 日本 報道
+  angle_query: ローマ教皇 多数派の専制 民主主義の危機 宗教の道具化 政治的正当性 批判 分析
+
+## Results
+  broad: {"urls": ["https://newsweekjapan.jp", "https://hatena.ne.jp", "https://donga.com", "https://toyokeizai.net", "https://afpbb.com", "https://fnn.jp"], "matched_urls": ["https://newsweekjapan.jp", "https://toyokeizai.net", "https://afpbb.com", "https://fnn.jp"], "excluded_urls": ["https://hatena.ne.jp"], "matched_tier": "tier_2_wire_service"}
+  angle: {"urls": ["https://newsweekjapan.jp", "https://hatena.ne.jp"], "matched_urls": ["https://newsweekjapan.jp"], "excluded_urls": ["https://hatena.ne.jp"], "matched_tier": "tier_4_business"}
+
+## Hits
+  jp_media_hits_broad: ['afpbb.com', 'news.fnn.jp', 'newsweekjapan.jp', 'toyokeizai.net']
+  jp_media_hits_angle: ['newsweekjapan.jp']
+  excluded_count_broad: 1
+  excluded_count_angle: 1

@@ -1,0 +1,33 @@
+# cls-0c7fa7c667d6
+timestamp: 2026-05-09T20:43:37.513785
+elapsed_seconds: 22.20
+
+## Truth
+  expected_stream: stream_1_silence_gap
+  expected_broad_jp_coverage: unreported
+  expected_angle_jp_coverage: unreported
+  expected_tier: None
+  in_golden_set: False
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_2_wire_service
+  angle_matched_tier: tier_4_business
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: Russian man sets himself on fire at war memorial on anniversary of Ukraine invasion, authorities suppress news of it 日本 報道
+  angle_query: ロシア ウクライナ侵攻周年 焼身自殺 独立系メディア 報道削除 隠蔽 言論統制 追跡
+
+## Results
+  broad: {"urls": ["https://newsweekjapan.jp", "https://afpbb.com", "https://jcie.or.jp", "https://1000mg.jp", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://minpo.online"], "matched_urls": ["https://newsweekjapan.jp", "https://afpbb.com"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_2_wire_service"}
+  angle: {"urls": ["https://fmmc.or.jp", "https://youtube.com", "https://youtube.com", "https://diamond.jp", "https://youtube.com"], "matched_urls": ["https://diamond.jp"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_4_business"}
+
+## Hits
+  jp_media_hits_broad: ['afpbb.com', 'newsweekjapan.jp']
+  jp_media_hits_angle: ['diamond.jp']
+  excluded_count_broad: 3
+  excluded_count_angle: 3

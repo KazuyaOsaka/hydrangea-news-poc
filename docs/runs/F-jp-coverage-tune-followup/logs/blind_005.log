@@ -1,0 +1,33 @@
+# blind_005
+timestamp: 2026-05-09T20:37:41.256651
+elapsed_seconds: 18.43
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_2_wire_service
+  angle_matched_tier: tier_2_wire_service
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: Gaza was the scandal that should have ended Keir Starmer's political career 日本 報道
+  angle_query: スターマー首相 ガザ イスラエル支援 基地利用 部品供給 軍事的加担 中東メディア 批判
+
+## Results
+  broad: {"urls": ["https://afpbb.com", "https://arabnews.jp", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://middleeasteye.net"], "matched_urls": ["https://afpbb.com"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_2_wire_service"}
+  angle: {"urls": ["https://youtube.com", "https://youtube.com", "https://jetro.go.jp", "https://newsweekjapan.jp", "https://youtube.com", "https://youtube.com", "https://afpbb.com", "https://arabnews.jp", "https://fnn.jp", "https://jfir.or.jp", "https://youtube.com", "https://abema.tv", "https://youtube.com", "https://youtube.com"], "matched_urls": ["https://newsweekjapan.jp", "https://afpbb.com", "https://fnn.jp"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_2_wire_service"}
+
+## Hits
+  jp_media_hits_broad: ['afpbb.com']
+  jp_media_hits_angle: ['afpbb.com', 'news.fnn.jp', 'newsweekjapan.jp']
+  excluded_count_broad: 4
+  excluded_count_angle: 7

@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-09 (F-jp-coverage-tune 完了、Phase A.5-3a-verify ゲート完了後の 6 つ目のバッチ、verify_two_stage 二段階クエリ生成実装 + 独立 23 件精度測定 + (c) dateRestrict プロンプト埋め込み除去 1 回チューニング、verdict=fail で Grounding API 構造的限界が明確化、F-jp-coverage-tune-followup を ★最優先として FUTURE_WORK 追加)
+最終更新: 2026-05-09 (F-jp-coverage-tune-followup 完了、Phase A.5-3a-verify ゲート完了後の 7 つ目のバッチ、WL マッチング階層判定化 + WL 拡張 3 ドメインで Recall covered +47.36pp / F1 covered +27.92pp の大幅改善 + F1 covered 0.8718 で threshold 0.85 を初突破、verdict=fail のまま (Recall 0.53pp 不足 + Precision blind / Tier 一致率 / Stream accuracy 未達) だが verdict=fail の主因 (= WL マッチング欠陥 + WL 漏れ準大手) を根本解消、残課題 4 軸に分離して FUTURE_WORK 記録)
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -60,9 +60,27 @@ F-extension-followup で記録した (c) サンプル選定バイアス仮説の
 42.11% / Precision blind 26.67% / F1 0.5926 / Tier 一致率 62.50%) で目標未達
 だが、本バッチで **Grounding API の構造的限界** (1 クエリ 5-10 chunk しか
 返さない / 上位ヒットが WL 外で埋まる / 0 URL 返却ケース複数) が支配的な FN 要因
-として明確化された。1 回チューニングで verdict=pass 到達は構造的に困難なため、
-**F-jp-coverage-tune-followup** (★最優先) で複数クエリ並列発行 + 結果統合等の
-根本治療を別バッチで議論することに決定 (「対症療法じゃなく根本治療」原則遵守)。
+として明確化された。
+
+★ 2026-05-09 (F-jp-coverage-tune-followup) で F-jp-coverage-tune verdict=fail の
+**根本原因 3 分解 → 主因 2 つを根本治療** を実施。`src/triage/jp_coverage_verifier.py`
+の `_match_whitelist()` 内のドメイン判定を **substring match → ドメイン階層判定**
+に置換 (新規モジュール関数 `_domain_matches_hierarchy` 追加、`news.fnn.jp` 登録
+に対して `fnn.jp` 返却でも同 Tier 扱い、TLD 共通や部分文字列の過剰マッチは排除)
++ `JP_MEDIA_WHITELIST` に 3 ドメイン追加 (`afpbb.com` Tier 2 / `forbesjapan.com` /
+`nippon.com` Tier 4)。Step C 再測定結果: **Recall covered 42.11% → 89.47%
+(+47.36pp)** / **F1 covered 0.5926 → 0.8718 (+0.2792、threshold 0.85 を初突破)** /
+Precision blind 26.67% → 33.33% (+6.66pp) / Tier 一致率 62.50% → 30.77%
+(-31.73pp、母数 8→13 増 + Grounding 非決定性) / Stream accuracy 27.27% → 9.09%
+(-18.18pp、stream_3 過剰検出が顕在化)。**verdict=fail のまま** (Recall 0.53pp
+不足 + Precision blind / Tier 一致率 / Stream accuracy 未達) だが、F-13.B 系列で
+F1 covered が threshold を初突破した実用ライン到達 + verdict=fail 主因の根本治療
+を確定。CP-3 中間チェックポイントで Step D ((p) 多クエリ並列発行) の着手可否を
+カズヤ判断、「対症療法じゃなく根本治療」原則 + 残課題はそれぞれ別問題で 1 バッチで
+全部解決すべきではない判断で **Step D スキップ** 決定。残課題は 4 軸に分離して
+FUTURE_WORK 記録: (a) Recall 90% 突破 = F-jp-coverage-tune-followup-2 候補、
+(b) Precision blind 母数問題 = Phase A.5-3b 第二作、(c) Tier 一致率 = Grounding
+非決定性、(d) Stream accuracy = stream_3 過剰検出 (F-stream-2-filter-design 責務)。
 
 ### 系統 1 (silence_gap): 完全な情報空白 — 広範事件も特定角度も日本主要メディアで未報道
 
@@ -173,41 +191,44 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。japan_ath
 
 ## 1. リポジトリ状態
 
-- **main HEAD コミット**: `e1ad637` (F-task-e-finalize マージ後、F-jp-coverage-tune は feature ブランチ `feature/F-jp-coverage-tune` で作業中、未マージ)
+- **main HEAD コミット**: `82ce0d0` (F-jp-coverage-tune マージ後、F-jp-coverage-tune-followup は feature ブランチ `feature/F-jp-coverage-tune-followup` で作業中、未マージ)
 - **直近 5 件のコミットログ**:
   ```
+  82ce0d0 Merge branch 'feature/F-jp-coverage-tune'
+  beb4aa7 feat: F-13.B verify_two_stage two-stage query generation + 23-event accuracy measurement (F-jp-coverage-tune, verdict=fail, Grounding API structural limit identified, followup drafted)
   e1ad637 Merge branch 'feature/F-task-e-finalize'
   bbc00db feat: Task E kazuya review finalized + 4 operational principles docs (F-task-e-finalize, all 25 events LLM estimates accepted)
   1311cd0 Merge branch 'feature/F-extension-followup'
-  038c298 docs+scripts: F-extension-followup — stream_3=0 件 (c) 仮説追記 + sontaku_signals サンプル設計バイアス記録 + finalize_annotations.py の sontaku_signals 対応
-  2c9ee96 Merge branch 'feature/F-particular-angle-redesign-extension'
   ```
-- **baseline テスト数**: **1364 passed** (本バッチで `tests/test_jp_coverage_verifier_two_stage.py` 19 件新規追加、既存 1345 件全件維持。`src/triage/jp_coverage_verifier.py` に新規 dataclass `TwoStageVerifyResult` + 新規メソッド `verify_two_stage()` + プライベートヘルパ追加 (+約 290 行)、既存メソッド完全不変。`scripts/measure_two_stage_accuracy.py` 新規作成 + `docs/runs/F-jp-coverage-tune/` 配下 (`measurement_result.json` post-tuning 最終 + `measurement_result_pre_tuning.json` Step 4 前ベースライン + `logs/<event_id>.log` × 23 件) 生成 + `docs/CURRENT_STATE.md` `docs/DECISION_LOG.md` `docs/FUTURE_WORK.md` `docs/DISCUSSION_NOTES.md` (本バッチ反映))
+- **baseline テスト数**: **1390 passed** (本バッチで `tests/test_jp_coverage_verifier_domain_extract.py` に 26 件新規追加 = `TestDomainMatchesHierarchy` 9 件 + `TestWhitelistMatchSubdomainAbsorption` 8 件 + `TestWhitelistExtension` 9 件、既存 1364 件全件維持。`src/triage/jp_coverage_verifier.py` の `_match_whitelist()` 内のドメイン判定を substring match → ドメイン階層判定に置換 + 新規モジュール関数 `_domain_matches_hierarchy(host, wl_domain)` 追加 + `JP_MEDIA_WHITELIST` に 3 ドメイン (`afpbb.com` Tier 2 / `forbesjapan.com` `nippon.com` Tier 4) 追加。既存メソッド contract 完全不変、不変原則 3 例外条件 4 つ全部適用。`docs/runs/F-jp-coverage-tune-followup/` 配下に `REPORT.md` 新規 + `measurement_result_step_c.json` 生成 + `logs/<event_id>.log` × 23 件 + `docs/CURRENT_STATE.md` `docs/DECISION_LOG.md` `docs/FUTURE_WORK.md` `docs/DISCUSSION_NOTES.md` (本バッチ反映))
 
 ## 2. 現在のフェーズ
 
 - **Phase**: Phase A.5-3a-verify **完了** ★ 1-A〜1-D''' 全完了で Phase A.5-3a-verify ゲート完了 (2026-05-07)
-- **進行中バッチ**: なし (F-jp-coverage-tune 完了直後、verdict=fail で目標未達だが Grounding API 構造的限界が明確化、F-jp-coverage-tune-followup 着手 OK)
-- **次バッチ候補と推奨** (★ F-jp-coverage-tune / 2026-05-09 で更新):
-  - **1st (★最優先): F-jp-coverage-tune-followup** (★最優先着手 OK、F-jp-coverage-tune verdict=fail の根本治療 = Grounding API 構造的限界対策、(p) 複数クエリ並列発行 + 結果統合 ★最有力候補 / (q) 検索 API 変更検討 / (r) WL ドメイン拡張検討 / (s) stream_3 過剰検出解消)
-  - **2nd: F-stream-2-filter-design** (★ 責務スコープ要再評価、stream_3 = 0 件確定 + Phase A.5-3b 第二作のサンプル拡充後に再評価が望ましい、小規模実装で済む可能性が高い)
-  - **3rd: Phase A.5-3b 第二作のサンプル拡充検討** (★ 系統 3 事象 (処理水放出 / 辺野古 等) + sontaku_signals type=domestic / media_industry の実例追加、(c) 仮説検証 + 系統 3 台本表現の試行錯誤を兼ねる)
+- **進行中バッチ**: なし (F-jp-coverage-tune-followup 完了直後、verdict=fail のまま だが主因 = WL マッチング欠陥 + WL 漏れ準大手 を根本解消 + F1 covered threshold 初突破)
+- **次バッチ候補と推奨** (★ F-jp-coverage-tune-followup / 2026-05-09 で更新):
+  - **1st: F-stream-2-filter-design** (★ 責務スコープ要再評価、stream_3 = 0 件確定 + Phase A.5-3b 第二作のサンプル拡充後に再評価が望ましい、小規模実装で済む可能性が高い + 本バッチで顕在化した stream_3 過剰検出 (Stream accuracy 27.27% → 9.09%) を責務範囲として組み込む可能性高)
+  - **2nd: Phase A.5-3b 第二作のサンプル拡充検討** (★ 系統 3 事象 (処理水放出 / 辺野古 等) + sontaku_signals type=domestic / media_industry の実例追加、(c) 仮説検証 + 系統 3 台本表現の試行錯誤を兼ねる、★ 副次効果として truly unreported 母数の拡充 = Precision blind 母数問題 (本バッチ残課題 (b)) の根本治療)
+  - **3rd (★ カズヤ判断後): F-jp-coverage-tune-followup-2** (★ 候補、本バッチ残課題 (a) Recall 90% 突破 + (c) Tier 一致率 Grounding 非決定性、(p) 多クエリ並列発行 or (q) 検索 API 変更、副作用リスク = Precision blind / Tier 一致率がさらに退行する可能性、Step C で Step D スキップ判定済のため緊急性は低下、verdict=pass を狙うなら必要)
   - 並走: F-verify-perspective / F-verify-script-quality
     (3b/3c 中にデータ収集、判断は 3b/3c 完了後 = データ収集性格)
 - **推奨フロー**:
-  - F-jp-coverage-tune-followup 着手 (Grounding API 構造的限界対策、broad search recall を 60-80% 水準に引き上げ)
-    → F-stream-2-filter-design スコープ判断 (stream_3 = 0 件確定 + sontaku_signals.level
-       次第で実装規模変動、Phase A.5-3b 第二作のサンプル拡充後)
-    → Phase A.5-3b 手動 PoC 着手 (第二作で系統 3 事象拡充も併せて実施)
+  - F-stream-2-filter-design スコープ判断 (stream_3 = 0 件確定 + sontaku_signals.level
+    次第で実装規模変動、★ stream_3 過剰検出を責務範囲に追加、Phase A.5-3b 第二作のサンプル拡充後)
+    → Phase A.5-3b 手動 PoC 着手 (第二作で系統 3 事象拡充 + truly unreported 母数拡充)
     → 3c 自動化 → Phase A.5-3d で投稿前ゲート + 自動投稿
-- **★ F-jp-coverage-tune 完了** (F-jp-coverage-tune / 2026-05-09): `src/triage/jp_coverage_verifier.py` に
-  `verify_two_stage()` 新メソッド + `TwoStageVerifyResult` dataclass 追加 (不変原則 3 例外条件 4 つ
-  全部適用、既存 `verify()` 完全不変)、独立 23 件で精度測定実行、(c) dateRestrict プロンプト埋め込み
-  除去で +10.53pp 改善するも verdict=fail (Recall 42.11% / Precision blind 26.67% / F1 0.5926 /
-  Tier 62.50%)。Grounding API の構造的限界 (1 クエリ 5-10 chunk + WL 外で上位埋まる + 0 URL 返却)
-  が支配的な FN 要因として明確化、F-jp-coverage-tune-followup ★最優先で根本治療を議論する流れに。
-  baseline 1345 → 1364 passed 維持、graceful fallback 発火 0 件、unknown 0 件、incremental save +
-  resume + ログファイル書き出し全機能動作確認済。
+  - 並行: F-jp-coverage-tune-followup-2 (★ カズヤ判断後着手、verdict=pass を必須とする場合のみ。
+    Phase A.5-3b/3c の実用上は F1 covered 0.8718 で実用ラインに到達済みのため緊急性は低い)
+- **★ F-jp-coverage-tune-followup 完了** (F-jp-coverage-tune-followup / 2026-05-09): `src/triage/jp_coverage_verifier.py`
+  の `_match_whitelist()` 内のドメイン判定を substring match → ドメイン階層判定に置換 (新規モジュール関数
+  `_domain_matches_hierarchy` 追加) + `JP_MEDIA_WHITELIST` に 3 ドメイン (`afpbb.com` Tier 2 /
+  `forbesjapan.com` `nippon.com` Tier 4) 追加。既存メソッド contract 完全不変、不変原則 3 例外条件
+  4 つ全部適用。Step C 再測定で **Recall covered +47.36pp 改善** (42.11% → 89.47%、threshold 0.53pp 不足) +
+  **F1 covered +27.92pp 改善** (0.5926 → 0.8718、threshold 0.85 を初突破)。verdict=fail のまま (Recall /
+  Precision blind / Tier 一致率 / Stream accuracy 未達) だが、F-13.B 系列で F1 covered が threshold を初突破した
+  実用ライン到達 + verdict=fail 主因の根本治療を確定。CP-3 でカズヤ判断 = Step D スキップ、残課題 4 軸分離で
+  個別根本治療を後続バッチに委譲 (「対症療法じゃなく根本治療」原則の運用実証)。baseline 1364 → 1390 passed 維持
+  (新規 26 件追加、既存全件維持)。
 
 ### Phase A.5-3a-verify ロードマップ (★F-jp-coverage-tune / 2026-05-09 完了版)
 
@@ -216,7 +237,9 @@ F-particular-angle-design は **ゲート完了後の 1 つ目のバッチ**で�
 正典化、F-particular-angle-redesign は **ゲート完了後の 2 つ目のバッチ**で 3 分類 →
 4 分類化を実施、F-task-e-finalize は **ゲート完了後の 5 つ目のバッチ**で Task E
 カズヤレビュー結果反映、F-jp-coverage-tune は **ゲート完了後の 6 つ目のバッチ**で
-verify_two_stage 二段階クエリ生成 + 独立 23 件精度測定を実施。
+verify_two_stage 二段階クエリ生成 + 独立 23 件精度測定を実施、F-jp-coverage-tune-followup
+は **ゲート完了後の 7 つ目のバッチ**で WL マッチング階層判定化 + WL 拡張 3 ドメインで
+verdict=fail 主因 (= WL 欠陥 + WL 漏れ) を根本解消 + F1 covered threshold 初突破を達成。
 
 | 段階 | バッチ | 状態 | 概要 |
 |---|---|---|---|
@@ -233,8 +256,9 @@ verify_two_stage 二段階クエリ生成 + 独立 23 件精度測定を実施�
 | 1-F' | F-particular-angle-redesign-extension | ✅ 完了 (2026-05-08) | ゲート完了後の 3 つ目のバッチ、系統名 1/1.5/2 → 1/2/3 リネーム + sontaku_signals 別軸メタデータ独立化 + クラウド誤り 9 記録 + Step 3-4 改良 + MECE 判別基準明示 |
 | 1-F'' | F-extension-followup | ✅ 完了 (2026-05-08) | ゲート完了後の 4 つ目のバッチ、extension クラウドレビュー指摘 3 件反映 = stream_3=0 件 (c) サンプル選定バイアス仮説追記 + sontaku_signals type 分布バイアス記録 + finalize_annotations.py の sontaku_signals 対応最小修正 |
 | 1-F''' | F-task-e-finalize | ✅ 完了 (2026-05-08) | ゲート完了後の 5 つ目のバッチ、Task E カズヤレビュー結果反映 (25 件全件 LLM 推定値そのまま) + finalize_annotations.py 実行 (annotation_diff.json + stream_classification.json + golden_set v1.3 生成更新) + 4 つの運用原則 + 1 つの構造的問題 + (c) 仮説証拠強化を docs 化 |
-| **1-G** | **F-jp-coverage-tune** | ✅ **完了 (2026-05-09)、verdict=fail** | ゲート完了後の 6 つ目のバッチ、`verify_two_stage()` 新メソッド + `TwoStageVerifyResult` dataclass 追加 (不変原則 3 例外条件 4 つ全部適用) + 独立 23 件精度測定 + (c) dateRestrict プロンプト埋め込み除去 1 回チューニング。post-tuning verdict=fail (Recall 42.11% / Precision blind 26.67% / F1 0.5926 / Tier 62.50%)。**Grounding API 構造的限界が明確化** = F-jp-coverage-tune-followup ★最優先で根本治療議論へ |
-| 1-H | F-stream-2-filter-design | ★ 責務スコープ要再評価 | stream_3 = 0 件確定 + sontaku_signals.level を追加軸に組み込む設計、Phase A.5-3b 第二作のサンプル拡充後に再評価、小規模実装の可能性が高い |
+| **1-G** | **F-jp-coverage-tune** | ✅ **完了 (2026-05-09)、verdict=fail** | ゲート完了後の 6 つ目のバッチ、`verify_two_stage()` 新メソッド + `TwoStageVerifyResult` dataclass 追加 (不変原則 3 例外条件 4 つ全部適用) + 独立 23 件精度測定 + (c) dateRestrict プロンプト埋め込み除去 1 回チューニング。post-tuning verdict=fail (Recall 42.11% / Precision blind 26.67% / F1 0.5926 / Tier 62.50%)。**Grounding API 構造的限界が明確化** = F-jp-coverage-tune-followup で根本治療議論へ |
+| **1-G'** | **F-jp-coverage-tune-followup** | ✅ **完了 (2026-05-09)、verdict=fail (改善大、F1 達成)** | ゲート完了後の 7 つ目のバッチ、verdict=fail 主因 3 分解 → WL マッチング階層判定化 (新規 `_domain_matches_hierarchy`) + WL 拡張 3 ドメイン (`afpbb.com` Tier 2 / `forbesjapan.com` `nippon.com` Tier 4) で根本治療。**Recall covered +47.36pp** (42.11%→89.47%、threshold 0.53pp 不足) / **F1 covered +27.92pp** (0.5926→0.8718、threshold 0.85 **初突破**) / Precision blind 33.33% / Tier 一致率 30.77% / Stream accuracy 9.09%。CP-3 で Step D スキップ判定 = 残課題 4 軸分離 ((a) Recall 90% / (b) Precision blind 母数 / (c) Tier 非決定性 / (d) Stream stream_3 過剰検出)。baseline 1364 → 1390 passed 維持 |
+| 1-H | F-stream-2-filter-design | ★ 責務スコープ要再評価 | stream_3 = 0 件確定 + sontaku_signals.level を追加軸に組み込む設計、Phase A.5-3b 第二作のサンプル拡充後に再評価、小規模実装の可能性が高い + **★ F-jp-coverage-tune-followup で顕在化した stream_3 過剰検出 (Stream accuracy 27.27% → 9.09%) を責務範囲として組み込む可能性高** (= angle 検索 WL マッチ後に LLM 解説価値判定追加) |
 | 2 | F-verify-perspective | 並走候補 | axis 分布集計 (3b/3c 中) |
 | 3 | F-verify-script-quality | 並走候補 | NG 語彙頻度 / リトライ率集計 (3b/3c 中) |
 
@@ -265,7 +289,8 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 
 | 試運転 | バッチ | 動画化率 | 主要観察 |
 |---|---|---|---|
-| **2026-05-09** | **F-jp-coverage-tune** | (試運転なし、独立 23 件精度測定 + 1 回チューニング) | `verify_two_stage()` 二段階クエリ生成を独立 23 件で精度測定 (重複 2 ペア除外、blind_005 / blind_004 採用)。**post-tuning verdict=fail**: Recall covered **42.11%** (8/19、+10.53pp from pre-tuning) / Precision blind **26.67%** / F1 **0.5926** / Tier 一致率 **62.50%** / Stream accuracy **27.27%**。confusion: TP=8 / FP=0 / FN=11 / TN=4 (post-tuning)。系統別正答率: stream_1 = 4/4 (100%) / stream_2 = 2/18 (11.1%、12 件 → stream_1 broad miss、6 件 → stream_3 over-detect) / stream_3 = 0/0 (真値 0 件)。graceful fallback 発火 0 件 / unknown 0 件 / per-call timeout 発火 0 件 / total elapsed 322s (pre) + 341s (post) = 平均 14-15s/件。**Grounding API 構造的限界が明確化** (1 クエリ 5-10 chunk + WL 外ドメインで上位埋まる + 0 URL 返却ケース複数)、verify_two_stage 固有ではなく F-13.B 全体の課題。F-jp-coverage-tune-followup (★最優先) で複数クエリ並列発行 + 結果統合等の根本治療を議論する流れに。 |
+| **2026-05-09** | **F-jp-coverage-tune-followup** | (試運転なし、独立 23 件再測定 + WL 整備) | F-jp-coverage-tune verdict=fail の根本原因 3 分解 → 主因 2 つ (WL マッチング欠陥 + WL 漏れ準大手) を根本治療。`_match_whitelist()` のドメイン判定を substring match → ドメイン階層判定に置換 + `JP_MEDIA_WHITELIST` に `afpbb.com` / `forbesjapan.com` / `nippon.com` 3 ドメイン追加。Step C 再測定: **Recall covered 42.11% → 89.47% (+47.36pp、threshold 0.53pp 不足)** / **F1 covered 0.5926 → 0.8718 (+0.2792、threshold 0.85 を ★ 初突破)** / Precision blind 26.67% → 33.33% (+6.66pp) / Tier 一致率 62.50% → 30.77% (-31.73pp、母数 8→13 増 + Grounding 非決定性) / Stream accuracy 27.27% → 9.09% (-18.18pp、stream_3 過剰検出が顕在化)。confusion: TP=8→17 (+9) / FN=11→2 (-9) / TN=4→1 (-3) / FP=0→3 (+3)。改善 9 件 (blind_004/005/008, covered_006/007/010, cls-7bd1406438b6/6be4fc09d9ed/a4132ec7d949) / 退行 3 件 (blind_003/blind_007/cls-0c7fa7c667d6 が新追加 nippon/afpbb/newsweekjapan 経由ヒット = WL 拡張のトレードオフ)。残 FN 2 件 (blind_010 論考型 = 構造的欠落 / covered_003 米中関税 = 政府系・研究機関偏重で多クエリ救済可能性高)。**verdict=fail のまま** (Recall / Precision blind / Tier 一致率 未達) だが F-13.B 系列で F1 covered が threshold を **初突破** = 実用ライン到達。CP-3 でカズヤ判断 = Step D スキップ、残課題 4 軸分離で個別根本治療へ。 |
+| 2026-05-09 | F-jp-coverage-tune | (試運転なし、独立 23 件精度測定 + 1 回チューニング) | `verify_two_stage()` 二段階クエリ生成を独立 23 件で精度測定 (重複 2 ペア除外、blind_005 / blind_004 採用)。**post-tuning verdict=fail**: Recall covered **42.11%** (8/19、+10.53pp from pre-tuning) / Precision blind **26.67%** / F1 **0.5926** / Tier 一致率 **62.50%** / Stream accuracy **27.27%**。confusion: TP=8 / FP=0 / FN=11 / TN=4 (post-tuning)。系統別正答率: stream_1 = 4/4 (100%) / stream_2 = 2/18 (11.1%、12 件 → stream_1 broad miss、6 件 → stream_3 over-detect) / stream_3 = 0/0 (真値 0 件)。graceful fallback 発火 0 件 / unknown 0 件 / per-call timeout 発火 0 件 / total elapsed 322s (pre) + 341s (post) = 平均 14-15s/件。**Grounding API 構造的限界が明確化** (1 クエリ 5-10 chunk + WL 外ドメインで上位埋まる + 0 URL 返却ケース複数)、verify_two_stage 固有ではなく F-13.B 全体の課題。F-jp-coverage-tune-followup ★最優先で複数クエリ並列発行 + 結果統合等の根本治療を議論する流れに (本フォローアップで主因解消、副因のみ残存に縮減)。 |
 | 2026-05-08 | F-task-e-finalize | (試運転なし、docs 追記 + finalize_annotations.py 実行のみ) | Task E カズヤレビュー (4 分類版 + sontaku_signals 込み、25 件) がクラウド対話形式で完了、**25 件全件 LLM 推定値そのまま採用** (= `kazuya_review.*_revised` 全件 null)。`finalize_annotations.py --schema-version 2.0` 実行で `annotation_diff.json` (`fully_unmodified_count=25`) + `stream_classification.json` (counts: stream_1=4 / stream_2=20 / stream_3=0 / out=1、各 event に `final_stream_source=llm_estimate` / `final_sontaku_signals_source=llm_estimate`) + `golden_set.json` (v1.1 → v1.3、19 件更新、試運転由来 6 件は対象外) 生成更新。**4 つの運用原則確立**: (1) 「揃える必然性なし」原則、(2) 「sontaku_signals は嘘をつかない設計、疑わしきは低く見積もる」運用原則、(3) 「LLM の知性に委ねる」原則 (Hydrangea コアバリュー)、(4) 「観点の選択的欠落 = 忖度」判定軸。**1 つの構造的問題発覚**: 試運転 / golden_set 重複サンプリング (25 件中 2 ペア = 4 件、独立件数は実質 23 件 = ★ F-jp-coverage-tune で本方針通り採用)。**(c) サンプル選定バイアス仮説の証拠強化**: カズヤレビューを経ても stream_3 に再分類される件は 0 件、根本治療は Phase A.5-3b 第二作のサンプル拡充。 |
 | 2026-05-08 | F-extension-followup | (試運転なし、docs 追記 + scripts/finalize_annotations.py 最小修正) | extension クラウドレビュー指摘 3 件反映: (1) stream_3=0 件エントリに **(c) サンプル選定バイアス説** を追記、(2) 新規エントリ「sontaku_signals type 分布のサンプル設計バイアス」追加、(3) `scripts/finalize_annotations.py` の sontaku_signals 対応 = 4 関数最小修正。Task E カズヤレビュー後の `--schema-version 2.0` 実行で sontaku_signals が反映される状態を確立。 |
 | 2026-05-08 | F-particular-angle-redesign-extension | (試運転なし、docs + scripts + LLM 推定) | 系統名 1/1.5/2 → 1/2/3 リネーム + sontaku_signals 25 件 LLM 推定 (level: high=7 / medium=14 / low=1 / none=3、type: diplomatic=20 / domestic=1 / media_industry=1 / null=3、extraction_confidence: high=23 / medium=2 / low=0)。クラウド誤り 9 記録 + Step 3-4 改良 + MECE 判別基準明示。 |
@@ -279,7 +304,7 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 |---|---|---|---|---|
 | F-1 | F-1 / F-1.5 | EditorialMissionFilter | 編集ミッション適合度で score 算出 (>= 45.0 で通過) | ✅ 稼働中 (F-trial-run-post-fix 試運転で 18/364 通過確認) |
 | F-2 | F-2 / F-5 | FlagshipGate (Hydrangea コンセプト整合) | 海外発の重要ニュースを優先 | ✅ 稼働中 (F-trial-run-post-fix 試運転で Blocked 0 件確認) |
-| F-13.B | F-13.B / F-jp-coverage-improve / F-trial-run-post-fix / **F-jp-coverage-tune** | JpCoverageVerifier (rescue 完全廃止 + Web 検証 + ドメイン抽出レイヤー + **★ verify_two_stage 二段階クエリ生成**) | JP 報道カバレッジを 27 ドメイン WL で検証 (既存 verify() = broad-only / **新 verify_two_stage() = broad + angle 二段階で系統 1/2/3 機械判別**) | ✅ **構造的不具合修正完了** (F-jp-coverage-improve / 2026-05-07) + 本番動作確認済み (F-trial-run-post-fix / 2026-05-07) + **★ verify_two_stage 二段階クエリ生成実装完了** (F-jp-coverage-tune / 2026-05-09、不変原則 3 例外条件 4 つ全部適用、既存 verify() 完全不変)。**残課題 (Recall/Precision/Tier 一致率閾値) は verdict=fail のまま** = Grounding API 構造的限界が支配的、F-jp-coverage-tune-followup ★最優先で根本治療議論 |
+| F-13.B | F-13.B / F-jp-coverage-improve / F-trial-run-post-fix / F-jp-coverage-tune / **F-jp-coverage-tune-followup** | JpCoverageVerifier (rescue 完全廃止 + Web 検証 + ドメイン抽出レイヤー + verify_two_stage 二段階クエリ生成 + **★ WL マッチング階層判定化 + WL 拡張 30 ドメイン**) | JP 報道カバレッジを 30 ドメイン WL で検証 (既存 verify() = broad-only / verify_two_stage() = broad + angle 二段階で系統 1/2/3 機械判別 / **★ WL マッチングはドメイン階層判定 (子孫・先祖関係を吸収、TLD 共通や部分文字列はマッチしない)**) | ✅ **構造的不具合修正完了** (F-jp-coverage-improve / 2026-05-07) + 本番動作確認済み (F-trial-run-post-fix / 2026-05-07) + verify_two_stage 二段階クエリ生成実装完了 (F-jp-coverage-tune / 2026-05-09) + **★ WL マッチング階層判定化 + WL 拡張 (afpbb / forbesjapan / nippon の 3 ドメイン追加で 27→30) 完了** (F-jp-coverage-tune-followup / 2026-05-09、不変原則 3 例外条件 4 つ全部適用、既存メソッド contract 完全不変)。**Recall covered 89.47% / F1 covered 0.8718 (threshold 0.85 を ★ 初突破)** で実用ライン到達、verdict は依然 fail だが主因 (WL マッチング欠陥 + WL 漏れ準大手) は根本解消、残課題 4 軸分離で個別治療へ |
 | F-5 | F-5 | FlagshipGate 下流救済 | 上流ガードを通過した候補の最終整合 | ✅ 稼働中 (F-trial-run-post-fix 試運転で救済発火 0 件、Elite Judge Gate 3 で十分採用) |
 | **F-13 (隠れ層)** | F-13 / F-doc-cleanup | script_writer.py:951-985 quality_floor_miss bypass | analysis_result 等が成立すれば appraisal の [抑制] を上書き | ✅ 稼働中 (F-trial-run-post-fix 試運転で bypass 発火 0 件、3 Slot 全て floor 通過) |
 
@@ -290,9 +315,11 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 - `docs/` 配下全般 (CURRENT_STATE / DISCUSSION_NOTES / DECISION_LOG /
   FUTURE_WORK / BATCH_PROTOCOL / **PARTICULAR_ANGLE_DEFINITION** 等の更新)
 - `tests/` 配下に新規テストファイル追加 (既存ファイルは原則変更しない、
-  ただし API contract 整合化に伴うフィクスチャ更新は許容、
-  例: F-jp-coverage-improve で `_make_grounding_response` を整合化、
-  F-jp-coverage-tune で `tests/test_jp_coverage_verifier_two_stage.py` 新規 19 件)
+  ただし API contract 整合化に伴うフィクスチャ更新 + 既存ファイルへの新規
+  テストクラス追加は許容、例: F-jp-coverage-improve で `_make_grounding_response`
+  を整合化、F-jp-coverage-tune で `tests/test_jp_coverage_verifier_two_stage.py`
+  新規 19 件、★ F-jp-coverage-tune-followup で
+  `tests/test_jp_coverage_verifier_domain_extract.py` に 3 クラス 26 件追加)
 - `scripts/` 配下に新規スクリプト追加 (例: `verify_jp_coverage_measure.py`,
   `replay_jp_coverage.py`, **`extract_particular_angle.py`**, **`finalize_annotations.py`**,
   **`reclassify_annotations.py`**, **`generate_review_draft_v2.py`**,
@@ -310,13 +337,17 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 - `src/triage/` の既存ファイル (不変原則 3、ただし F-jp-coverage-improve /
   2026-05-07 で `jp_coverage_verifier.py` の `_search_with_grounding()` 修正、
   F-jp-coverage-tune / 2026-05-09 で `jp_coverage_verifier.py` への `verify_two_stage()`
-  新メソッド + `TwoStageVerifyResult` dataclass 追加、を例外適用済 — BATCH_PROTOCOL
-  「不変原則の例外条件」4 条件全て満たすことを確認した上で、既存 `verify()` /
-  `_build_search_query` / `_search_with_grounding` / `_filter_excluded` /
-  `_match_whitelist` 完全不変)
+  新メソッド + `TwoStageVerifyResult` dataclass 追加、★ F-jp-coverage-tune-followup /
+  2026-05-09 で `_match_whitelist()` 内のドメイン判定を substring match → ドメイン
+  階層判定に置換 (バグ修正) + 新規モジュール関数 `_domain_matches_hierarchy(host, wl_domain)`
+  追加 + `JP_MEDIA_WHITELIST` に 3 ドメイン追加 (データ追加のみ)、を例外適用済 —
+  BATCH_PROTOCOL「不変原則の例外条件」4 条件全て満たすことを確認した上で、既存
+  `verify()` / `verify_two_stage()` / `_build_search_query` / `_search_with_grounding` /
+  `_search_with_grounding_two_stage` / `_filter_excluded` のシグネチャ・挙動完全不変、
+  `_match_whitelist` は内部判定ロジック修正のみで戻り値 contract 不変)
 - `src/analysis/` 配下全般 (不変原則 4、F-12-B-2 着手時に例外条項追加検討)
-- 既存テスト (不変原則 5、baseline 1364 passed 維持 — ただしフィクスチャの
-  API contract 整合化は許容)
+- 既存テスト (不変原則 5、baseline 1390 passed 維持 — ただしフィクスチャの
+  API contract 整合化 + 既存テストファイルへの新規テストクラス追加は許容)
 
 ## 6. 不変原則 5 つ (リマインダ、正本: BATCH_PROTOCOL.md)
 
@@ -337,7 +368,7 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
    カズヤ承認済の 4 条件全て満たす場合に同例外条件を適用可。
    詳細は BATCH_PROTOCOL.md「不変原則の例外条件」セクション参照。
 4. **`src/analysis/` 変更不可** (F-12-B-2 axis 多様化着手時に例外条項追加検討)
-5. **既存テスト破壊しない** (baseline 1364 passed)
+5. **既存テスト破壊しない** (baseline 1390 passed)
 
 ## 7. カズヤの直近フィードバック要点
 
@@ -352,8 +383,11 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
   F-jp-coverage-tune に分離、★ F-particular-angle-design で「広範事件 vs 特定角度」の
   判定単位の曖昧さを概念正典化で根本治療、★ F-particular-angle-redesign で 3 分類の
   「系統 1 内部の混在」を 4 分類化で構造的に解消、★ F-jp-coverage-tune で
-  Grounding API 構造的限界が verify_two_stage 単独では解けないと判明、F-jp-coverage-tune-followup で
-  複数クエリ並列発行 + 結果統合等の根本治療を別バッチで議論)
+  Grounding API 構造的限界が verify_two_stage 単独では解けないと判明、★
+  F-jp-coverage-tune-followup で verdict=fail 主因を 3 分解 → WL マッチング階層
+  判定化 + WL 拡張で主因解消 + Step D は CP-3 でカズヤ判断によりスキップ + 残課題
+  4 軸分離で個別の根本治療を後続バッチへ = 1 バッチで欲張らず根本治療を積み重ねる
+  運用が確立)
 - **「重複しないように定義すればよくね?」** — 系統 1 / 系統 2 の判定対象が
   「広範事件」だと両系統で重複ケース発生 → 判定対象を『特定角度』に限定すれば
   重複は構造的に消える、という 2026-05-07 議論結論。F-particular-angle-design
@@ -467,10 +501,25 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
  限界が明確化。post-tuning verdict=fail (Recall covered 42.11% / Precision blind
  26.67% / F1 0.5926 / Tier 一致率 62.50%) で目標未達だが、本バッチで支配的 FN 要因が
  verify_two_stage 固有ではなく F-13.B 全体の構造的課題と判明、F-jp-coverage-tune-followup
- (★最優先) で複数クエリ並列発行 + 結果統合等の根本治療を別バッチで議論する流れに。
- baseline 1345 → 1364 passed (新規 19 件追加、既存全 1345 件維持)。
- ★ Project Knowledge 最新化リマインダ: 本バッチ完了で F-jp-coverage-tune-followup 着手の
- 前提が完全に整ったため、新チャット移行前にカズヤが手動で claude.ai の
- Project Knowledge を **必須最新化** することを推奨 (BATCH_PROTOCOL の
+ で複数クエリ並列発行 + 結果統合等の根本治療を別バッチで議論する流れに。
+ F-jp-coverage-tune-followup (2026-05-09) は **ゲート完了後の 7 つ目のバッチ**で
+ verdict=fail の根本原因を 3 分解 (WL マッチング欠陥 + WL 漏れ準大手 + Grounding
+ API 構造的限界) し、`_match_whitelist()` のドメイン判定を substring match → ドメイン
+ 階層判定に置換 (新規モジュール関数 `_domain_matches_hierarchy(host, wl_domain)` 追加) +
+ `JP_MEDIA_WHITELIST` に 3 ドメイン (`afpbb.com` Tier 2 / `forbesjapan.com` `nippon.com`
+ Tier 4) 追加 (不変原則 3 例外条件 4 つ全部適用、既存メソッド contract 完全不変) +
+ 独立 23 件で再測定 + CP-3 中間チェックポイントで Step D ((p) 多クエリ並列発行) を
+ カズヤ判断で **スキップ** = verdict=fail 主因 2 つを根本治療しつつ残課題 4 軸分離で
+ 個別治療を後続バッチに委譲する運用を確立。Step C 結果: Recall covered 42.11% → 89.47%
+ (+47.36pp) / F1 covered 0.5926 → 0.8718 (+0.2792、threshold 0.85 を ★ 初突破) /
+ Precision blind 26.67% → 33.33% / Tier 一致率 62.50% → 30.77% / Stream accuracy
+ 27.27% → 9.09% = verdict=fail のまま だが F-13.B 系列で F1 covered が threshold を
+ 初突破した実用ライン到達。残課題 4 軸: (a) Recall 90% 突破 = F-jp-coverage-tune-followup-2
+ 候補、(b) Precision blind 母数問題 = Phase A.5-3b 第二作、(c) Tier 一致率 = Grounding
+ 非決定性、(d) Stream accuracy = F-stream-2-filter-design 責務範囲。baseline 1364 →
+ 1390 passed (新規 26 件追加、既存全 1364 件維持)。
+ ★ Project Knowledge 最新化リマインダ: 本バッチ完了で F-jp-coverage-tune verdict=fail
+ 主因の根本治療が完了し残課題が 4 軸に分離されたため、新チャット移行前にカズヤが手動で
+ claude.ai の Project Knowledge を **必須最新化** することを推奨 (BATCH_PROTOCOL の
  Project Knowledge 運用ルールに従う)。
  過去の経緯は DECISION_LOG.md / FUTURE_WORK.md / DISCUSSION_NOTES.md を参照。*

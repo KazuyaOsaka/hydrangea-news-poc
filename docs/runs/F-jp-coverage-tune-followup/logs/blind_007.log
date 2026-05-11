@@ -1,0 +1,33 @@
+# blind_007
+timestamp: 2026-05-09T20:38:01.940774
+elapsed_seconds: 20.68
+
+## Truth
+  expected_stream: stream_1_silence_gap
+  expected_broad_jp_coverage: unreported
+  expected_angle_jp_coverage: unreported
+  expected_tier: None
+  in_golden_set: True
+
+## Predicted
+  stream: stream_2_perspective_gap
+  broad_jp_coverage: True
+  angle_jp_coverage: False
+  broad_matched_tier: tier_4_business
+  angle_matched_tier: None
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: Putin ally's $500 million Russian superyacht sails through Hormuz despite US blockade 日本 報道
+  angle_query: ロシア 大富豪 ヨット ホルムズ海峡 イラン 封鎖 特権的 通過 地政学的 結託
+
+## Results
+  broad: {"urls": ["https://joins.com", "https://newsweekjapan.jp"], "matched_urls": ["https://newsweekjapan.jp"], "excluded_urls": [], "matched_tier": "tier_4_business"}
+  angle: {"urls": ["https://joins.com", "https://hasethblog.com", "https://laodong.vn", "https://gaitameonline.com", "https://binance.com"], "matched_urls": [], "excluded_urls": [], "matched_tier": null}
+
+## Hits
+  jp_media_hits_broad: ['newsweekjapan.jp']
+  jp_media_hits_angle: []
+  excluded_count_broad: 0
+  excluded_count_angle: 0

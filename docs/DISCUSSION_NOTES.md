@@ -1,8 +1,11 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-09 (F-jp-coverage-tune 完了 verdict=fail、Grounding API 構造的
-限界が本バッチで明確化 + stream_3 過剰検出の定義レベル限界が観察、新規 2 エントリ +
-既存 1 エントリ追記 (重複サンプリング問題に独立 23 件評価結果の補足))
+最終更新: 2026-05-09 (F-jp-coverage-tune-followup 完了 verdict=fail のまま、
+ただし WL マッチング階層判定化 + WL 拡張 3 ドメインで主因 (= WL サブドメイン
+不一致 + WL 漏れ準大手) を解消、Recall covered +47.36pp / F1 covered +27.92pp の
+大幅改善 + F1 covered 0.8718 で threshold 初突破。Grounding API 構造的限界
+エントリを部分的解消ステータス + 残課題 (副因のみ残存) で更新、stream_3 過剰検出
+エントリは Active 維持で本バッチで顕在化 (Stream accuracy 27.27% → 9.09%) を追記)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -16,53 +19,65 @@
 
 ## 未分類 (Active)
 
-### 2026-05-09: Grounding API の構造的限界 — 1 クエリ 5-10 chunk + WL 外で上位埋まる + 0 URL 返却 (F-jp-coverage-tune で発覚)
+### 2026-05-09: Grounding API の構造的限界 — 主因 (WL マッチング欠陥 + WL 漏れ) は F-jp-coverage-tune-followup で解消、副因 (1 クエリ chunk 制限 + 政府系/研究機関偏重) のみ残存
 
 **内容**:
 F-jp-coverage-tune (2026-05-09) で `verify_two_stage` 二段階クエリ生成を独立
 23 件で精度測定した結果、verdict=fail (Recall covered 42.11% / Precision blind
 26.67% / F1 0.5926 / Tier 一致率 62.50%、(c) dateRestrict プロンプト埋め込み
-除去で +10.53pp 改善後)。FN 13 件の broad 検索結果分析で、**Grounding API の
-構造的限界** が支配的な FN 要因として明確化:
+除去で +10.53pp 改善後)。FN 13 件の broad 検索結果分析で、当初は **Grounding
+API の構造的限界** が支配的な FN 要因として明確化されていたが、F-jp-coverage-tune-followup
+(2026-05-09) で **本問題が 3 つの異なる原因に分解可能** であることが判明:
 
-1. **1 クエリあたり 5-10 chunk しか返さない** (Gemini Grounding API 仕様)
-2. **上位ヒットが WL 外で埋まる**: 観測された頻出 WL 外ドメイン =
-   `youtube.com×6` / `hatena.ne.jp×3` / `chosunonline.com×2` (韓国メディア!)
-   / `msf.or.jp×2` / `nippon.com×2` / `note.com×2` / `reddit.com×2` /
-   `chiba-tv.com×2` / `forbesjapan.com×1` / `afpbb.com×1`。本来あるべき大手 WL
-   ドメイン (NHK / 朝日 / 日経 / 読売等) が上位に入らないケースが多発。
-3. **0 URL 返却ケース複数**: covered_005 (ブラジル COP30) / cls-0c7fa7c667d6
-   (ロシア焼身) / cls-a4132ec7d949 (Met Police) で Grounding 検索結果ゼロ。
-   日本語タイトル + 「日本 報道」接尾辞では検索エンジンが過剰絞込している
-   可能性 (broad query 仮説)。
+1. **WL マッチング欠陥** (★ 主因): WL `news.fnn.jp` 登録に対して Grounding が
+   `fnn.jp` を返してきても WL マッチング側 (`domain in url_lower` substring
+   match) がサブドメイン関係を別エントリ扱い → ✅ **F-jp-coverage-tune-followup
+   Step A で解消** (`_domain_matches_hierarchy` 階層判定で吸収)
+2. **WL 漏れ準大手** (★ 主因): `forbesjapan.com` / `nippon.com` / `afpbb.com`
+   等が WL 未登録 → ✅ **F-jp-coverage-tune-followup Step B で解消** (3 ドメイン
+   追加、判定 3 基準 = 発行元独立性 / 取材リソース / 大手認知度を満たす)
+3. **Grounding API 仕様限界** (★ 副因のみ残存):
+   - **1 クエリあたり 5-10 chunk しか返さない** (Gemini Grounding API 仕様)
+   - **政府系・研究機関・アグリゲータ偏重**: covered_003 (米中関税協議) で
+     jetro.go.jp / dir.co.jp / cistec.or.jp / livedoor.com 等が返却されるが
+     日経・朝日等の主要メディアが上位に入らないケース
+   - **論考型事象の構造的欠落**: blind_010 (Zionism crisis 論考) で日本主要
+     メディアが取り上げていない事実上のもの (= Grounding 仕様限界ではなく
+     報道側構造の問題)
+   - **0 URL 返却ケースは F-jp-coverage-tune-followup でほぼ消失** (broad query
+     からの dateRestrict 除去 + WL 整備で大半救済)
 
-これは `verify_two_stage` 固有ではなく **F-13.B 全体の構造的課題**。
-F-trial-run-post-fix (2026-05-07) DISCUSSION_NOTES「F-13.B Grounding 検索クエリ
-品質問題 — 英語タイトルクエリでの youtube.com 偏重」と同型の問題で、本バッチで
-**日本語タイトル / 系統 2 候補にも一般化** されることが確認された。
+**F-jp-coverage-tune-followup Step C 再測定結果**:
+- Recall covered: 42.11% → **89.47%** (+47.36pp、threshold 90% に **0.53pp
+  不足**)
+- F1 covered: 0.5926 → **0.8718** で threshold 0.85 を **初突破** ✓
+- 残 FN 2 件: blind_010 (論考型、構造的欠落) + covered_003 (政府系/研究機関
+  偏重、多クエリ並列発行で救済可能性高)
 
-**論点と対応案 (F-jp-coverage-tune-followup の検討候補)**:
-- (p) **Grounding API 複数クエリ並列発行 + 結果統合** ★最有力候補: 1 イベント
-  に対して複数の異なるクエリ表現 (元タイトル / 短縮タイトル / WL ドメイン名
-  ヒント混入クエリ / 英→日翻訳クエリ) を並列発行し、結果を WL マッチングで
-  マージ。Grounding API 1 クエリの 5-10 chunk 制限を「複数クエリで疑似的に
-  拡張」する戦略。期待: Recall covered 60-80% に到達可能。
+**残存副因の対応案 (F-jp-coverage-tune-followup-2 の検討候補)**:
+- (p) **Grounding API 複数クエリ並列発行 + 結果統合**: covered_003 救済狙い、
+  Recall 90% 突破見込み (94.7%+ 推測)。副作用リスク = Precision blind / Tier
+  一致率がさらに退行する可能性 (broader matching で FP 増加)。
 - (q) **検索 API 変更検討**: Google Custom Search / Bing Search 等への移行。
   dateRestrict / num=10 / siteSearch 等のパラメータが API レベルで supported
   される利点。検証コスト + コスト見積もり要。
-- (r) **WL ドメイン拡張検討**: 観測された頻出 WL 外ドメインのうち真の WL 候補
-  (`forbesjapan.com` / `nippon.com` / `afpbb.com` 等) を Tier 4 等に追加。厳密
-  な追加基準 (発行元独立性 / 取材規模 / 大手認知) で議論。
 
 **出典**:
 - F-jp-coverage-tune バッチプロンプト + 完了レポート (2026-05-09)
+- F-jp-coverage-tune-followup REPORT
+  (`docs/runs/F-jp-coverage-tune-followup/REPORT.md`)
+- F-jp-coverage-tune-followup Step C measurement
+  (`docs/runs/F-jp-coverage-tune-followup/measurement_result_step_c.json`)
 - `docs/runs/F-jp-coverage-tune/measurement_result.json` (post-tuning) +
   `measurement_result_pre_tuning.json` (Step 4 前ベースライン)
-- 23 件の per-event ログ (`docs/runs/F-jp-coverage-tune/logs/`)
+- 23 件の per-event ログ (両バッチ)
 - F-trial-run-post-fix (2026-05-07) DISCUSSION_NOTES 関連エントリ
 
-**ステータス**: `Active` (★ F-jp-coverage-tune-followup ★最優先で 対応案 (p)
-を最有力候補に検討、決定後 DECISION_LOG に昇格)。
+**ステータス**: **Partially Resolved** (主因 = WL マッチング欠陥 + WL 漏れ準大手
+は F-jp-coverage-tune-followup で解消、副因 = 1 クエリ chunk 制限 + 政府系/研究
+機関偏重 + 論考型構造欠落 のみ残存。残存副因は F-jp-coverage-tune-followup-2
+で対応案 (p) 多クエリ並列発行を ★ カズヤ判断後に検討、Phase A.5-3b 第二作の
+サンプル拡充も並行)。
 
 ---
 
@@ -90,6 +105,16 @@ newsweekjapan.jp / asahi.com) が発生したが、真値は「特定角度は�
 - Post-tuning (dateRestrict プロンプト埋め込み除去): stream_3 過剰検出 6 件
 - = dateRestrict 解除で angle 検索の recall も上がり、WL ヒット件数増加 → 過剰
   検出も増加。トレードオフが存在。
+
+**F-jp-coverage-tune-followup (2026-05-09) で更に顕在化**:
+- WL マッチング階層判定化 + WL 拡張 3 ドメイン (afpbb.com / forbesjapan.com /
+  nippon.com) で angle 検索もマッチ範囲が拡大、stream_2 真値 18 件中
+  **15 件が stream_3_candidate に誤分類** (Stream accuracy 27.27% → **9.09%**、
+  -18.18pp)
+- 同型問題が WL 整備の副作用として深刻化、本エントリで指摘した「URL マッチング
+  の粒度限界」が定量的に拡大した形
+- = 本バッチでは scopes 外 (broad-level の Recall/Precision/F1 改善が主目的)、
+  F-stream-2-filter-design 責務範囲として残課題分離
 
 **対応案 (F-jp-coverage-tune-followup の (s) 副次論点)**:
 - angle 検索結果に対する **LLM 解説価値判定** の追加: 単なる WL マッチでは

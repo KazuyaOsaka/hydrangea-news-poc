@@ -1,0 +1,33 @@
+# covered_002
+timestamp: 2026-05-09T20:39:43.978221
+elapsed_seconds: 22.62
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_1_newspaper
+  angle_matched_tier: tier_3_broadcaster
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: 米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』 日本 報道
+  angle_query: トランプ プーチン 直接交渉 20項目の具体的条件 G7枠組み 破壊的影響 外交的正当性
+
+## Results
+  broad: {"urls": ["https://yomiuri.co.jp", "https://livedoor.com", "https://fathomjournal.org", "https://youtube.com", "https://youtube.com", "https://nippon.com", "https://jetro.go.jp", "https://youtube.com", "https://youtube.com", "https://tbsradio.jp"], "matched_urls": ["https://yomiuri.co.jp", "https://nippon.com"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_1_newspaper"}
+  angle: {"urls": ["https://fnn.jp", "https://youtube.com", "https://youtube.com", "https://arabnews.jp", "https://nippon.com", "https://mofa.go.jp", "https://mofa.go.jp"], "matched_urls": ["https://fnn.jp", "https://nippon.com"], "excluded_urls": ["https://youtube.com", "https://youtube.com"], "matched_tier": "tier_3_broadcaster"}
+
+## Hits
+  jp_media_hits_broad: ['nippon.com', 'yomiuri.co.jp']
+  jp_media_hits_angle: ['news.fnn.jp', 'nippon.com']
+  excluded_count_broad: 4
+  excluded_count_angle: 2

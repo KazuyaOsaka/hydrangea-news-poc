@@ -1,0 +1,33 @@
+# covered_005
+timestamp: 2026-05-09T20:40:48.249294
+elapsed_seconds: 26.14
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_1_newspaper
+  angle_matched_tier: tier_2_wire_service
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: ブラジル ルラ政権、アマゾン開催の COP30 で狙うグローバルサウス主導役 日本 報道
+  angle_query: ブラジル COP30 ルラ グローバルサウス 西側主導 気候秩序 交渉力 経済的主権 地政学的レバレッジ
+
+## Results
+  broad: {"urls": ["https://yomiuri.co.jp", "https://afpbb.com", "https://youtube.com", "https://jetro.go.jp", "https://jetro.go.jp", "https://newsweekjapan.jp", "https://ismedia.jp", "https://projectdesign.jp", "https://foejapan.org", "https://greenpeace.org", "https://jica.go.jp", "https://worldtimes.co.jp", "https://ide.go.jp", "https://nies.go.jp"], "matched_urls": ["https://yomiuri.co.jp", "https://afpbb.com", "https://newsweekjapan.jp"], "excluded_urls": ["https://youtube.com"], "matched_tier": "tier_1_newspaper"}
+  angle: {"urls": ["https://fnn.jp", "https://nhk-ep.co.jp", "https://youtube.com", "https://meti.go.jp", "https://env.go.jp", "https://afpbb.com", "https://projectdesign.jp", "https://youtube.com", "https://mofa.go.jp", "https://jetro.go.jp", "https://jri.co.jp", "https://wwf.or.jp", "https://pwc.com", "https://greenpeace.org"], "matched_urls": ["https://fnn.jp", "https://afpbb.com"], "excluded_urls": ["https://youtube.com", "https://youtube.com"], "matched_tier": "tier_2_wire_service"}
+
+## Hits
+  jp_media_hits_broad: ['afpbb.com', 'newsweekjapan.jp', 'yomiuri.co.jp']
+  jp_media_hits_angle: ['afpbb.com', 'news.fnn.jp']
+  excluded_count_broad: 1
+  excluded_count_angle: 2
