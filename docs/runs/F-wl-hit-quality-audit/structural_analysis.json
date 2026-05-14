@@ -1,0 +1,169 @@
+{
+  "version": "1.0",
+  "batch": "F-wl-hit-quality-audit",
+  "generated_at": "2026-05-14T18:30:00+09:00",
+  "task": "Task E — 構造的理解 + 改善案議論",
+  "input_evidence": [
+    "trial_run_websearch_audit.json (Task B)",
+    "golden_sampling_websearch_audit.json (Task C)",
+    "grounding_chunk_raw_dump.json (Task D, Slot-2 only)"
+  ],
+  "structural_diagnosis": {
+    "decisive_finding": {
+      "headline": "★★★ Gemini LLM 自身が response_text で『該当しない (別事象)』と明言しているのに、F-13.B `_search_with_grounding` は chunk.web の WL マッチだけで has_jp_coverage=True を返している",
+      "evidence_quote_from_response_text": "「ユーザーが確認を求めている『BBCが放送を取りやめたガザに関するドキュメンタリーが受賞し、映画製作者がBBCを非難した』という2026年5月上旬の出来事とは異なる内容で、かつ日付も異なります」",
+      "implication": "★ コードレベルの設計判断問題: 現実装は LLM の judgement を完全に無視 (response_text を解釈せず) + chunk のドメイン抽出 + WL 階層マッチングのみで True/False を決めている"
+    },
+    "chunk_web_data_structure_observation": {
+      "all_chunks_web_uri": "Vertex AI redirect URL のみ (例: `https://vertexaisearch.cloud.google.com/grounding-api-redirect/...`、不可逆エンコード)",
+      "all_chunks_web_title": "ドメイン名のみ (例: `afpbb.com`、`arabnews.jp`、`middleeasteye.net` 等。article path もページタイトルも含まれない)",
+      "all_chunks_web_domain_attr": "全件 None (SDK の戦略 1 公式 domain フィールドは未実装、戦略 2 title 経由のみ機能)",
+      "chunk_total": 8,
+      "chunk_extraction_strategy_distribution": {
+        "strategy_1_web_domain": 0,
+        "strategy_2_web_title": 8,
+        "none": 0
+      },
+      "wl_match_outcome_in_slot_2_dump": {
+        "afpbb_com_count": 2,
+        "wl_tier_assigned": "tier_2_wire_service (= 2 chunk が afpbb.com 由来 → WL match → True)",
+        "but_llm_says": "該当しない、別事象 (= F-13.B の判定と LLM の judgement が乖離)"
+      }
+    },
+    "hypothesis_separation": {
+      "hypothesis_a_sdk_bug": {
+        "description": "Gemini SDK が chunk.web.uri を redirect URL でしか返さない仕様",
+        "evidence": "Slot-2 ダンプの 8/8 chunk で web_uri = Vertex AI redirect URL のみ。decode 経路は SDK で提供されず",
+        "verdict": "✅ 部分確認 (chunk.web.uri からは article path は取得不能)。ただし bug というより仕様"
+      },
+      "hypothesis_b_api_spec": {
+        "description": "Grounding API は article path を chunk.web に返さない設計",
+        "evidence": "Slot-2 ダンプの 8/8 chunk で web_title = ドメイン名のみ (article path もページタイトルもなし)。SDK で取得可能なフィールドに article URL が一切ない",
+        "verdict": "✅ 確認 (API 仕様レベルで article 粒度の URL 取得は不可能)"
+      },
+      "hypothesis_c_query_quality": {
+        "description": "検索クエリが article 単位の URL を引き出せていない",
+        "evidence": "現クエリ = `{英語 title} 日本 報道` で Gemini は『該当しない』と response_text で正しく判定。chunk が低品質なのではなく、Grounding が返す chunk 構造自体に article URL が含まれない設計",
+        "verdict": "❌ 主因ではない (クエリ品質よりも API レベルの構造的制約が支配)"
+      },
+      "hypothesis_d_llm_judgement_ignored_★_new": {
+        "description": "F-13.B 現実装が LLM の response_text 判定を完全に無視し、chunk のドメイン抽出 + WL マッチのみで True/False を決めている",
+        "evidence": "Slot-2 で LLM が『該当しない、別事象、日付も異なる』と明示判定。にもかかわらず F-13.B は afpbb.com chunk が 2 件存在することだけで has_jp_coverage=True を返している",
+        "verdict": "✅★ 確認 = 改善余地が最大の論点。本検証で初めて顕在化"
+      }
+    },
+    "root_cause_synthesis": {
+      "primary": "★ LLM judgement bypass (hypothesis_d): LLM の response_text 判定を `_search_with_grounding` が解釈せず、chunk のドメイン抽出のみで True/False を決めている。これは『LLM の知性に委ねる』 (カズヤ哲学、Hydrangea コアバリュー) と矛盾する設計",
+      "secondary": "Grounding API 仕様 (hypothesis_a + b): chunk.web に article 粒度の URL を返さない (= 改善案には API level の対処が必要)",
+      "non_cause": "クエリ品質 (hypothesis_c) は本質ではない (= LLM 自身が正しく判定している)"
+    }
+  },
+  "improvement_options": {
+    "option_i_llm_judgement_extraction": {
+      "name": "(i) LLM response_text の判定を抽出して使う (★★★ 推奨度最高)",
+      "description": "`_search_with_grounding` で Gemini response_text を解釈し、LLM 自身の『該当する記事はあるか/ないか』判断を取り込む。chunk のドメイン抽出 + WL マッチは併用するが、LLM が『該当しない』と明言した場合は has_jp_coverage=False に下げる (= LLM 判定が WL マッチを上書き)",
+      "implementation_sketch": [
+        "1. プロンプトを改修: 『該当する記事があれば URL を列挙、ない場合は明示的に「なし」と回答してください』指示を追加",
+        "2. response_text の構造化 (JSON 出力をオプションで指示、無理なら正規表現/キーワード抽出で『なし』判定)",
+        "3. `_search_with_grounding` の戻り値型を `tuple[list[str], LLMJudgement]` に拡張、LLM judgement を verify() の判定に反映",
+        "4. `verify()` のロジック: WL match あり AND LLM 判定 = 『あり』 → True / WL match あり AND LLM 判定 = 『なし』 → False (= LLM 判定が支配) / WL match なし → False (現状維持)"
+      ],
+      "pros": [
+        "★ Hydrangea カズヤ哲学『LLM の知性に委ねる』に整合",
+        "★ 誤陽性 (Slot-2 / blind_002 / cls-a4132ec7d949 のような broader topic 一致のみ) の根本治療",
+        "Grounding API の article URL 不在問題を回避 (= LLM が記事内容をすでに読んで判定している)"
+      ],
+      "cons": [
+        "LLM 判定にハルシネーション/誤判定のリスク (= 別 LLM 呼び出し or 既存 chunk から判定するセルフバイアス)",
+        "プロンプト改修 + 出力解釈 + 既存 verify() ロジック改修で工数 4-8h",
+        "src/triage/jp_coverage_verifier.py 改修必要 = 不変原則 3 例外条件 (Hydrangea ミッション中核機構 + 実装バグ修正 + 設計変更ではない + DECISION_LOG 明記、4 条件全) でカズヤ承認要"
+      ],
+      "estimated_recall_impact": "Recall covered = -5 to -10pp 想定 (= 現在の TP の一部が FP として正しく排除されるため)",
+      "estimated_precision_impact": "Precision blind = +20 to +40pp 想定 (= broader topic-only な False Positive が排除されるため、Hydrangea ブランド忠実度大幅上昇)"
+    },
+    "option_ii_wl_match_confidence_flag": {
+      "name": "(ii) WL マッチング側で『ベアドメインのみマッチ = 低信頼度』フラグ追加",
+      "description": "matched_urls に article path が含まれるかどうかで信頼度を 2 段階に分ける (high_confidence / low_confidence)。下流で low_confidence のみのケースは慎重に扱う (= silence_gap でなく divergence へ寄せない 等)",
+      "implementation_sketch": [
+        "1. JpCoverageResult に `match_confidence: 'high'|'low'` フィールド追加",
+        "2. `_match_whitelist` で url path 部分の長さ判定 (path が `/articles/-/xxxxx` 等存在すれば high、`/` のみなら low)",
+        "3. 下流ロジック (final_routing) で low_confidence + Tier 4 の場合は has_jp_coverage を再評価"
+      ],
+      "pros": [
+        "現挙動を壊さず段階的に信頼度情報を追加できる (= 既存 True/False 二値判定は維持)",
+        "実装工数 2-4h",
+        "src/triage/jp_coverage_verifier.py 改修必要 (= 不変原則 3 例外条件)"
+      ],
+      "cons": [
+        "★ Grounding API 仕様で article path は ★ 取得できない事が判明 (Task D の決定的発見) → 本オプションは原理的に動作しない (= 全 chunk が low_confidence になる)",
+        "対症療法的 (LLM judgement bypass の根本問題に手を付けない)"
+      ],
+      "verdict": "★ Task D 発見により実質的に無効化 = 推奨しない"
+    },
+    "option_iii_two_stage_gate": {
+      "name": "(iii) 高信頼度マッチ (article path あり) のみで True 判定",
+      "description": "(ii) と同じく article path 有無で判定するが、low_confidence は has_jp_coverage=False 扱い",
+      "verdict": "★ Task D 発見により無効化 (= article path は全 chunk で取得できないため全件 False になる、極端な Recall 低下)"
+    },
+    "option_iv_alternative_search_api": {
+      "name": "(iv) 別 API (Google Custom Search 等) への移行",
+      "description": "Grounding API を捨て、article URL を返す検索 API に切り替える",
+      "pros": [
+        "article 粒度の URL が取得可能",
+        "WL マッチング階層判定が article 単位で機能",
+        "siteSearch / dateRestrict 等のパラメータがネイティブ対応"
+      ],
+      "cons": [
+        "実装工数 1-2 日 + 検証",
+        "コスト評価必要 (Google Custom Search は無料枠 100 query/日)",
+        "src/triage/jp_coverage_verifier.py の大規模改修 = 不変原則 3 例外条件 + カズヤ承認"
+      ],
+      "verdict": "★ Option (i) を優先後、Recall/Precision 改善が不十分なら検討。F-jp-coverage-tune-followup-2 と統合検討候補"
+    },
+    "option_v_grounding_query_improvement": {
+      "name": "(v) Grounding クエリの品質改善",
+      "description": "現クエリ `{英語 title} 日本 報道` を改修 (例: 英→日翻訳キーワード抽出 + 『記事の URL も含めて返してください』指示追加)",
+      "verdict": "★ クエリ品質説 (hypothesis_c) は本質ではないと Task D で判明 = 主因対策にならない。ただし Option (i) と組み合わせて LLM judgement 抽出を促す副次効果はあり"
+    }
+  },
+  "recommended_path": {
+    "primary_recommendation": "Option (i) LLM response_text 判定を抽出して使う = 根本治療",
+    "rationale": [
+      "★ カズヤ哲学『LLM の知性に委ねる』『対症療法じゃなく根本治療』に整合",
+      "★ Task D で LLM 自身が正しく『該当しない、別事象、日付も異なる』と判定していることが確認された = LLM の判定能力は高い",
+      "★ 現実装が LLM judgement を bypass している = 設計判断レベルの欠陥、修正で大きな効果が見込める",
+      "★ Grounding API の article URL 不在問題は回避できる (= LLM が記事内容を読んで判定済み)"
+    ],
+    "implementation_strategy_proposal": [
+      "★ 別バッチ案件として『F-jp-coverage-llm-judgement-extraction』(仮称) を起案",
+      "Step 1: プロンプト改修 + response_text 解釈ロジック実装 (= scripts/ に PoC を先に作る、F-jp-coverage-improve の F-13.B 構造的不具合修正と同様の段階的開発)",
+      "Step 2: ゴールデンセット 23 件 + 試運転 3 件で再測定 (Recall covered + Precision blind の trade-off 評価)",
+      "Step 3: verify() への配線 (不変原則 3 例外条件適用、カズヤ承認必須)",
+      "Step 4: 本番試運転 + REPORT"
+    ],
+    "deferred_options": [
+      "Option (iv) Alternative Search API = (i) で Recall/Precision 改善が不十分な場合 OR F-jp-coverage-tune-followup-2 (多クエリ並列発行) と統合検討",
+      "Option (v) クエリ品質改善 = (i) の補助として併用可能"
+    ]
+  },
+  "implications_for_existing_metrics": {
+    "f1_covered_0_8718_meaning_reinterpreted": "★ F-jp-coverage-tune-followup Step C の F1 covered 0.8718 (threshold 0.85 初突破) は『broader topic-family レベル』での実用性指標 = 『specific event (= particular_angle) レベル』では下振れの可能性。本検証で Slot-2 / blind_002 / cls-a4132ec7d949 の 3 ケースで topic-family 一致 / specific event 不一致が確認された (試運転 + golden サンプリングで 3/8 = 37.5%)",
+    "recall_covered_89_47_percent_meaning_reinterpreted": "同様に broader topic level での Recall (= 当該日本メディアが当該 topic 家系を報道しているか) であって、specific event level (= 当該日本メディアが当該 specific 角度を報道しているか) ではない。Hydrangea コアミッション = perspective_gap (系統 2、= specific 角度の日本未報道) を機械検出するには現 F-13.B では構造的に不足",
+    "precision_blind_33_33_percent_meaning_reinterpreted": "blind 真値 4 件中 3 件が誤って『covered』と判定されている = Option (i) LLM judgement 抽出で大幅改善可能性 (= LLM が『該当しない』と言える broader topic-only ケースを救い出せる)",
+    "metric_revisit_recommendation": "★ 本バッチ完了時に F-jp-coverage-tune-followup REPORT を v2 化 (= broader vs specific の caveat 明記) するか、別バッチで実施するかはカズヤ判断要 (CP で『本バッチは記録のみ、REPORT v2 化は別バッチ』を選択 = REPORT v2 化は F-jp-coverage-tune-followup-2 着手時に実施推奨)"
+  },
+  "implications_for_phase_a5_3b": {
+    "slot_1_status_after_verification": "★ Slot-1 cls-6889e9e1c7ac (試運転、Israel 9,600 Detainees) は本検証で **Topic-Level TP 確定** (afpbb は 9,600 数字 + 虐待を継続報道) = 真の silence_gap ではなく perspective_gap (系統 2) のターゲット",
+    "first_video_options": {
+      "option_a_proceed_with_perspective_gap_framing": "Slot-1 で第一作起案、台本表現を『日本でも事象は報道されたが、TeleSUR が掘った構造 (ICRC 訪問操作疑惑等) は触れられていない』perspective_gap 型に切り替え。Hydrangea ブランドメッセージ『日本未報道』との整合は『特定角度の未報道』として再定義",
+      "option_b_select_different_event": "Slot-1 は保留、別題材で試運転やり直し or 真の silence_gap 題材を選定。F-13.B WL ヒット品質の根本治療 (Option i) を先に実施してから第一作着手",
+      "option_c_hold_decision_in_report": "★ カズヤ CP 選択 = 本バッチでは判断保留、REPORT に両論併記。最終判断は別議論",
+      "selected_by_kazuya_in_cp": "option_c_hold_decision_in_report"
+    }
+  },
+  "constraints_acknowledged": {
+    "scope_of_this_batch": "本バッチは独立検証 + 分析 + docs 更新のみ。改善案 (Option i 等) の実装は本バッチでは行わず、別バッチ案件として記録",
+    "invariant_principles_compliance": "本バッチで `src/` `tests/` `configs/` 変更なし、`scripts/dump_grounding_chunks.py` 新規追加のみ、`docs/` 更新のみ、baseline 1390 passed 維持",
+    "single_audit_caveat": "Task D ダンプは Slot-2 のみ 1 回呼び出し。Grounding API の非決定性 (= 同 event でも回によって chunk 構成が揺れる) は加味しておらず、別回の挙動は別途検証必要"
+  }
+}

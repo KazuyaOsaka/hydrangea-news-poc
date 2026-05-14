@@ -4442,3 +4442,165 @@ docs/ 配下のみ更新 (新規 10 ファイル + 既存 4 ファイル更新) 
   - F-trial-run-post-fix (構造的踏襲元、比較ベース)
   - F-stream-2-filter-design (★ 責務範囲再評価対象、本バッチで顕在化した課題反映)
   - Phase A.5-3b 第一作起案 (★ 後続バッチ、本バッチの題材候補ランクをベースに着手判断)
+
+---
+
+## 2026-05-14: F-wl-hit-quality-audit — F-13.B WL ヒット品質の独立検証 + LLM judgement bypass 発見
+
+### 背景
+
+F-trial-run-post-tune (2026-05-11) で観察された問題: 試運転 3 Slot 全件で
+has_jp_coverage=True、ただし matched_urls が全件「ベアドメインのみ」
+(`https://afpbb.com` / `https://nippon.com`、article path なし) だった。
+Grounding API の chunk.web.title 抽出経路で『afpbb.com』等の文字列をドメインと
+して識別 → WL マッチング階層判定で Tier 認定する仕組みが、「当該事象を実際に
+報道している」ことを保証しない (= 誤陽性リスク) ことが懸念された。
+
+本バッチでは独立検証を実施し、(1) 試運転 3 Slot + (2) ゴールデンセット TP 17 件
+サンプリング 5 件 + (3) Grounding chunk 生データダンプ (Slot-2 のみ、CP カズヤ判断)
+の 3 段階で WL ヒット品質を評価した。
+
+### 議論
+
+#### 検証で確認された 3 つのパターン
+
+1. **TP**: Slot-1 (Israel 9,600 Detainees) は afpbb で 9,600 数字 + 虐待を継続報道
+   = topic-level 一致確認、ただし silence_gap ではなく perspective_gap のターゲット
+2. **Suspect FP**: Slot-2 (Channel 4 `Doctors Under Attack` BAFTA 受賞) は afpbb が
+   別事象 (`How to Survive Warzone Gaza` の Ofcom 制裁) を報じるのみ。Slot-2 specific
+   event は不在
+3. **Topic-Level TP / Specific Partial**: Slot-3 (Tehran says US proposal sought
+   Iran's surrender) は nippon.com でトピック家系を継続報道、specific 主張は不在
+
+ゴールデンセット 5 件サンプリングでも同じ 3 パターンが観察 (TP 2 件、Topic-Level TP
+2 件、Specific Event Suspect FP 1 件)。
+
+#### ★ Task D Grounding chunk 生データダンプで決定的発見
+
+Slot-2 cls-1a38c0ca8c99 で 8 chunk 取得。全 chunk で:
+- web_uri = Vertex AI redirect URL のみ (decode 不可)
+- web_title = ドメイン名のみ (article path もページタイトルもなし)
+- web_domain = None (SDK 戦略 1 未実装)
+
+★★★ **決定的発見**: Gemini LLM 自身が response_text で
+「指定されたニュース [...] とは異なる内容で、かつ日付も異なります」と **明示的に
+判定** している。にもかかわらず F-13.B は chunk の WL マッチだけで True を返している
+= **LLM の知性を完全に無視する設計判断レベルの欠陥**。
+
+#### 仮説の切り分け
+
+| 仮説 | 判定 |
+|---|---|
+| (a) SDK バグ説 | ✅ 部分確認 (chunk.web.uri redirect URL のみ) |
+| (b) Grounding API 仕様説 | ✅ 確認 (article path は API レベルで取得不能) |
+| (c) クエリ品質説 | ❌ 主因ではない (LLM は正しく判定) |
+| **(d) ★ LLM judgement bypass 説** | ✅★ 確認 = 最大の改善余地 |
+
+#### Hydrangea カズヤ哲学との整合性議論
+
+F-task-e-finalize (2026-05-08) で確立された「Hydrangea のポイントの一つに LLM の
+膨大な知識による評価とか判定があるから、一定 LLM を信用したいから」原則および
+クラウド誤り 9 (各論コントロールへの誘惑、2026-05-08) と本バッチの発見が直接呼応。
+
+現実装は LLM の judgement (= response_text の判定) を完全に bypass し、chunk の
+ドメイン抽出 + WL 階層マッチのみで True/False を決めている。これはカズヤ哲学
+「LLM の知性に委ねる」と矛盾する設計判断。
+
+### 決定
+
+#### 主要決定
+
+1. **WL ヒット品質誤陽性の根本原因 = (d) LLM judgement bypass を確定**
+   - 検証で確認された誤陽性パターン (broader topic 一致のみで True 返却) は
+     Grounding API 構造的限界 (a/b) + 現実装の設計欠陥 (d) の組み合わせ
+   - クエリ品質 (c) は本質ではない (LLM 自身は正しく判定している)
+
+2. **根本治療は Option (i) LLM response_text 判定抽出 (推奨)**
+   - 5 つの改善案 ((i)〜(v)) を整理し Option (i) を最有力候補として推奨
+   - 工数 4-8h、Recall -5〜-10pp / Precision +20〜+40pp の想定効果
+   - 実装は **別バッチ案件** として記録 (`F-jp-coverage-llm-judgement-extraction` 仮称)
+   - 不変原則 3 例外条件 (実装バグ修正 + 設計変更ではない + DECISION_LOG 明記 +
+     Hydrangea ミッション中核機構、4 条件全) でカズヤ承認要
+
+3. **Slot-1 cls-6889e9e1c7ac の系統判定 = perspective_gap 確定、第一作着手判断は両論併記で保留**
+   - CP カズヤ判断 = REPORT 両論併記。最終判断は別議論
+   - Option A (perspective_gap framing で第一作起案) と Option B (別題材で試運転やり直し OR
+     Option (i) 実装後に着手) を両論併記
+
+4. **F-jp-coverage-tune-followup REPORT v2 化は別バッチ**
+   - CP カズヤ判断 = 本バッチは記録のみ、REPORT v2 化は別バッチ
+   - F1 0.8718 / Recall 89.47% は broader topic level の値 = specific event level の caveat を
+     DISCUSSION_NOTES + CURRENT_STATE に記録
+   - REPORT v2 化は F-jp-coverage-tune-followup-2 着手時に統合推奨
+
+5. **「観察と記録に集中するバッチ」運用継続**
+   - 本バッチで `src/` `tests/` `configs/` 全て不変、`scripts/dump_grounding_chunks.py`
+     新規 1 ファイル + `docs/` のみ更新で完結
+   - 「動くものを壊さない」+「1 バッチで欲張らない」+「無制限自走禁止」原則維持
+   - F-trial-run-post-tune (2026-05-11) で確立された運用が再現
+
+#### CP (Task C 完了時) で停止 + カズヤ判断
+- Task D スコープ: Slot-2 のみ実施 (診断価値最大、Slot-1/3 スキップ)
+- Slot-1 系統判定: REPORT に両論併記
+- F1 信頼性: 本バッチは記録のみ、REPORT v2 化は別バッチ
+
+### 結果
+
+#### 検証結果サマリー
+
+| 検証 | 件数 | 結果 |
+|---|---|---|
+| 試運転 3 Slot WebSearch 検証 | 3 | TP=1, Suspect FP=1, Topic-TP=1 |
+| ゴールデンセット TP 17 → 5 件サンプリング | 5 | TP=1, Topic-Level TP=3, Specific Event Suspect FP=1 |
+| Slot-2 Grounding chunk dump | 8 chunks | LLM 自身が「該当しない」判定、F-13.B は WL マッチで True 返却 |
+
+#### 構造的問題の確定
+
+★ **F-13.B 現実装は LLM response_text 判定を完全に無視し、chunk のドメイン抽出 + WL
+階層マッチのみで True/False を決定** = 根本原因 (d) LLM judgement bypass を確定。
+
+#### 既存メトリクスの再解釈
+
+- F1 covered 0.8718 / Recall covered 89.47% = broader topic-family level の値
+- specific event (= particular_angle) level では下振れ可能性
+- 試運転 + golden サンプリングで 3/8 = 37.5% のケースで topic-family 一致 / specific
+  不一致パターンを確認
+
+#### 残課題 (FUTURE_WORK 追加)
+
+1. ★ **F-jp-coverage-llm-judgement-extraction** (仮称、新規バッチ案件): Option (i)
+   実装。LLM response_text 判定を抽出して `_search_with_grounding` に組み込む根本治療。
+   不変原則 3 例外条件適用要 + カズヤ承認要。
+2. ★ **F-jp-coverage-tune-followup REPORT v2 化** (別バッチ): broader vs specific の
+   caveat 反映 + 再測定。F-jp-coverage-tune-followup-2 と統合推奨。
+3. ★ **ゴールデンセット v2 化検討**: specific angle level の truth annotation 追加を別バッチで検討。
+
+#### 「動くものを壊さない」哲学の運用結果
+
+本バッチで `src/` `tests/` `configs/` `CLAUDE.md` 全て 0 行変更、
+`scripts/dump_grounding_chunks.py` 新規 1 ファイル + `docs/` のみ更新で完結。
+baseline 1390 passed 維持。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規ファイル:
+  - `scripts/dump_grounding_chunks.py`
+  - `docs/runs/F-wl-hit-quality-audit/REPORT.md`
+  - `docs/runs/F-wl-hit-quality-audit/environment_snapshot.json`
+  - `docs/runs/F-wl-hit-quality-audit/trial_run_websearch_audit.json`
+  - `docs/runs/F-wl-hit-quality-audit/golden_sampling_websearch_audit.json`
+  - `docs/runs/F-wl-hit-quality-audit/grounding_chunk_raw_dump.json`
+  - `docs/runs/F-wl-hit-quality-audit/structural_analysis.json`
+  - `docs/runs/F-wl-hit-quality-audit/structural_analysis.md`
+- ドキュメント更新:
+  - `docs/CURRENT_STATE.md` (全置換更新)
+  - `docs/DECISION_LOG.md` (本エントリ追加)
+  - `docs/FUTURE_WORK.md` (本バッチ完了済み移動 + 新規残課題 3 件追加)
+  - `docs/DISCUSSION_NOTES.md` (4-A 新規 1 件 + 4-B 既存 1 件再評価)
+- 関連バッチ:
+  - F-trial-run-post-tune (前バッチ、本バッチで観察された問題を独立検証)
+  - F-jp-coverage-tune-followup (Step C metric の再解釈、REPORT v2 化は別バッチ)
+  - F-jp-coverage-improve (F-13.B 構造的不具合修正、_extract_domain_from_chunk 戦略を踏襲)
+  - F-jp-coverage-llm-judgement-extraction (★ 後続バッチ案件、Option (i) 実装)
+  - Phase A.5-3b 第一作起案 (Slot-1 系統判定 = perspective_gap 確定、両論併記でカズヤ判断待ち)

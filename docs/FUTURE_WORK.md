@@ -1,10 +1,14 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-11 (F-trial-run-post-tune 完了、F-jp-coverage-tune-followup 改修後の
-本番試運転 + 第一作題材ランク付け、3/3 で WL 拡張 (afpbb/nippon) ヒット = 本番影響の
-強さ確認 + 第一作最有力候補 Slot-1 cls-6889e9e1c7ac 機械スコア 10pt 確定、新規残課題
-3 件追加 = F-13.B WL ヒット品質検証 / verify_two_stage 本番配線判断 /
-particular_angle_metadata + sontaku_signals 本番配線判断)
+最終更新: 2026-05-14 (F-wl-hit-quality-audit 完了、F-trial-run-post-tune で観察された
+matched_urls ベアドメイン問題を独立検証、★ Task D Grounding chunk dump で『Gemini LLM が
+response_text で「該当しない」と明示判定しているのに F-13.B は WL マッチだけで True を
+返す = LLM judgement bypass の設計判断レベルの欠陥』が決定的に判明、根本治療 Option (i)
+LLM response_text 判定抽出を別バッチ `F-jp-coverage-llm-judgement-extraction` として
+新規追加、F-jp-coverage-tune-followup REPORT v2 化 + ゴールデンセット v2 化検討 を残課題に
+追加、Slot-1 系統判定 = perspective_gap 確定 + 第一作着手判断は両論併記でカズヤ判断待ち、
+F-13.B WL ヒット品質検証エントリを完了済みに移動、src/ tests/ configs/ 0 変更で baseline
+1390 passed 維持)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -103,13 +107,37 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 - ~~**F-trial-run-post-tune** (★最優先、2026-05-11 完了、完了済みセクション参照)~~
 
-- **F-13.B WL ヒット品質の独立検証** ★高 (F-trial-run-post-tune / 2026-05-11 で観察)
-  - 背景: F-trial-run-post-tune 本番試運転で 3/3 has_jp_coverage=True 返却。ただし `matched_urls` が全て **ベアドメインのみ** (`https://afpbb.com` / `https://nippon.com` のみ、article path なし)。Grounding API の chunk.web.title 抽出経路で `afpbb.com` という文字列をドメイン形式として識別 + `_domain_matches_hierarchy` 階層判定で Tier 認定する仕組みが、「afpbb.com が当該事象を実際に報道している」ことを必ずしも保証しない (= 誤陽性リスク)。F-jp-coverage-tune-followup の Step C 測定 (Recall covered 89.47%) も同じ抽出経路を経ているため、ゴールデンセット測定値も同等の懸念がある可能性。
-  - 対応案: (a) WebSearch 後追い検証 (Anthropic web search で本試運転 3 Slot + ゴールデンセット 23 件の matched_domains が実際に報道しているか手作業 + WebSearch で確認)、(b) Grounding chunk の生データダンプ (`_search_with_grounding` / `_search_with_grounding_two_stage` の chunk.web 配列を全件 JSON 保存して目視確認)、(c) Grounding 検索クエリ品質改善 (英語タイトル → 日本語キーワード抽出 + article path 取得を促す)
-  - 検討時期: Phase A.5-3b 第一作着手判断と同時 (= Slot-1 cls-6889e9e1c7ac が真に divergence ルート妥当かどうか確認するため)
-  - 想定工数: 2-4 時間 (WebSearch 後追い + Grounding chunk ダンプ + 整理)
-  - 関連ファイル: `src/triage/jp_coverage_verifier.py` (`_extract_domain_from_chunk` 戦略 1/2)、`docs/runs/F-trial-run-post-tune/f13b_output_analysis.json` (本問題の記録)、`docs/runs/F-jp-coverage-tune-followup/measurement_result_step_c.json` (ゴールデンセット測定の同問題リスク)
-  - 関連: F-jp-coverage-tune-followup-2 (★ 多クエリ並列発行と同時検討可)、Phase A.5-3b 第一作起案 (本検証結果が前提条件になる可能性)
+- ~~**F-13.B WL ヒット品質の独立検証** ★高 (F-trial-run-post-tune / 2026-05-11 で観察、F-wl-hit-quality-audit / 2026-05-14 完了、完了済みセクション参照)~~
+
+- **F-jp-coverage-llm-judgement-extraction** ★最優先 (F-wl-hit-quality-audit / 2026-05-14 で根本原因確定)
+  - 背景: F-wl-hit-quality-audit の Task D で **Gemini LLM 自身が response_text で『該当しない (別事象)』と明示判定しているのに、F-13.B `_search_with_grounding` は chunk の WL マッチだけで True を返している** ことが確認 (= LLM judgement bypass の設計判断レベルの欠陥)。Grounding API 仕様で article path が取得不能 (Task D 確認、戦略 1 SDK 未実装 + 戦略 2 title フィールドはドメイン名のみ) のため、article 粒度の WL マッチで誤陽性を排除する経路は原理的に閉じられている。代替としては **LLM 自身の判定を取り込む経路** が根本治療。
+  - 対応案 (Option (i) LLM response_text 判定抽出):
+    1. `_search_with_grounding` プロンプトを改修: 『該当する記事があれば URL を列挙、ない場合は明示的に「なし」と回答してください』指示を追加
+    2. response_text の構造化 (JSON 出力をオプションで指示、無理なら正規表現/キーワード抽出で『なし』判定)
+    3. `_search_with_grounding` の戻り値型を `tuple[list[str], LLMJudgement]` に拡張、LLM judgement を verify() の判定に反映
+    4. `verify()` のロジック: WL match あり AND LLM 判定 = 『あり』 → True / WL match あり AND LLM 判定 = 『なし』 → False (= LLM 判定が支配) / WL match なし → False (現状維持)
+  - 期待効果: Recall covered = -5 to -10pp / Precision blind = +20 to +40pp (broader topic-only な False Positive 排除、Hydrangea ブランド忠実度大幅上昇)
+  - 検討時期: Phase A.5-3b 第一作着手判断と並走 OR 着手前 (カズヤ判断要、Slot-1 第一作着手可否と密接に関連)
+  - 想定工数: 4-8 時間 (プロンプト改修 + response 解釈 + verify() 改修 + テスト + 試運転)
+  - 不変原則例外条件: `src/triage/jp_coverage_verifier.py` 改修必要 = 不変原則 3 例外条件 (実装バグ修正 + 設計変更ではない + DECISION_LOG 明記 + Hydrangea ミッション中核機構、4 条件全) でカズヤ承認必須
+  - 関連ファイル: `src/triage/jp_coverage_verifier.py` (`_search_with_grounding` 改修、`JpCoverageResult` 拡張)、`scripts/measure_two_stage_accuracy.py` (再測定用)、`docs/runs/F-wl-hit-quality-audit/structural_analysis.md` (改善案論点整理)
+  - 関連: F-wl-hit-quality-audit (前バッチ、本問題の根本原因を確定)、F-jp-coverage-tune-followup-2 (★ 別 API 移行検討と統合候補)、Phase A.5-3b 第一作起案 (Slot-1 の perspective_gap framing が前提条件)
+
+- **F-jp-coverage-tune-followup REPORT v2 化** ★高 (F-wl-hit-quality-audit / 2026-05-14 で要件確定)
+  - 背景: F-wl-hit-quality-audit の独立検証で F-jp-coverage-tune-followup Step C メトリクス (F1 covered 0.8718 / Recall covered 89.47% / Precision blind 33.33%) が **broader topic-family level の値**であって、**specific event (= particular_angle) level では下振れの可能性** が確認 (試運転 + golden サンプリングで 3/8 = 37.5% で topic-family 一致 / specific 不一致パターン観察)。CP カズヤ判断 = 本バッチ (F-wl-hit-quality-audit) は記録のみ、REPORT v2 化は別バッチとして分離。
+  - 対応案: F-jp-coverage-tune-followup REPORT.md に broader vs specific caveat セクションを追加 + F-wl-hit-quality-audit 検証結果へのリンク + 解釈ガイダンス (= 機械検出の現在地と Option (i) 実装後の予想再評価値)。本来は F-jp-coverage-llm-judgement-extraction の再測定結果と統合して書き直すのが最適。
+  - 検討時期: F-jp-coverage-llm-judgement-extraction 完了直後 (= 再測定値が出てから統合 v2 化、現状値だけで v2 化するメリットは小さい) OR F-jp-coverage-tune-followup-2 着手と統合
+  - 想定工数: 1-2 時間 (単体バッチで実施する場合)、F-jp-coverage-llm-judgement-extraction or -tune-followup-2 に統合する場合は工数追加最小
+  - 関連ファイル: `docs/runs/F-jp-coverage-tune-followup/REPORT.md` (v2 化対象)、`docs/runs/F-wl-hit-quality-audit/REPORT.md` (caveat の根拠)
+  - 関連: F-wl-hit-quality-audit (caveat 発見元)、F-jp-coverage-llm-judgement-extraction (再測定値の供給元)、F-jp-coverage-tune-followup-2 (統合候補)
+
+- **ゴールデンセット v2 化検討 (specific angle truth annotation)** (F-wl-hit-quality-audit / 2026-05-14 で論点提起)
+  - 背景: F-wl-hit-quality-audit で『topic-family level』と『specific event level』の Recall/Precision 乖離が顕在化。現ゴールデンセットは `expected_broad_jp_coverage` / `expected_angle_jp_coverage` truth を持つが、★ **『specific angle level (= MEE/TeleSUR が独自に掘った particular_angle 単位) で日本主要メディアが報じているか』という truth は明示的に annotate されていない** 可能性。これが annotate されていれば F-jp-coverage-llm-judgement-extraction の再測定で broader vs specific の Recall/Precision を 2 軸で評価可能。
+  - 対応案: `docs/runs/F-verify-jp-coverage/golden_set.json` v2 として specific angle truth フィールドを追加。各 event について particular_angle (例: Slot-1 なら『ICRC 訪問操作疑惑』) と該当 angle が日本主要メディアで報じられているか truth を明示する。F-particular-angle-design の `annotations.json` と整合させる。
+  - 検討時期: F-jp-coverage-llm-judgement-extraction 着手前に実施する (= 再測定の評価軸を整える) OR 着手と並走
+  - 想定工数: 2-4 時間 (annotate + 整合性チェック + 既存メトリクス計算ロジックへの対応)
+  - 関連ファイル: `docs/runs/F-verify-jp-coverage/golden_set.json`、`docs/runs/F-particular-angle-design/annotations.json`、`scripts/measure_two_stage_accuracy.py` (specific angle metric 対応)
+  - 関連: F-jp-coverage-llm-judgement-extraction (再測定で specific angle level の精度評価)、F-jp-coverage-tune-followup REPORT v2 化 (caveat 反映)
 
 - **verify_two_stage 本番配線判断** (F-trial-run-post-tune / 2026-05-11 で観察)
   - 背景: F-jp-coverage-tune (2026-05-09) で `verify_two_stage()` 二段階クエリ生成メソッドが新規実装され、F-jp-coverage-tune-followup (2026-05-09) で `_match_whitelist` 階層判定化 + WL 拡張で機械精度が改善 (F1 covered 0.8718 で threshold 初突破) したが、**production main.py:3187 は legacy `verify()` (broad-only) のみ呼び出し** で本番未配線。F-trial-run-post-tune で stream_1/2/3 機械判別が production-pipeline 上で稼働しないことが確認された。
@@ -540,6 +568,75 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **F-13.B WL ヒット品質の独立検証 (F-wl-hit-quality-audit)** (F-wl-hit-quality-audit /
+  2026-05-14 完了)
+  - 発生バッチ: F-trial-run-post-tune (2026-05-11) で 試運転 3 Slot 全件 has_jp_coverage=True
+    + matched_urls が全件ベアドメインのみ (`https://afpbb.com` / `https://nippon.com`、
+    article path なし) という挙動が観察され、Grounding API の chunk.web.title 抽出経路で
+    『afpbb.com』等の文字列をドメイン形式として識別 + `_domain_matches_hierarchy` 階層
+    判定で Tier 認定する仕組みが、「当該事象を実際に報道している」ことを保証しない
+    (= 誤陽性リスク) ことが懸念された。本バッチで独立検証を実施。
+  - 対応内容: (Task A) ブランチ作成 + 環境スナップショット (main HEAD `eb0dd5e`、
+    baseline 1390 passed)。(Task B) 試運転 3 Slot の WebSearch 後追い検証 = Slot-1 (Israel
+    9,600 Detainees) が afpbb で 9,600 数字 + 虐待を継続報道 = **TP**、Slot-2 (Channel 4
+    `Doctors Under Attack` BAFTA 受賞) が afpbb で別事象 (`How to Survive Warzone Gaza`
+    Ofcom 制裁 `3604087`) のみ = **Suspect FP 確定**、Slot-3 (Tehran 降伏フレーミング)
+    が nippon.com で類似トピック家系報道 = **Topic-Level TP / Specific Partial**。
+    (Task C) ゴールデンセット TP 17 件から seed=42 で 5 件サンプリング検証 = blind_008 /
+    blind_009 が Topic-Level TP、blind_002 が Topic-Level TP / Specific Suspect FP
+    (Jesus 像破壊 itself は afpbb 報道、Rabbinate 沈黙の specific 角度は不在)、covered_008
+    が TP Confirmed (nippon.com direct match)、cls-a4132ec7d949 が Specific Event Suspect
+    FP (Met Police シナゴーグ法的苦情、afpbb で specific event 不在)。**CP 中間レポート
+    提出 → カズヤ判断**: Task D は Slot-2 のみ実施 (診断価値最大)、Slot-1 系統判定は両論
+    併記で保留、F1 信頼性は本バッチ記録のみで REPORT v2 化は別バッチ。(Task D)
+    `scripts/dump_grounding_chunks.py` 新規作成、Slot-2 で Grounding chunk 8 件取得
+    (7.51 秒、≒$0.05)。**★★★ 決定的発見**: Gemini LLM 自身が response_text で『指定された
+    ニュース [...] とは異なる内容で、かつ日付も異なります』と明示判定しているのに、
+    F-13.B は chunk の WL マッチだけで True を返している = **LLM judgement bypass の
+    設計判断レベルの欠陥**。chunk.web 構造の確認: 全 8 件で web_uri = Vertex AI redirect
+    URL のみ (decode 不可)、web_title = ドメイン名のみ (article path なし)、web_domain =
+    None (戦略 1 未実装)。(Task E) 構造的理解 + 改善案 5 オプション整理、Option (i)
+    LLM response_text 判定抽出 = 推奨 (工数 4-8h、Recall -5〜-10pp / Precision +20〜+40pp
+    想定、不変原則 3 例外条件適用要)。Option (ii)(iii) は Task D 発見で無効化、Option
+    (iv) 別 API 移行は F-jp-coverage-tune-followup-2 統合候補、Option (v) クエリ品質改善
+    は補助。(Task F) 統合 REPORT.md + Slot-1 系統判定両論併記 + 第一作着手判断材料 +
+    残課題リスト。(Task G) BATCH_PROTOCOL Task 1-5 ドッグフーディング。
+  - 重要な発見 / 観察:
+    (1) ★★★ **F-13.B 現実装は LLM response_text 判定を完全に無視し、chunk のドメイン抽出
+    + WL 階層マッチのみで True/False を決定** = 根本原因 (d) LLM judgement bypass を確定。
+    Grounding API 仕様 (article path 取得不能) と組み合わせて、broader topic 一致のみで
+    True 返却する構造的弱点が顕在化。
+    (2) ★ **Slot-1 cls-6889e9e1c7ac の系統判定 = perspective_gap 確定** (afpbb で 9,600
+    数字 + 虐待を継続報道済み = 真の silence_gap ではない)。第一作起案で『日本未報道』
+    というブランドメッセージで売り出すのは事実と矛盾、台本表現は『日本でも事象は報道
+    されたが、TeleSUR が掘った構造 (ICRC 訪問操作疑惑等) は触れられていない』
+    perspective_gap 型が正しい。第一作着手判断は両論併記でカズヤ判断待ち。
+    (3) ★ **F-jp-coverage-tune-followup Step C メトリクス (F1 covered 0.8718 / Recall
+    covered 89.47% / Precision blind 33.33%) は broader topic-family level の値** = specific
+    event (= particular_angle) level では下振れの可能性。試運転 + golden サンプリング
+    8 件中 3 件 (37.5%) で topic-family 一致 / specific 不一致パターンが観察された。
+    (4) ★ **改善案 = Option (i) LLM response_text 判定抽出** が根本治療。本バッチでは
+    実装せず、別バッチ案件 `F-jp-coverage-llm-judgement-extraction` として記録。
+    `src/triage/jp_coverage_verifier.py` 改修必要 = 不変原則 3 例外条件 (実装バグ修正 +
+    設計変更ではない + DECISION_LOG 明記 + Hydrangea ミッション中核機構、4 条件全) で
+    カズヤ承認必須。
+  - 残課題:
+    1. `F-jp-coverage-llm-judgement-extraction` (Option (i) 実装、緊急度 高、本バッチで
+       FUTURE_WORK 新規追加済み)
+    2. F-jp-coverage-tune-followup REPORT v2 化 (broader vs specific caveat、緊急度 高、
+       F-jp-coverage-llm-judgement-extraction 再測定値と統合推奨)
+    3. ゴールデンセット v2 化検討 (specific angle truth annotation、F-jp-coverage-llm-judgement-extraction
+       着手前 OR 並走推奨)
+    4. Phase A.5-3b 第一作着手判断: Slot-1 を perspective_gap framing で起案する (Option A)
+       か、別題材選定 (Option B) か、Option (i) 実装後に着手する (Option B' 統合) か =
+       カズヤ判断要
+  - 関連ファイル: 新規 `scripts/dump_grounding_chunks.py` + `docs/runs/F-wl-hit-quality-audit/`
+    配下 8 ファイル (REPORT.md + 5 JSON + 1 MD + 1 environment_snapshot.json) +
+    `docs/CURRENT_STATE.md` 全置換 + `docs/DECISION_LOG.md` 末尾追加 + `docs/FUTURE_WORK.md`
+    本エントリ完了済み移動 + 新規残課題 3 件追加 + `docs/DISCUSSION_NOTES.md` 4-A 新規 1 件
+    + 4-B 既存 1 件再評価。リグレッション影響なし (`src/` `tests/` `configs/` `CLAUDE.md`
+    0 行変更、baseline 1390 passed 維持)。
 
 - **F-jp-coverage-tune-followup マージ後の本番試運転 + Phase A.5-3b 第一作
   題材候補ランク付け (F-trial-run-post-tune)** (F-trial-run-post-tune /

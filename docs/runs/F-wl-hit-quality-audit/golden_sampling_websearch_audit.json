@@ -1,0 +1,254 @@
+{
+  "version": "1.0",
+  "batch": "F-wl-hit-quality-audit",
+  "generated_at": "2026-05-11T19:40:00+09:00",
+  "task": "Task C — ゴールデンセット TP 17 件から seed=42 で 5 件サンプリング検証",
+  "sampling_method": {
+    "tp_universe_size": 17,
+    "tp_definition": "expected_broad_jp_coverage='reported' AND predicted broad_jp_coverage=True (F-jp-coverage-tune-followup measurement_result_step_c.json)",
+    "seed": 42,
+    "sample_size": 5,
+    "method": "Python random.sample(seed=42)"
+  },
+  "websearch_constraint_caveat": {
+    "blocked_domains": ["yomiuri.co.jp", "fnn.jp"],
+    "note": "Anthropic WebSearch クローラがこれら主要紙ドメインをブロックしている。matched_urls に Tier 1 主要紙 (yomiuri / fnn / nikkei / asahi 等) が含まれるケースでは、ヒットの妥当性を直接 WebSearch で検証できない。本検証は accessible domains (afpbb.com / nippon.com / newsweekjapan.jp / forbesjapan.com / 海外メディア) のみで実施"
+  },
+  "verifications": [
+    {
+      "sample_idx": 1,
+      "event_id": "blind_008",
+      "title": "Israel accused of using 'water as a weapon' against Palestinians in Gaza",
+      "expected_stream": "stream_2_perspective_gap",
+      "f13b_matched": {
+        "matched_urls": ["https://newsweekjapan.jp"],
+        "matched_tier": "tier_4_business",
+        "matched_domains": ["newsweekjapan.jp"]
+      },
+      "queries": ["newsweekjapan.jp イスラエル ガザ 水 武器 パレスチナ"],
+      "newsweekjapan_hits": [
+        {
+          "url": "https://www.newsweekjapan.jp/headlines/world/2023/12/476851.php",
+          "title": "イスラエル、ガザで飢餓を武器化 パレスチナ外相が非難",
+          "relevance": "★ 強い topic-level match: 『飢餓を武器化』というフレーミング = 『water as weapon』と同根 (= 国連/外相による non-conventional weapon 化非難の言説空間)"
+        },
+        {
+          "url": "https://www.newsweekjapan.jp/articles/-/13152",
+          "title": "イスラエルはパレスチナの迫害をやめよ",
+          "relevance": "迫害トピックの解説"
+        },
+        {
+          "url": "https://www.newsweekjapan.jp/headlines/world/2024/11/525824.php",
+          "title": "イスラエルがガザ空爆、48時間で120人殺害 パレスチナ当局発表",
+          "relevance": "ガザの人道危機を継続報道"
+        }
+      ],
+      "judgement": "Topic-Level TP (specific 'water' framing 直接 match なし、ただし『非武装の手段を武器化』という言説 framework は明確に共有)",
+      "judgement_rationale": "newsweekjapan.jp は『食料 / 燃料 / 水 / 医療物資の完全遮断 = 国際法上の戦争犯罪』を継続報道。Slot の specific 『water as weapon』フレーミングは『starvation as weapon』『戦争犯罪』の言説家系に包含されており、topic-level でカバーされている。Tier 4 認定は妥当",
+      "fp_risk": "low"
+    },
+    {
+      "sample_idx": 2,
+      "event_id": "blind_002",
+      "title": "Israel's top Jewish religious body 'refuses to condemn' smashing of Jesus statue",
+      "expected_stream": "stream_2_perspective_gap",
+      "f13b_matched": {
+        "matched_urls": ["https://yomiuri.co.jp", "https://afpbb.com", "https://nippon.com", "https://nippon.com", "https://fnn.jp"],
+        "matched_tier": "tier_1_newspaper",
+        "matched_domains": ["yomiuri.co.jp", "afpbb.com", "nippon.com", "fnn.jp"]
+      },
+      "queries": [
+        "afpbb.com OR nippon.com イスラエル ラビ会議 イエス像 破壊 非難拒否",
+        "イエス像 イスラエル兵 レバノン 破壊 ラビ会議 (allowed_domains=afpbb/nippon/newsweekjapan)",
+        "\"refuses to condemn\" \"Jesus statue\" \"smashing\" Jewish rabbi Israel 2026 (general)"
+      ],
+      "blocked_domain_caveat": "yomiuri.co.jp / fnn.jp は WebSearch ブロック対象 → 直接確認不能",
+      "afpbb_hits_for_underlying_event": [
+        {
+          "url": "https://www.afpbb.com/articles/-/3632003",
+          "title": "大ハンマーでレバノンのキリスト像を叩く兵士の画像 イスラエル軍が調査",
+          "relevance": "★ 統計事象 (Jesus 像破壊 itself) を直接報道"
+        },
+        {
+          "url": "https://www.afpbb.com/articles/-/3632068",
+          "title": "キリスト像を大ハンマーで叩く兵士の画像 イスラエルが自国兵と認める",
+          "relevance": "事象継続報道"
+        },
+        {
+          "url": "https://www.afpbb.com/articles/-/3632252",
+          "title": "ネタニヤフ氏、キリスト像破壊の自国兵に「厳しい対応」明言",
+          "relevance": "ネタニヤフの非難声明を直接報道"
+        },
+        {
+          "url": "https://www.afpbb.com/articles/-/3633876",
+          "title": "レバノンで宗教施設「損傷」 イスラエル軍の発表にキリスト教団体「意図的」",
+          "relevance": "キリスト教団体の非難を継続報道"
+        }
+      ],
+      "specific_angle_coverage": {
+        "rabbinate_refusing_to_condemn_in_afpbb_nippon_newsweek": "未確認 (検索結果に出現せず)",
+        "interpretation": "★ Slot blind_002 の specific angle (= ラビ会議 / Chief Rabbinate が非難を拒否したこと) は afpbb/nippon/newsweekjapan に直接出現せず。afpbb は Jesus 像破壊 itself は手厚く報道、ただし MEE の独自角度 (= ラビ会議の非難拒否) は不在",
+        "yomiuri_fnn_check": "★ 未確認 (WebSearch ブロック)。yomiuri / fnn が当該角度を報道しているかは独立検証必要"
+      },
+      "judgement": "Topic-Level TP (broader event) / Specific Angle Partial-Suspect-FP (for afpbb/nippon checked; yomiuri/fnn unverified)",
+      "judgement_rationale": "Jesus 像破壊 itself は afpbb で手厚く報道 = topic-level TP 確定。ただし MEE が独自に追った specific angle (Rabbinate の沈黙 = 制度的忖度) は afpbb/nippon の検索結果に出現せず。これは ★ 重要パターン: 『広範事件は報道済み、特定角度は未報道』 = まさに perspective_gap (系統 2) のターゲット事例。Tier 1 認定の妥当性は yomiuri / fnn の検証に依存するが、少なくとも afpbb level では underlying event の topic match があるので False Positive とまでは断定できない",
+      "fp_risk": "specific angle level では mid-high、broader event level では low",
+      "particular_angle_implication": "★ blind_002 は『perspective_gap』そのもの = Slot-1 cls-6889e9e1c7ac と同じ構造 (= 広範事件は報道済み、虐待主張 itself は触れていない specific 角度)。これが F-particular-angle-design が解こうとしている問題の典型例"
+    },
+    {
+      "sample_idx": 3,
+      "event_id": "covered_008",
+      "title": "マリ 軍事政権に反政府勢力が一斉攻撃 暫定国防相死亡",
+      "expected_stream": "stream_2_perspective_gap",
+      "f13b_matched": {
+        "matched_urls": ["https://yomiuri.co.jp", "https://afpbb.com", "https://nippon.com", "https://nippon.com"],
+        "matched_tier": "tier_1_newspaper",
+        "matched_domains": ["yomiuri.co.jp", "afpbb.com", "nippon.com"]
+      },
+      "queries": ["afpbb.com OR nippon.com マリ 暫定国防相 死亡 反政府勢力 攻撃 (allowed_domains=afpbb/nippon)"],
+      "blocked_domain_caveat": "yomiuri.co.jp は WebSearch ブロック対象",
+      "direct_hits": [
+        {
+          "url": "https://www.nippon.com/ja/news/kd1421073361225777944/",
+          "title": "マリで一斉攻撃、国防相殺害 イスラム過激派が犯行声明",
+          "relevance": "★ direct match: Slot tail と完全一致 (国防相殺害 + イスラム過激派 + 一斉攻撃)"
+        },
+        {
+          "url": "https://www.nippon.com/ja/news/kd1425260038342689252/",
+          "title": "過激派、マリで約50人殺害 軍事政権と戦闘継続",
+          "relevance": "継続報道"
+        }
+      ],
+      "judgement": "TP Confirmed (Direct Specific Event Match)",
+      "judgement_rationale": "nippon.com で direct specific event match を確認。yomiuri / afpbb も同事象を報道している可能性が高い (公開された大手国際ニュースのため)。WL Tier 1 認定は妥当",
+      "fp_risk": "none"
+    },
+    {
+      "sample_idx": 4,
+      "event_id": "blind_009",
+      "title": "The real reason Iran and the US cannot end the war: Money",
+      "expected_stream": "stream_2_perspective_gap",
+      "f13b_matched": {
+        "matched_urls": ["https://yomiuri.co.jp", "https://newsweekjapan.jp", "https://newsweekjapan.jp"],
+        "matched_tier": "tier_1_newspaper",
+        "matched_domains": ["yomiuri.co.jp", "newsweekjapan.jp"]
+      },
+      "queries": [
+        "newsweekjapan.jp イラン 米国 戦争 終わらない 金 マネー 王政復古",
+        "newsweekjapan.jp イラン 米国 戦争 金 経済 制裁 王政"
+      ],
+      "blocked_domain_caveat": "yomiuri.co.jp は WebSearch ブロック対象",
+      "newsweekjapan_hits": [
+        {
+          "url": "https://www.newsweekjapan.jp/headlines/world/2026/03/590093_1.php",
+          "title": "焦点：イランの狙いは「消耗戦」、原油施設攻撃で経済的に欧米揺さぶる",
+          "relevance": "★ 強い topic-level match: 経済的・消耗戦のフレーミング"
+        },
+        {
+          "url": "https://www.newsweekjapan.jp/kimura/2026/04/post-352.php",
+          "title": "アメリカは同盟国の「潜在的な敵」となった...イラン戦争が停戦までにもたらしたものとは",
+          "relevance": "戦争終結プロセスの分析"
+        },
+        {
+          "url": "https://www.newsweekjapan.jp/stories/world/2025/06/557213.php",
+          "title": "イランとイスラエルの戦争、米国より中国の「ダメージが大きい」理由...世界経済への影響を分析",
+          "relevance": "経済の影響分析"
+        },
+        {
+          "url": "https://www.newsweekjapan.jp/articles/-/319560?display=b",
+          "title": "日本が見逃してはならない、「イラン紛争の裏」でベッセント米財務長官が見せた役割",
+          "relevance": "財務長官の役割 = 戦争 + 金"
+        }
+      ],
+      "judgement": "Topic-Level TP (Iran-US war + 経済/金/制裁の家系で多数報道、specific 'money is the reason' フレーミングは部分一致)",
+      "judgement_rationale": "newsweekjapan.jp はイラン-米国戦争を経済の観点から多数分析。Slot の specific framing (『戦争を終わらせられない真の理由 = カネ』) は『消耗戦による経済揺さぶり』『財務長官の役割』等の topic 家系に明確に包含されている。yomiuri がより limited に報道している可能性はあるが、Tier 1 認定は newsweekjapan の Tier 1 newspaper としての位置づけが正しいか別問題 (本来 Tier 2-3 相当か)",
+      "fp_risk": "low",
+      "tier_validity_concern": "newsweekjapan.jp の WL Tier 認定は問題なさそうだが、yomiuri と並ぶ Tier 1 newspaper としての位置づけは categorical-fit 観点で違和感あり (newsweekjapan は週刊誌系)"
+    },
+    {
+      "sample_idx": 5,
+      "event_id": "cls-a4132ec7d949",
+      "title": "Legal complaint filed by Palestine activists against Met Police chief over synagogue remarks",
+      "expected_stream": "stream_2_perspective_gap",
+      "f13b_matched": {
+        "matched_urls": ["https://afpbb.com"],
+        "matched_tier": "tier_2_wire_service",
+        "matched_domains": ["afpbb.com"]
+      },
+      "queries": [
+        "afpbb.com Met Police chief synagogue Palestine activists legal complaint Mark Rowley",
+        "afpbb.com ロンドン警視庁 ローリー長官 シナゴーグ パレスチナ 抗議",
+        "Met Police Rowley synagogue Palestine activists legal complaint 2026 (general)"
+      ],
+      "afpbb_hits": [
+        {
+          "url": "https://www.afpbb.com/articles/-/3630950",
+          "title": "親パレスチナの禁止団体を支持 ロンドンのデモで500人以上逮捕",
+          "relevance": "ロンドンの親パレスチナデモ取締まりを継続報道"
+        },
+        {
+          "url": "https://www.afpbb.com/articles/-/3601570",
+          "title": "ロンドン警視庁で警官の人種差別・女性蔑視行為 潜入取材で発覚",
+          "relevance": "ローリー長官による警官不祥事への謝罪 (= 同長官への注目報道、ただし別事象)"
+        },
+        {
+          "url": "https://www.afpbb.com/articles/-/3633831",
+          "title": "英首相、一部親パレスチナデモの禁止示唆",
+          "relevance": "英国の親パレスチナデモ規制論議"
+        },
+        {
+          "url": "https://www.afpbb.com/articles/-/3614468",
+          "title": "英警察、「反イスラエル闘争を世界展開せよ」とシュプレヒコール上げた人々を逮捕",
+          "relevance": "英警察 vs 親パレスチナの構図継続報道"
+        }
+      ],
+      "specific_event_coverage": {
+        "palestine_coalition_legal_complaint_against_rowley_in_afpbb": "未確認 (検索結果に出現せず)",
+        "interpretation": "★ afpbb は ロンドン警視庁 + 親パレスチナデモ + ローリー長官の言動という topic 家系を継続報道、ただし Slot の specific 事象 (Palestine Coalition による Rowley シナゴーグ発言への正式法的苦情、2026-05 直近) は afpbb 検索結果に出現せず"
+      },
+      "judgement": "Suspect FP (Specific Event Level) / Topic-Family Match (Broader)",
+      "judgement_rationale": "afpbb は Mark Rowley / ロンドン警視庁 / 親パレスチナデモという同じ topic 家系を継続報道、ただし MEE が独自に追った specific 事象 (Palestine Coalition の正式法的苦情、Rowley のシナゴーグルート言及への反論) は afpbb で確認できなかった。WL Tier 2 認定の妥当性は低い可能性 (= Slot-2 cls-1a38c0ca8c99 と同じ Topic-Family-Match-Only パターン)",
+      "fp_risk": "specific event level では high、broader topic-family では mid-low"
+    }
+  ],
+  "summary": {
+    "verdict_distribution_strict": {
+      "TP_specific_event_confirmed": 1,
+      "Topic_TP_specific_unverified_due_to_blocked_domain": 2,
+      "Topic_Level_TP_specific_angle_partial_FP": 2,
+      "判定不能": 0
+    },
+    "verdict_breakdown": {
+      "blind_008 (water as weapon)": "Topic-Level TP (newsweekjapan の broader weaponization 言説に包含)",
+      "blind_002 (Rabbinate refuses to condemn)": "Topic-Level TP (Jesus 像破壊 itself は afpbb 手厚く報道) / Specific Angle Suspect FP (Rabbinate 沈黙の specific 角度は不在)",
+      "covered_008 (Mali defense minister killed)": "TP Confirmed (nippon.com で direct match)",
+      "blind_009 (Iran-US war: Money)": "Topic-Level TP (newsweekjapan で経済論議家系に包含)",
+      "cls-a4132ec7d949 (Met Police synagogue complaint)": "Specific Event Suspect FP (afpbb は同 topic 家系継続報道だが、specific 事象不在)"
+    },
+    "specific_event_level_fp_rate_estimate": {
+      "events_with_specific_event_specific_fp_signal": 2,
+      "total_sampled": 5,
+      "specific_event_fp_rate": "2/5 = 40% (Slot-2/Slot-5 type)",
+      "caveat": "ただし sample size 5 で 95% CI 広く、また 'specific event matching' の厳密定義に依存"
+    },
+    "topic_level_match_rate": {
+      "events_with_topic_match": 5,
+      "total_sampled": 5,
+      "topic_match_rate": "5/5 = 100% (broader topic family 一致率は確実)"
+    },
+    "comparison_with_step_c_measurement": {
+      "step_c_recall_covered_strict_value": "89.47% (TP=17/19)",
+      "step_c_implicit_assumption": "Step C は『has_jp_coverage=True 返却 = 正しく報道検出』を前提に Recall を算出",
+      "audit_finding": "★ 重要: Step C TP 17 件の中に『topic-family match but specific event miss』が混在している可能性が高い。Slot-1 (試運転) + Slot-2/Slot-5 (golden) の 3 件で同じパターンを確認 = F-jp-coverage-tune-followup Step C の 89.47% は『topic-family レベル Recall』であって『specific event レベル Recall』ではない可能性",
+      "implication": "★ Step C 結果の解釈に注意: Recall 89.47% は『日本主要メディアが当該 topic 家系を報道しているか』レベルでの値であって、『日本主要メディアが当該 specific 事象 (= MEE が独自に掘った特定角度) を報道しているか』レベルでは下振れする可能性が高い"
+    },
+    "implications_for_perspective_gap_design": "★ blind_002 / cls-a4132ec7d949 で観察された『広範事件は報道済み、特定角度は未報道』パターンは、まさに F-particular-angle-design で正典化された perspective_gap (系統 2) のターゲット事例 = ゴールデンセット内に系統 2 のサンプルが含まれていること自体は妥当。ただし F-13.B の現実装は 『specific 角度の日本未報道』 を検出できず『broader topic 家系の日本報道』 を検出している = stream_2_perspective_gap を確実に検出するには verify_two_stage の angle query 経路 + その品質改善が必要",
+    "implications_for_phase_a5_3b_first_video": "★ Slot-1 cls-6889e9e1c7ac (試運転、Israel 9,600 Detainees) は本検証で topic-level TP 確定 (afpbb は 9,600 数字と虐待を継続報道) = 真に『日本未報道事象』ではなく『日本でも事象は報道済み、TeleSUR の specific 角度 (ICRC 訪問操作疑惑等) は未報道』 = perspective_gap (系統 2) のターゲット。第一作起案で『日本では報道されない』というブランドメッセージで売り出すのは事実と矛盾するため要注意。台本表現は『日本でも報道はされたが、TeleSUR が掘った特定角度は触れられていない』が正しい"
+  },
+  "constraints_acknowledged": {
+    "yomiuri_fnn_blocked": "yomiuri.co.jp / fnn.jp が WebSearch ブロック対象のため、Tier 1 ヒットの妥当性を直接検証不能。これは検証手法の構造的限界 = 別手段 (Google Custom Search 等) では検証可能",
+    "sample_size_5_only": "1 バッチで欲張らない原則に従い、TP 17 件全件検証はせず seed=42 で 5 件サンプリングのみ。verdict は preliminary",
+    "specificity_definition_subjective": "『specific event match』vs『topic-family match』の境界は判定者の判断に依存。本検証は『MEE / TeleSUR が独自に掘った主張 (= particular_angle) を当該日本メディアがほぼ同等の主張を含めて報道しているか』を基準とした",
+    "single_audit_round_only": "WebSearch クエリは事象あたり 2-3 種類試行、追加クエリで取りこぼしの可能性はある"
+  }
+}

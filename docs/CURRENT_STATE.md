@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-11 (F-trial-run-post-tune 完了、Phase A.5-3a-verify ゲート完了後の 8 つ目のバッチ、F-jp-coverage-tune-followup マージ後の本番試運転 + 防衛機構 5 層監査 + 拾われた Slot の台本品質確認 + 第一作題材ランク付け、3/3 で WL 拡張ドメイン (afpbb x2 + nippon x1) ヒット = 本番影響の強さ確認、機械スコア 1 位 = Slot-1 cls-6889e9e1c7ac 「9,600 Detainees: Israel Prison Abuses」(10pt) で第一作の最有力候補確定、`src/` `tests/` `configs/` `scripts/` 0 変更で baseline 1390 passed 維持、新規残課題 4 件追加 (= F-13.B WL ヒット品質検証 / verify_two_stage 本番配線判断 / particular_angle_metadata + sontaku_signals 本番配線判断 / F-stream-2-filter-design 責務範囲再評価))
+最終更新: 2026-05-14 (F-wl-hit-quality-audit 完了、Phase A.5-3a-verify ゲート完了後の 9 つ目のバッチ、F-trial-run-post-tune で観察された WL ヒット品質問題 (matched_urls ベアドメインのみ) を独立検証、★★★ Task D Slot-2 Grounding chunk dump で **LLM judgement bypass 問題** が決定的に判明 = Gemini LLM が response_text で『該当しない (別事象)』と明示判定しているのに F-13.B は WL マッチだけで True を返す = 設計判断レベルの欠陥、根本治療 Option (i) LLM response_text 判定抽出を別バッチ `F-jp-coverage-llm-judgement-extraction` (仮称) として新規記録、Slot-1 cls-6889e9e1c7ac の系統判定 = perspective_gap 確定 + 第一作着手判断は両論併記で保留 (カズヤ判断待ち)、F-jp-coverage-tune-followup Step C メトリクス再解釈 = broader topic-family level の値で specific event level では下振れ可能性、`src/` `tests/` `configs/` 0 変更で `scripts/dump_grounding_chunks.py` 新規 1 ファイル + `docs/` のみ更新で完結、baseline 1390 passed 維持)
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -51,12 +51,21 @@ F-13.B 系列で F1 covered が threshold を初突破した実用ライン到�
 0/3 から完全反転) = WL 拡張の本番影響が想定以上に強いことを確認。第一作題材機械
 スコア: Slot-1 cls-6889e9e1c7ac (10pt) > Slot-2 (6pt) > Slot-3 (5pt)、Slot-1 は
 editorial_mission_score=86.0 (Hydrangea ど真ん中) + 唯一 video_payload 生成済み
-= 第一作の最有力候補確定。`src/` `tests/` `configs/` `scripts/` 0 行変更、`docs/`
-配下のみ更新で完結、baseline 1390 passed 維持。**重要な観察事項として 4 件**を残課題化:
-(1) F-13.B WL ヒット品質の独立検証 (matched_urls がベアドメインのみで誤陽性リスク)、
-(2) verify_two_stage 本番配線判断 (production main.py は legacy verify() のみ呼び出し)、
-(3) particular_angle_metadata + sontaku_signals 本番配線判断 (src/ 配下 grep で 0 件)、
-(4) F-stream-2-filter-design 責務範囲再評価 (本番運用視点反映)。
+= 第一作の最有力候補確定。
+
+★★★ 2026-05-14 (F-wl-hit-quality-audit) で F-trial-run-post-tune で観察された
+**matched_urls がベアドメインのみ問題を独立検証**。Task B 試運転 3 Slot WebSearch
+後追い (TP=1, Suspect FP=1, Topic-TP=1) + Task C ゴールデンセット TP 17 件サンプリング
+5 件 (TP=1, Topic-TP=3, Specific Event Suspect FP=1) + Task D Slot-2 Grounding chunk
+生データダンプ。**Task D で決定的発見**: Gemini LLM 自身が response_text で
+『指定されたニュース [...] とは異なる内容で、かつ日付も異なります』と明示的に判定して
+いるのに、F-13.B `_search_with_grounding` は chunk のドメイン抽出 + WL 階層マッチのみで
+True を返している = **LLM judgement bypass の設計判断レベルの欠陥**。Hydrangea カズヤ
+哲学『LLM の知性に委ねる』に反する設計。chunk.web 構造: 全 8 件で web_uri = Vertex AI
+redirect URL のみ (decode 不可)、web_title = ドメイン名のみ (article path なし)、
+web_domain = None (戦略 1 未実装) = Grounding API 仕様で article 粒度の URL 取得は
+原理的に不可能。根本治療 = **Option (i) LLM response_text 判定抽出** を別バッチ案件
+`F-jp-coverage-llm-judgement-extraction` (仮称) として新規記録。
 
 ### 系統 1 (silence_gap): 完全な情報空白 — 広範事件も特定角度も日本主要メディアで未報道
 
@@ -108,6 +117,13 @@ cls-6be4fc09d9ed (Insider trading) / cls-a4132ec7d949 (Met Police)。
 (2026-05-08) のカズヤレビューで (c) サンプル選定バイアス仮説の **強い証拠**
 が確認された。根本治療は Phase A.5-3b 第二作のサンプル拡充 (処理水放出 / 辺野古 等)。
 
+★★★ 2026-05-14 (F-wl-hit-quality-audit) で Slot-1 cls-6889e9e1c7ac (第一作最有力
+候補) も含めて、試運転 3 Slot 中 2 件 + golden サンプリング 5 件中 3 件 (合計 8 件
+中 5 件) が **stream_2_perspective_gap** に該当することが独立検証で確認された
+(= afpbb / nippon.com が broader event itself は継続報道、specific 角度 (MEE /
+TeleSUR が独自に掘った構造) のみ未報道)。これは F-jp-coverage-tune-followup の
+sample size (25 件) と一致する分布パターンの再現。
+
 ### 系統 3 (framing_inversion、★ extension で系統 2 → 系統 3 にリネーム): 報道差の背景解説 — 特定角度も報道済み + 解釈差 + 忖度シグナル
 
 広範事件 + 特定角度 (= 海外メディアが独自に掘った視点) も日本主要メディアで
@@ -116,7 +132,7 @@ cls-6be4fc09d9ed (Insider trading) / cls-a4132ec7d949 (Met Police)。
 を満たす事象。「日本人が知っておくべき教養としての国際的評価」を提供するメディア
 としての本質。25 件アノテーションの最終分類で **0 件** ★ 想定外。
 
-### ★ docs 概念整理と production-pipeline の乖離 (2026-05-11 F-trial-run-post-tune で確認)
+### ★ docs 概念整理と production-pipeline の乖離 (2026-05-11 F-trial-run-post-tune で確認、2026-05-14 で構造的根本原因が判明)
 
 Phase A.5-3a-verify ゲート完了後の連続バッチで概念整理 (4 分類化 +
 sontaku_signals 独立化 + verify_two_stage 二段階クエリ生成実装) が docs 上で
@@ -126,9 +142,17 @@ sontaku_signals 独立化 + verify_two_stage 二段階クエリ生成実装) が
 - `particular_angle_metadata` / `sontaku_signals`: src/ 配下 grep で 0 件
 - `generate_script_with_analysis` 新ルート: F-trial-run-post-tune Slot-1 で `analysis_result=null` で未起動、旧ルート + F-13 隠れ層 bypass で台本生成
 
-これは「概念正典化先行 + 本番配線は段階的」戦略の結果であり、配線判断バッチ
-3 件が FUTURE_WORK 緊急度 高に新規追加された (verify_two_stage / particular_angle_metadata
-+ sontaku_signals 本番配線 / F-stream-2-filter-design 責務範囲再評価)。
+★★★ **2026-05-14 (F-wl-hit-quality-audit) で更に深い構造的問題が判明**: 本番 legacy
+`verify()` (broad-only) も verify_two_stage() も両方とも **LLM judgement bypass の
+設計判断レベルの欠陥** を共有している。`_search_with_grounding` が Gemini の
+response_text 判定を完全に無視し chunk のドメイン抽出 + WL 階層マッチのみで True/False
+を決めているため、broader topic 一致のみで True 返却する誤陽性パターンが構造的に
+発生する。これは Hydrangea カズヤ哲学『LLM の知性に委ねる』(F-task-e-finalize /
+2026-05-08 確立) に反する設計。
+
+「概念正典化先行 + 本番配線は段階的」戦略の結果として、配線判断バッチ 3 件 +
+**WL ヒット品質根本治療バッチ 1 件 (F-jp-coverage-llm-judgement-extraction)** が
+FUTURE_WORK 緊急度 高に並走待機している。
 
 ### ブランドポジション
 
@@ -159,50 +183,58 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
 
 ## 1. リポジトリ状態
 
-- **main HEAD コミット**: `4062639` (F-jp-coverage-tune-followup マージ後。F-trial-run-post-tune は feature ブランチ `feature/F-trial-run-post-tune` で作業中、未マージ)
+- **main HEAD コミット**: `eb0dd5e` (F-trial-run-post-tune マージ後。F-wl-hit-quality-audit は feature ブランチ `feature/F-wl-hit-quality-audit` で作業中、未マージ)
 - **直近 5 件のコミットログ**:
   ```
+  eb0dd5e Merge branch 'feature/F-trial-run-post-tune'
+  b81376f feat: F-trial-run-post-tune trial run after F-jp-coverage-tune-followup + first video candidate ranking
   4062639 Merge branch 'feature/F-jp-coverage-tune-followup'
   84a678e feat: WL hierarchy match + WL extension 3 domains (F-jp-coverage-tune-followup, verdict=fail but Recall +47.36pp / F1 covered 0.8718 first threshold break, root cause resolved, 4 residual axes split)
   82ce0d0 Merge branch 'feature/F-jp-coverage-tune'
-  beb4aa7 feat: F-13.B verify_two_stage two-stage query generation + 23-event accuracy measurement (F-jp-coverage-tune, verdict=fail, Grounding API structural limit identified, followup drafted)
-  e1ad637 Merge branch 'feature/F-task-e-finalize'
   ```
-- **baseline テスト数**: **1390 passed** (F-trial-run-post-tune では `src/` `tests/` `configs/` `scripts/` 0 行変更、`docs/` のみ更新で baseline 完全維持。F-trial-run-post-tune 開始時に baseline 1390 passed を再確認、終了時も 1390 passed)
+- **baseline テスト数**: **1390 passed** (F-wl-hit-quality-audit では `src/` `tests/` `configs/` 0 行変更、`scripts/dump_grounding_chunks.py` 新規 1 ファイル追加 + `docs/` のみ更新で baseline 完全維持。F-wl-hit-quality-audit 開始時に baseline 1390 passed を再確認)
 
 ## 2. 現在のフェーズ
 
 - **Phase**: Phase A.5-3a-verify **完了** ★ 1-A〜1-D''' 全完了で Phase A.5-3a-verify ゲート完了 (2026-05-07)
-- **進行中バッチ**: なし (F-trial-run-post-tune 完了直後、`src/ tests/ configs/ scripts/` 0 変更、baseline 1390 passed 維持)
-- **次バッチ候補と推奨** (★ F-trial-run-post-tune / 2026-05-11 で更新、★ Phase A.5-3b 第一作起案を最有力候補に昇格):
-  - **1st: Phase A.5-3b 第一作起案** ★最有力候補昇格 (本バッチで題材ランク 1 位 = Slot-1 cls-6889e9e1c7ac 「9,600 Detainees: Israel Prison Abuses」が機械スコア 10pt で確定 + 動画 payload 生成済み + Hydrangea ど真ん中、カズヤ axis_5 主観評価が前提条件)
-  - **2nd: 本番配線判断 + WL ヒット品質検証バッチ群 (4 件、並走進行が望ましい)**:
-    - F-13.B WL ヒット品質の独立検証 (★ 高、matched_urls ベアドメイン問題、第一作着手判断と直前に実施)
+- **進行中バッチ**: なし (F-wl-hit-quality-audit 完了直後、`src/ tests/ configs/` 0 変更、`scripts/` 1 新規追加、baseline 1390 passed 維持)
+- **次バッチ候補と推奨** (★ F-wl-hit-quality-audit / 2026-05-14 で更新、★ WL ヒット品質根本治療 + Slot-1 第一作着手判断の両軸が前面化):
+  - **1st: F-jp-coverage-llm-judgement-extraction** ★★★ 最有力候補昇格 (本バッチで根本原因 (d) LLM judgement bypass を確定、Option (i) LLM response_text 判定抽出 = 工数 4-8h / Recall -5〜-10pp / Precision +20〜+40pp 想定、不変原則 3 例外条件 + カズヤ承認必要、Phase A.5-3b 第一作着手と密接に関連)
+  - **2nd: Phase A.5-3b 第一作起案** (Slot-1 cls-6889e9e1c7ac、本バッチで系統判定 = perspective_gap 確定、第一作着手判断は両論併記でカズヤ判断待ち、F-jp-coverage-llm-judgement-extraction 完了後に着手する戦略が推奨)
+  - **3rd: 本番配線判断バッチ群 (3 件、並走進行可)**:
     - verify_two_stage 本番配線判断 (production-pipeline と docs 概念整理の乖離解消)
     - particular_angle_metadata + sontaku_signals 本番配線判断 (新ルート起動条件)
     - F-stream-2-filter-design 責務範囲再評価 (本番運用視点反映)
-  - **3rd: F-stream-2-filter-design** (★ 責務スコープ要再評価、stream_3 = 0 件確定 + Phase A.5-3b 第二作のサンプル拡充後に再評価が望ましい、小規模実装で済む可能性高 + 本バッチで顕在化した「has_jp_coverage=True 3/3 で blind_spot_global 消滅」問題を責務範囲として組み込む可能性高)
-  - **4th: Phase A.5-3b 第二作のサンプル拡充検討** (★ 系統 3 事象 + sontaku_signals type=domestic / media_industry の実例追加、(c) 仮説検証 + 系統 3 台本表現の試行錯誤を兼ねる、★ 副次効果として truly unreported 母数の拡充 = Precision blind 母数問題の根本治療)
-  - **5th (★ カズヤ判断後): F-jp-coverage-tune-followup-2** (★ 候補、Recall 90% 突破 + Tier 一致率 Grounding 非決定性、(p) 多クエリ並列発行 or (q) 検索 API 変更、副作用リスク = Precision blind / Tier 一致率がさらに退行する可能性、緊急性は低下)
+  - **4th: F-jp-coverage-tune-followup REPORT v2 化 + ゴールデンセット v2 化検討** (本バッチで論点提起、F-jp-coverage-llm-judgement-extraction の再測定値と統合推奨)
+  - **5th: F-stream-2-filter-design** (★ 責務スコープ要再評価、F-jp-coverage-llm-judgement-extraction 完了後 + Phase A.5-3b 第二作のサンプル拡充後に再評価が望ましい、本バッチで顕在化した『LLM judgement bypass』を責務範囲として組み込む可能性高)
+  - **6th: F-jp-coverage-tune-followup-2** (★ カズヤ判断後、F-jp-coverage-llm-judgement-extraction 完了後に Recall 90% 突破狙いで実施するかカズヤ判断)
 - **推奨フロー**:
-  - F-13.B WL ヒット品質独立検証 (Phase A.5-3b 第一作着手判断と直前で実施、結果次第で F-jp-coverage-tune-followup REPORT を v2 化する必要)
-    → カズヤ Slot-1 axis_5 主観評価 → 承認なら **Phase A.5-3b 第一作着手** (動画レンダリング + 配信前ゲート + 投稿)
+  - F-jp-coverage-llm-judgement-extraction (★ 最優先、Option (i) 実装で WL ヒット品質根本治療)
+    → 再測定 (specific event level metric を golden v2 で評価) → カズヤ承認
+    → 本番試運転 (= F-trial-run-post-llm-extraction、仮称) で実挙動確認
+    → Phase A.5-3b 第一作着手 (Slot-1 perspective_gap framing OR 別題材)
     → 並走: 本番配線判断バッチ群 (verify_two_stage / particular_angle_metadata + sontaku_signals)
     → F-stream-2-filter-design スコープ判断 → Phase A.5-3b 第二作のサンプル拡充
     → 3c 自動化 → Phase A.5-3d で投稿前ゲート + 自動投稿
-- **★ F-trial-run-post-tune 完了** (F-trial-run-post-tune / 2026-05-11): `src/` `tests/`
-  `configs/` `scripts/` 0 行変更、`docs/` 配下のみ更新で完結。baseline 1390 passed 維持。
-  本番試運転 3 Slot 全件で has_jp_coverage=True (WL 拡張 afpbb x2 + nippon x1)、第一作
-  題材ランク 1 位 = Slot-1 cls-6889e9e1c7ac (機械スコア 10pt、video_payload 生成済み)。
-  Hydrangea ブランドメッセージ (blind_spot_global) が機械判別で消滅する副作用 +
-  WL ヒット品質 (matched_urls ベアドメイン問題) + production-pipeline と docs 概念整理の
-  乖離が顕在化、4 件の残課題を FUTURE_WORK 緊急度 高に追加。
+- **★ F-wl-hit-quality-audit 完了** (F-wl-hit-quality-audit / 2026-05-14): `src/` `tests/`
+  `configs/` 0 行変更、`scripts/dump_grounding_chunks.py` 新規 1 ファイル + `docs/` のみ
+  更新で完結。baseline 1390 passed 維持。試運転 3 Slot WebSearch 検証 (TP=1, Suspect FP=1,
+  Topic-TP=1) + ゴールデンセット 5 件サンプリング (TP=1, Topic-TP=3, Specific Suspect FP=1)
+  + Slot-2 Grounding chunk dump で **★★★ LLM judgement bypass 問題が決定的に判明** (Gemini
+  LLM が response_text で『該当しない』と明示判定しているのに F-13.B は WL マッチだけで
+  True を返す = 設計判断レベルの欠陥)。根本治療 = Option (i) LLM response_text 判定抽出
+  を別バッチ `F-jp-coverage-llm-judgement-extraction` (仮称) として新規記録。
+  Slot-1 cls-6889e9e1c7ac の系統判定 = **perspective_gap 確定** (afpbb で 9,600 数字 +
+  虐待を継続報道済み = 真の silence_gap ではない)、第一作着手判断は両論併記でカズヤ
+  判断待ち。F-jp-coverage-tune-followup Step C メトリクス再解釈 = broader topic-family
+  level の値で specific event level では下振れの可能性 (REPORT v2 化は別バッチ、CP カズヤ
+  判断)。
 
-### Phase A.5-3a-verify ロードマップ (★F-trial-run-post-tune / 2026-05-11 完了版)
+### Phase A.5-3a-verify ロードマップ (★F-wl-hit-quality-audit / 2026-05-14 完了版)
 
 **ゲート完了**: 1-A〜1-D''' 全段階完了で Phase A.5-3a-verify ゲート完了。
-F-trial-run-post-tune は **ゲート完了後の 8 つ目のバッチ** で F-jp-coverage-tune-followup
-改修後の本番試運転 + 第一作題材ランク付けを実施した。
+F-wl-hit-quality-audit は **ゲート完了後の 9 つ目のバッチ** で F-trial-run-post-tune で
+観察された WL ヒット品質問題の独立検証を実施した。
 
 | 段階 | バッチ | 状態 | 概要 |
 |---|---|---|---|
@@ -221,8 +253,10 @@ F-trial-run-post-tune は **ゲート完了後の 8 つ目のバッチ** で F-j
 | 1-F''' | F-task-e-finalize | ✅ 完了 (2026-05-08) | ゲート完了後の 5 つ目のバッチ、Task E カズヤレビュー結果反映 (25 件全件 LLM 推定値そのまま) + finalize_annotations.py 実行 + 4 つの運用原則 + 1 つの構造的問題 + (c) 仮説証拠強化を docs 化 |
 | 1-G | F-jp-coverage-tune | ✅ 完了 (2026-05-09)、verdict=fail | ゲート完了後の 6 つ目のバッチ、`verify_two_stage()` 新メソッド + `TwoStageVerifyResult` dataclass 追加 (不変原則 3 例外条件 4 つ全部適用) + 独立 23 件精度測定 + (c) dateRestrict プロンプト埋め込み除去 1 回チューニング。post-tuning verdict=fail (Recall 42.11% / Precision blind 26.67% / F1 0.5926 / Tier 62.50%)。**Grounding API 構造的限界が明確化** = F-jp-coverage-tune-followup で根本治療議論へ |
 | 1-G' | F-jp-coverage-tune-followup | ✅ 完了 (2026-05-09)、verdict=fail (改善大、F1 達成) | ゲート完了後の 7 つ目のバッチ、verdict=fail 主因 3 分解 → WL マッチング階層判定化 (新規 `_domain_matches_hierarchy`) + WL 拡張 3 ドメイン (`afpbb.com` Tier 2 / `forbesjapan.com` `nippon.com` Tier 4) で根本治療。**Recall covered +47.36pp** (42.11%→89.47%、threshold 0.53pp 不足) / **F1 covered +27.92pp** (0.5926→0.8718、threshold 0.85 **初突破**) / Precision blind 33.33% / Tier 一致率 30.77% / Stream accuracy 9.09%。CP-3 で Step D スキップ判定 = 残課題 4 軸分離 |
-| **1-G''** | **F-trial-run-post-tune** | ✅ **完了 (2026-05-11)** | **ゲート完了後の 8 つ目のバッチ**、F-jp-coverage-tune-followup マージ後の本番試運転 + 防衛機構 5 層監査 + 拾われた Slot の台本品質確認 + 第一作題材ランク付け (機械 4 軸 + カズヤ主観 1 軸空欄)。試運転 3 Slot 全件 has_jp_coverage=True (afpbb x2 + nippon x1)、F-trial-run-post-fix から完全反転。**機械スコア 1 位 = Slot-1 cls-6889e9e1c7ac (10pt) で第一作の最有力候補確定** (editorial_mission_score=86.0、Hydrangea ど真ん中、唯一 video_payload 生成済み)。`src/` `tests/` `configs/` `scripts/` 0 変更、`docs/` のみ更新、baseline 1390 passed 維持。重要観察事項 4 件残課題化: (1) F-13.B WL ヒット品質の独立検証 (matched_urls ベアドメインのみで誤陽性リスク)、(2) verify_two_stage 本番配線判断 (production-pipeline と docs 概念整理の乖離解消)、(3) particular_angle_metadata + sontaku_signals 本番配線判断 (新ルート起動条件)、(4) F-stream-2-filter-design 責務範囲再評価 (本番運用視点反映) |
-| 1-H | F-stream-2-filter-design | ★ 責務スコープ要再評価 | stream_3 = 0 件確定 + sontaku_signals.level を追加軸に組み込む設計、Phase A.5-3b 第二作のサンプル拡充後に再評価、小規模実装の可能性が高い + **★ F-jp-coverage-tune-followup で顕在化した stream_3 過剰検出 + F-trial-run-post-tune で顕在化した「has_jp_coverage=True 3/3 で blind_spot_global 消滅」 を責務範囲として組み込む可能性高** |
+| 1-G'' | F-trial-run-post-tune | ✅ 完了 (2026-05-11) | ゲート完了後の 8 つ目のバッチ、F-jp-coverage-tune-followup マージ後の本番試運転 + 防衛機構 5 層監査 + 拾われた Slot の台本品質確認 + 第一作題材ランク付け (機械 4 軸 + カズヤ主観 1 軸空欄)。試運転 3 Slot 全件 has_jp_coverage=True (afpbb x2 + nippon x1)、F-trial-run-post-fix から完全反転。機械スコア 1 位 = Slot-1 cls-6889e9e1c7ac (10pt) で第一作の最有力候補確定 (editorial_mission_score=86.0、Hydrangea ど真ん中、唯一 video_payload 生成済み)。`src/` `tests/` `configs/` `scripts/` 0 変更、`docs/` のみ更新、baseline 1390 passed 維持。重要観察事項 4 件残課題化 |
+| **1-G'''** | **F-wl-hit-quality-audit** | ✅ **完了 (2026-05-14)** | **ゲート完了後の 9 つ目のバッチ**、F-trial-run-post-tune で観察された matched_urls ベアドメイン問題を独立検証 (Task B 試運転 3 Slot WebSearch + Task C ゴールデンセット 5 件サンプリング + Task D Slot-2 Grounding chunk dump)。**★★★ Task D 決定的発見**: Gemini LLM が response_text で『該当しない』と明示判定しているのに F-13.B は WL マッチだけで True を返している = **LLM judgement bypass の設計判断レベルの欠陥**。根本治療 = Option (i) LLM response_text 判定抽出を別バッチ `F-jp-coverage-llm-judgement-extraction` (仮称) として新規記録 (緊急度 高、不変原則 3 例外条件 + カズヤ承認必要、Phase A.5-3b 第一作着手と密接に関連)。**Slot-1 cls-6889e9e1c7ac の系統判定 = perspective_gap 確定** (afpbb で 9,600 数字 + 虐待を継続報道済み = 真の silence_gap ではない)。第一作着手判断は両論併記でカズヤ判断待ち。F-jp-coverage-tune-followup Step C メトリクス再解釈 = broader topic-family level の値で specific event level では下振れの可能性 (REPORT v2 化は別バッチ、CP カズヤ判断)。`src/` `tests/` `configs/` 0 変更、`scripts/dump_grounding_chunks.py` 新規 1 ファイル + `docs/` のみ更新で完結、baseline 1390 passed 維持 |
+| **1-H** | **F-jp-coverage-llm-judgement-extraction** | ★★★ **最有力候補 (2026-05-14 起案)** | Option (i) LLM response_text 判定抽出 = WL ヒット品質根本治療。プロンプト改修 + response 解釈 + verify() への配線。不変原則 3 例外条件 (実装バグ修正 + 設計変更ではない + DECISION_LOG 明記 + Hydrangea ミッション中核機構、4 条件全) でカズヤ承認必須。工数 4-8h、Recall -5〜-10pp / Precision +20〜+40pp 想定 |
+| 1-I | F-stream-2-filter-design | ★ 責務スコープ要再評価 | F-jp-coverage-llm-judgement-extraction 完了 + Phase A.5-3b 第二作のサンプル拡充後に再評価、本バッチで顕在化した『LLM judgement bypass』を責務範囲として組み込む可能性高 |
 | 2 | F-verify-perspective | 並走候補 | axis 分布集計 (3b/3c 中) |
 | 3 | F-verify-script-quality | 並走候補 | NG 語彙頻度 / リトライ率集計 (3b/3c 中) |
 
@@ -240,8 +274,9 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 
 | 試運転 | バッチ | 動画化率 | 主要観察 |
 |---|---|---|---|
-| **2026-05-11** | **F-trial-run-post-tune** | **1/3 動画化** (Slot-1 のみ video_payload + script 生成、Slot-2/3 article-only F-16-A mode) + 3 articles | F-jp-coverage-tune-followup マージ後の本番試運転。**3 Slot 全件で has_jp_coverage=True** (afpbb x2 / nippon x1 = WL 拡張ドメイン全件ヒット、F-trial-run-post-fix から完全反転)。Slot-1 cls-6889e9e1c7ac (TeleSUR 発「9,600 Detainees: Israel Prison Abuses」editorial_mission_score=86.0、Hydrangea ど真ん中) / Slot-2 cls-1a38c0ca8c99 (MEE 発「BBC Gaza documentary BAFTA 受賞」77.0) / Slot-3 cls-03892eab2072 (MEE 発「Tehran says US proposal sought Iran's surrender」83.0、judge=blind_spot_global score 9.0)。防衛機構 5 層全機能 (F-1 20/304, F-2 通過, F-13.B 3/3 True, F-5 救済 1 件 / cls-da0a74aa712d 選定外, F-13 隠れ層 bypass 1 件 / Slot-1)。**第一作題材機械スコア: Slot-1 (10pt) > Slot-2 (6pt) > Slot-3 (5pt)、Slot-1 が機械スコア 1 位 + 唯一 script 生成済み + Hydrangea ど真ん中 = 第一作最有力候補確定** (カズヤ axis_5 主観評価が最終判断)。重要観察 4 件: (1) matched_urls がベアドメインのみ = 誤陽性リスク、(2) production main.py は legacy verify() のみ呼び出し = verify_two_stage 未配線、(3) particular_angle_metadata / sontaku_signals 本番未配線、(4) Hydrangea ブランドメッセージ (blind_spot_global) が機械判別で消滅 = F-stream-2-filter-design 責務範囲再評価必要。`src/ tests/ configs/ scripts/` 0 変更、baseline 1390 passed 維持。 |
-| 2026-05-09 | F-jp-coverage-tune-followup | (試運転なし、独立 23 件再測定 + WL 整備) | F-jp-coverage-tune verdict=fail の根本原因 3 分解 → 主因 2 つ (WL マッチング欠陥 + WL 漏れ準大手) を根本治療。Step C 再測定: **Recall covered 42.11% → 89.47% (+47.36pp)** / **F1 covered 0.5926 → 0.8718 (+0.2792、threshold 0.85 を ★ 初突破)**。CP-3 でカズヤ判断 = Step D スキップ、残課題 4 軸分離で個別根本治療へ。 |
+| **2026-05-14** | **F-wl-hit-quality-audit** | (試運転なし、WebSearch 検証 + Grounding chunk dump) | F-trial-run-post-tune の matched_urls ベアドメイン問題を独立検証。試運転 3 Slot WebSearch: TP=1 (Slot-1)、Suspect FP=1 (Slot-2)、Topic-TP=1 (Slot-3)。ゴールデンセット TP 17 件から seed=42 で 5 件サンプリング: TP=1、Topic-Level TP=3、Specific Event Suspect FP=1。**Slot-2 Grounding chunk dump (8 chunks) で ★★★ LLM judgement bypass 問題が決定的に判明**: Gemini LLM が response_text で『該当しない』と明示判定しているのに F-13.B は WL マッチだけで True を返している = 設計判断レベルの欠陥、Hydrangea カズヤ哲学『LLM の知性に委ねる』に反する設計。chunk.web 構造: 全 8 件で web_uri = Vertex AI redirect URL のみ (decode 不可)、web_title = ドメイン名のみ (article path なし)、web_domain = None (戦略 1 未実装) = Grounding API 仕様で article 粒度の URL 取得は原理的に不可能。根本治療 = Option (i) LLM response_text 判定抽出 を別バッチ `F-jp-coverage-llm-judgement-extraction` (仮称) として新規記録。Slot-1 cls-6889e9e1c7ac の系統判定 = **perspective_gap 確定** (afpbb で 9,600 数字 + 虐待を継続報道済み)、第一作着手判断は両論併記でカズヤ判断待ち。`src/` `tests/` `configs/` 0 変更、`scripts/dump_grounding_chunks.py` 新規 1 ファイル + `docs/` のみ更新で完結、baseline 1390 passed 維持。 |
+| 2026-05-11 | F-trial-run-post-tune | 1/3 動画化 (Slot-1 のみ video_payload + script 生成、Slot-2/3 article-only F-16-A mode) + 3 articles | F-jp-coverage-tune-followup マージ後の本番試運転。**3 Slot 全件で has_jp_coverage=True** (afpbb x2 / nippon x1 = WL 拡張ドメイン全件ヒット、F-trial-run-post-fix から完全反転)。Slot-1 cls-6889e9e1c7ac (TeleSUR 発「9,600 Detainees: Israel Prison Abuses」editorial_mission_score=86.0) / Slot-2 cls-1a38c0ca8c99 (MEE 発「BBC Gaza documentary BAFTA 受賞」77.0) / Slot-3 cls-03892eab2072 (MEE 発「Tehran says US proposal sought Iran's surrender」83.0、judge=blind_spot_global score 9.0)。防衛機構 5 層全機能 (F-1 20/304, F-2 通過, F-13.B 3/3 True, F-5 救済 1 件 / cls-da0a74aa712d 選定外, F-13 隠れ層 bypass 1 件 / Slot-1)。**第一作題材機械スコア: Slot-1 (10pt) > Slot-2 (6pt) > Slot-3 (5pt)、Slot-1 が機械スコア 1 位 + 唯一 script 生成済み + Hydrangea ど真ん中 = 第一作最有力候補確定** (★ F-wl-hit-quality-audit / 2026-05-14 で perspective_gap 確定、第一作 framing 再検討要)。 |
+| 2026-05-09 | F-jp-coverage-tune-followup | (試運転なし、独立 23 件再測定 + WL 整備) | F-jp-coverage-tune verdict=fail の根本原因 3 分解 → 主因 2 つ (WL マッチング欠陥 + WL 漏れ準大手) を根本治療。Step C 再測定: **Recall covered 42.11% → 89.47% (+47.36pp)** / **F1 covered 0.5926 → 0.8718 (+0.2792、threshold 0.85 を ★ 初突破)**。CP-3 でカズヤ判断 = Step D スキップ、残課題 4 軸分離で個別根本治療へ。★ F-wl-hit-quality-audit / 2026-05-14 で **broader topic-family level の値であって specific event level では下振れ可能性** が判明、REPORT v2 化は別バッチ。 |
 | 2026-05-09 | F-jp-coverage-tune | (試運転なし、独立 23 件精度測定 + 1 回チューニング) | `verify_two_stage()` 二段階クエリ生成を独立 23 件で精度測定。**post-tuning verdict=fail**: Recall covered **42.11%** / Precision blind **26.67%** / F1 **0.5926** / Tier 一致率 **62.50%** / Stream accuracy **27.27%**。**Grounding API 構造的限界が明確化** (1 クエリ 5-10 chunk + WL 外ドメインで上位埋まる + 0 URL 返却ケース複数)。 |
 | 2026-05-08 | F-task-e-finalize | (試運転なし) | Task E カズヤレビュー (25 件) 完了、全件 LLM 推定値そのまま採用。4 つの運用原則確立 + 1 つの構造的問題 (試運転/golden_set 重複 25→23 件) 発覚。 |
 | 2026-05-08 | F-extension-followup | (試運転なし) | extension クラウドレビュー指摘 3 件反映: stream_3=0 件 (c) サンプル選定バイアス + sontaku_signals type 分布バイアス + finalize_annotations.py 最小修正。 |
@@ -256,7 +291,7 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 |---|---|---|---|---|
 | F-1 | F-1 / F-1.5 | EditorialMissionFilter | 編集ミッション適合度で score 算出 (>= 45.0 で通過) | ✅ 稼働中 (F-trial-run-post-tune 試運転で 20/304 通過確認、selected 3 Slot scores: 86/77/83) |
 | F-2 | F-2 / F-5 | FlagshipGate (Hydrangea コンセプト整合) | 海外発の重要ニュースを優先 | ✅ 稼働中 (F-trial-run-post-tune 試運転で Blocked 0 件、全 20 件通過) |
-| F-13.B | F-13.B / F-jp-coverage-improve / F-trial-run-post-fix / F-jp-coverage-tune / F-jp-coverage-tune-followup / **F-trial-run-post-tune** | JpCoverageVerifier (rescue 完全廃止 + Web 検証 + ドメイン抽出レイヤー + verify_two_stage 二段階クエリ生成 + WL マッチング階層判定化 + WL 拡張 30 ドメイン) | JP 報道カバレッジを 30 ドメイン WL で検証 | ✅ **構造的不具合修正完了** + 本番動作確認済み + **★ F-trial-run-post-tune で WL 拡張本番効果確認** (3 Slot 全件 has_jp_coverage=True、F-trial-run-post-fix 0/3 → 3/3 完全反転)。**ただし matched_urls がベアドメインのみ問題が顕在化** (誤陽性リスク)、独立検証が次バッチ案件として残課題化。production main.py は legacy verify() (broad-only) のみ呼び出し、verify_two_stage 系統 1/2/3 機械判別は本番未配線 |
+| F-13.B | F-13.B / F-jp-coverage-improve / F-trial-run-post-fix / F-jp-coverage-tune / F-jp-coverage-tune-followup / F-trial-run-post-tune / **F-wl-hit-quality-audit** | JpCoverageVerifier (rescue 完全廃止 + Web 検証 + ドメイン抽出レイヤー + verify_two_stage 二段階クエリ生成 + WL マッチング階層判定化 + WL 拡張 30 ドメイン) | JP 報道カバレッジを 30 ドメイン WL で検証 | ✅ **構造的不具合修正完了** + 本番動作確認済み + WL 拡張本番効果確認 (F-trial-run-post-tune 3 Slot 全件 has_jp_coverage=True)。★★★ **ただし F-wl-hit-quality-audit / 2026-05-14 で『LLM judgement bypass 問題』が決定的に判明** = Gemini LLM が response_text で『該当しない』と明示判定しているのに F-13.B は WL マッチだけで True を返す設計判断レベルの欠陥。chunk.web 構造の API 仕様限界 (article path 取得不能) と組み合わせて、broader topic 一致のみで True 返却する構造的弱点。根本治療 = Option (i) LLM response_text 判定抽出 を別バッチ `F-jp-coverage-llm-judgement-extraction` (仮称) として新規記録。production main.py は legacy verify() (broad-only) のみ呼び出し、verify_two_stage 系統 1/2/3 機械判別は本番未配線 |
 | F-5 | F-5 | FlagshipGate 下流救済 | 上流ガードを通過した候補の最終整合 | ✅ 稼働中 (F-trial-run-post-tune 試運転で 1 件発火 = cls-da0a74aa712d、ただし Top-3 選定外で「救済しても下流選定で適切に評価」が正常動作確認) |
 | **F-13 (隠れ層)** | F-13 / F-doc-cleanup | script_writer.py:951-985 quality_floor_miss bypass | analysis_result 等が成立すれば appraisal の [抑制] を上書き | ✅ 稼働中 (F-trial-run-post-tune 試運転で 1 件発火 = Slot-1、editorial_mission_score=86.0 + analysis_result=none で bypass = 旧ルート救済、新ルート `generate_script_with_analysis` 未配線の証拠) |
 
@@ -282,7 +317,8 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 - `src/generation/script_writer.py` の **既存ルート**
   (`write_script` / `_PROMPT_TEMPLATE` / `_build_script_from_llm`) (不変原則 2)
 - `src/triage/` の既存ファイル (不変原則 3、F-jp-coverage-improve / F-jp-coverage-tune /
-  F-jp-coverage-tune-followup で例外条件適用済)
+  F-jp-coverage-tune-followup で例外条件適用済、★ F-jp-coverage-llm-judgement-extraction
+  で再適用予定 = カズヤ承認必須)
 - `src/analysis/` 配下全般 (不変原則 4、F-12-B-2 / particular_angle_metadata 配線判断バッチで例外条項追加検討)
 - 既存テスト (不変原則 5、baseline 1390 passed 維持 — ただしフィクスチャの
   API contract 整合化 + 既存テストファイルへの新規テストクラス追加は許容)
@@ -304,11 +340,10 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 - **「中間が良い」** — シニカル一辺倒でも生活実感一辺倒でもなく、両立
   (F-12-B-1-extension で punchline 定義を「シニカル × 具体着地」両立に)
 - **「考え方で制御」** — NG リスト方式は廃止、原則ベースのプロンプト
-- **「対症療法じゃなくて根本治療」** — 仕組みで再発防止、★ F-trial-run-post-tune
-  (2026-05-11) で「動くものを壊さない」哲学 + 「観察と記録に集中するバッチも
-  根本治療の一部」運用が実証 = src/ tests/ configs/ scripts/ 0 変更、docs/ のみ
-  更新で完結。本バッチで顕在化した 4 件の残課題 (WL ヒット品質検証 + 本番配線
-  判断 3 件) は個別バッチに分離し、1 バッチで欲張らない原則を維持
+- **「対症療法じゃなくて根本治療」** — 仕組みで再発防止、★ F-wl-hit-quality-audit
+  (2026-05-14) で「観察と記録に集中するバッチも根本治療の一部」運用が継続適用、
+  本バッチで顕在化した『LLM judgement bypass 問題』は別バッチ案件
+  (F-jp-coverage-llm-judgement-extraction) として根本治療を起案
 - **「重複しないように定義すればよくね?」** — 系統 1 / 系統 2 の判定対象を
   『特定角度』に限定すれば重複は構造的に消える (2026-05-07 議論結論)
 - **「一部報道だけど観点不足っていう 1.5 分類儲けてもいいのかもしれない」** — 系統 1
@@ -325,21 +360,28 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
   sontaku_signals.level の判定方針として「嘘をつかない設計、疑わしきは低く見積もる」
 - **「Hydrangea のポイントの一つに LLM の膨大な知識による評価とか判定があるから、
   一定 LLM を信用したいから」** (F-task-e-finalize / 2026-05-08 記録、★ Hydrangea
-  コアバリュー) — 「LLM の知性に委ねる」原則
+  コアバリュー) — 「LLM の知性に委ねる」原則。★★★ **F-wl-hit-quality-audit /
+  2026-05-14 で本原則が F-13.B 現実装で踏みにじられている (= LLM judgement bypass)
+  ことが決定的に判明** = `F-jp-coverage-llm-judgement-extraction` で根本治療予定
 - **「これは明確に忖度だと思う。暴くべき観点を暴いていない」** (F-task-e-finalize /
   2026-05-08 記録) — 「観点の選択的欠落 = 忖度」判定軸を確立
 - **F-jp-coverage-tune CP-1/CP-2 中間チェックポイント方式** (F-jp-coverage-tune /
   2026-05-09 確立) — 長時間実行バッチで中間レポート提出 → カズヤ承認後に次 Step
-  着手。チューニング試行は **1 回のみ** = 無制限自走禁止
+  着手。チューニング試行は **1 回のみ** = 無制限自走禁止。★ F-wl-hit-quality-audit
+  (2026-05-14) でも CP (Task C 完了時) を導入 = Task D スコープ判断 + Slot-1 系統判定
+  取り扱い + F1 信頼性フォローアップの 3 軸でカズヤ判断、Task D-G 進行へ
 - **「負の遺産残さないように」** — 不整合・乖離を早期解消
 - **「カズヤの手作業はバッチプロンプトのコピペ 1 回のみ」**
 - **「過剰拡張性の罠」** — 「将来のため」の抽象化前倒しは見送る
 - **「動くものを壊さない」** — F-jp-coverage-improve で構造的不具合修正後も
   本番試運転 + 過去判定後追い (F-trial-run-post-fix) を必須段階として組み込み、
-  ★ F-trial-run-post-tune (2026-05-11) で「観察と記録に集中する性格のバッチも
-  根本治療の一部」運用が確立 = src/ tests/ configs/ scripts/ 0 変更で完結
+  ★ F-wl-hit-quality-audit (2026-05-14) で「観察と記録に集中する性格のバッチも
+  根本治療の一部」運用が再度実証 = src/ tests/ configs/ 0 変更、scripts/ 1 新規追加 +
+  docs/ のみ更新で完結
 - **「整合の説明であって検証ではない」** (F-extension-followup / 2026-05-08
-  記録、★ サンプル設計バイアス検出原則)
+  記録、★ サンプル設計バイアス検出原則) — F-wl-hit-quality-audit (2026-05-14)
+  で本原則を独立検証バッチとして体現 (Step C 測定の整合説明だけでは捉えられ
+  なかった『LLM judgement bypass 問題』を生データダンプ + WebSearch 後追いで顕在化)
 
 ## 8. 関連ドキュメントへの導線
 
@@ -353,28 +395,30 @@ Phase A.5-3c 実装時は「拡張性差し込み判断ルール」(BATCH_PROTOC
 - 編集ミッションフィルタ設計 (F-13 隠れ層含む) → `docs/EDITORIAL_MISSION_FILTER_DESIGN.md`
 - ★ **「特定角度」概念正典 (4 分類版、命名 1/2/3) → `docs/PARTICULAR_ANGLE_DEFINITION.md`**
 - Claude Code 振る舞い指針 → `CLAUDE.md`
+- ★ **F-wl-hit-quality-audit REPORT + 構造的分析** → `docs/runs/F-wl-hit-quality-audit/REPORT.md` + `structural_analysis.md`
 
 ---
 
 *このドキュメントは F-state-protocol (2026-05-01) で導入。
  Claude Code がバッチ完了時に全置換更新する運用 (BATCH_PROTOCOL.md Task 5 参照)。
- F-trial-run-post-tune (2026-05-11) は **ゲート完了後の 8 つ目のバッチ**で、
- F-jp-coverage-tune-followup マージ後の本番試運転 + 防衛機構 5 層監査 + 拾われた
- Slot の台本品質確認 + 第一作題材ランク付け (機械 4 軸 + カズヤ主観 1 軸空欄) を実施。
- 試運転 3 Slot 全件 has_jp_coverage=True (afpbb x2 / nippon x1 = WL 拡張ドメイン
- 全件ヒット、F-trial-run-post-fix から完全反転)。**機械スコア 1 位 = Slot-1
- cls-6889e9e1c7ac (10pt) で第一作最有力候補確定** (editorial_mission_score=86.0、
- Hydrangea ど真ん中、唯一 video_payload 生成済み)。`src/` `tests/` `configs/`
- `scripts/` 0 変更、`docs/` のみ更新で完結、baseline 1390 passed 維持。
- 重要観察事項 4 件残課題化: (1) F-13.B WL ヒット品質の独立検証 (matched_urls
- ベアドメインのみで誤陽性リスク)、(2) verify_two_stage 本番配線判断
- (production-pipeline と docs 概念整理の乖離解消)、(3) particular_angle_metadata
- + sontaku_signals 本番配線判断 (新ルート起動条件)、(4) F-stream-2-filter-design
- 責務範囲再評価 (本番運用視点反映)。次バッチ候補 = Phase A.5-3b 第一作起案
- (Slot-1 cls-6889e9e1c7ac、機械スコア 10pt、★ 最有力候補昇格) + 並走 4 件の
- 残課題バッチ群。
- ★ Project Knowledge 最新化リマインダ: 本バッチ完了で第一作題材候補が確定 +
- production-pipeline と docs 概念整理の乖離が明示化されたため、新チャット移行前
- にカズヤが手動で claude.ai の Project Knowledge を **必須最新化** することを推奨
+ F-wl-hit-quality-audit (2026-05-14) は **ゲート完了後の 9 つ目のバッチ**で、
+ F-trial-run-post-tune で観察された matched_urls ベアドメイン問題を独立検証 (Task B
+ 試運転 3 Slot WebSearch + Task C ゴールデンセット 5 件サンプリング + Task D Slot-2
+ Grounding chunk dump)。★★★ **Task D で LLM judgement bypass 問題が決定的に判明** =
+ Gemini LLM が response_text で『該当しない』と明示判定しているのに F-13.B は WL マッチ
+ だけで True を返している = 設計判断レベルの欠陥、Hydrangea カズヤ哲学『LLM の知性に
+ 委ねる』に反する設計。根本治療 = Option (i) LLM response_text 判定抽出 を別バッチ
+ `F-jp-coverage-llm-judgement-extraction` (仮称) として新規記録 (緊急度 高、不変原則 3
+ 例外条件 + カズヤ承認必要)。Slot-1 cls-6889e9e1c7ac の系統判定 = **perspective_gap
+ 確定** (afpbb で 9,600 数字 + 虐待を継続報道済み)、第一作着手判断は両論併記でカズヤ
+ 判断待ち。F-jp-coverage-tune-followup Step C メトリクス再解釈 = broader topic-family
+ level の値で specific event level では下振れ可能性 (REPORT v2 化は別バッチ、CP カズヤ
+ 判断)。`src/` `tests/` `configs/` 0 変更、`scripts/dump_grounding_chunks.py` 新規 1
+ ファイル + `docs/` のみ更新で完結、baseline 1390 passed 維持。次バッチ候補 =
+ F-jp-coverage-llm-judgement-extraction (★ 最有力候補昇格) + 並走で Phase A.5-3b 第一作
+ 起案 (Slot-1 perspective_gap framing / カズヤ判断待ち) + 本番配線判断バッチ群 3 件。
+ ★ Project Knowledge 最新化リマインダ: 本バッチ完了で WL ヒット品質根本治療の方向性が
+ 確定 + Slot-1 系統判定 = perspective_gap 確定したため、新チャット移行前にカズヤが
+ 手動で claude.ai の Project Knowledge を **必須最新化** することを推奨
  (BATCH_PROTOCOL の Project Knowledge 運用ルールに従う)。
  過去の経緯は DECISION_LOG.md / FUTURE_WORK.md / DISCUSSION_NOTES.md を参照。*
