@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "batch": "F-wl-hit-quality-audit",
+  "generated_at": "2026-05-11T19:00:00+09:00",
+  "purpose": "F-13.B WL ヒット品質の独立検証 (matched_urls ベアドメインのみで誤陽性リスク懸念)",
+  "branch": "feature/F-wl-hit-quality-audit",
+  "branched_from": "main @ eb0dd5e13bb167dadfde59e2108ca5de00a6de40 (= F-trial-run-post-tune merge)",
+  "main_head_commit": "eb0dd5e13bb167dadfde59e2108ca5de00a6de40",
+  "main_recent_commits": [
+    "eb0dd5e Merge branch 'feature/F-trial-run-post-tune'",
+    "b81376f feat: F-trial-run-post-tune trial run after F-jp-coverage-tune-followup + first video candidate ranking",
+    "4062639 Merge branch 'feature/F-jp-coverage-tune-followup'",
+    "84a678e feat: WL hierarchy match + WL extension 3 domains (F-jp-coverage-tune-followup, verdict=fail but Recall +47.36pp / F1 covered 0.8718 first threshold break, root cause resolved, 4 residual axes split)",
+    "82ce0d0 Merge branch 'feature/F-jp-coverage-tune'"
+  ],
+  "baseline_tests": {
+    "result": "1390 passed",
+    "elapsed_seconds": 74.87,
+    "command": "python -m pytest tests/ -x --tb=no -q"
+  },
+  "python_version": "3.11.15",
+  "pytest_version": "9.0.2",
+  "scope": {
+    "trial_run_3_slots": [
+      "cls-6889e9e1c7ac (Israel Prison Abuses 9,600 Detainees, matched=afpbb.com Tier 2)",
+      "cls-1a38c0ca8c99 (BBC Gaza documentary BAFTA, matched=afpbb.com Tier 2)",
+      "cls-03892eab2072 (Tehran says US proposal sought Iran's surrender, matched=nippon.com Tier 4)"
+    ],
+    "golden_sampling_seed": 42,
+    "golden_sampling_count": 5,
+    "golden_total_tp_universe": 17,
+    "tp_definition": "expected_broad_jp_coverage='reported' AND predicted broad_jp_coverage=True (17 events out of 23 in F-jp-coverage-tune-followup measurement_result_step_c.json)"
+  },
+  "constraints": {
+    "invariant_principles_compliance": "本バッチは src/ tests/ configs/ scripts/ を変更しない (docs/ + 新規 scripts/dump_grounding_chunks.py のみ)",
+    "principles_5_check": {
+      "1_article_writer_unchanged": true,
+      "2_script_writer_existing_route_unchanged": true,
+      "3_triage_existing_files_unchanged": true,
+      "4_analysis_unchanged": true,
+      "5_existing_tests_unbroken": "baseline 1390 passed 維持確認済み"
+    }
+  },
+  "output_files_planned": [
+    "docs/runs/F-wl-hit-quality-audit/REPORT.md",
+    "docs/runs/F-wl-hit-quality-audit/environment_snapshot.json (本ファイル)",
+    "docs/runs/F-wl-hit-quality-audit/trial_run_websearch_audit.json (Task B)",
+    "docs/runs/F-wl-hit-quality-audit/golden_sampling_websearch_audit.json (Task C)",
+    "docs/runs/F-wl-hit-quality-audit/grounding_chunk_raw_dump.json (Task D、CP 後)",
+    "docs/runs/F-wl-hit-quality-audit/structural_analysis.json (Task E)",
+    "docs/runs/F-wl-hit-quality-audit/structural_analysis.md (Task E)",
+    "scripts/dump_grounding_chunks.py (Task D、CP 後)"
+  ],
+  "cp_protocol": "Task C 完了時に CP 中間レポート提示 → カズヤ承認 → Task D 着手 (無制限自走禁止 + 1 バッチで欲張らない原則)"
+}

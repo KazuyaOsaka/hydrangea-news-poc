@@ -1,11 +1,12 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-09 (F-jp-coverage-tune-followup 完了 verdict=fail のまま、
-ただし WL マッチング階層判定化 + WL 拡張 3 ドメインで主因 (= WL サブドメイン
-不一致 + WL 漏れ準大手) を解消、Recall covered +47.36pp / F1 covered +27.92pp の
-大幅改善 + F1 covered 0.8718 で threshold 初突破。Grounding API 構造的限界
-エントリを部分的解消ステータス + 残課題 (副因のみ残存) で更新、stream_3 過剰検出
-エントリは Active 維持で本バッチで顕在化 (Stream accuracy 27.27% → 9.09%) を追記)
+最終更新: 2026-05-14 (F-wl-hit-quality-audit 完了、F-trial-run-post-tune で観察された
+matched_urls ベアドメイン問題を独立検証、★ Task D Grounding chunk dump で **LLM judgement
+bypass 問題** が決定的に判明 = Gemini LLM が response_text で『該当しない』と明示判定して
+いるのに F-13.B は WL マッチだけで True を返している、根本治療 Option (i) LLM response_text
+判定抽出を別バッチ案件として記録、4-A 新規エントリ追加 = 「2026-05-14: LLM judgement bypass
+問題」、4-B 既存再評価 = 「2026-05-11: F-13.B WL ヒット品質問題」を Active → 部分的解消
+(構造的理解完了、Option (i) 実装は別バッチ) に更新)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -18,6 +19,93 @@
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-14: F-13.B LLM judgement bypass 問題 — Gemini LLM が「該当しない」と明示判定しているのに F-13.B は WL マッチだけで True を返している (F-wl-hit-quality-audit Task D で決定的発見)
+
+**背景**:
+F-wl-hit-quality-audit (2026-05-14) の Task D で `scripts/dump_grounding_chunks.py` を新規
+作成し、Slot-2 cls-1a38c0ca8c99 (BBC Gaza documentary BAFTA、Suspect FP 確定) について
+Gemini Grounding API を呼び chunk 生データを JSON 保存した結果、**Gemini LLM 自身が
+response_text で『指定されたニュース「BBCが放送を取りやめたガザに関するドキュメンタリーが
+受賞し、映画製作者がBBCを非難した」という2026年5月上旬の出来事とは異なる内容で、かつ
+日付も異なります』と明示的に「該当しない」判定** をしている事実が確認された。
+
+にもかかわらず、F-13.B `_search_with_grounding` 現実装は LLM の response_text 判定を完全に
+無視し、chunk のドメイン抽出 + WL 階層マッチのみで True/False を決めている (= afpbb.com
+chunk 2 件存在で True 返却)。
+
+**chunk.web 構造の確認 (Slot-2 dump、8 chunks)**:
+- 全 8 件で `web_uri` = Vertex AI redirect URL のみ (decode 不可)
+- 全 8 件で `web_title` = ドメイン名のみ (article path もページタイトルも含まれない)
+- 全 8 件で `web_domain` 属性 = None (SDK 戦略 1 未実装)
+- 抽出戦略は全件 strategy_2 (title フィールド経由)
+
+**仮説の切り分け**:
+| 仮説 | 判定 |
+|---|---|
+| (a) SDK バグ説 (chunk.web.uri が redirect URL のみ) | ✅ 部分確認 (仕様) |
+| (b) Grounding API 仕様説 (article path は元から返されない) | ✅ 確認 |
+| (c) クエリ品質説 | ❌ 主因ではない (LLM は正しく判定) |
+| **(d) ★ LLM judgement bypass 説** | ✅★ 確認 = **最大の改善余地** |
+
+**Hydrangea カズヤ哲学との整合性問題**:
+F-task-e-finalize (2026-05-08) で確立された「Hydrangea のポイントの一つに LLM の膨大な
+知識による評価とか判定があるから、一定 LLM を信用したいから」原則および クラウド誤り 9
+(各論コントロールへの誘惑、2026-05-08) と本発見が直接呼応。現実装は LLM の知性を完全に
+bypass する設計 = カズヤ哲学に反する。
+
+**論点**:
+- **(i) ★★★ LLM response_text 判定抽出 (推奨)**: プロンプト改修 + response 解釈で
+  LLM 判定を verify() に反映 (= LLM 判定が WL マッチを上書き)。工数 4-8h、Recall -5〜
+  -10pp / Precision +20〜+40pp 想定
+- (ii) WL マッチ信頼度フラグ追加 → Task D 発見で無効化 (article path 取得不能)
+- (iii) 高信頼度マッチのみで True → 同上、無効化
+- (iv) 別 API (Google Custom Search) 移行 → 工数 1-2 日、F-jp-coverage-tune-followup-2
+  統合候補
+- (v) Grounding クエリ品質改善 → (i) の補助として併用可能
+
+**Hydrangea コアミッションへの影響**:
+- 本問題は perspective_gap (系統 2、= 特定角度の日本未報道) の機械検出を構造的に妨げる
+- 試運転 + golden サンプリングで 3/8 = 37.5% のケースで topic-family 一致 / specific event
+  不一致パターンが観察 → Option (i) 実装で大幅改善可能性
+- F-13.B WL ヒット品質問題 (前エントリ) の根本原因として確定
+
+**出典**:
+- F-wl-hit-quality-audit Task D 結果
+  (`docs/runs/F-wl-hit-quality-audit/grounding_chunk_raw_dump.json`)
+- 構造的分析 (`docs/runs/F-wl-hit-quality-audit/structural_analysis.{json,md}`)
+- 統合 REPORT (`docs/runs/F-wl-hit-quality-audit/REPORT.md`)
+
+**ステータス**: `Active` (FUTURE_WORK 緊急度 高に `F-jp-coverage-llm-judgement-extraction`
+新規追加済み。Phase A.5-3b 第一作着手判断と密接に関連 = Slot-1 cls-6889e9e1c7ac の
+perspective_gap 確定後、Option (i) 実装で WL ヒット品質根本治療 → 再試運転 → 第一作着手の
+フローが推奨)
+
+---
+
+### 2026-05-11: F-13.B WL ヒット品質問題 — matched_urls がベアドメインのみで記事レベル一致が不明 (F-trial-run-post-tune で観察、F-wl-hit-quality-audit で部分的解消)
+
+**2026-05-14 ステータス更新**: F-wl-hit-quality-audit (2026-05-14) で本問題を独立検証した
+結果、**構造的理解は完了** (= 根本原因は (d) LLM judgement bypass 問題、別エントリ参照)、
+ただし **改善案 Option (i) の実装は別バッチ案件 (`F-jp-coverage-llm-judgement-extraction`)
+として記録**。本エントリは Active → **部分的解消 (構造的理解完了、根本治療実装は別バッチ)**
+に更新。
+
+**F-wl-hit-quality-audit 検証結果サマリー**:
+1. 試運転 3 Slot 検証: Slot-1 = TP (Israel 9,600 Detainees は afpbb で報道済み)、Slot-2 =
+   Suspect FP (BBC Gaza documentary BAFTA は afpbb で別事象のみ)、Slot-3 = Topic-Level TP
+   (Iran 降伏フレーミングは nippon.com で類似トピック報道、specific 主張不在)
+2. ゴールデンセット TP 17 件から seed=42 で 5 件サンプリング: TP=1、Topic-Level TP=3、
+   Specific Event Suspect FP=1 (cls-a4132ec7d949)
+3. ★ Slot-2 Grounding chunk dump で **LLM 自身が「該当しない」判定しているのに F-13.B は
+   WL マッチだけで True を返している** ことが決定的に判明 → 根本原因 (d) を確定
+
+**F-jp-coverage-tune-followup Step C メトリクスの再解釈**:
+- F1 covered 0.8718 / Recall covered 89.47% は **broader topic-family level の値**
+- specific event (= particular_angle) level では下振れの可能性
+- REPORT v2 化は別バッチ (F-wl-hit-quality-audit CP カズヤ判断で本バッチ記録のみと決定)
+
+---
 
 ### 2026-05-11: F-13.B WL ヒット品質問題 — matched_urls がベアドメインのみで記事レベル一致が不明 (F-trial-run-post-tune で観察)
 

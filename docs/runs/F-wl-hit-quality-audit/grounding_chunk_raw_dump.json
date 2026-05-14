@@ -1,0 +1,100 @@
+{
+  "version": "1.0",
+  "batch": "F-wl-hit-quality-audit",
+  "task": "Task D — Slot-2 cls-1a38c0ca8c99 Grounding chunk 生データダンプ",
+  "generated_at": "2026-05-14T18:16:54.452818+09:00",
+  "scope": "Slot-2 only (Suspect FP 確定、診断価値最大、カズヤ承認後)",
+  "purpose": "F-trial-run-post-tune 試運転で matched_urls=https://afpbb.com (ベアドメイン) となった原因を切り分ける: (a) SDK バグ説 (chunk.web.uri が redirect URL のみ) / (b) API 仕様説 (article path は元から返されない) / (c) クエリ品質説",
+  "result": {
+    "event": {
+      "slot_index": 2,
+      "event_id": "cls-1a38c0ca8c99",
+      "title": "Filmmakers slam BBC after Gaza documentary wins award despite being dropped",
+      "summary": "BAFTA TV 賞を受賞したガザ医療従事者ドキュメンタリーを巡り、BBC が放送中止に したとして製作陣が公的に非難。Channel 4 が代替放送。",
+      "f13b_observed_matched_urls": [
+        "https://afpbb.com"
+      ],
+      "f13b_observed_matched_tier": "tier_2_wire_service",
+      "audit_verdict": "Suspect FP (afpbb は別事象 BBC Gaza doc Ofcom 制裁 3604087 を報じるのみ、Slot-2 specific event は不在)"
+    },
+    "query": "Filmmakers slam BBC after Gaza documentary wins award despite being dropped 日本 報道",
+    "elapsed_seconds": 7.51,
+    "chunk_count": 8,
+    "chunks": [
+      {
+        "idx": 0,
+        "web_present": true,
+        "web_uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvhaCgvgu71og09fX8wnA3pqv12Tu_fgRmG6t4comidNF6PgNI5m_aU0AqimEEXGHG_AEBB63XNK9hzlti0ppDHUfDl0ACXbJsfNPYrKgFG_s4HP36767MsUqt7Sc079fe5Ug=",
+        "web_title": "afpbb.com",
+        "web_domain_attr": null,
+        "extracted_domain_via_strategy": "afpbb.com",
+        "extraction_strategy_used": "strategy_2_web_title"
+      },
+      {
+        "idx": 1,
+        "web_present": true,
+        "web_uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF3JKA1u3TY_Jv1ZJ_-vccvQQ5UDNvSe-QVto9CQwKvwG8syOly88jL5pGyGsY-5IIFvsYYED6nN_pIJ-0KIvfPnmUybsQigHH1LbN4nBf1SsQpsU14tFye1dM7yVIuHcwHc-8=",
+        "web_title": "afpbb.com",
+        "web_domain_attr": null,
+        "extracted_domain_via_strategy": "afpbb.com",
+        "extraction_strategy_used": "strategy_2_web_title"
+      },
+      {
+        "idx": 2,
+        "web_present": true,
+        "web_uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG3nnowDjswtYWH0kpbalEHEblvcHMJnF1iJrjdTp1fQqPux4yz1CCa-shejm-E4jbsBDA5EATeQ8pMpHYWVp_iYgTGoQwkNdi5z6Lfp9FL88PNBJTASmD8wbE4NVOfCpjWd5qqjsjdppGho_V0RkfzffOx",
+        "web_title": "arabnews.jp",
+        "web_domain_attr": null,
+        "extracted_domain_via_strategy": "arabnews.jp",
+        "extraction_strategy_used": "strategy_2_web_title"
+      },
+      {
+        "idx": 3,
+        "web_present": true,
+        "web_uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFHoWNwSUg5S-7qYt08SB4rDVZIlcc9rP5kZ-6KjYWhtzpFV58mXOEDtHRpH_CIk0HXylnNyN5a8ui_UQV1GS6cRud1GzmQmwnInGSc1d3GH7vy_OL9Qg2a4mvkVNS9ZO67UUqmfNsYF7nqWT36CwcbvtADBwuUZ2RyvpS_8eounipajJP8JN8_kAsrmBUdlDwPjFsIjNk539vm_5a9esYXB2XX0flYliDX",
+        "web_title": "middleeasteye.net",
+        "web_domain_attr": null,
+        "extracted_domain_via_strategy": "middleeasteye.net",
+        "extraction_strategy_used": "strategy_2_web_title"
+      },
+      {
+        "idx": 4,
+        "web_present": true,
+        "web_uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF6l3A2feXmKeELew-hoEo58n2PD6kmwFZ5VNCSawB4I5jtsfku_S6KaM72OL0-EZuaMfpzrDzsV_qo50_aHncfy9fKfPp60aOg-Kr-2riPGGp7nYj9NO_fdS-IEzh98hDcaovffAAJtBzf-BmAv_7cU1NeTXV4HARGBby-AhfUQZTYZfnHrddD6vztnEq-XzXk",
+        "web_title": "newarab.com",
+        "web_domain_attr": null,
+        "extracted_domain_via_strategy": "newarab.com",
+        "extraction_strategy_used": "strategy_2_web_title"
+      },
+      {
+        "idx": 5,
+        "web_present": true,
+        "web_uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEicIQRT3sPW1w64Ap9Uf7HHwZTzzDXfmVlExlKdbBJuA212nL61SQMHSMhI_YPw4DRcn1IlF5TChpd56t2Qqa_Fa9K7ONRc-x5r6NMyGVu12EeoSGfv8feOpgQ_qnnG_fIJpYg38LVZ1tx7eKs9DxCwY-H6Hqvl9dN0eQfML3wcXTt6gvjNAa0c42cFp1b8v8iqz2xz0QJuvvgksRKxzE=",
+        "web_title": "madhyamamonline.com",
+        "web_domain_attr": null,
+        "extracted_domain_via_strategy": "madhyamamonline.com",
+        "extraction_strategy_used": "strategy_2_web_title"
+      },
+      {
+        "idx": 6,
+        "web_present": true,
+        "web_uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEjzryEe6fpopJJlunFnNsGS_Q8aCZpVnVXKR5CxsOKLHZgv5-bSW5Ie0-HidiSxf8cYv-puJ0aJWj6D2h27I7nx4AwG-guuq8HxcWj54YyjkRIkDzYKFOYJme0CX3Ias3z_7eyP7mLqEY6-n0m5rlcEup6te6WLQthZBl7St4xQVMvkB9-vM74zTt4uMM90LRiLyxAdPZsGZQtbVETclWzRYCXk-H3S4fCnLoGMIYjU1eums2UNGJADLuluOdnleHUrRYV-e34JI1KuUl-yT1a_ciSC9p5TNsv-g==",
+        "web_title": "themarysue.com",
+        "web_domain_attr": null,
+        "extracted_domain_via_strategy": "themarysue.com",
+        "extraction_strategy_used": "strategy_2_web_title"
+      },
+      {
+        "idx": 7,
+        "web_present": true,
+        "web_uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGQXGmv_M7KhNDaYpBQk_P75kcjJ2pdshUce4L_PJKSV1_wyz9a4aYHke2Xqyay-mN4zULNl4zJ6ietafjkSX6spzYoNHgdPI8Vn5v-yYAceuqiVObmaEPoPdGlfIQXPL6YA16rXugqS5WAqAVs_KQ0BAEnp3IhpDHbKUdlE9Z0UW7Tqu1Gd-C_RfnNdjUyg-niFjyRihaleJgI5ypYvyBbPTqVsHwB",
+        "web_title": "aa.com.tr",
+        "web_domain_attr": null,
+        "extracted_domain_via_strategy": "aa.com.tr",
+        "extraction_strategy_used": "strategy_2_web_title"
+      }
+    ],
+    "response_text_excerpt": "日本語のWeb検索結果を確認したところ、指定されたニュース「Filmmakers slam BBC after Gaza documentary wins award despite being dropped」が日本の主要メディアで報道されていることを示す記事URLは見つかりませんでした。\n\n検索結果には、BBCのガザ関連ドキュメンタリーに関する過去の報道（例えば、ハマス幹部の息子がナレーターを務めたことに関するBBCの謝罪や制裁に関するAFPBB Newsの2025年の記事、BBCのガザ・イスラエル報道の偏向に関するARAB NEWSの2025年の記事など）は含まれていましたが、これらの記事は、ユーザーが確認を求めている「BBCが放送を取りやめたガザに関するドキュメンタリーが受賞し、映画製作者がBBCを非難した」という2026年5月上旬の出来事とは異なる内容で、かつ日付も異なります。",
+    "model": "gemini-2.5-flash"
+  }
+}

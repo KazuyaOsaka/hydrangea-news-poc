@@ -1,0 +1,167 @@
+{
+  "version": "1.0",
+  "batch": "F-wl-hit-quality-audit",
+  "generated_at": "2026-05-11T19:20:00+09:00",
+  "task": "Task B — Slot-1/2/3 WebSearch 後追い検証 (試運転 3 件)",
+  "method": "Anthropic WebSearch を allowed_domains で当該 WL ドメインに絞り込み、当該事象が報道されているか確認 (2-4 クエリ試行/Slot)",
+  "judgement_criteria": {
+    "TP": "検索結果に当該ドメインの記事 URL が含まれ、内容が当該事象 (または同一トピック家系) を扱っている",
+    "Suspect_FP": "検索結果に当該ドメインの当該事象記事なし、または別事象の記事のみ",
+    "Partial": "ドメイン側がトピック家系は報じているが、特定事象 (specific event) は触れていない or 別角度のみ",
+    "判定不能": "WebSearch クローラ制約でドメインに直接アクセスできない"
+  },
+  "verifications": [
+    {
+      "slot": 1,
+      "event_id": "cls-6889e9e1c7ac",
+      "title": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners",
+      "primary_source": "TeleSUR (en/VE/latin_america, state_aligned)",
+      "f13b_matched": {
+        "matched_urls": ["https://afpbb.com"],
+        "matched_tier": "tier_2_wire_service",
+        "matched_domains": ["afpbb.com"]
+      },
+      "web_search_queries": [
+        "afpbb.com イスラエル パレスチナ 9600人 拘留 刑務所 虐待 (allowed_domains=[afpbb.com])",
+        "\"Israel\" \"9,600\" OR \"9600\" \"detainees\" OR \"Palestinian prisoners\" 日本 報道 2026",
+        "site:afpbb.com イスラエル 拘禁者 9600"
+      ],
+      "afpbb_hits": [
+        {
+          "url": "https://www.afpbb.com/articles/-/3541376",
+          "title": "パレスチナ人遺体は人質奪還への交渉材料 イスラエル最高裁が容認",
+          "relevance": "本文中に『9,600 人以上のパレスチナ人が拘禁されている』言及あり (2024-10-01)。当該数字を明示報道"
+        },
+        {
+          "url": "https://www.afpbb.com/articles/-/3531453",
+          "title": "パレスチナ人被収容者を虐待か、兵士9人拘束 イスラエル軍",
+          "relevance": "イスラエル軍によるパレスチナ人虐待を直接報道 (2024-07-30)"
+        },
+        {
+          "url": "https://www.afpbb.com/articles/-/3622357",
+          "title": "イスラエル極右閣僚が収容者虐待を監督か パレスチナ側が非難",
+          "relevance": "刑務所内パレスチナ人虐待の構造的非難を報道"
+        },
+        {
+          "url": "https://www.afpbb.com/articles/-/3597451",
+          "title": "イスラエル治安相、パレスチナ人収容者の待遇改善命令で最高裁非難",
+          "relevance": "拘禁者待遇に関する構造的論議を報道"
+        },
+        {
+          "url": "https://www.afpbb.com/articles/-/3125376",
+          "title": "イスラエルの刑務所でパレスチナ人1000人以上がハンスト、大物受刑者が呼び掛け",
+          "relevance": "刑務所内パレスチナ人問題を継続的に報道"
+        }
+      ],
+      "judgement": "TP (True Positive)",
+      "judgement_rationale": "afpbb.com は『9,600 人拘禁』数字 + 『虐待』 + 『刑務所処遇』全要素を継続報道。特に 3541376 が 9,600 数字を明示。Slot-1 TeleSUR 発の問題提起 (人権侵害・収容者処遇) は afpbb.com の継続報道トピックと一致。WL Tier 2 ヒットは妥当",
+      "specificity_note": "TeleSUR 記事の『9,600 人虐待』という強い主張に対し、afpbb は同 9,600 数字を引用しつつも主張内容 (ICRC 訪問操作疑惑等) までは含めていない可能性あり。トピック level の matching は確実、特定主張 level までは確認不能"
+    },
+    {
+      "slot": 2,
+      "event_id": "cls-1a38c0ca8c99",
+      "title": "Filmmakers slam BBC after Gaza documentary wins award despite being dropped",
+      "primary_source": "Middle_East_Eye (en/GB/middle_east, bridge_source)",
+      "f13b_matched": {
+        "matched_urls": ["https://afpbb.com"],
+        "matched_tier": "tier_2_wire_service",
+        "matched_domains": ["afpbb.com"]
+      },
+      "web_search_queries": [
+        "afpbb.com BBC ガザ ドキュメンタリー BAFTA 受賞 (allowed_domains=[afpbb.com])",
+        "afpbb.com Channel 4 ガザ 医療 ドキュメンタリー 放送中止 BBC (allowed_domains=[afpbb.com])",
+        "afpbb.com BBC Channel 4 Gaza documentary BAFTA dropped award (general)"
+      ],
+      "afpbb_hits": [
+        {
+          "url": "https://www.afpbb.com/articles/-/3604087",
+          "title": "「誤解を招く」ガザのドキュメンタリー 英BBCに制裁",
+          "relevance": "★ 別事象。これは BBC の別ドキュメンタリー 『How to Survive in Warzone Gaza』(ナレーターがハマス幹部息子) に対する Ofcom 制裁を報道。本 Slot 主題の Channel 4 『Gaza: Doctors Under Attack』BAFTA 受賞 (2026-05-11) とは別事象"
+        }
+      ],
+      "specific_event_coverage": {
+        "channel4_doctors_under_attack_bafta_in_afpbb": "未確認 (検索結果に出現せず)",
+        "note": "BAFTA TV Awards 2026 は 2026-05-11 (試運転実行日と同日)、afpbb がこの特定事象を取り上げているかは検索結果に出現せず"
+      },
+      "judgement": "Suspect FP (誤陽性疑い、Topic-Level Partial)",
+      "judgement_rationale": "afpbb.com は BBC/ガザ ドキュメンタリーというトピック家系では継続報道しているが、Slot-2 の特定事象 (Channel 4 『Doctors Under Attack』の BAFTA 受賞 + BBC お蔵入り批判、2026-05-11) は afpbb で確認できなかった。WL Tier 2 認定の妥当性は低い (= 違うドキュメンタリーの違う事件 を引き当てている可能性が高い)。Grounding chunk.web.title でドメイン抽出経路を経た WL マッチが、Slot-2 の固有事象を実際には報じていないドメインを False Positive として認定している証拠の可能性",
+      "specificity_note": "★ 重要: Topic 家系一致だけで WL マッチング階層判定が True を返すことの構造的問題が顕在化"
+    },
+    {
+      "slot": 3,
+      "event_id": "cls-03892eab2072",
+      "title": "Tehran says US proposal sought Iran's surrender",
+      "primary_source": "Middle_East_Eye (en/GB/middle_east, bridge_source)",
+      "f13b_matched": {
+        "matched_urls": ["https://nippon.com"],
+        "matched_tier": "tier_4_business",
+        "matched_domains": ["nippon.com"]
+      },
+      "web_search_queries": [
+        "nippon.com Iran United States surrender Tehran proposal (allowed_domains=[nippon.com])",
+        "nippon.com イラン 降伏 提案 拒否 最高指導者 (allowed_domains=[nippon.com])",
+        "nippon.com イラン 米国 和平案 降伏要求 (allowed_domains=[nippon.com])"
+      ],
+      "nippon_com_hits": [
+        {
+          "url": "https://www.nippon.com/ja/news/kd1412356008838595375/",
+          "title": "イラン「米降伏まで」抗戦 軍事当局が声明",
+          "relevance": "★ 強い関連: イラン軍事当局が『米降伏まで抗戦』声明 (= Slot-3 トピック『降伏』フレーミングの中心)"
+        },
+        {
+          "url": "https://www.nippon.com/ja/news/kd1308036514305868061/",
+          "title": "「屈服しない」とイラン最高指導者",
+          "relevance": "★ 強い関連: 最高指導者の『屈服しない』表明 (2025-06)"
+        },
+        {
+          "url": "https://www.nippon.com/ja/news/kd1413899930809467310/",
+          "title": "イラン、仲介国に米との停戦拒否伝達と報道",
+          "relevance": "イランの停戦拒否を報道"
+        },
+        {
+          "url": "https://www.nippon.com/en/news/yjj2026031301174/",
+          "title": "Iran Conflict Becoming War of Attrition: Ex-Japan Ambassador",
+          "relevance": "イラン-米紛争の継続性を分析 (2026-03)"
+        },
+        {
+          "url": "https://www.nippon.com/ja/in-depth/d01226/",
+          "title": "出口の見えないイラン戦争：米欧の亀裂が深刻化",
+          "relevance": "米欧の温度差を分析、イラン戦争継続"
+        }
+      ],
+      "specific_event_coverage": {
+        "tehran_says_us_proposal_sought_surrender": "★ 確実な direct match なし、ただしトピック家系 (Iran rejects US proposal / Iran framing as 'surrender' demand) は nippon.com で継続報道",
+        "framing_inversion_note": "Slot-3 MEE 元記事は『テヘラン側が米和平案を「降伏要求」と呼んだ』フレーミング。nippon.com は『イラン側 = 米降伏まで抗戦』『屈服しない』『停戦拒否』を継続報道 = フレーミングは反転気味だが同じ言説空間"
+      },
+      "judgement": "TP (Topic-Level、Partial at Specific Event Level)",
+      "judgement_rationale": "nippon.com は Iran-US 紛争・降伏フレーミング言説を継続的に詳しく報道 (10 件以上のヒット)。Slot-3 MEE の特定主張 (= 米和平案が降伏要求だった) を直接引き当てる単一記事は確認できなかったが、トピック家系全体としては明確に報道されている。WL Tier 4 認定は『Business 系』カテゴリ違和感あり (Tier 認定の categorical fit は別問題) だが has_jp_coverage=True の判定自体は妥当",
+      "specificity_note": "★ ただし nippon.com の Tier 4 (Business 系) は WL カテゴリ的に違和感あり (本事象は外交・地政学)。WL カテゴリ問題は別軸論点"
+    }
+  ],
+  "summary": {
+    "verdict_distribution": {
+      "TP": 1,
+      "Suspect_FP": 1,
+      "Topic_TP_Specific_Partial": 1,
+      "判定不能": 0
+    },
+    "key_findings": [
+      "★ Slot-1 (Israel 9,600 detainees) は afpbb.com で 9,600 数字 + 虐待 + 拘禁処遇を明示的に継続報道 = WL Tier 2 ヒット妥当 = TP 確定",
+      "★ Slot-2 (Channel 4 'Doctors Under Attack' BAFTA 受賞 = MEE 報道) は afpbb.com で当該事象未確認、別事象 BBC ガザ ドキュメンタリー Ofcom 制裁を報じる記事 (3604087) があるのみ = Suspect FP の可能性 (= Topic 家系一致のみで WL マッチング階層判定が True を返す構造的弱点)",
+      "★ Slot-3 (Iran 降伏フレーミング = MEE 報道) は nippon.com で類似トピック家系を継続報道 = Topic-Level TP、ただし MEE 特定主張の direct match は未確認。Tier 4 (Business) 認定は categorical fit に違和感あり",
+      "★ 全体: 3 件中 1 件 (Slot-1) が確定 TP、1 件 (Slot-2) が Suspect FP、1 件 (Slot-3) が Topic-Level TP + Specific Partial = WL ヒット品質は『全件 TP』とは断言できない、誤陽性リスクが少なくとも 1/3 の事例で顕在化"
+    ],
+    "implication_for_phase_a5_3b": {
+      "slot_1_as_first_video_candidate": "★ Slot-1 (Israel 9,600 Detainees) は WL ヒット品質検証で TP 確定 = 真に divergence ルート (afpbb 報道済み) であり、blind_spot_global ではない。Hydrangea コアミッション = 系統 2 (perspective_gap、afpbb は事実だけ報道し『虐待の構造性 + ICRC 訪問操作疑惑』までは含めていない可能性) のターゲットとして妥当 = 第一作起案で TeleSUR 角度を加える設計は意味あり、ただし純粋 silence_gap として売り出すと afpbb 報道済み事実と矛盾するため要注意"
+    },
+    "implication_for_grounding_chunk_quality": [
+      "Slot-2 で『Topic 家系一致のみで WL マッチング階層判定が True を返す』構造的弱点が確認 = Grounding API の chunk 返却ロジック + ドメイン抽出経路 + WL マッチング階層判定の組み合わせで、記事レベル不一致でもドメイン level True を返す",
+      "Task D の Grounding chunk 生データダンプ実施で『article path が取得できる chunk があるか / chunk.web.title 経由抽出のみで article path が原理的に取得不能か』を切り分けるべき"
+    ]
+  },
+  "constraints_acknowledged": {
+    "websearch_clawer_limit": "F-trial-run-post-fix audit_caveat: 一部の日本主要紙 (asahi.com / yomiuri.co.jp 等) は WebSearch クローラ制約あり。本検証では afpbb.com / nippon.com は問題なく検索可能と確認",
+    "specificity_limitation": "本検証は Topic 家系一致 vs 特定事象一致を区別する厳密検証だが、afpbb / nippon の全記事を網羅したわけではなく、検索クエリの選択バイアスは残る (= 改善案: Task D で Grounding chunk 生データを取得し article URL の有無を直接確認)",
+    "single_audit_round_only": "1 バッチで欲張らない原則 (CP-3 + F-jp-coverage-tune-followup 確立) に従い、本 Task は 3 Slot WebSearch のみで終結 (詳細な記事 URL 探索はゴールデンセット 5 件サンプリングと合わせて結論を出す)"
+  }
+}
