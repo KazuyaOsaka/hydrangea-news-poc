@@ -1,0 +1,71 @@
+{
+  "version": "1.0",
+  "batch": "F-jp-coverage-llm-judgement-extraction",
+  "task": "Task B CP-1 — dry-run #1 (parser on existing F-wl-hit-quality-audit Slot-2 dump)",
+  "generated_at": "2026-05-14T20:26:38.258696+09:00",
+  "purpose": "新 parser (_parse_llm_judgement 草案) を F-wl-hit-quality-audit 既存 Slot-2 dump の response_text に適用し、no_match 判定 → has_jp_coverage False になるかを実証する。API コスト 0 (既存 dump 再利用)。",
+  "input": {
+    "event_id": "cls-1a38c0ca8c99",
+    "title": "Filmmakers slam BBC after Gaza documentary wins award despite being dropped",
+    "response_text_excerpt": "日本語のWeb検索結果を確認したところ、指定されたニュース「Filmmakers slam BBC after Gaza documentary wins award despite being dropped」が日本の主要メディアで報道されていることを示す記事URLは見つかりませんでした。\n\n検索結果には、BBCのガザ関連ドキュメンタリーに関する過去の報道（例えば、ハマス幹部の息子がナレーターを務めたことに関するBBCの謝罪や制裁に関するAFPBB Newsの2025年の記事、BBCのガザ・イスラエル報道の偏向に関するARAB NEWSの2025年の記事など）は含まれていましたが、これらの記事は、ユーザーが確認を求めている「BBCが放送を取りやめたガザに関するドキュメンタリーが受賞し、映画製作者がBBCを非難した」という2026年5月上旬の出来事とは異なる内容で、かつ日付も異なります。"
+  },
+  "parser_settings": {
+    "no_match_keywords": [
+      "該当する記事はありません",
+      "該当する記事は見つかりませんでした",
+      "見つかりませんでした",
+      "見つかりません",
+      "該当しません",
+      "該当なし",
+      "異なる内容",
+      "異なる事象",
+      "別の事象",
+      "日付も異なります",
+      "報道されていません",
+      "報道は確認できませんでした",
+      "見当たりません"
+    ],
+    "match_keywords": [
+      "該当する記事は以下",
+      "該当する記事は次の",
+      "以下のURL",
+      "以下の記事",
+      "次の記事",
+      "報道されています",
+      "報道されました",
+      "報道済み",
+      "確認できました"
+    ],
+    "turn_particles": [
+      "しかし",
+      "ただし",
+      "一方で",
+      "に対し"
+    ],
+    "priority": "先に no_match を確定 → 次に match → 最後に uncertain (Hydrangea 嘘をつかない設計)"
+  },
+  "result": {
+    "parsed_llm_judgement": "no_match",
+    "llm_judgement_text": "日本語のWeb検索結果を確認したところ、指定されたニュース「Filmmakers slam BBC after Gaza documentary wins award despite being dropped」が日本の主要メディアで報道されていることを示す記事URLは見つかりませんでした",
+    "detected_keywords": {
+      "no_match": [
+        "見つかりませんでした",
+        "見つかりません",
+        "異なる内容",
+        "日付も異なります"
+      ],
+      "match": []
+    },
+    "expected": "no_match (Slot-2 は Suspect FP 確定済み = LLM 判定『該当しない』が正解)",
+    "match_with_expectation": true
+  },
+  "decision_simulation": {
+    "wl_match": true,
+    "wl_matched_tier": "tier_2_wire_service",
+    "current_has_jp_coverage": true,
+    "current_audit_verdict": "Suspect FP (afpbb は別事象 BBC Gaza doc Ofcom 制裁 3604087 を報じるのみ、Slot-2 specific event は不在)",
+    "new_has_jp_coverage": false,
+    "stream_simulation_two_stage": "stream_1_silence_gap (broad で LLM=no_match → has_jp_coverage=False → Step 2 スキップ)"
+  },
+  "conclusion": "★ 既存プロンプトの response_text からも 3 件の独立 no_match シグナル (『見つかりませんでした』『異なる内容』『日付も異なります』) が parser で抽出可能。B-3 表適用で has_jp_coverage が True → False に修正される (= Suspect FP の根本治療)。新プロンプト改修 (B-6) は本判定をより明確化する補強で、既存出力でも parser が機能する。"
+}

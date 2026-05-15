@@ -1,0 +1,57 @@
+{
+  "batch": "F-jp-coverage-llm-judgement-extraction",
+  "task": "Task A — Environment snapshot",
+  "captured_at": "2026-05-14",
+  "branch": "feature/F-jp-coverage-llm-judgement-extraction",
+  "branched_from": "main",
+  "main_head": "915ace3bc6516fbd37c6adbf12f1c5403d3435d9",
+  "main_head_subject": "Merge branch 'feature/F-wl-hit-quality-audit'",
+  "python_version": "3.11.15",
+  "pytest_version": "9.0.2",
+  "baseline_tests": {
+    "command": "python -m pytest tests/ --tb=no -q",
+    "passed": 1390,
+    "failed": 0,
+    "duration_seconds": 205.57,
+    "expectation": "1390 passed (CLAUDE.md baseline)"
+  },
+  "scope": {
+    "src_files_to_modify": [
+      "src/triage/jp_coverage_verifier.py (★ 不変原則 3 例外条件適用、既存 contract 完全維持 + optional フィールド追加のみ)"
+    ],
+    "tests_to_add": [
+      "tests/test_jp_coverage_verifier_llm_judgement.py (新規追加)"
+    ],
+    "docs_to_update": [
+      "docs/CURRENT_STATE.md (Task 5 全置換更新)",
+      "docs/DECISION_LOG.md (Task 1 末尾追加)",
+      "docs/FUTURE_WORK.md (Task 2 完了済み移動 + 新規残課題)",
+      "docs/DISCUSSION_NOTES.md (Task 4 4-A 新規 + 4-B 既存再評価)"
+    ],
+    "docs_to_create_under_runs": [
+      "docs/runs/F-jp-coverage-llm-judgement-extraction/REPORT.md",
+      "docs/runs/F-jp-coverage-llm-judgement-extraction/design_spec.md",
+      "docs/runs/F-jp-coverage-llm-judgement-extraction/measurement_result_v2.json",
+      "docs/runs/F-jp-coverage-llm-judgement-extraction/environment_snapshot.json (本ファイル)",
+      "docs/runs/F-jp-coverage-llm-judgement-extraction/logs/<event_id>.log × 23"
+    ]
+  },
+  "unmodified_files_guarantee": {
+    "src": "src/triage/jp_coverage_verifier.py 以外は完全不変 (article_writer.py / script_writer.py / analysis / main.py 等)",
+    "tests": "既存テストファイル完全不変、test_jp_coverage_verifier_llm_judgement.py を新規追加のみ",
+    "configs": "全ファイル不変",
+    "scripts": "全ファイル不変 (既存 measure_two_stage_accuracy.py を呼び出すのみ)",
+    "CLAUDE_md": "完全不変"
+  },
+  "invariant_3_exception_check": {
+    "condition_1_bug_fix": "✅ LLM judgement bypass の設計欠陥修正",
+    "condition_2_no_design_change": "✅ 既存メソッド contract 完全維持、optional フィールド追加のみ",
+    "condition_3_decision_log": "✅ Task H で DECISION_LOG エントリ追加予定",
+    "condition_4_kazuya_approved": "✅ 本バッチプロンプトでクラウド (web) 経由カズヤ承認済"
+  },
+  "checkpoints": [
+    "CP-1: Task B 完了時 (設計仕様 + 新プロンプト草案 + dry-run 結果) — カズヤ承認待ち",
+    "CP-2: Task E 完了時 (ゴールデンセット再測定値) — カズヤ承認待ち",
+    "完了レポート: Task G 完了時 (commit/merge コマンド一式) — カズヤ承認待ち"
+  ]
+}

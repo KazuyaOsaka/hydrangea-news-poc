@@ -153,6 +153,133 @@ def _extract_domain_from_chunk(chunk: Any) -> Optional[str]:
     return None
 
 
+# F-jp-coverage-llm-judgement-extraction (2026-05-14): LLM response_text 判定抽出。
+# F-wl-hit-quality-audit Task D で決定的に判明した LLM judgement bypass 問題の
+# 根本治療。Gemini Grounding API の chunk.web は article 粒度の URL を返さない
+# 構造的限界があるが、Gemini LLM 自身は response_text で「該当する記事はあり
+# ません」「異なる内容」「日付も異なります」のような明確な判定を返す。本ヘルパ
+# はその判定を機械側が読み取れる形式に変換し、verify() / verify_two_stage() の
+# 最終判定 (B-3 表) に反映する。
+#
+# 設計仕様: docs/runs/F-jp-coverage-llm-judgement-extraction/design_spec.md
+# Hydrangea カズヤ哲学: 「LLM の知性に委ねる」(F-task-e-finalize / 2026-05-08)
+
+# 「該当記事なし」シグナル (Hydrangea 嘘をつかない設計、疑わしきは低く)
+_NO_MATCH_KEYWORDS: tuple[str, ...] = (
+    "該当する記事はありません",
+    "該当する記事は見つかりませんでした",
+    "見つかりませんでした",
+    "見つかりません",
+    "該当しません",
+    "該当なし",
+    "異なる内容",
+    "異なる事象",
+    "別の事象",
+    "日付も異なります",
+    "報道されていません",
+    "報道は確認できませんでした",
+    "見当たりません",
+)
+
+# 「該当記事あり」シグナル
+_MATCH_KEYWORDS: tuple[str, ...] = (
+    "該当する記事は以下",
+    "該当する記事は次の",
+    "以下のURL",
+    "以下の記事",
+    "次の記事",
+    "報道されています",
+    "報道されました",
+    "報道済み",
+    "確認できました",
+)
+
+# 転換接続詞 (否定の否定 = uncertain 寄り)
+_TURN_PARTICLES: tuple[str, ...] = ("しかし", "ただし", "一方で", "に対し")
+
+
+def _extract_response_text(response: Any) -> str:
+    """Gemini response から response.candidates[0].content.parts[*].text を結合。
+
+    Gemini SDK の content.parts[*].text にモデルの自然言語応答が格納されている。
+    属性欠損 / 型不一致 / イテレーション失敗時は "" にフォールバックすることで、
+    既存テスト (MagicMock で content/parts を未設定) との後方互換性を確保する
+    (= response_text="" → llm_judgement=None → 後方互換パスへ)。
+    """
+    try:
+        candidates = getattr(response, "candidates", None) or []
+        if not candidates:
+            return ""
+        content = getattr(candidates[0], "content", None)
+        if content is None:
+            return ""
+        parts = getattr(content, "parts", None)
+        if parts is None:
+            return ""
+        text_parts: list[str] = []
+        for p in parts:
+            t = getattr(p, "text", None)
+            if isinstance(t, str):
+                text_parts.append(t)
+        return "".join(text_parts)
+    except (TypeError, AttributeError):
+        return ""
+
+
+def _parse_llm_judgement(
+    response_text: str,
+) -> tuple[Optional[str], Optional[str]]:
+    """response_text からキーワード判定で LLM 判定を抽出する。
+
+    戻り値:
+        (label, matched_text)
+        - label: "match" / "no_match" / "uncertain" / None
+        - matched_text: 判定該当文 (デバッグ用) or None
+
+    None の意味 (B-3.a 後方互換):
+        response_text が空 / str でない場合は None を返す。これにより既存テスト
+        (MagicMock で response_text が抽出できないケース) で「LLM 判定不在 →
+        WL マッチのみで判定」の後方互換パスを通る。
+
+    パース戦略 (design_spec B-2.b / B-2.c):
+        1. response_text を文単位 (。 / \\n 区切り) に分割
+        2. 各文で no_match / match キーワードを検出
+        3. 転換接続詞 (しかし / ただし / 一方で / に対し) が同一文にある場合は弱化
+        4. 全文 no_match のみヒット → "no_match"
+        5. 全文 match のみヒット → "match"
+        6. 混在 or キーワード不在 → "uncertain" (空入力は None)
+
+    Hydrangea 嘘をつかない設計 (F-task-e-finalize / カズヤ哲学):
+        報道済み判定 (= silence_gap でない判定) を出すには高いバーを要求。
+        曖昧 / 混在は "uncertain" に倒し、verify() 側で False (= 未報道) に
+        まとめる (B-3 表)。
+    """
+    if not isinstance(response_text, str):
+        return (None, None)
+    text = response_text.strip()
+    if not text:
+        return (None, None)
+
+    sentences = [s for s in re.split(r"[。\n]", text) if s.strip()]
+    no_match_hits: list[str] = []
+    match_hits: list[str] = []
+    for sent in sentences:
+        is_after_turn = any(p in sent for p in _TURN_PARTICLES)
+        nm_kw = next((k for k in _NO_MATCH_KEYWORDS if k in sent), None)
+        mt_kw = next((k for k in _MATCH_KEYWORDS if k in sent), None)
+        if nm_kw and not mt_kw and not is_after_turn:
+            no_match_hits.append(sent.strip())
+        elif mt_kw and not nm_kw and not is_after_turn:
+            match_hits.append(sent.strip())
+        # 混在 / 転換後は無視 (= uncertain 寄り)
+
+    if no_match_hits and not match_hits:
+        return ("no_match", no_match_hits[0])
+    if match_hits and not no_match_hits:
+        return ("match", match_hits[0])
+    return ("uncertain", None)
+
+
 # 大手メディアホワイトリスト (Web 検証用)
 JP_MEDIA_WHITELIST: dict[str, list[str]] = {
     # Tier 1: 全国紙・公共放送
@@ -250,6 +377,11 @@ class JpCoverageResult:
     error: Optional[str] = None
     cached: bool = False
     cached_at: Optional[str] = None
+    # F-jp-coverage-llm-judgement-extraction (2026-05-14): LLM judgement bypass 根本治療。
+    # response_text から抽出した LLM 判定 ("match"/"no_match"/"uncertain"/None)。
+    # None = 抽出不能 (後方互換パス、WL マッチのみで判定)。
+    llm_judgement: Optional[str] = None
+    llm_judgement_text: Optional[str] = None
 
 
 @dataclass
@@ -282,6 +414,13 @@ class TwoStageVerifyResult:
     angle_query_fallback_reason: Optional[str] = None
     error_message: Optional[str] = None
     elapsed_seconds: float = 0.0
+    # F-jp-coverage-llm-judgement-extraction (2026-05-14): LLM judgement bypass 根本治療。
+    # broad / angle 各々の response_text から抽出した LLM 判定。
+    # None = 抽出不能 (後方互換パス、WL マッチのみで判定)。
+    broad_llm_judgement: Optional[str] = None
+    broad_llm_judgement_text: Optional[str] = None
+    angle_llm_judgement: Optional[str] = None
+    angle_llm_judgement_text: Optional[str] = None
 
 
 class JpCoverageVerifier:
@@ -342,21 +481,41 @@ class JpCoverageVerifier:
         search_query = self._build_search_query(title, summary)
 
         try:
-            urls = self._search_with_grounding(search_query)
+            urls, response_text = self._search_with_grounding(search_query)
 
             filtered_urls, excluded_urls = self._filter_excluded(urls)
 
             matched_urls, matched_domains, matched_tier = self._match_whitelist(filtered_urls)
 
+            # F-jp-coverage-llm-judgement-extraction (2026-05-14): LLM judgement
+            # bypass 根本治療。response_text から LLM 判定を抽出し、B-3 表
+            # (design_spec.md) に従って WL マッチを上書きする。
+            llm_judgement, llm_judgement_text = _parse_llm_judgement(response_text)
+
+            wl_match = bool(matched_urls)
+            if wl_match:
+                if llm_judgement == "match":
+                    has_jp_coverage = True
+                elif llm_judgement in ("no_match", "uncertain"):
+                    # ★ LLM 判定が支配 (本改修の核心)。嘘をつかない設計 (uncertain も False)。
+                    has_jp_coverage = False
+                else:
+                    # llm_judgement is None: 抽出不能 → 後方互換 (WL マッチのみで判定)
+                    has_jp_coverage = True
+            else:
+                has_jp_coverage = False
+
             result = JpCoverageResult(
                 event_id=event_id,
                 title=title,
-                has_jp_coverage=bool(matched_urls),
+                has_jp_coverage=has_jp_coverage,
                 matched_urls=matched_urls,
                 matched_domains=matched_domains,
                 matched_tier=matched_tier,
                 excluded_urls=excluded_urls,
                 search_query=search_query,
+                llm_judgement=llm_judgement,
+                llm_judgement_text=llm_judgement_text,
             )
 
             self._save_cache(result)
@@ -366,7 +525,8 @@ class JpCoverageVerifier:
                 f"has_jp_coverage={result.has_jp_coverage} "
                 f"tier={result.matched_tier} "
                 f"matched={len(result.matched_urls)} "
-                f"excluded={len(result.excluded_urls)}"
+                f"excluded={len(result.excluded_urls)} "
+                f"llm_judgement={llm_judgement}"
             )
             return result
 
@@ -391,8 +551,14 @@ class JpCoverageVerifier:
         # Gemini Grounding は日本語ページを優先取得するため、これで十分。
         return f"{title} 日本 報道"
 
-    def _search_with_grounding(self, query: str) -> list[str]:
-        """Gemini Grounding で日本語検索し、URL 一覧を返す。
+    def _search_with_grounding(self, query: str) -> tuple[list[str], str]:
+        """Gemini Grounding で日本語検索し、(URL 一覧, response_text) を返す。
+
+        F-jp-coverage-llm-judgement-extraction (2026-05-14): LLM judgement bypass
+        根本治療。戻り値を `list[str]` → `tuple[list[str], str]` に拡張し、LLM の
+        response_text を `_parse_llm_judgement` で読み取れるよう露出する。プロンプト
+        にも回答形式指示 3 行を追加し、LLM が「該当する記事はありません」を明示
+        するように促す。
 
         Gemini API Grounding 公式ドキュメント:
           https://ai.google.dev/gemini-api/docs/google-search
@@ -407,7 +573,11 @@ class JpCoverageVerifier:
             f"日本語の Web 検索で確認してください。\n\n"
             f"検索クエリ: {query}\n\n"
             f"検索結果から、日本のメディア (新聞、テレビ局、通信社等) の "
-            f"記事 URL を中心に確認してください。"
+            f"記事 URL を中心に確認してください。\n\n"
+            f"# 回答形式\n"
+            f"- 該当する記事が見つかった場合: 該当記事の URL を箇条書きで列挙してください\n"
+            f"- 該当する記事が見つからなかった場合: 文中に「該当する記事はありません」と明示してください\n"
+            f"- 検索結果に類似トピックの記事はあるが当該事象とは異なる場合: 「該当する記事はありません。類似トピック (○○) は報道されていますが、当該事象自体は報道されていません」と明示してください"
         )
 
         response = self.gemini_client.models.generate_content(
@@ -438,11 +608,13 @@ class JpCoverageVerifier:
                         if uri:
                             redirect_urls.append(uri)
 
+        response_text = _extract_response_text(response)
+
         logger.debug(
             f"[JpCoverageVerifier] Grounding returned {len(urls)} domains "
-            f"(redirect_urls={len(redirect_urls)})"
+            f"(redirect_urls={len(redirect_urls)}, response_text_len={len(response_text)})"
         )
-        return urls
+        return urls, response_text
 
     def _filter_excluded(self, urls: list[str]) -> tuple[list[str], list[str]]:
         """除外ドメインを除去する。"""
@@ -613,7 +785,7 @@ class JpCoverageVerifier:
         broad_query = self._build_broad_query(candidate)
 
         try:
-            broad_urls = self._search_with_grounding_two_stage(
+            broad_urls, broad_response_text = self._search_with_grounding_two_stage(
                 broad_query,
                 date_restrict_days=date_restrict_days,
                 timeout_seconds=timeout_seconds,
@@ -634,7 +806,22 @@ class JpCoverageVerifier:
         broad_matched_urls, broad_matched_domains, broad_matched_tier = (
             self._match_whitelist(broad_filtered)
         )
-        broad_jp_coverage = bool(broad_matched_urls)
+
+        # F-jp-coverage-llm-judgement-extraction (2026-05-14): broad の LLM judgement
+        # を抽出し、B-3 表 (design_spec.md) に従って WL マッチを上書きする。
+        broad_llm_judgement, broad_llm_judgement_text = _parse_llm_judgement(
+            broad_response_text
+        )
+        broad_wl_match = bool(broad_matched_urls)
+        if broad_wl_match:
+            if broad_llm_judgement == "match":
+                broad_jp_coverage = True
+            elif broad_llm_judgement in ("no_match", "uncertain"):
+                broad_jp_coverage = False  # ★ LLM 判定が支配
+            else:
+                broad_jp_coverage = True  # None: 後方互換 (WL マッチのみで判定)
+        else:
+            broad_jp_coverage = False
 
         broad_results = {
             "urls": broad_urls,
@@ -647,7 +834,7 @@ class JpCoverageVerifier:
             # 系統 1 確定。検索 2 はスキップ (= API コール削減)。
             logger.info(
                 f"[JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap "
-                f"(broad未報道、Step 2 skip)"
+                f"(broad未報道、Step 2 skip、broad_llm_judgement={broad_llm_judgement})"
             )
             return TwoStageVerifyResult(
                 stream="stream_1_silence_gap",
@@ -658,6 +845,8 @@ class JpCoverageVerifier:
                 broad_matched_tier=broad_matched_tier,
                 excluded_count_broad=len(broad_excluded),
                 elapsed_seconds=time.time() - start,
+                broad_llm_judgement=broad_llm_judgement,
+                broad_llm_judgement_text=broad_llm_judgement_text,
             )
 
         # Step 2: 特定角度クエリ生成 + 検索
@@ -669,7 +858,7 @@ class JpCoverageVerifier:
         )
 
         try:
-            angle_urls = self._search_with_grounding_two_stage(
+            angle_urls, angle_response_text = self._search_with_grounding_two_stage(
                 angle_query,
                 date_restrict_days=date_restrict_days,
                 timeout_seconds=timeout_seconds,
@@ -691,13 +880,30 @@ class JpCoverageVerifier:
                 angle_query_fallback_reason=fallback_reason,
                 error_message=f"angle_search_error: {type(exc).__name__}: {exc}",
                 elapsed_seconds=time.time() - start,
+                broad_llm_judgement=broad_llm_judgement,
+                broad_llm_judgement_text=broad_llm_judgement_text,
             )
 
         angle_filtered, angle_excluded = self._filter_excluded(angle_urls)
         angle_matched_urls, angle_matched_domains, angle_matched_tier = (
             self._match_whitelist(angle_filtered)
         )
-        angle_jp_coverage = bool(angle_matched_urls)
+
+        # F-jp-coverage-llm-judgement-extraction (2026-05-14): angle の LLM judgement
+        # を抽出し、B-3 表に従って WL マッチを上書き。
+        angle_llm_judgement, angle_llm_judgement_text = _parse_llm_judgement(
+            angle_response_text
+        )
+        angle_wl_match = bool(angle_matched_urls)
+        if angle_wl_match:
+            if angle_llm_judgement == "match":
+                angle_jp_coverage = True
+            elif angle_llm_judgement in ("no_match", "uncertain"):
+                angle_jp_coverage = False  # ★ LLM 判定が支配
+            else:
+                angle_jp_coverage = True  # None: 後方互換
+        else:
+            angle_jp_coverage = False
 
         stream = (
             "stream_3_candidate" if angle_jp_coverage else "stream_2_perspective_gap"
@@ -713,7 +919,8 @@ class JpCoverageVerifier:
         logger.info(
             f"[JpCoverageVerifier] verify_two_stage stream={stream} "
             f"(broad_jp={broad_jp_coverage}, angle_jp={angle_jp_coverage}, "
-            f"broad_tier={broad_matched_tier}, angle_tier={angle_matched_tier})"
+            f"broad_tier={broad_matched_tier}, angle_tier={angle_matched_tier}, "
+            f"broad_llm={broad_llm_judgement}, angle_llm={angle_llm_judgement})"
         )
 
         return TwoStageVerifyResult(
@@ -732,6 +939,10 @@ class JpCoverageVerifier:
             excluded_count_angle=len(angle_excluded),
             angle_query_fallback_reason=fallback_reason,
             elapsed_seconds=time.time() - start,
+            broad_llm_judgement=broad_llm_judgement,
+            broad_llm_judgement_text=broad_llm_judgement_text,
+            angle_llm_judgement=angle_llm_judgement,
+            angle_llm_judgement_text=angle_llm_judgement_text,
         )
 
     def _build_broad_query(self, candidate: dict[str, Any]) -> str:
@@ -875,7 +1086,7 @@ class JpCoverageVerifier:
         *,
         date_restrict_days: int = 60,
         timeout_seconds: float = 90.0,
-    ) -> list[str]:
+    ) -> tuple[list[str], str]:
         """二段階用 Grounding 検索 (per-call timeout)。
 
         既存 `_search_with_grounding` は変更せず、新規バリアントとして実装。
@@ -888,6 +1099,11 @@ class JpCoverageVerifier:
         のない記事を一律弾く / 検索結果ゼロ多発) に起因する仮説を検証する目的で、
         プロンプトから日付制約を撤去。`date_restrict_days` パラメータ自体は
         後方互換のため残置 (Grounding API 公式サポート時の再導入を想定)。
+
+        F-jp-coverage-llm-judgement-extraction (2026-05-14): LLM judgement bypass
+        根本治療。戻り値を `list[str]` → `tuple[list[str], str]` に拡張し、LLM の
+        response_text を呼び出し側 (verify_two_stage) で `_parse_llm_judgement`
+        できるようにする。プロンプトにも回答形式指示 3 行を追加。
         """
         if self.gemini_client is None:
             raise RuntimeError("gemini_client is not configured")
@@ -901,10 +1117,14 @@ class JpCoverageVerifier:
             f"次のニュースが日本のメディアで報道されているか、"
             f"日本語の Web 検索で確認してください。\n\n"
             f"検索クエリ: {query}\n\n"
-            f"日本のメディア (新聞、テレビ局、通信社等) の記事 URL を中心に確認してください。"
+            f"日本のメディア (新聞、テレビ局、通信社等) の記事 URL を中心に確認してください。\n\n"
+            f"# 回答形式\n"
+            f"- 該当する記事が見つかった場合: 該当記事の URL を箇条書きで列挙してください\n"
+            f"- 該当する記事が見つからなかった場合: 文中に「該当する記事はありません」と明示してください\n"
+            f"- 検索結果に類似トピックの記事はあるが当該事象とは異なる場合: 「該当する記事はありません。類似トピック (○○) は報道されていますが、当該事象自体は報道されていません」と明示してください"
         )
 
-        def _do_call() -> list[str]:
+        def _do_call() -> tuple[list[str], str]:
             response = self.gemini_client.models.generate_content(
                 model=self.model,
                 contents=prompt,
@@ -930,11 +1150,14 @@ class JpCoverageVerifier:
                             if uri:
                                 redirect_urls.append(uri)
 
+            response_text = _extract_response_text(response)
+
             logger.debug(
                 f"[JpCoverageVerifier] two_stage Grounding returned {len(urls)} domains "
-                f"(redirect_urls={len(redirect_urls)}, query={query!r})"
+                f"(redirect_urls={len(redirect_urls)}, response_text_len={len(response_text)}, "
+                f"query={query!r})"
             )
-            return urls
+            return urls, response_text
 
         return self._call_with_timeout(_do_call, timeout_seconds)
 
