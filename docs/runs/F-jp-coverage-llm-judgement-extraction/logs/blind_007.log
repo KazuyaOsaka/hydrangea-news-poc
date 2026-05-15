@@ -1,0 +1,33 @@
+# blind_007
+timestamp: 2026-05-15T16:54:32.875028
+elapsed_seconds: 6.56
+
+## Truth
+  expected_stream: stream_1_silence_gap
+  expected_broad_jp_coverage: unreported
+  expected_angle_jp_coverage: unreported
+  expected_tier: None
+  in_golden_set: True
+
+## Predicted
+  stream: stream_1_silence_gap
+  broad_jp_coverage: False
+  angle_jp_coverage: None
+  broad_matched_tier: tier_4_business
+  angle_matched_tier: None
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: Putin ally's $500 million Russian superyacht sails through Hormuz despite US blockade 日本 報道
+  angle_query: None
+
+## Results
+  broad: {"urls": ["https://joins.com", "https://newsweekjapan.jp", "https://hatena.ne.jp", "https://beincrypto.com", "https://mexc.com"], "matched_urls": ["https://newsweekjapan.jp"], "excluded_urls": ["https://hatena.ne.jp"], "matched_tier": "tier_4_business"}
+  angle: None
+
+## Hits
+  jp_media_hits_broad: ['newsweekjapan.jp']
+  jp_media_hits_angle: []
+  excluded_count_broad: 1
+  excluded_count_angle: 0

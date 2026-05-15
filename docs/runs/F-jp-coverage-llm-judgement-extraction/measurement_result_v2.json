@@ -1,0 +1,1537 @@
+{
+  "version": "1.0",
+  "batch": "F-jp-coverage-tune",
+  "generated_at": "2026-05-15T16:59:33.294780",
+  "config": {
+    "annotations_path": "docs/runs/F-particular-angle-design/annotations.json",
+    "golden_set_path": "docs/runs/F-verify-jp-coverage/golden_set.json",
+    "timeout_seconds": 90.0,
+    "date_restrict_days": 60,
+    "excluded_duplicate_event_ids": [
+      "cls-204a683f73ee_7K",
+      "cls-33b4f4960bf9_7K"
+    ],
+    "elapsed_seconds_total": 381.8
+  },
+  "thresholds": {
+    "recall_covered": 0.9,
+    "precision_blind": 0.8,
+    "f1_covered": 0.85,
+    "tier_accuracy": 0.7
+  },
+  "metrics": {
+    "total_events": 23,
+    "eligible_events": 19,
+    "unknown_events": 4,
+    "tp": 6,
+    "fp": 0,
+    "tn": 3,
+    "fn": 10,
+    "precision_covered": 1.0,
+    "recall_covered": 0.375,
+    "f1_covered": 0.5455,
+    "precision_blind": 0.2308,
+    "recall_blind": 1.0,
+    "tier_accuracy": 0.2,
+    "tier_eligible": 5,
+    "tier_matched": 1,
+    "stream_accuracy": 0.3333,
+    "stream_eligible": 18,
+    "stream_matched": 6,
+    "per_stream_breakdown": {
+      "stream_2_perspective_gap": {
+        "truth_count": 15,
+        "matched": 3,
+        "accuracy": 0.2,
+        "predicted_distribution": {
+          "stream_1_silence_gap": 10,
+          "stream_2_perspective_gap": 3,
+          "stream_3_candidate": 2
+        }
+      },
+      "stream_1_silence_gap": {
+        "truth_count": 3,
+        "matched": 3,
+        "accuracy": 1.0,
+        "predicted_distribution": {
+          "stream_1_silence_gap": 3
+        }
+      },
+      "stream_3_framing_inversion": {
+        "truth_count": 0
+      }
+    }
+  },
+  "verdict": {
+    "verdict": "fail",
+    "criteria": {
+      "recall_covered": {
+        "actual": 0.375,
+        "threshold": 0.9,
+        "passed": false
+      },
+      "precision_blind": {
+        "actual": 0.2308,
+        "threshold": 0.8,
+        "passed": false
+      },
+      "f1_covered": {
+        "actual": 0.5455,
+        "threshold": 0.85,
+        "passed": false
+      },
+      "tier_accuracy": {
+        "actual": 0.2,
+        "threshold": 0.7,
+        "passed": false
+      }
+    },
+    "all_passed": false
+  },
+  "entries": [
+    {
+      "event_id": "blind_001",
+      "title": "Ukrainian Forces Wounded, Killed 1,725 Civilians in Q1 2026",
+      "truth": {
+        "expected_stream": "stream_1_silence_gap",
+        "expected_broad_jp_coverage": "unreported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": null,
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_1_silence_gap",
+        "broad_query": "Ukrainian Forces Wounded, Killed 1,725 Civilians in Q1 2026 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://youtube.com",
+            "https://youtube.com",
+            "https://fnn.jp",
+            "https://youtube.com",
+            "https://youtube.com",
+            "https://ikaros.jp",
+            "https://telesurenglish.net"
+          ],
+          "matched_urls": [
+            "https://fnn.jp"
+          ],
+          "excluded_urls": [
+            "https://youtube.com",
+            "https://youtube.com",
+            "https://youtube.com",
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_3_broadcaster"
+        },
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [
+          "news.fnn.jp"
+        ],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": "tier_3_broadcaster",
+        "angle_matched_tier": null,
+        "excluded_count_broad": 4,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 9.067132949829102
+      },
+      "elapsed_seconds": 9.067
+    },
+    {
+      "event_id": "blind_002",
+      "title": "Israel's top Jewish religious body 'refuses to condemn' smashing of Jesus statue",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": "tier_1_newspaper",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "unknown",
+        "broad_query": "Israel's top Jewish religious body 'refuses to condemn' smashing of Jesus statue 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://joins.com",
+            "https://nippon.com",
+            "https://nippon.com",
+            "https://newsweekjapan.jp",
+            "https://yomiuri.co.jp",
+            "https://youtube.com",
+            "https://fnn.jp",
+            "https://livedoor.com",
+            "https://afpbb.com"
+          ],
+          "matched_urls": [
+            "https://nippon.com",
+            "https://nippon.com",
+            "https://newsweekjapan.jp",
+            "https://yomiuri.co.jp",
+            "https://fnn.jp",
+            "https://afpbb.com"
+          ],
+          "excluded_urls": [
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_1_newspaper"
+        },
+        "angle_query": "イスラエル ラビ庁 兵士 イエス像 破壊 非難拒否 宗教的過激主義 軍 融合",
+        "angle_results": null,
+        "broad_jp_coverage": true,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [
+          "afpbb.com",
+          "news.fnn.jp",
+          "newsweekjapan.jp",
+          "nippon.com",
+          "yomiuri.co.jp"
+        ],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": "tier_1_newspaper",
+        "angle_matched_tier": null,
+        "excluded_count_broad": 1,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": "angle_search_error: ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}",
+        "elapsed_seconds": 31.63799500465393
+      },
+      "elapsed_seconds": 31.638
+    },
+    {
+      "event_id": "blind_003",
+      "title": "US-Israel intervention frees Israeli-Turkish citizen held for serving in Israeli army",
+      "truth": {
+        "expected_stream": "stream_1_silence_gap",
+        "expected_broad_jp_coverage": "unreported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": null,
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "unknown",
+        "broad_query": "US-Israel intervention frees Israeli-Turkish citizen held for serving in Israeli army 日本 報道",
+        "broad_results": null,
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": null,
+        "angle_matched_tier": null,
+        "excluded_count_broad": 0,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": "broad_search_error: ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}",
+        "elapsed_seconds": 2.766446828842163
+      },
+      "elapsed_seconds": 2.766
+    },
+    {
+      "event_id": "blind_004",
+      "title": "In Gaza, life flickers as power cuts shatter livelihoods and healthcare",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": "tier_1_newspaper",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "unknown",
+        "broad_query": "In Gaza, life flickers as power cuts shatter livelihoods and healthcare 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://fnn.jp",
+            "https://afpbb.com",
+            "https://prtimes.jp",
+            "https://arabnews.jp",
+            "https://youtube.com",
+            "https://newsweekjapan.jp",
+            "https://youtube.com",
+            "https://afpbb.com",
+            "https://youtube.com"
+          ],
+          "matched_urls": [
+            "https://fnn.jp",
+            "https://afpbb.com",
+            "https://newsweekjapan.jp",
+            "https://afpbb.com"
+          ],
+          "excluded_urls": [
+            "https://youtube.com",
+            "https://youtube.com",
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_2_wire_service"
+        },
+        "angle_query": "ガザ 発電機 潤滑油 100倍 価格高騰 社会インフラ 組織的 解体",
+        "angle_results": null,
+        "broad_jp_coverage": true,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [
+          "afpbb.com",
+          "news.fnn.jp",
+          "newsweekjapan.jp"
+        ],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": "tier_2_wire_service",
+        "angle_matched_tier": null,
+        "excluded_count_broad": 3,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": "angle_search_error: ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}",
+        "elapsed_seconds": 20.270880937576294
+      },
+      "elapsed_seconds": 20.271
+    },
+    {
+      "event_id": "blind_005",
+      "title": "Gaza was the scandal that should have ended Keir Starmer's political career",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": "tier_1_newspaper",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_1_silence_gap",
+        "broad_query": "Gaza was the scandal that should have ended Keir Starmer's political career 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://afpbb.com",
+            "https://afpbb.com",
+            "https://youtube.com",
+            "https://youtube.com",
+            "https://arabnews.jp",
+            "https://arabnews.jp",
+            "https://arabnews.jp",
+            "https://diamond.jp",
+            "https://youtube.com"
+          ],
+          "matched_urls": [
+            "https://afpbb.com",
+            "https://afpbb.com",
+            "https://diamond.jp"
+          ],
+          "excluded_urls": [
+            "https://youtube.com",
+            "https://youtube.com",
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_2_wire_service"
+        },
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [
+          "afpbb.com",
+          "diamond.jp"
+        ],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": "tier_2_wire_service",
+        "angle_matched_tier": null,
+        "excluded_count_broad": 3,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 11.062195777893066
+      },
+      "elapsed_seconds": 11.062
+    },
+    {
+      "event_id": "blind_007",
+      "title": "Putin ally's $500 million Russian superyacht sails through Hormuz despite US blockade",
+      "truth": {
+        "expected_stream": "stream_1_silence_gap",
+        "expected_broad_jp_coverage": "unreported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": null,
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_1_silence_gap",
+        "broad_query": "Putin ally's $500 million Russian superyacht sails through Hormuz despite US blockade 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://joins.com",
+            "https://newsweekjapan.jp",
+            "https://hatena.ne.jp",
+            "https://beincrypto.com",
+            "https://mexc.com"
+          ],
+          "matched_urls": [
+            "https://newsweekjapan.jp"
+          ],
+          "excluded_urls": [
+            "https://hatena.ne.jp"
+          ],
+          "matched_tier": "tier_4_business"
+        },
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [
+          "newsweekjapan.jp"
+        ],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": "tier_4_business",
+        "angle_matched_tier": null,
+        "excluded_count_broad": 1,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 6.563731908798218
+      },
+      "elapsed_seconds": 6.564
+    },
+    {
+      "event_id": "blind_008",
+      "title": "Israel accused of using 'water as a weapon' against Palestinians in Gaza",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": null,
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_1_silence_gap",
+        "broad_query": "Israel accused of using 'water as a weapon' against Palestinians in Gaza 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://japantimes.co.jp",
+            "https://prtimes.jp",
+            "https://1242.com",
+            "https://prtimes.jp",
+            "https://chiba-tv.com",
+            "https://youtube.com",
+            "https://arabnews.jp",
+            "https://msf.or.jp",
+            "https://msf.or.jp"
+          ],
+          "matched_urls": [],
+          "excluded_urls": [
+            "https://youtube.com"
+          ],
+          "matched_tier": null
+        },
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": null,
+        "angle_matched_tier": null,
+        "excluded_count_broad": 1,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 6.951648950576782
+      },
+      "elapsed_seconds": 6.952
+    },
+    {
+      "event_id": "blind_009",
+      "title": "The real reason Iran and the US cannot end the war: Money",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": "tier_2_wire_service",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_2_perspective_gap",
+        "broad_query": "The real reason Iran and the US cannot end the war: Money 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://newsweekjapan.jp",
+            "https://arabnews.jp",
+            "https://grandfleet.info",
+            "https://yomiuri.co.jp",
+            "https://go2senkyo.com",
+            "https://ksb.co.jp",
+            "https://livedoor.com"
+          ],
+          "matched_urls": [
+            "https://newsweekjapan.jp",
+            "https://yomiuri.co.jp"
+          ],
+          "excluded_urls": [],
+          "matched_tier": "tier_1_newspaper"
+        },
+        "angle_query": "イラン 革命防衛隊 米国 対立 意図的 継続 制裁 影の経済 利権 維持 経済的動機",
+        "angle_results": {
+          "urls": [
+            "https://youtube.com",
+            "https://afpbb.com",
+            "https://mainichi.jp"
+          ],
+          "matched_urls": [
+            "https://afpbb.com",
+            "https://mainichi.jp"
+          ],
+          "excluded_urls": [
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_1_newspaper"
+        },
+        "broad_jp_coverage": true,
+        "angle_jp_coverage": false,
+        "jp_media_hits_broad": [
+          "newsweekjapan.jp",
+          "yomiuri.co.jp"
+        ],
+        "jp_media_hits_angle": [
+          "afpbb.com",
+          "mainichi.jp"
+        ],
+        "broad_matched_tier": "tier_1_newspaper",
+        "angle_matched_tier": "tier_1_newspaper",
+        "excluded_count_broad": 0,
+        "excluded_count_angle": 1,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 30.226734161376953
+      },
+      "elapsed_seconds": 30.227
+    },
+    {
+      "event_id": "blind_010",
+      "title": "Israel's policy of endless war is fuelled by the crisis of Zionism",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": null,
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_1_silence_gap",
+        "broad_query": "Israel's policy of endless war is fuelled by the crisis of Zionism 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://huffingtonpost.jp",
+            "https://agora-web.jp",
+            "https://note.com",
+            "https://chosyu-journal.jp",
+            "https://note.com",
+            "https://kawade.co.jp",
+            "https://kobunsha.com"
+          ],
+          "matched_urls": [],
+          "excluded_urls": [
+            "https://huffingtonpost.jp",
+            "https://note.com",
+            "https://note.com"
+          ],
+          "matched_tier": null
+        },
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": null,
+        "angle_matched_tier": null,
+        "excluded_count_broad": 3,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 28.239003896713257
+      },
+      "elapsed_seconds": 28.239
+    },
+    {
+      "event_id": "covered_001",
+      "title": "ホルムズ海峡めぐりアメリカの対イラン封鎖始まる イランは反発",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": "tier_1_newspaper",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_1_silence_gap",
+        "broad_query": "ホルムズ海峡めぐりアメリカの対イラン封鎖始まる イランは反発 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://yomiuri.co.jp",
+            "https://youtube.com",
+            "https://ktv.jp",
+            "https://fnn.jp",
+            "https://youtube.com",
+            "https://livedoor.com",
+            "https://diamond.jp"
+          ],
+          "matched_urls": [
+            "https://yomiuri.co.jp",
+            "https://fnn.jp",
+            "https://diamond.jp"
+          ],
+          "excluded_urls": [
+            "https://youtube.com",
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_1_newspaper"
+        },
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [
+          "diamond.jp",
+          "news.fnn.jp",
+          "yomiuri.co.jp"
+        ],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": "tier_1_newspaper",
+        "angle_matched_tier": null,
+        "excluded_count_broad": 2,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 11.979140996932983
+      },
+      "elapsed_seconds": 11.979
+    },
+    {
+      "event_id": "covered_002",
+      "title": "米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": "tier_1_newspaper",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_1_silence_gap",
+        "broad_query": "米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://fathomjournal.org",
+            "https://yomiuri.co.jp",
+            "https://youtube.com",
+            "https://youtube.com",
+            "https://youtube.com"
+          ],
+          "matched_urls": [
+            "https://yomiuri.co.jp"
+          ],
+          "excluded_urls": [
+            "https://youtube.com",
+            "https://youtube.com",
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_1_newspaper"
+        },
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [
+          "yomiuri.co.jp"
+        ],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": "tier_1_newspaper",
+        "angle_matched_tier": null,
+        "excluded_count_broad": 3,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 4.503722906112671
+      },
+      "elapsed_seconds": 4.504
+    },
+    {
+      "event_id": "covered_003",
+      "title": "米中 関税協議 / 通商交渉 (2026 年 4 月)",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": "tier_1_newspaper",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_1_silence_gap",
+        "broad_query": "米中 関税協議 / 通商交渉 (2026 年 4 月) 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://jp.net",
+            "https://youtube.com",
+            "https://dir.co.jp",
+            "https://jetro.go.jp"
+          ],
+          "matched_urls": [],
+          "excluded_urls": [
+            "https://youtube.com"
+          ],
+          "matched_tier": null
+        },
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": null,
+        "angle_matched_tier": null,
+        "excluded_count_broad": 1,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 7.683262825012207
+      },
+      "elapsed_seconds": 7.683
+    },
+    {
+      "event_id": "covered_004",
+      "title": "ローマ教皇『多数派の専制』を警告 民主主義に危機感",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": "tier_1_newspaper",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_1_silence_gap",
+        "broad_query": "ローマ教皇『多数派の専制』を警告 民主主義に危機感 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://newsweekjapan.jp",
+            "https://newsweekjapan.jp",
+            "https://newsweekjapan.jp",
+            "https://newsweekjapan.jp",
+            "https://hatena.ne.jp",
+            "https://chiba-tv.com",
+            "https://worldtimes.co.jp"
+          ],
+          "matched_urls": [
+            "https://newsweekjapan.jp",
+            "https://newsweekjapan.jp",
+            "https://newsweekjapan.jp",
+            "https://newsweekjapan.jp"
+          ],
+          "excluded_urls": [
+            "https://hatena.ne.jp"
+          ],
+          "matched_tier": "tier_4_business"
+        },
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [
+          "newsweekjapan.jp"
+        ],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": "tier_4_business",
+        "angle_matched_tier": null,
+        "excluded_count_broad": 1,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 7.778715133666992
+      },
+      "elapsed_seconds": 7.779
+    },
+    {
+      "event_id": "covered_005",
+      "title": "ブラジル ルラ政権、アマゾン開催の COP30 で狙うグローバルサウス主導役",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": "tier_1_newspaper",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_2_perspective_gap",
+        "broad_query": "ブラジル ルラ政権、アマゾン開催の COP30 で狙うグローバルサウス主導役 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://worldtimes.co.jp",
+            "https://worldtimes.co.jp",
+            "https://meti.go.jp",
+            "https://newsweekjapan.jp",
+            "https://fnn.jp",
+            "https://youtube.com",
+            "https://pwc.com",
+            "https://jetro.go.jp"
+          ],
+          "matched_urls": [
+            "https://newsweekjapan.jp",
+            "https://fnn.jp"
+          ],
+          "excluded_urls": [
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_3_broadcaster"
+        },
+        "angle_query": "ブラジル ルラ政権 COP30 グローバルサウス 西側主導 気候秩序 経済的主権 交渉力 地政学的レバレッジ",
+        "angle_results": {
+          "urls": [
+            "https://jetro.go.jp",
+            "https://storm.mg",
+            "https://projectdesign.jp",
+            "https://pwc.com",
+            "https://recordchina.co.jp",
+            "https://spaceshipearth.jp",
+            "https://meti.go.jp",
+            "https://yomiuri.co.jp",
+            "https://jetro.go.jp",
+            "https://pwc.com",
+            "https://huffingtonpost.jp",
+            "https://youtube.com",
+            "https://youtube.com",
+            "https://newsweekjapan.jp",
+            "https://mofa.go.jp",
+            "https://ide.go.jp",
+            "https://mof.go.jp",
+            "https://wwf.or.jp",
+            "https://meti.go.jp",
+            "https://jiia.or.jp",
+            "https://global-gw.com",
+            "https://dlri.co.jp",
+            "https://cas.go.jp"
+          ],
+          "matched_urls": [
+            "https://yomiuri.co.jp",
+            "https://newsweekjapan.jp"
+          ],
+          "excluded_urls": [
+            "https://huffingtonpost.jp",
+            "https://youtube.com",
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_1_newspaper"
+        },
+        "broad_jp_coverage": true,
+        "angle_jp_coverage": false,
+        "jp_media_hits_broad": [
+          "news.fnn.jp",
+          "newsweekjapan.jp"
+        ],
+        "jp_media_hits_angle": [
+          "newsweekjapan.jp",
+          "yomiuri.co.jp"
+        ],
+        "broad_matched_tier": "tier_3_broadcaster",
+        "angle_matched_tier": "tier_1_newspaper",
+        "excluded_count_broad": 1,
+        "excluded_count_angle": 3,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 26.728120803833008
+      },
+      "elapsed_seconds": 26.728
+    },
+    {
+      "event_id": "covered_006",
+      "title": "NVIDIA 株が半年ぶり最高値更新 衰えぬ AI 需要、循環投資にはリスク",
+      "truth": {
+        "expected_stream": "out_of_scope",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "reported",
+        "expected_tier": "tier_1_newspaper",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_2_perspective_gap",
+        "broad_query": "NVIDIA 株が半年ぶり最高値更新 衰えぬ AI 需要、循環投資にはリスク 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://beincrypto.com",
+            "https://ig.com",
+            "https://forbesjapan.com",
+            "https://investing.com",
+            "https://moneypost.jp",
+            "https://beincrypto.com",
+            "https://investing.com",
+            "https://rakuten-sec.net",
+            "https://investing.com"
+          ],
+          "matched_urls": [
+            "https://forbesjapan.com"
+          ],
+          "excluded_urls": [],
+          "matched_tier": "tier_4_business"
+        },
+        "angle_query": "エヌビディア AI需要 拡大の裏で 投資家が警戒する シリコンサイクル 循環投資 リスク 将来の需要減退",
+        "angle_results": {
+          "urls": [
+            "https://biz-journal.jp",
+            "https://ismedia.jp",
+            "https://note.com",
+            "https://rakuten-sec.net",
+            "https://investing.com"
+          ],
+          "matched_urls": [],
+          "excluded_urls": [
+            "https://biz-journal.jp",
+            "https://note.com"
+          ],
+          "matched_tier": null
+        },
+        "broad_jp_coverage": true,
+        "angle_jp_coverage": false,
+        "jp_media_hits_broad": [
+          "forbesjapan.com"
+        ],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": "tier_4_business",
+        "angle_matched_tier": null,
+        "excluded_count_broad": 0,
+        "excluded_count_angle": 2,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 23.337450981140137
+      },
+      "elapsed_seconds": 23.337
+    },
+    {
+      "event_id": "covered_007",
+      "title": "ナイジェリアで 100 人拉致 過激派襲撃、死者多数か",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": "tier_1_newspaper",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_1_silence_gap",
+        "broad_query": "ナイジェリアで 100 人拉致 過激派襲撃、死者多数か 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://chiba-tv.com"
+          ],
+          "matched_urls": [],
+          "excluded_urls": [],
+          "matched_tier": null
+        },
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": null,
+        "angle_matched_tier": null,
+        "excluded_count_broad": 0,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 7.040860891342163
+      },
+      "elapsed_seconds": 7.041
+    },
+    {
+      "event_id": "covered_008",
+      "title": "マリ 軍事政権に反政府勢力が一斉攻撃 暫定国防相死亡",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": "tier_1_newspaper",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_3_candidate",
+        "broad_query": "マリ 軍事政権に反政府勢力が一斉攻撃 暫定国防相死亡 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://cube-soft.jp",
+            "https://fnn.jp",
+            "https://tufs.ac.jp",
+            "https://newsweekjapan.jp",
+            "https://novaist.jp",
+            "https://youtube.com",
+            "https://qab.co.jp",
+            "https://saitama-np.co.jp",
+            "https://livedoor.com",
+            "https://livedoor.com",
+            "https://nippon.com"
+          ],
+          "matched_urls": [
+            "https://fnn.jp",
+            "https://newsweekjapan.jp",
+            "https://nippon.com"
+          ],
+          "excluded_urls": [
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_3_broadcaster"
+        },
+        "angle_query": "マリ 国防相 死亡 トゥアレグ アルカイダ 異例の共闘 ワグネル 依存 破綻",
+        "angle_results": {
+          "urls": [
+            "https://newsweekjapan.jp",
+            "https://youtube.com",
+            "https://qab.co.jp",
+            "https://nippon.com",
+            "https://novaist.jp",
+            "https://livedoor.com",
+            "https://afpbb.com",
+            "https://note.com",
+            "https://fsight.jp"
+          ],
+          "matched_urls": [
+            "https://newsweekjapan.jp",
+            "https://nippon.com",
+            "https://afpbb.com"
+          ],
+          "excluded_urls": [
+            "https://youtube.com",
+            "https://note.com"
+          ],
+          "matched_tier": "tier_2_wire_service"
+        },
+        "broad_jp_coverage": true,
+        "angle_jp_coverage": true,
+        "jp_media_hits_broad": [
+          "news.fnn.jp",
+          "newsweekjapan.jp",
+          "nippon.com"
+        ],
+        "jp_media_hits_angle": [
+          "afpbb.com",
+          "newsweekjapan.jp",
+          "nippon.com"
+        ],
+        "broad_matched_tier": "tier_3_broadcaster",
+        "angle_matched_tier": "tier_2_wire_service",
+        "excluded_count_broad": 1,
+        "excluded_count_angle": 2,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 29.406888961791992
+      },
+      "elapsed_seconds": 29.407
+    },
+    {
+      "event_id": "covered_009",
+      "title": "インド・パキスタン カシミール 緊張 (4 月 22 日テロ攻撃 + 5 月 7-10 日 Operation Sindoor)",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": "tier_1_newspaper",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_1_silence_gap",
+        "broad_query": "インド・パキスタン カシミール 緊張 (4 月 22 日テロ攻撃 + 5 月 7-10 日 Operation Sindoor) 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://jetro.go.jp",
+            "https://jetro.go.jp",
+            "https://mofa.go.jp",
+            "https://mofa.go.jp",
+            "https://emb-japan.go.jp",
+            "https://kyodo.co.jp",
+            "https://ismedia.jp",
+            "https://fnn.jp",
+            "https://youtube.com",
+            "https://mod.go.jp",
+            "https://risktaisaku.com"
+          ],
+          "matched_urls": [
+            "https://fnn.jp"
+          ],
+          "excluded_urls": [
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_3_broadcaster"
+        },
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [
+          "news.fnn.jp"
+        ],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": "tier_3_broadcaster",
+        "angle_matched_tier": null,
+        "excluded_count_broad": 1,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 22.644933700561523
+      },
+      "elapsed_seconds": 22.645
+    },
+    {
+      "event_id": "covered_010",
+      "title": "イエメン・フーシ派、イスラエルに弾道ミサイル発射し『イラン支援』を公式表明",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": "tier_2_wire_service",
+        "in_golden_set": true
+      },
+      "predicted": {
+        "stream": "stream_2_perspective_gap",
+        "broad_query": "イエメン・フーシ派、イスラエルに弾道ミサイル発射し『イラン支援』を公式表明 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://youtube.com",
+            "https://youtube.com",
+            "https://afpbb.com",
+            "https://arabnews.jp",
+            "https://rocket-boys.co.jp",
+            "https://youtube.com",
+            "https://arabnews.jp",
+            "https://ksb.co.jp",
+            "https://afpbb.com"
+          ],
+          "matched_urls": [
+            "https://afpbb.com",
+            "https://afpbb.com"
+          ],
+          "excluded_urls": [
+            "https://youtube.com",
+            "https://youtube.com",
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_2_wire_service"
+        },
+        "angle_query": "フーシ派 イラン 支援 抵抗の弧 代理勢力 軍事同盟 変質 相互防衛 ガザ連帯を超え",
+        "angle_results": {
+          "urls": [
+            "https://fsight.jp",
+            "https://yomiuri.co.jp",
+            "https://courrier.jp",
+            "https://donga.com",
+            "https://ide.go.jp",
+            "https://ismedia.jp",
+            "https://mod.go.jp",
+            "https://youtube.com",
+            "https://newsweekjapan.jp",
+            "https://recordchina.co.jp",
+            "https://cmeps-j.net"
+          ],
+          "matched_urls": [
+            "https://yomiuri.co.jp",
+            "https://newsweekjapan.jp"
+          ],
+          "excluded_urls": [
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_1_newspaper"
+        },
+        "broad_jp_coverage": true,
+        "angle_jp_coverage": false,
+        "jp_media_hits_broad": [
+          "afpbb.com"
+        ],
+        "jp_media_hits_angle": [
+          "newsweekjapan.jp",
+          "yomiuri.co.jp"
+        ],
+        "broad_matched_tier": "tier_2_wire_service",
+        "angle_matched_tier": "tier_1_newspaper",
+        "excluded_count_broad": 3,
+        "excluded_count_angle": 1,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 38.22559595108032
+      },
+      "elapsed_seconds": 38.226
+    },
+    {
+      "event_id": "cls-7bd1406438b6",
+      "title": "Palestine football appeals Fifa decision to do nothing about Israeli clubs in illegal settlements",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": null,
+        "in_golden_set": false
+      },
+      "predicted": {
+        "stream": "stream_3_candidate",
+        "broad_query": "Palestine football appeals Fifa decision to do nothing about Israeli clubs in illegal settlements 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://afpbb.com",
+            "https://livedoor.com",
+            "https://livedoor.com",
+            "https://nippon.com",
+            "https://goal.com"
+          ],
+          "matched_urls": [
+            "https://afpbb.com",
+            "https://nippon.com"
+          ],
+          "excluded_urls": [],
+          "matched_tier": "tier_2_wire_service"
+        },
+        "angle_query": "パレスチナサッカー協会 FIFA イスラエル 入植地 クラブ 15年間 不作為 規約違反 政治的複雑さ",
+        "angle_results": {
+          "urls": [
+            "https://nippon.com",
+            "https://goal.com",
+            "https://afpbb.com",
+            "https://arabnews.jp",
+            "https://swissinfo.ch",
+            "https://hatena.ne.jp",
+            "https://voi.id",
+            "https://mk.co.kr"
+          ],
+          "matched_urls": [
+            "https://nippon.com",
+            "https://afpbb.com"
+          ],
+          "excluded_urls": [
+            "https://hatena.ne.jp"
+          ],
+          "matched_tier": "tier_2_wire_service"
+        },
+        "broad_jp_coverage": true,
+        "angle_jp_coverage": true,
+        "jp_media_hits_broad": [
+          "afpbb.com",
+          "nippon.com"
+        ],
+        "jp_media_hits_angle": [
+          "afpbb.com",
+          "nippon.com"
+        ],
+        "broad_matched_tier": "tier_2_wire_service",
+        "angle_matched_tier": "tier_2_wire_service",
+        "excluded_count_broad": 0,
+        "excluded_count_angle": 1,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 37.04117202758789
+      },
+      "elapsed_seconds": 37.041
+    },
+    {
+      "event_id": "cls-6be4fc09d9ed",
+      "title": "'Insider trading': Oil and stocks jolt on news of US-Iran deal as some cry 'manipulation'",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": null,
+        "in_golden_set": false
+      },
+      "predicted": {
+        "stream": "unknown",
+        "broad_query": "'Insider trading': Oil and stocks jolt on news of US-Iran deal as some cry 'manipulation' 日本 報道",
+        "broad_results": null,
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": null,
+        "angle_matched_tier": null,
+        "excluded_count_broad": 0,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": "broad_search_error: ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}",
+        "elapsed_seconds": 6.514053106307983
+      },
+      "elapsed_seconds": 6.514
+    },
+    {
+      "event_id": "cls-0c7fa7c667d6",
+      "title": "Russian man sets himself on fire at war memorial on anniversary of Ukraine invasion, authorities suppress news of it",
+      "truth": {
+        "expected_stream": "stream_1_silence_gap",
+        "expected_broad_jp_coverage": "unreported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": null,
+        "in_golden_set": false
+      },
+      "predicted": {
+        "stream": "stream_1_silence_gap",
+        "broad_query": "Russian man sets himself on fire at war memorial on anniversary of Ukraine invasion, authorities suppress news of it 日本 報道",
+        "broad_results": {
+          "urls": [],
+          "matched_urls": [],
+          "excluded_urls": [],
+          "matched_tier": null
+        },
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": null,
+        "angle_matched_tier": null,
+        "excluded_count_broad": 0,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 6.031459093093872
+      },
+      "elapsed_seconds": 6.031
+    },
+    {
+      "event_id": "cls-a4132ec7d949",
+      "title": "Legal complaint filed by Palestine activists against Met Police chief over synagogue remarks",
+      "truth": {
+        "expected_stream": "stream_2_perspective_gap",
+        "expected_broad_jp_coverage": "reported",
+        "expected_angle_jp_coverage": "unreported",
+        "expected_tier": null,
+        "in_golden_set": false
+      },
+      "predicted": {
+        "stream": "stream_1_silence_gap",
+        "broad_query": "Legal complaint filed by Palestine activists against Met Police chief over synagogue remarks 日本 報道",
+        "broad_results": {
+          "urls": [
+            "https://nippon.com",
+            "https://emb-japan.go.jp",
+            "https://afpbb.com",
+            "https://mofa.go.jp",
+            "https://mofa.go.jp",
+            "https://nippon.com",
+            "https://youtube.com",
+            "https://arabnews.jp"
+          ],
+          "matched_urls": [
+            "https://nippon.com",
+            "https://afpbb.com",
+            "https://nippon.com"
+          ],
+          "excluded_urls": [
+            "https://youtube.com"
+          ],
+          "matched_tier": "tier_2_wire_service"
+        },
+        "angle_query": null,
+        "angle_results": null,
+        "broad_jp_coverage": false,
+        "angle_jp_coverage": null,
+        "jp_media_hits_broad": [
+          "afpbb.com",
+          "nippon.com"
+        ],
+        "jp_media_hits_angle": [],
+        "broad_matched_tier": "tier_2_wire_service",
+        "angle_matched_tier": null,
+        "excluded_count_broad": 1,
+        "excluded_count_angle": 0,
+        "angle_query_fallback_reason": null,
+        "error_message": null,
+        "elapsed_seconds": 6.0321550369262695
+      },
+      "elapsed_seconds": 6.032
+    }
+  ],
+  "analysis_e4": {
+    "_note": "E-4 分析ブロック (Claude Code が measurement_result_v2.json に追記、スクリプト非改変)。broad/angle_llm_judgement は scripts/measure_two_stage_accuracy.py の result_to_dict() が新規 optional フィールドを serialize しないため entries[].predicted には含まれない。本ブロックの broad_llm/angle_llm は measurement_run.log のverify_two_stageログ行から復元した値。",
+    "comparison_pre_vs_post": {
+      "recall_covered": {
+        "pre": 0.8947,
+        "post": 0.375,
+        "delta": -0.5197,
+        "expected_range": "0.79-0.84"
+      },
+      "precision_blind": {
+        "pre": 0.3333,
+        "post": 0.2308,
+        "delta": -0.1025,
+        "expected_range": "0.60-0.70"
+      },
+      "f1_covered": {
+        "pre": 0.8718,
+        "post": 0.5455,
+        "delta": -0.3263,
+        "expected_range": "0.78-0.83"
+      },
+      "tier_accuracy": {
+        "pre": 0.3077,
+        "post": 0.2,
+        "delta": -0.1077
+      },
+      "stream_accuracy": {
+        "pre": 0.0909,
+        "post": 0.3333,
+        "delta": 0.2424
+      },
+      "confusion": {
+        "pre": {
+          "TP": 17,
+          "FP": 3,
+          "TN": 1,
+          "FN": 2
+        },
+        "post": {
+          "TP": 6,
+          "FP": 0,
+          "TN": 3,
+          "FN": 10
+        }
+      },
+      "eligible_unknown": {
+        "pre": {
+          "eligible": 23,
+          "unknown": 0
+        },
+        "post": {
+          "eligible": 19,
+          "unknown": 4
+        }
+      }
+    },
+    "llm_judgement_distribution": {
+      "broad": {
+        "uncertain": 9,
+        "no_match": 4,
+        "match": 6
+      },
+      "broad_total_eligible": 19,
+      "angle": {
+        "uncertain": 3,
+        "match": 2,
+        "no_match": 1
+      },
+      "angle_total_computed": 6,
+      "uncertain_ratio_broad": 0.4737
+    },
+    "regressions_T_to_F": [
+      {
+        "event_id": "blind_005",
+        "title": "Gaza was the scandal that should have ended Keir Starmer's political career",
+        "truth_broad": "reported",
+        "broad_llm": "no_match",
+        "correct_fix": false,
+        "broad_matched_urls": [
+          "https://afpbb.com",
+          "https://afpbb.com",
+          "https://diamond.jp"
+        ]
+      },
+      {
+        "event_id": "blind_007",
+        "title": "Putin ally's $500 million Russian superyacht sails through Hormuz despite US blockade",
+        "truth_broad": "unreported",
+        "broad_llm": "uncertain",
+        "correct_fix": true,
+        "broad_matched_urls": [
+          "https://newsweekjapan.jp"
+        ]
+      },
+      {
+        "event_id": "blind_008",
+        "title": "Israel accused of using 'water as a weapon' against Palestinians in Gaza",
+        "truth_broad": "reported",
+        "broad_llm": "uncertain",
+        "correct_fix": false,
+        "broad_matched_urls": []
+      },
+      {
+        "event_id": "covered_001",
+        "title": "ホルムズ海峡めぐりアメリカの対イラン封鎖始まる イランは反発",
+        "truth_broad": "reported",
+        "broad_llm": "uncertain",
+        "correct_fix": false,
+        "broad_matched_urls": [
+          "https://yomiuri.co.jp",
+          "https://fnn.jp",
+          "https://diamond.jp"
+        ]
+      },
+      {
+        "event_id": "covered_002",
+        "title": "米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』",
+        "truth_broad": "reported",
+        "broad_llm": "uncertain",
+        "correct_fix": false,
+        "broad_matched_urls": [
+          "https://yomiuri.co.jp"
+        ]
+      },
+      {
+        "event_id": "covered_004",
+        "title": "ローマ教皇『多数派の専制』を警告 民主主義に危機感",
+        "truth_broad": "reported",
+        "broad_llm": "uncertain",
+        "correct_fix": false,
+        "broad_matched_urls": [
+          "https://newsweekjapan.jp",
+          "https://newsweekjapan.jp",
+          "https://newsweekjapan.jp",
+          "https://newsweekjapan.jp"
+        ]
+      },
+      {
+        "event_id": "covered_007",
+        "title": "ナイジェリアで 100 人拉致 過激派襲撃、死者多数か",
+        "truth_broad": "reported",
+        "broad_llm": "uncertain",
+        "correct_fix": false,
+        "broad_matched_urls": []
+      },
+      {
+        "event_id": "covered_009",
+        "title": "インド・パキスタン カシミール 緊張 (4 月 22 日テロ攻撃 + 5 月 7-10 日 Operation Sindoor)",
+        "truth_broad": "reported",
+        "broad_llm": "uncertain",
+        "correct_fix": false,
+        "broad_matched_urls": [
+          "https://fnn.jp"
+        ]
+      },
+      {
+        "event_id": "cls-0c7fa7c667d6",
+        "title": "Russian man sets himself on fire at war memorial on anniversary of Ukraine invasion, authorities suppress news of it",
+        "truth_broad": "unreported",
+        "broad_llm": "no_match",
+        "correct_fix": true,
+        "broad_matched_urls": []
+      },
+      {
+        "event_id": "cls-a4132ec7d949",
+        "title": "Legal complaint filed by Palestine activists against Met Police chief over synagogue remarks",
+        "truth_broad": "reported",
+        "broad_llm": "no_match",
+        "correct_fix": false,
+        "broad_matched_urls": [
+          "https://nippon.com",
+          "https://afpbb.com",
+          "https://nippon.com"
+        ]
+      }
+    ],
+    "improvements_F_to_T": [],
+    "regression_breakdown": {
+      "total_T_to_F": 10,
+      "correct_fix_truth_unreported": 2,
+      "false_regression_truth_reported": 8,
+      "false_regression_by_uncertain": 6,
+      "false_regression_by_no_match": 2
+    },
+    "api_errors_503": [
+      "blind_002",
+      "blind_003",
+      "blind_004",
+      "cls-6be4fc09d9ed"
+    ]
+  }
+}

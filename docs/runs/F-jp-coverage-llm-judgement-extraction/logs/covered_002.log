@@ -1,0 +1,33 @@
+# covered_002
+timestamp: 2026-05-15T16:55:54.782954
+elapsed_seconds: 4.50
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_1_silence_gap
+  broad_jp_coverage: False
+  angle_jp_coverage: None
+  broad_matched_tier: tier_1_newspaper
+  angle_matched_tier: None
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: 米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』 日本 報道
+  angle_query: None
+
+## Results
+  broad: {"urls": ["https://fathomjournal.org", "https://yomiuri.co.jp", "https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_urls": ["https://yomiuri.co.jp"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_1_newspaper"}
+  angle: None
+
+## Hits
+  jp_media_hits_broad: ['yomiuri.co.jp']
+  jp_media_hits_angle: []
+  excluded_count_broad: 3
+  excluded_count_angle: 0

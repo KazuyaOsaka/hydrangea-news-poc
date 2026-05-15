@@ -1,0 +1,33 @@
+# blind_010
+timestamp: 2026-05-15T16:55:38.297888
+elapsed_seconds: 28.24
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: None
+  in_golden_set: True
+
+## Predicted
+  stream: stream_1_silence_gap
+  broad_jp_coverage: False
+  angle_jp_coverage: None
+  broad_matched_tier: None
+  angle_matched_tier: None
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: Israel's policy of endless war is fuelled by the crisis of Zionism 日本 報道
+  angle_query: None
+
+## Results
+  broad: {"urls": ["https://huffingtonpost.jp", "https://agora-web.jp", "https://note.com", "https://chosyu-journal.jp", "https://note.com", "https://kawade.co.jp", "https://kobunsha.com"], "matched_urls": [], "excluded_urls": ["https://huffingtonpost.jp", "https://note.com", "https://note.com"], "matched_tier": null}
+  angle: None
+
+## Hits
+  jp_media_hits_broad: []
+  jp_media_hits_angle: []
+  excluded_count_broad: 3
+  excluded_count_angle: 0
