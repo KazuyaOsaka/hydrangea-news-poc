@@ -1,0 +1,33 @@
+# covered_002
+timestamp: 2026-05-16T01:32:31.822549
+elapsed_seconds: 33.80
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_1_newspaper
+  angle_matched_tier: tier_4_business
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: 米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』 日本 報道
+  angle_query: トランプ プーチン 直接交渉 20項目の具体的条件 バイデン政権バイパス G7合意 破壊的影響 外交的正当性
+
+## Results
+  broad: {"urls": ["https://fathomjournal.org", "https://yomiuri.co.jp", "https://yomiuri.co.jp", "https://newsweekjapan.jp", "https://youtube.com", "https://youtube.com"], "matched_urls": ["https://yomiuri.co.jp", "https://yomiuri.co.jp", "https://newsweekjapan.jp"], "excluded_urls": ["https://youtube.com", "https://youtube.com"], "matched_tier": "tier_1_newspaper"}
+  angle: {"urls": ["https://youtube.com", "https://diamond.jp", "https://youtube.com", "https://nippon.com", "https://diamond.jp", "https://nippon.com", "https://forbesjapan.com", "https://president.jp", "https://arabnews.jp", "https://u-tokyo.ac.jp", "https://worldtimes.co.jp", "https://youtube.com", "https://newsweekjapan.jp", "https://fsight.jp", "https://youtube.com", "https://youtube.com"], "matched_urls": ["https://diamond.jp", "https://nippon.com", "https://diamond.jp", "https://nippon.com", "https://forbesjapan.com", "https://president.jp", "https://newsweekjapan.jp"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_4_business"}
+
+## Hits
+  jp_media_hits_broad: ['newsweekjapan.jp', 'yomiuri.co.jp']
+  jp_media_hits_angle: ['diamond.jp', 'forbesjapan.com', 'newsweekjapan.jp', 'nippon.com', 'president.jp']
+  excluded_count_broad: 2
+  excluded_count_angle: 5

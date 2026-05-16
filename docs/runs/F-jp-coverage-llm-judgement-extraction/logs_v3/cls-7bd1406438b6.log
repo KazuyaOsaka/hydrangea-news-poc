@@ -1,0 +1,33 @@
+# cls-7bd1406438b6
+timestamp: 2026-05-16T01:34:49.266212
+elapsed_seconds: 28.16
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: None
+  in_golden_set: False
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_2_wire_service
+  angle_matched_tier: tier_2_wire_service
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: Palestine football appeals Fifa decision to do nothing about Israeli clubs in illegal settlements 日本 報道
+  angle_query: パレスチナサッカー協会 FIFA イスラエル 入植地 クラブ 15年間 不作為 政治的複雑さ 規約違反 国際法
+
+## Results
+  broad: {"urls": ["https://afpbb.com", "https://goal.com", "https://nippon.com", "https://mk.co.kr"], "matched_urls": ["https://afpbb.com", "https://nippon.com"], "excluded_urls": [], "matched_tier": "tier_2_wire_service"}
+  angle: {"urls": ["https://afpbb.com", "https://nippon.com", "https://goal.com", "https://livedoor.com", "https://arabnews.jp"], "matched_urls": ["https://afpbb.com", "https://nippon.com"], "excluded_urls": [], "matched_tier": "tier_2_wire_service"}
+
+## Hits
+  jp_media_hits_broad: ['afpbb.com', 'nippon.com']
+  jp_media_hits_angle: ['afpbb.com', 'nippon.com']
+  excluded_count_broad: 0
+  excluded_count_angle: 0

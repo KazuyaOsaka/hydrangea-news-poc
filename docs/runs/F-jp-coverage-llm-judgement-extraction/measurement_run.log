@@ -1,0 +1,88 @@
+2026-05-15T16:53:10 [INFO] measure_two_stage_accuracy: Excluding duplicate event: cls-33b4f4960bf9_7K (see DISCUSSION_NOTES 2026-05-08)
+2026-05-15T16:53:10 [INFO] measure_two_stage_accuracy: Excluding duplicate event: cls-204a683f73ee_7K (see DISCUSSION_NOTES 2026-05-08)
+2026-05-15T16:53:10 [INFO] measure_two_stage_accuracy: Loaded 23 independent truth entries (excluding 2 duplicates)
+2026-05-15T16:53:11 [INFO] measure_two_stage_accuracy: [1/23] Verifying blind_001: 'Ukrainian Forces Wounded, Killed 1,725 Civilians in Q1 2026'
+2026-05-15T16:53:20 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap (broad未報道、Step 2 skip、broad_llm_judgement=uncertain)
+2026-05-15T16:53:20 [INFO] measure_two_stage_accuracy:   -> stream=stream_1_silence_gap broad_jp=False angle_jp=None broad_tier=tier_3_broadcaster elapsed=9.07s
+2026-05-15T16:53:20 [INFO] measure_two_stage_accuracy: [2/23] Verifying blind_002: "Israel's top Jewish religious body 'refuses to condemn' smas"
+2026-05-15T16:53:52 [WARNING] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage angle search failed: ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-05-15T16:53:52 [INFO] measure_two_stage_accuracy:   -> stream=unknown broad_jp=True angle_jp=None broad_tier=tier_1_newspaper elapsed=31.64s
+2026-05-15T16:53:52 [INFO] measure_two_stage_accuracy: [3/23] Verifying blind_003: 'US-Israel intervention frees Israeli-Turkish citizen held fo'
+2026-05-15T16:53:54 [WARNING] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage broad search failed: ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-05-15T16:53:54 [INFO] measure_two_stage_accuracy:   -> stream=unknown broad_jp=False angle_jp=None broad_tier=None elapsed=2.77s
+2026-05-15T16:53:54 [INFO] measure_two_stage_accuracy: [4/23] Verifying blind_004: 'In Gaza, life flickers as power cuts shatter livelihoods and'
+2026-05-15T16:54:15 [WARNING] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage angle search failed: ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-05-15T16:54:15 [INFO] measure_two_stage_accuracy:   -> stream=unknown broad_jp=True angle_jp=None broad_tier=tier_2_wire_service elapsed=20.27s
+2026-05-15T16:54:15 [INFO] measure_two_stage_accuracy: [5/23] Verifying blind_005: "Gaza was the scandal that should have ended Keir Starmer's p"
+2026-05-15T16:54:26 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap (broad未報道、Step 2 skip、broad_llm_judgement=no_match)
+2026-05-15T16:54:26 [INFO] measure_two_stage_accuracy:   -> stream=stream_1_silence_gap broad_jp=False angle_jp=None broad_tier=tier_2_wire_service elapsed=11.06s
+2026-05-15T16:54:26 [INFO] measure_two_stage_accuracy: [6/23] Verifying blind_007: "Putin ally's $500 million Russian superyacht sails through H"
+2026-05-15T16:54:32 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap (broad未報道、Step 2 skip、broad_llm_judgement=uncertain)
+2026-05-15T16:54:32 [INFO] measure_two_stage_accuracy:   -> stream=stream_1_silence_gap broad_jp=False angle_jp=None broad_tier=tier_4_business elapsed=6.56s
+2026-05-15T16:54:32 [INFO] measure_two_stage_accuracy: [7/23] Verifying blind_008: "Israel accused of using 'water as a weapon' against Palestin"
+2026-05-15T16:54:39 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap (broad未報道、Step 2 skip、broad_llm_judgement=uncertain)
+2026-05-15T16:54:39 [INFO] measure_two_stage_accuracy:   -> stream=stream_1_silence_gap broad_jp=False angle_jp=None broad_tier=None elapsed=6.95s
+2026-05-15T16:54:39 [INFO] measure_two_stage_accuracy: [8/23] Verifying blind_009: 'The real reason Iran and the US cannot end the war: Money'
+2026-05-15T16:55:10 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_2_perspective_gap (broad_jp=True, angle_jp=False, broad_tier=tier_1_newspaper, angle_tier=tier_1_newspaper, broad_llm=match, angle_llm=uncertain)
+2026-05-15T16:55:10 [INFO] measure_two_stage_accuracy:   -> stream=stream_2_perspective_gap broad_jp=True angle_jp=False broad_tier=tier_1_newspaper elapsed=30.23s
+2026-05-15T16:55:10 [INFO] measure_two_stage_accuracy: [9/23] Verifying blind_010: "Israel's policy of endless war is fuelled by the crisis of Z"
+2026-05-15T16:55:38 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap (broad未報道、Step 2 skip、broad_llm_judgement=no_match)
+2026-05-15T16:55:38 [INFO] measure_two_stage_accuracy:   -> stream=stream_1_silence_gap broad_jp=False angle_jp=None broad_tier=None elapsed=28.24s
+2026-05-15T16:55:38 [INFO] measure_two_stage_accuracy: [10/23] Verifying covered_001: 'ホルムズ海峡めぐりアメリカの対イラン封鎖始まる イランは反発'
+2026-05-15T16:55:50 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap (broad未報道、Step 2 skip、broad_llm_judgement=uncertain)
+2026-05-15T16:55:50 [INFO] measure_two_stage_accuracy:   -> stream=stream_1_silence_gap broad_jp=False angle_jp=None broad_tier=tier_1_newspaper elapsed=11.98s
+2026-05-15T16:55:50 [INFO] measure_two_stage_accuracy: [11/23] Verifying covered_002: '米ロ首脳電話会談 ロシア『5月にウクライナと停戦の用意ある』'
+2026-05-15T16:55:54 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap (broad未報道、Step 2 skip、broad_llm_judgement=uncertain)
+2026-05-15T16:55:54 [INFO] measure_two_stage_accuracy:   -> stream=stream_1_silence_gap broad_jp=False angle_jp=None broad_tier=tier_1_newspaper elapsed=4.50s
+2026-05-15T16:55:54 [INFO] measure_two_stage_accuracy: [12/23] Verifying covered_003: '米中 関税協議 / 通商交渉 (2026 年 4 月)'
+2026-05-15T16:56:02 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap (broad未報道、Step 2 skip、broad_llm_judgement=uncertain)
+2026-05-15T16:56:02 [INFO] measure_two_stage_accuracy:   -> stream=stream_1_silence_gap broad_jp=False angle_jp=None broad_tier=None elapsed=7.68s
+2026-05-15T16:56:02 [INFO] measure_two_stage_accuracy: [13/23] Verifying covered_004: 'ローマ教皇『多数派の専制』を警告 民主主義に危機感'
+2026-05-15T16:56:10 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap (broad未報道、Step 2 skip、broad_llm_judgement=uncertain)
+2026-05-15T16:56:10 [INFO] measure_two_stage_accuracy:   -> stream=stream_1_silence_gap broad_jp=False angle_jp=None broad_tier=tier_4_business elapsed=7.78s
+2026-05-15T16:56:10 [INFO] measure_two_stage_accuracy: [14/23] Verifying covered_005: 'ブラジル ルラ政権、アマゾン開催の COP30 で狙うグローバルサウス主導役'
+2026-05-15T16:56:36 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_2_perspective_gap (broad_jp=True, angle_jp=False, broad_tier=tier_3_broadcaster, angle_tier=tier_1_newspaper, broad_llm=match, angle_llm=uncertain)
+2026-05-15T16:56:36 [INFO] measure_two_stage_accuracy:   -> stream=stream_2_perspective_gap broad_jp=True angle_jp=False broad_tier=tier_3_broadcaster elapsed=26.73s
+2026-05-15T16:56:36 [INFO] measure_two_stage_accuracy: [15/23] Verifying covered_006: 'NVIDIA 株が半年ぶり最高値更新 衰えぬ AI 需要、循環投資にはリスク'
+2026-05-15T16:57:00 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_2_perspective_gap (broad_jp=True, angle_jp=False, broad_tier=tier_4_business, angle_tier=None, broad_llm=match, angle_llm=uncertain)
+2026-05-15T16:57:00 [INFO] measure_two_stage_accuracy:   -> stream=stream_2_perspective_gap broad_jp=True angle_jp=False broad_tier=tier_4_business elapsed=23.34s
+2026-05-15T16:57:00 [INFO] measure_two_stage_accuracy: [16/23] Verifying covered_007: 'ナイジェリアで 100 人拉致 過激派襲撃、死者多数か'
+2026-05-15T16:57:07 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap (broad未報道、Step 2 skip、broad_llm_judgement=uncertain)
+2026-05-15T16:57:07 [INFO] measure_two_stage_accuracy:   -> stream=stream_1_silence_gap broad_jp=False angle_jp=None broad_tier=None elapsed=7.04s
+2026-05-15T16:57:07 [INFO] measure_two_stage_accuracy: [17/23] Verifying covered_008: 'マリ 軍事政権に反政府勢力が一斉攻撃 暫定国防相死亡'
+2026-05-15T16:57:36 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_3_candidate (broad_jp=True, angle_jp=True, broad_tier=tier_3_broadcaster, angle_tier=tier_2_wire_service, broad_llm=match, angle_llm=match)
+2026-05-15T16:57:36 [INFO] measure_two_stage_accuracy:   -> stream=stream_3_candidate broad_jp=True angle_jp=True broad_tier=tier_3_broadcaster elapsed=29.41s
+2026-05-15T16:57:36 [INFO] measure_two_stage_accuracy: [18/23] Verifying covered_009: 'インド・パキスタン カシミール 緊張 (4 月 22 日テロ攻撃 + 5 月 7-10 日 Operation Sind'
+2026-05-15T16:57:59 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap (broad未報道、Step 2 skip、broad_llm_judgement=uncertain)
+2026-05-15T16:57:59 [INFO] measure_two_stage_accuracy:   -> stream=stream_1_silence_gap broad_jp=False angle_jp=None broad_tier=tier_3_broadcaster elapsed=22.64s
+2026-05-15T16:57:59 [INFO] measure_two_stage_accuracy: [19/23] Verifying covered_010: 'イエメン・フーシ派、イスラエルに弾道ミサイル発射し『イラン支援』を公式表明'
+2026-05-15T16:58:37 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_2_perspective_gap (broad_jp=True, angle_jp=False, broad_tier=tier_2_wire_service, angle_tier=tier_1_newspaper, broad_llm=match, angle_llm=no_match)
+2026-05-15T16:58:37 [INFO] measure_two_stage_accuracy:   -> stream=stream_2_perspective_gap broad_jp=True angle_jp=False broad_tier=tier_2_wire_service elapsed=38.23s
+2026-05-15T16:58:37 [INFO] measure_two_stage_accuracy: [20/23] Verifying cls-7bd1406438b6: 'Palestine football appeals Fifa decision to do nothing about'
+2026-05-15T16:59:14 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_3_candidate (broad_jp=True, angle_jp=True, broad_tier=tier_2_wire_service, angle_tier=tier_2_wire_service, broad_llm=match, angle_llm=match)
+2026-05-15T16:59:14 [INFO] measure_two_stage_accuracy:   -> stream=stream_3_candidate broad_jp=True angle_jp=True broad_tier=tier_2_wire_service elapsed=37.04s
+2026-05-15T16:59:14 [INFO] measure_two_stage_accuracy: [21/23] Verifying cls-6be4fc09d9ed: "'Insider trading': Oil and stocks jolt on news of US-Iran de"
+2026-05-15T16:59:21 [WARNING] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage broad search failed: ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-05-15T16:59:21 [INFO] measure_two_stage_accuracy:   -> stream=unknown broad_jp=False angle_jp=None broad_tier=None elapsed=6.51s
+2026-05-15T16:59:21 [INFO] measure_two_stage_accuracy: [22/23] Verifying cls-0c7fa7c667d6: 'Russian man sets himself on fire at war memorial on annivers'
+2026-05-15T16:59:27 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap (broad未報道、Step 2 skip、broad_llm_judgement=no_match)
+2026-05-15T16:59:27 [INFO] measure_two_stage_accuracy:   -> stream=stream_1_silence_gap broad_jp=False angle_jp=None broad_tier=None elapsed=6.03s
+2026-05-15T16:59:27 [INFO] measure_two_stage_accuracy: [23/23] Verifying cls-a4132ec7d949: 'Legal complaint filed by Palestine activists against Met Pol'
+2026-05-15T16:59:33 [INFO] src.triage.jp_coverage_verifier: [JpCoverageVerifier] verify_two_stage stream=stream_1_silence_gap (broad未報道、Step 2 skip、broad_llm_judgement=no_match)
+2026-05-15T16:59:33 [INFO] measure_two_stage_accuracy:   -> stream=stream_1_silence_gap broad_jp=False angle_jp=None broad_tier=tier_2_wire_service elapsed=6.03s
+2026-05-15T16:59:33 [INFO] measure_two_stage_accuracy: Total elapsed: 381.8s for 23 events
+2026-05-15T16:59:33 [INFO] measure_two_stage_accuracy: Saved final result to docs/runs/F-jp-coverage-llm-judgement-extraction/measurement_result_v2.json
+
+=== F-jp-coverage-tune verify_two_stage 精度測定結果 ===
+verdict: fail
+events: total=23 eligible=19 unknown=4
+confusion: TP=6 FP=0 TN=3 FN=10
+
+  Recall covered  : 0.3750  (threshold 0.90)  ✗
+  Precision blind : 0.2308  (threshold 0.80)  ✗
+  F1 covered      : 0.5455  (threshold 0.85)  ✗
+  Tier accuracy   : 0.2000  (threshold 0.70)  ✗
+
+  Stream accuracy (informational): 0.3333  (matched=6/18)
+    stream_2_perspective_gap: 3/15 = 0.2000, predicted_dist={'stream_1_silence_gap': 10, 'stream_2_perspective_gap': 3, 'stream_3_candidate': 2}
+    stream_1_silence_gap: 3/3 = 1.0000, predicted_dist={'stream_1_silence_gap': 3}

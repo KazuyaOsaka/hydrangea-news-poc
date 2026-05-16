@@ -4604,3 +4604,109 @@ baseline 1390 passed 維持。
   - F-jp-coverage-improve (F-13.B 構造的不具合修正、_extract_domain_from_chunk 戦略を踏襲)
   - F-jp-coverage-llm-judgement-extraction (★ 後続バッチ案件、Option (i) 実装)
   - Phase A.5-3b 第一作起案 (Slot-1 系統判定 = perspective_gap 確定、両論併記でカズヤ判断待ち)
+
+---
+
+## 2026-05-16: F-jp-coverage-llm-judgement-extraction — LLM judgement bypass 根本治療 (B-3 → B-3' 二段階)
+
+### 背景
+
+F-wl-hit-quality-audit Task D で決定的に判明した **LLM judgement bypass 問題**
+(Gemini LLM が response_text で『該当しない (別事象)』と明示判定しているのに
+F-13.B `_search_with_grounding` は WL マッチだけで True を返す = 設計判断
+レベルの欠陥) の根本治療。Option (i) = LLM response_text 判定抽出を
+`verify()` (本番) + `verify_two_stage()` (計測) 両方に実装する。
+
+### 議論
+
+- Task C-D で初版 B-3 表 (`uncertain → False (疑わしきは低く)`) を実装
+  (commit `e97eea7`)。
+- Task E でゴールデンセット 23 件再測定 (commit `f239e13`) → **想定外退行検出**:
+  Recall covered 89.47% → 37.50% (-51.97pp、想定 79-84% を大きく下回り)。
+  退行 10 件中 6 件が `uncertain → False` ルール由来の誤退行。
+- 根本原因: Gemini response_text は報道済み event でも約半数が uncertain
+  (中立文 / キーワード不在)。これを全件 False に倒すと WL tier-1 マッチが
+  明確に存在する報道済み event まで未報道判定 → Recall 崩壊。初版 B-3 の
+  `uncertain → False` は「品質保証したい善意」由来の過剰保守 = **クラウド誤り
+  9 (各論コントロールへの誘惑) の自己事例**。
+- Task E-fix で B-3' 表に修正: 「LLM が明確に no_match と言った時のみ安全装置
+  として WL マッチを覆す。uncertain は WL マッチを尊重 (True)」。
+  「疑わしきは低く見積もる」は LLM 応答の曖昧さではなく **シグナルが何も無い
+  (WL マッチ無し) 時** に適用すべき原則だった、と解釈を見直し。
+
+### 決定
+
+- **B-3' 表確定** (`design_spec_v2.md`): WL あり + no_match → False、
+  WL あり + match/uncertain/None → True、WL なし → False。
+- `src/triage/jp_coverage_verifier.py` 3 箇所 (verify / two_stage broad /
+  two_stage angle) に統一適用。**不変原則 3 例外条件 4 つ全充足**:
+  実装バグ修正 (LLM judgement bypass = 設計判断レベルの欠陥) / 設計変更では
+  ない (既存メソッド contract 完全維持 + optional フィールド追加のみ + 後方
+  互換 None パス) / 本 DECISION_LOG 明記 / F-13.B は Hydrangea コンセプト
+  防衛機構 5 層中核 + カズヤ承認済 (CP-1 + CP-3)。
+- `scripts/measure_two_stage_accuracy.py` `result_to_dict()` に LLM judgement
+  optional 4 フィールド追加。**scripts/ 例外条件適用**: 実装バグ修正 (Task E
+  で未 serialize → measurement_run.log 事後復元を強いられた構造的事後検証
+  不能の欠陥) / 設計変更ではない (出力フィールド追加のみ、既存呼び出し側
+  影響なし) / 本 DECISION_LOG 明記 / カズヤ承認済 (本バッチプロンプト)。
+- 既存テスト `test_wl_match_llm_uncertain_returns_false` →
+  `..._returns_true` (期待値のみ修正、構造変更なし)。
+
+### 結果
+
+- baseline **1417 passed** 維持、既存メソッド contract 完全不変。
+- Task E-fix-F 再々測定 (v3): ヘッドライン Recall 0.4706 / Precision 0.2500 /
+  F1 0.6154 (全閾値未達)。
+- ★ **WL マッチ条件下評価 (B-3' 判定が実走したサブセット)**: TP=8 / FP=1 /
+  TN=1 / **FN=0**、**Recall 1.0000 / Precision 0.8889** = 設計通り完璧に機能。
+  Task E の uncertain→False 誤退行 (covered_001/002/004) クリーン復帰、
+  no_match 安全装置発火 (cls-0c7fa7c667d6 TN) 維持。
+- 低ヘッドライン Recall の真因は **B-3' ではなく** v3 run で broad Grounding
+  が WL ドメインを返さなかった 11 件 (検索ミス 9 + Gemini 503 が 2) =
+  ゴールデンセット live-API 計測の既知の非決定性 (本バッチスコープ外)。
+- CP-3 でカズヤ + クラウド web 側協議 → **選択肢 1 (Task F-G 進行 + merge)**
+  確定。理由: B-3' は設計通り機能 + Task E 誤退行を解消 + 低 Recall は別軸
+  問題 + Hydrangea カズヤ哲学整合。
+
+#### Hydrangea カズヤ哲学運用記録 (重要事例)
+
+Task E 想定外退行を CP で検知し commit/merge せず保留 → B-3 を場当たり的に
+パッチせず設計仕様レベルで B-3' に根本治療 → 「LLM の知性に委ねる」原則の
+**解釈そのものを見直し** た一連の運用は、「無制限自走禁止」+「対症療法
+じゃなく根本治療」+ クラウド誤り 9 の自己診断是正の好例。詳細は
+`docs/runs/F-jp-coverage-llm-judgement-extraction/REPORT.md` §6 +
+`docs/DISCUSSION_NOTES.md` 4-A エントリ。
+
+#### 残課題 (FUTURE_WORK 追加)
+
+1. ★ **F-grounding-determinism-audit** (新規、緊急度 中): Gemini Grounding
+   API の WL ドメイン返却率 run 間分散の集約戦略検討。Phase A.5-3b 第二作
+   並走可。
+2. ★ **F-trial-run-post-llm-extraction** (新規、最有力次バッチ候補): 本改修
+   本番反映後の試運転。
+3. F-jp-coverage-tune-followup REPORT v2 化 (本バッチ再測定値供給で実施可)。
+4. ゴールデンセット v2 化検討 (specific angle truth annotation)。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規ファイル:
+  - `docs/runs/F-jp-coverage-llm-judgement-extraction/design_spec_v2.md`
+  - `docs/runs/F-jp-coverage-llm-judgement-extraction/REPORT.md`
+  - `docs/runs/F-jp-coverage-llm-judgement-extraction/measurement_result_v3.json`
+  - `docs/runs/F-jp-coverage-llm-judgement-extraction/measurement_run_v3.log`
+  - `docs/runs/F-jp-coverage-llm-judgement-extraction/logs_v3/<event_id>.log` × 23
+- 変更ファイル:
+  - `src/triage/jp_coverage_verifier.py` (不変原則 3 例外、B-3' 3 箇所)
+  - `tests/test_jp_coverage_verifier_llm_judgement.py` (uncertain 期待値修正)
+  - `scripts/measure_two_stage_accuracy.py` (scripts/ 例外、optional 4 フィールド)
+- ドキュメント更新:
+  - `docs/CURRENT_STATE.md` (全置換更新)
+  - `docs/DECISION_LOG.md` (本エントリ追加)
+  - `docs/FUTURE_WORK.md` (本バッチ完了済み移動 + 新規残課題追加)
+  - `docs/DISCUSSION_NOTES.md` (4-A 新規 + 4-B 既存再評価)
+- 関連バッチ:
+  - F-wl-hit-quality-audit (前バッチ、本問題の根本原因を確定)
+  - F-jp-coverage-tune-followup (Step C ベースライン供給、REPORT v2 化は別バッチ)
+  - F-grounding-determinism-audit (★ 後続バッチ案件、ヘッドライン Recall 主因)
+  - F-trial-run-post-llm-extraction (★ 後続バッチ案件、本番反映後試運転)

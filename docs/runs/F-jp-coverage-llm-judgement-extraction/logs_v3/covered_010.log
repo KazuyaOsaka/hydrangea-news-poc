@@ -1,0 +1,33 @@
+# covered_010
+timestamp: 2026-05-16T01:34:21.102370
+elapsed_seconds: 40.75
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_2_wire_service
+  in_golden_set: True
+
+## Predicted
+  stream: stream_2_perspective_gap
+  broad_jp_coverage: True
+  angle_jp_coverage: False
+  broad_matched_tier: tier_2_wire_service
+  angle_matched_tier: tier_1_newspaper
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: イエメン・フーシ派、イスラエルに弾道ミサイル発射し『イラン支援』を公式表明 日本 報道
+  angle_query: フーシ派 イラン イスラエル 抵抗の弧 代理勢力 軍事同盟 変質 相互防衛
+
+## Results
+  broad: {"urls": ["https://arabnews.jp", "https://arabnews.jp", "https://afpbb.com", "https://ksb.co.jp", "https://youtube.com", "https://youtube.com"], "matched_urls": ["https://afpbb.com"], "excluded_urls": ["https://youtube.com", "https://youtube.com"], "matched_tier": "tier_2_wire_service"}
+  angle: {"urls": ["https://donga.com", "https://yomiuri.co.jp", "https://fsight.jp", "https://mk.co.kr", "https://diamond.jp", "https://recordchina.co.jp", "https://cmeps-j.net", "https://mod.go.jp", "https://ide.go.jp", "https://foreignaffairsj.co.jp", "https://youtube.com", "https://jfir.or.jp", "https://mod.go.jp"], "matched_urls": ["https://yomiuri.co.jp", "https://diamond.jp"], "excluded_urls": ["https://youtube.com"], "matched_tier": "tier_1_newspaper"}
+
+## Hits
+  jp_media_hits_broad: ['afpbb.com']
+  jp_media_hits_angle: ['diamond.jp', 'yomiuri.co.jp']
+  excluded_count_broad: 2
+  excluded_count_angle: 1

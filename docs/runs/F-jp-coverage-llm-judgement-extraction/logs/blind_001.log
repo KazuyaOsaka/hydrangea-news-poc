@@ -1,0 +1,33 @@
+# blind_001
+timestamp: 2026-05-15T16:53:20.566688
+elapsed_seconds: 9.07
+
+## Truth
+  expected_stream: stream_1_silence_gap
+  expected_broad_jp_coverage: unreported
+  expected_angle_jp_coverage: unreported
+  expected_tier: None
+  in_golden_set: True
+
+## Predicted
+  stream: stream_1_silence_gap
+  broad_jp_coverage: False
+  angle_jp_coverage: None
+  broad_matched_tier: tier_3_broadcaster
+  angle_matched_tier: None
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: Ukrainian Forces Wounded, Killed 1,725 Civilians in Q1 2026 日本 報道
+  angle_query: None
+
+## Results
+  broad: {"urls": ["https://youtube.com", "https://youtube.com", "https://fnn.jp", "https://youtube.com", "https://youtube.com", "https://ikaros.jp", "https://telesurenglish.net"], "matched_urls": ["https://fnn.jp"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_3_broadcaster"}
+  angle: None
+
+## Hits
+  jp_media_hits_broad: ['news.fnn.jp']
+  jp_media_hits_angle: []
+  excluded_count_broad: 4
+  excluded_count_angle: 0

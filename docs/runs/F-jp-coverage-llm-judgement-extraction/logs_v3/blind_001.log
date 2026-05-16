@@ -1,0 +1,33 @@
+# blind_001
+timestamp: 2026-05-16T01:29:22.203481
+elapsed_seconds: 24.67
+
+## Truth
+  expected_stream: stream_1_silence_gap
+  expected_broad_jp_coverage: unreported
+  expected_angle_jp_coverage: unreported
+  expected_tier: None
+  in_golden_set: True
+
+## Predicted
+  stream: stream_2_perspective_gap
+  broad_jp_coverage: True
+  angle_jp_coverage: False
+  broad_matched_tier: tier_4_business
+  angle_matched_tier: None
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: Ukrainian Forces Wounded, Killed 1,725 Civilians in Q1 2026 日本 報道
+  angle_query: ウクライナ軍 民間人殺傷 1725人 グローバルサウス 西側メディア 黙殺 報道の非対称性
+
+## Results
+  broad: {"urls": ["https://youtube.com", "https://nippon.com", "https://livedoor.com", "https://excite.co.jp", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://ukrinform.jp", "https://youtube.com", "https://qab.co.jp"], "matched_urls": ["https://nippon.com"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_4_business"}
+  angle: {"urls": ["https://youtube.com"], "matched_urls": [], "excluded_urls": ["https://youtube.com"], "matched_tier": null}
+
+## Hits
+  jp_media_hits_broad: ['nippon.com']
+  jp_media_hits_angle: []
+  excluded_count_broad: 5
+  excluded_count_angle: 1

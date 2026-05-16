@@ -1,14 +1,15 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-14 (F-wl-hit-quality-audit 完了、F-trial-run-post-tune で観察された
-matched_urls ベアドメイン問題を独立検証、★ Task D Grounding chunk dump で『Gemini LLM が
-response_text で「該当しない」と明示判定しているのに F-13.B は WL マッチだけで True を
-返す = LLM judgement bypass の設計判断レベルの欠陥』が決定的に判明、根本治療 Option (i)
-LLM response_text 判定抽出を別バッチ `F-jp-coverage-llm-judgement-extraction` として
-新規追加、F-jp-coverage-tune-followup REPORT v2 化 + ゴールデンセット v2 化検討 を残課題に
-追加、Slot-1 系統判定 = perspective_gap 確定 + 第一作着手判断は両論併記でカズヤ判断待ち、
-F-13.B WL ヒット品質検証エントリを完了済みに移動、src/ tests/ configs/ 0 変更で baseline
-1390 passed 維持)
+最終更新: 2026-05-16 (F-jp-coverage-llm-judgement-extraction 完了、LLM judgement
+bypass 問題を Option (i) で根本治療。Task C-D 初版 B-3 表 → Task E 想定外退行
+(Recall 89.47%→37.50%、uncertain→False 過剰保守 = クラウド誤り 9 自己事例) →
+Task E-fix で B-3' 表 (no_match のみ False で覆す) に根本治療。WL マッチ条件下で
+Recall 1.0000 / Precision 0.8889 / FN=0 = 設計通り機能、ヘッドライン Recall 0.4706
+は broad Grounding 非決定性で薄まる (本スコープ外)。CP-3 カズヤ + クラウド web 側
+協議で選択肢 1 (Task F-G 進行 + merge) 確定。`F-jp-coverage-llm-judgement-extraction`
+を完了済みに移動、新規残課題 `F-grounding-determinism-audit` (緊急度 中) +
+`F-trial-run-post-llm-extraction` (最有力次バッチ候補) 追加。不変原則 3 例外
+(src/triage) + scripts/ 例外 (measure script) の二箇所適用、baseline 1417 passed 維持)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -109,19 +110,15 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 - ~~**F-13.B WL ヒット品質の独立検証** ★高 (F-trial-run-post-tune / 2026-05-11 で観察、F-wl-hit-quality-audit / 2026-05-14 完了、完了済みセクション参照)~~
 
-- **F-jp-coverage-llm-judgement-extraction** ★最優先 (F-wl-hit-quality-audit / 2026-05-14 で根本原因確定)
-  - 背景: F-wl-hit-quality-audit の Task D で **Gemini LLM 自身が response_text で『該当しない (別事象)』と明示判定しているのに、F-13.B `_search_with_grounding` は chunk の WL マッチだけで True を返している** ことが確認 (= LLM judgement bypass の設計判断レベルの欠陥)。Grounding API 仕様で article path が取得不能 (Task D 確認、戦略 1 SDK 未実装 + 戦略 2 title フィールドはドメイン名のみ) のため、article 粒度の WL マッチで誤陽性を排除する経路は原理的に閉じられている。代替としては **LLM 自身の判定を取り込む経路** が根本治療。
-  - 対応案 (Option (i) LLM response_text 判定抽出):
-    1. `_search_with_grounding` プロンプトを改修: 『該当する記事があれば URL を列挙、ない場合は明示的に「なし」と回答してください』指示を追加
-    2. response_text の構造化 (JSON 出力をオプションで指示、無理なら正規表現/キーワード抽出で『なし』判定)
-    3. `_search_with_grounding` の戻り値型を `tuple[list[str], LLMJudgement]` に拡張、LLM judgement を verify() の判定に反映
-    4. `verify()` のロジック: WL match あり AND LLM 判定 = 『あり』 → True / WL match あり AND LLM 判定 = 『なし』 → False (= LLM 判定が支配) / WL match なし → False (現状維持)
-  - 期待効果: Recall covered = -5 to -10pp / Precision blind = +20 to +40pp (broader topic-only な False Positive 排除、Hydrangea ブランド忠実度大幅上昇)
-  - 検討時期: Phase A.5-3b 第一作着手判断と並走 OR 着手前 (カズヤ判断要、Slot-1 第一作着手可否と密接に関連)
-  - 想定工数: 4-8 時間 (プロンプト改修 + response 解釈 + verify() 改修 + テスト + 試運転)
-  - 不変原則例外条件: `src/triage/jp_coverage_verifier.py` 改修必要 = 不変原則 3 例外条件 (実装バグ修正 + 設計変更ではない + DECISION_LOG 明記 + Hydrangea ミッション中核機構、4 条件全) でカズヤ承認必須
-  - 関連ファイル: `src/triage/jp_coverage_verifier.py` (`_search_with_grounding` 改修、`JpCoverageResult` 拡張)、`scripts/measure_two_stage_accuracy.py` (再測定用)、`docs/runs/F-wl-hit-quality-audit/structural_analysis.md` (改善案論点整理)
-  - 関連: F-wl-hit-quality-audit (前バッチ、本問題の根本原因を確定)、F-jp-coverage-tune-followup-2 (★ 別 API 移行検討と統合候補)、Phase A.5-3b 第一作起案 (Slot-1 の perspective_gap framing が前提条件)
+- ~~**F-jp-coverage-llm-judgement-extraction** ★最優先 (F-wl-hit-quality-audit / 2026-05-14 で根本原因確定、F-jp-coverage-llm-judgement-extraction / 2026-05-16 完了、完了済みセクション参照)~~
+
+- **F-trial-run-post-llm-extraction** ★最優先 (F-jp-coverage-llm-judgement-extraction / 2026-05-16 で起案、最有力次バッチ候補)
+  - 背景: F-jp-coverage-llm-judgement-extraction で LLM judgement bypass の根本治療 (B-3') が完了し本番反映済。B-3' は WL マッチ条件下で Recall 1.0000 / Precision 0.8889 と設計通り機能。本番 production-pipeline で改修後挙動を試運転し、防衛機構 5 層への影響 + 第一作題材ランクへの影響を確認する。
+  - 対応案: F-trial-run-post-tune と同形式の試運転 (3 Slot 程度) + has_jp_coverage / stream 判定の改修前後比較 + 第一作題材ランク再評価。
+  - 検討時期: F-jp-coverage-llm-judgement-extraction merge 直後 OR Phase A.5-3b 第一作着手判断と並走
+  - 想定工数: 3-5 時間 (試運転 + 防衛機構監査 + ランク再評価)
+  - 関連ファイル: `src/triage/jp_coverage_verifier.py` (改修後挙動)、`docs/runs/F-trial-run-post-tune/` (前回試運転フォーマット)
+  - 関連: F-jp-coverage-llm-judgement-extraction (前バッチ、本改修元)、F-grounding-determinism-audit (★ broad 検索分散の並走確認)、Phase A.5-3b 第一作起案 (Slot-1 perspective_gap framing 前提)
 
 - **F-jp-coverage-tune-followup REPORT v2 化** ★高 (F-wl-hit-quality-audit / 2026-05-14 で要件確定)
   - 背景: F-wl-hit-quality-audit の独立検証で F-jp-coverage-tune-followup Step C メトリクス (F1 covered 0.8718 / Recall covered 89.47% / Precision blind 33.33%) が **broader topic-family level の値**であって、**specific event (= particular_angle) level では下振れの可能性** が確認 (試運転 + golden サンプリングで 3/8 = 37.5% で topic-family 一致 / specific 不一致パターン観察)。CP カズヤ判断 = 本バッチ (F-wl-hit-quality-audit) は記録のみ、REPORT v2 化は別バッチとして分離。
@@ -328,6 +325,14 @@ F-stream-2-filter-design 着手 OK 状態に。
 ## 緊急度 中（実運用データ収集後に判断）
 
 ---
+
+- **F-grounding-determinism-audit** (F-jp-coverage-llm-judgement-extraction / 2026-05-16 で起案)
+  - 背景: F-jp-coverage-llm-judgement-extraction Task E-fix-F 再々測定で、ゴールデンセット live-API 計測が **run 間で broad Grounding API の WL メディアドメイン返却が大きく変動** することが顕在化。v3 run では 11 件の reported event で WL ヒット 0 (うち Gemini 503 が 2) = B-3' 判定以前に False に倒れ、ヘッドライン Recall を 0.4706 まで薄めた (WL マッチ条件下では Recall 1.0000 = B-3' 自体は設計通り機能)。同一クエリでも Task E run と v3 run で WL ヒット有無が反転する event 多数 (例: covered_008/009)。
+  - 対応案: (a) 同一ゴールデンセットを N 回 (3-5 回) 連続再測定し WL ドメイン返却率の run 間分散を定量化、(b) 集約戦略の検討 (複数 run の OR / 多数決 / response_text 優先等)、(c) Gemini 503 リトライ強化の費用対効果評価、(d) 別 API 移行検討 (F-jp-coverage-tune-followup-2) との統合可否判断。
+  - 検討時期: Phase A.5-3b 第二作と並走可 (カズヤ判断)、F-trial-run-post-llm-extraction の本番試運転で再現性が確認されたら優先度再評価
+  - 想定工数: 4-8 時間 (連続再測定 N 回 + 分散分析 + 集約戦略 PoC)
+  - 関連ファイル: `scripts/measure_two_stage_accuracy.py`、`docs/runs/F-jp-coverage-llm-judgement-extraction/measurement_result_v3.json` (分散観察元)、`docs/runs/F-jp-coverage-llm-judgement-extraction/REPORT.md` §4.3
+  - 関連: F-jp-coverage-llm-judgement-extraction (分散顕在化元)、F-jp-coverage-tune-followup-2 (別 API 移行統合候補)、ゴールデンセット v2 化検討 (評価軸整備で並走)
 
 - **F-12-B-1.5: 台本 4 ブロック文字数制約の緩和判断** (F-12-B-1 / 2026-05-01 発生)
   - 背景: F-12-B-1 (視聴者ファースト原則追加) により「聞き慣れない固有名詞には最小限の補足を添える」原則が導入された結果、setup ブロックの char validation で 1 リトライが発生 (94 字 → 82 字)。LLM が補足を入れようとして既存制約 (setup 60〜90 字 / twist 150〜220 字 / punchline 70〜110 字) の上限に当たりやすくなる傾向が試運転で確認された。
@@ -568,6 +573,32 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **F-jp-coverage-llm-judgement-extraction (LLM judgement bypass 根本治療)**
+  (F-jp-coverage-llm-judgement-extraction / 2026-05-16 完了)
+  - 発生バッチ: F-wl-hit-quality-audit (2026-05-14) Task D で LLM judgement
+    bypass 問題 (Gemini が response_text で『該当しない』と明示判定しても
+    F-13.B は WL マッチだけで True を返す設計欠陥) を確定。
+  - 対応: Option (i) LLM response_text 判定抽出を `verify()` +
+    `verify_two_stage()` 両方に実装。`_parse_llm_judgement` /
+    `_extract_response_text` 新規 + dataclass optional フィールド拡張 +
+    プロンプト回答形式指示 3 行追加。
+  - 二段階設計プロセス: Task C-D で初版 B-3 表 (`uncertain→False`) 実装 →
+    Task E ゴールデンセット 23 件再測定で **想定外退行検出** (Recall
+    89.47%→37.50%、uncertain→False 過剰保守が主因 = クラウド誤り 9 自己
+    事例) → Task E-fix で B-3' 表 (`no_match のみ False で覆す`) に根本治療。
+  - 結果: baseline 1417 passed 維持 + 既存メソッド contract 完全不変。
+    WL マッチ条件下評価で **Recall 1.0000 / Precision 0.8889 / FN=0** =
+    B-3' は設計通り完璧に機能。ヘッドライン Recall 0.4706 は v3 run の
+    broad Grounding 非決定性 (WL ヒット 0 が 11 件 + Gemini 503 が 2) で
+    薄まる (本バッチスコープ外 → F-grounding-determinism-audit 起案)。
+  - CP-3 でカズヤ + クラウド web 側協議 → 選択肢 1 (Task F-G 進行 + merge)
+    確定。不変原則 3 例外 (src/triage) + scripts/ 例外 (measure script)
+    の二箇所適用、DECISION_LOG 明記。
+  - 関連: `docs/runs/F-jp-coverage-llm-judgement-extraction/REPORT.md`
+    (主軸: WL マッチ条件下評価)、`design_spec.md` (v1 B-3) /
+    `design_spec_v2.md` (v2 B-3')、DECISION_LOG「2026-05-16:
+    F-jp-coverage-llm-judgement-extraction」エントリ。
 
 - **F-13.B WL ヒット品質の独立検証 (F-wl-hit-quality-audit)** (F-wl-hit-quality-audit /
   2026-05-14 完了)

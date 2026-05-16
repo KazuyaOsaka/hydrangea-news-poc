@@ -1,0 +1,33 @@
+# blind_004
+timestamp: 2026-05-15T16:54:15.245911
+elapsed_seconds: 20.27
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: unknown
+  broad_jp_coverage: True
+  angle_jp_coverage: None
+  broad_matched_tier: tier_2_wire_service
+  angle_matched_tier: None
+  error_message: angle_search_error: ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: In Gaza, life flickers as power cuts shatter livelihoods and healthcare 日本 報道
+  angle_query: ガザ 発電機 潤滑油 100倍 価格高騰 社会インフラ 組織的 解体
+
+## Results
+  broad: {"urls": ["https://fnn.jp", "https://afpbb.com", "https://prtimes.jp", "https://arabnews.jp", "https://youtube.com", "https://newsweekjapan.jp", "https://youtube.com", "https://afpbb.com", "https://youtube.com"], "matched_urls": ["https://fnn.jp", "https://afpbb.com", "https://newsweekjapan.jp", "https://afpbb.com"], "excluded_urls": ["https://youtube.com", "https://youtube.com", "https://youtube.com"], "matched_tier": "tier_2_wire_service"}
+  angle: None
+
+## Hits
+  jp_media_hits_broad: ['afpbb.com', 'news.fnn.jp', 'newsweekjapan.jp']
+  jp_media_hits_angle: []
+  excluded_count_broad: 3
+  excluded_count_angle: 0

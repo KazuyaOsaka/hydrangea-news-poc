@@ -1,0 +1,33 @@
+# covered_008
+timestamp: 2026-05-15T16:57:36.772090
+elapsed_seconds: 29.41
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_3_broadcaster
+  angle_matched_tier: tier_2_wire_service
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: マリ 軍事政権に反政府勢力が一斉攻撃 暫定国防相死亡 日本 報道
+  angle_query: マリ 国防相 死亡 トゥアレグ アルカイダ 異例の共闘 ワグネル 依存 破綻
+
+## Results
+  broad: {"urls": ["https://cube-soft.jp", "https://fnn.jp", "https://tufs.ac.jp", "https://newsweekjapan.jp", "https://novaist.jp", "https://youtube.com", "https://qab.co.jp", "https://saitama-np.co.jp", "https://livedoor.com", "https://livedoor.com", "https://nippon.com"], "matched_urls": ["https://fnn.jp", "https://newsweekjapan.jp", "https://nippon.com"], "excluded_urls": ["https://youtube.com"], "matched_tier": "tier_3_broadcaster"}
+  angle: {"urls": ["https://newsweekjapan.jp", "https://youtube.com", "https://qab.co.jp", "https://nippon.com", "https://novaist.jp", "https://livedoor.com", "https://afpbb.com", "https://note.com", "https://fsight.jp"], "matched_urls": ["https://newsweekjapan.jp", "https://nippon.com", "https://afpbb.com"], "excluded_urls": ["https://youtube.com", "https://note.com"], "matched_tier": "tier_2_wire_service"}
+
+## Hits
+  jp_media_hits_broad: ['news.fnn.jp', 'newsweekjapan.jp', 'nippon.com']
+  jp_media_hits_angle: ['afpbb.com', 'newsweekjapan.jp', 'nippon.com']
+  excluded_count_broad: 1
+  excluded_count_angle: 2

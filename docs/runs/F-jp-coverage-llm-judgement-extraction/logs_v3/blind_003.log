@@ -1,0 +1,33 @@
+# blind_003
+timestamp: 2026-05-16T01:29:38.984256
+elapsed_seconds: 8.77
+
+## Truth
+  expected_stream: stream_1_silence_gap
+  expected_broad_jp_coverage: unreported
+  expected_angle_jp_coverage: unreported
+  expected_tier: None
+  in_golden_set: True
+
+## Predicted
+  stream: stream_1_silence_gap
+  broad_jp_coverage: False
+  angle_jp_coverage: None
+  broad_matched_tier: None
+  angle_matched_tier: None
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: US-Israel intervention frees Israeli-Turkish citizen held for serving in Israeli army 日本 報道
+  angle_query: None
+
+## Results
+  broad: {"urls": [], "matched_urls": [], "excluded_urls": [], "matched_tier": null}
+  angle: None
+
+## Hits
+  jp_media_hits_broad: []
+  jp_media_hits_angle: []
+  excluded_count_broad: 0
+  excluded_count_angle: 0

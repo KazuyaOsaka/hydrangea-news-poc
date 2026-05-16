@@ -1,0 +1,33 @@
+# cls-6be4fc09d9ed
+timestamp: 2026-05-16T01:35:14.382282
+elapsed_seconds: 25.11
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: None
+  in_golden_set: False
+
+## Predicted
+  stream: stream_3_candidate
+  broad_jp_coverage: True
+  angle_jp_coverage: True
+  broad_matched_tier: tier_4_business
+  angle_matched_tier: tier_4_business
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: 'Insider trading': Oil and stocks jolt on news of US-Iran deal as some cry 'manipulation' 日本 報道
+  angle_query: イラン 米国 合意直前 原油 株価 インサイダー取引 TACOトレード 国家規模 疑惑 責任
+
+## Results
+  broad: {"urls": ["https://tokyonewsmedia.com", "https://nippon.com", "https://ismedia.jp", "https://moomoo.com", "https://livedoor.com", "https://youtube.com"], "matched_urls": ["https://nippon.com"], "excluded_urls": ["https://youtube.com"], "matched_tier": "tier_4_business"}
+  angle: {"urls": ["https://jp.net", "https://tokyonewsmedia.com", "https://nippon.com", "https://businessinsider.jp", "https://saitama-np.co.jp", "https://tokyonewsmedia.com", "https://livedoor.com", "https://joins.com", "https://ismedia.jp", "https://newsweekjapan.jp", "https://coinpost.jp"], "matched_urls": ["https://nippon.com", "https://newsweekjapan.jp"], "excluded_urls": [], "matched_tier": "tier_4_business"}
+
+## Hits
+  jp_media_hits_broad: ['nippon.com']
+  jp_media_hits_angle: ['newsweekjapan.jp', 'nippon.com']
+  excluded_count_broad: 1
+  excluded_count_angle: 0

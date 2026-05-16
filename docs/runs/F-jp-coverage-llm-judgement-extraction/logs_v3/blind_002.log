@@ -1,0 +1,33 @@
+# blind_002
+timestamp: 2026-05-16T01:29:30.210014
+elapsed_seconds: 8.00
+
+## Truth
+  expected_stream: stream_2_perspective_gap
+  expected_broad_jp_coverage: reported
+  expected_angle_jp_coverage: unreported
+  expected_tier: tier_1_newspaper
+  in_golden_set: True
+
+## Predicted
+  stream: unknown
+  broad_jp_coverage: False
+  angle_jp_coverage: None
+  broad_matched_tier: None
+  angle_matched_tier: None
+  error_message: broad_search_error: ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: Israel's top Jewish religious body 'refuses to condemn' smashing of Jesus statue 日本 報道
+  angle_query: None
+
+## Results
+  broad: None
+  angle: None
+
+## Hits
+  jp_media_hits_broad: []
+  jp_media_hits_angle: []
+  excluded_count_broad: 0
+  excluded_count_angle: 0
