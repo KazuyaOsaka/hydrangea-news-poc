@@ -270,8 +270,16 @@ class TestVerifyWithLLMJudgement:
         assert result.matched_tier == "tier_2_wire_service"
         assert result.llm_judgement_text is not None
 
-    def test_wl_match_llm_uncertain_returns_false(self, db_path) -> None:
-        """★ WL あり + LLM = uncertain → has_jp_coverage = False (嘘をつかない設計)。"""
+    def test_wl_match_llm_uncertain_returns_true(self, db_path) -> None:
+        """★ WL あり + LLM = uncertain → has_jp_coverage = True (B-3' 修正)。
+
+        Task E-fix (2026-05-16): 旧 B-3 では uncertain → False だったが、Task E
+        ゴールデンセット再測定で Recall が 89.47%→37.50% に崩壊。原因は WL tier-1
+        マッチが明確に存在する報道済み event を uncertain → False で大量に未報道
+        判定したこと。B-3' では「LLM が明確に no_match と言った時のみ覆す」運用に
+        改め、uncertain では WL マッチを尊重 (= 過剰保守 = クラウド誤り 9 各論
+        コントロール誘惑の反省)。
+        """
         client = MagicMock()
         client.models.generate_content.return_value = _make_grounding_response(
             ["nikkei.com"],
@@ -279,7 +287,7 @@ class TestVerifyWithLLMJudgement:
         )
         v = JpCoverageVerifier(gemini_client=client, db_path=db_path)
         result = v.verify("evt-wl-llm-uncertain", "T")
-        assert result.has_jp_coverage is False  # ★ 疑わしきは低く見積もる
+        assert result.has_jp_coverage is True  # ★ WL マッチを尊重 (B-3')
         assert result.llm_judgement == "uncertain"
 
     def test_wl_no_match_returns_false(self, db_path) -> None:

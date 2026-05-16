@@ -1,12 +1,12 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-14 (F-wl-hit-quality-audit 完了、F-trial-run-post-tune で観察された
-matched_urls ベアドメイン問題を独立検証、★ Task D Grounding chunk dump で **LLM judgement
-bypass 問題** が決定的に判明 = Gemini LLM が response_text で『該当しない』と明示判定して
-いるのに F-13.B は WL マッチだけで True を返している、根本治療 Option (i) LLM response_text
-判定抽出を別バッチ案件として記録、4-A 新規エントリ追加 = 「2026-05-14: LLM judgement bypass
-問題」、4-B 既存再評価 = 「2026-05-11: F-13.B WL ヒット品質問題」を Active → 部分的解消
-(構造的理解完了、Option (i) 実装は別バッチ) に更新)
+最終更新: 2026-05-16 (F-jp-coverage-llm-judgement-extraction 完了。4-A 新規 2 件
+追加 = 「2026-05-16: 『LLM の知性に委ねる』原則の解釈見直し (uncertain は否定では
+なく沈黙)」+「2026-05-16: broad Grounding API run 間非決定性」。4-B 既存再評価 =
+「2026-05-14: F-13.B LLM judgement bypass 問題」を Active → ★ Resolved に更新
+(Option (i) を B-3 → Task E 想定外退行 → B-3' で根本治療、WL マッチ条件下で
+Recall 1.0000 / FN=0)。前回 2026-05-14: F-wl-hit-quality-audit で LLM judgement
+bypass 問題が決定的判明、Option (i) を別バッチ案件として記録)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -19,6 +19,90 @@ bypass 問題** が決定的に判明 = Gemini LLM が response_text で『該�
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-16: 「LLM の知性に委ねる」原則の解釈見直し — uncertain は「LLM の否定」ではなく「LLM の沈黙」 (F-jp-coverage-llm-judgement-extraction Task E 想定外退行からの学び)
+
+**背景**:
+F-jp-coverage-llm-judgement-extraction Task C-D で LLM judgement bypass の
+根本治療として初版 B-3 表を実装した。その際「LLM の知性に委ねる」
+(F-task-e-finalize / カズヤ哲学) + 「嘘をつかない設計、疑わしきは低く
+見積もる」を **「LLM 応答が曖昧 (uncertain) なら未報道側に倒す
+(uncertain → False)」** と解釈した。
+
+**内容**:
+Task E でゴールデンセット 23 件再測定した結果、Recall covered が
+89.47% → 37.50% に崩壊 (-51.97pp)。退行 10 件中 6 件が `uncertain → False`
+ルール由来の誤退行で、**WL tier-1 マッチが明確に存在する報道済み event
+(covered_001/002/004 等) まで未報道判定**していた。
+
+根本原因の構造的理解:
+- Gemini response_text は **報道済み event でも約半数が uncertain**
+  (中立文 / キーワード不在)。これは「LLM が否定した」のではなく
+  「LLM が明確な判断を文章化しなかった (= 沈黙)」状態。
+- 「疑わしきは低く見積もる」は **LLM 応答の曖昧さ** に適用すべき原則
+  ではなく、**シグナルが何も無い (WL マッチ無し) 時** に適用すべき
+  原則だった。WL tier-1 マッチが存在する時点で「疑わしい」状態ではない。
+- 初版 B-3 の `uncertain → False` は「品質保証したい善意」由来の過剰保守
+  で、まさに **クラウド誤り 9 (各論コントロールへの誘惑) の自己事例**
+  (善意の誤りがルール累積劣化 = ここでは Recall 崩壊を招く)。
+
+**正しい解釈 (B-3' で確定)**:
+> **LLM が明確に否定 (no_match) した時のみその判断を尊重して WL マッチを
+> 覆す (= 安全装置)。LLM が明確な判断を示さない (uncertain) 場合は、
+> WL マッチという別の確度の高いシグナルを尊重する (True)。**
+
+「LLM の知性に委ねる」= LLM の **明示的な判断** を信頼するのであって、
+LLM の **沈黙 (曖昧さ)** を否定的判断として読み替えるのは知性への委任
+ではなく機械側の過剰解釈だった。
+
+**運用ルール (今後のクラウド向け)**:
+- LLM 判定をルールに組み込む時、「LLM が明示的に X と言った」と
+  「LLM が X を言わなかった」を厳密に区別する。後者を前者の否定として
+  扱わない (= 沈黙を判断と混同しない)。
+- 「疑わしきは低く」を適用する前に「そもそも疑わしい状態か (= 他に
+  確度の高いシグナルが無いか)」を確認する。
+- 想定外退行を CP で検知したら場当たりパッチではなく **原則の解釈
+  そのもの**を見直す (対症療法じゃなく根本治療)。
+
+**出典**: F-jp-coverage-llm-judgement-extraction Task E
+(`measurement_result_v2.json` analysis_e4) + Task E-fix
+(`design_spec_v2.md` / `REPORT.md` §6) / 2026-05-16 CP-3 カズヤ +
+クラウド web 側協議。CLAUDE.md クラウド誤り 9、`docs/PARTICULAR_ANGLE_DEFINITION.md`
+セクション 3.7 (LLM の知性に委ねる設計哲学) と整合。
+
+**ステータス**: `Resolved (運用原則として確立)` — B-3' で実装反映済。
+今後の LLM 判定組込バッチで本エントリを参照する。
+
+---
+
+### 2026-05-16: broad Grounding API の WL ドメイン返却 run 間非決定性 — ゴールデンセット live-API 計測のヘッドライン精度を薄める構造要因 (F-jp-coverage-llm-judgement-extraction Task E-fix-F で顕在化)
+
+**背景**:
+F-jp-coverage-llm-judgement-extraction Task E-fix-F でゴールデンセット
+23 件を再々測定 (v3)。B-3' は WL マッチ条件下で Recall 1.0000 /
+Precision 0.8889 / FN=0 と設計通り機能したが、ヘッドライン Recall は
+0.4706 に留まった。
+
+**内容**:
+truth=reported なのに取りこぼした 11 件 **全てが「v3 run で broad
+Grounding が WL メディアドメインを 1 件も返さなかった」**ケース
+(検索ミス 9 件 + Gemini 503 が 2 件)。同一クエリでも Task E run と v3
+run で WL ヒット有無が反転する event 多数 (例: covered_008/009 は Task E
+で fnn.jp 等ヒット → v3 でゼロ)。= ゴールデンセット live-API 計測は
+**run 間で broad Grounding API の WL ドメイン返却が大きく変動**する
+構造的非決定性を持つ。これはヘッドラインメトリクスの解釈を歪める
+要因であり、B-3' のような judgement 改修の効果測定を WL マッチ条件下
+サブセットで評価する必要性を示す。
+
+**出典**: `docs/runs/F-jp-coverage-llm-judgement-extraction/measurement_result_v3.json`
++ `REPORT.md` §4.3 / 2026-05-16 CP-3。
+
+**ステータス**: `Active` (FUTURE_WORK 緊急度 中に
+`F-grounding-determinism-audit` 新規追加済み。集約戦略 = 複数 run の
+OR / 多数決 / response_text 優先等を別バッチで検討。F-trial-run-post-
+llm-extraction の本番試運転で再現性確認後に優先度再評価)
+
+---
 
 ### 2026-05-14: F-13.B LLM judgement bypass 問題 — Gemini LLM が「該当しない」と明示判定しているのに F-13.B は WL マッチだけで True を返している (F-wl-hit-quality-audit Task D で決定的発見)
 
@@ -76,10 +160,20 @@ bypass する設計 = カズヤ哲学に反する。
 - 構造的分析 (`docs/runs/F-wl-hit-quality-audit/structural_analysis.{json,md}`)
 - 統合 REPORT (`docs/runs/F-wl-hit-quality-audit/REPORT.md`)
 
-**ステータス**: `Active` (FUTURE_WORK 緊急度 高に `F-jp-coverage-llm-judgement-extraction`
-新規追加済み。Phase A.5-3b 第一作着手判断と密接に関連 = Slot-1 cls-6889e9e1c7ac の
-perspective_gap 確定後、Option (i) 実装で WL ヒット品質根本治療 → 再試運転 → 第一作着手の
-フローが推奨)
+**ステータス**: ★ **Resolved** (F-jp-coverage-llm-judgement-extraction /
+2026-05-16 完了)。Option (i) LLM response_text 判定抽出を `verify()` +
+`verify_two_stage()` 両方に実装し、LLM judgement bypass を根本治療した。
+二段階設計プロセス: 初版 B-3 表 (`uncertain→False`) は Task E 想定外退行
+(Recall 89.47%→37.50%) を起こし、Task E-fix で B-3' 表 (`no_match のみ
+False で覆す`) に修正。WL マッチ条件下評価で Recall 1.0000 / Precision
+0.8889 / FN=0 = bypass は構造的に解消。ヘッドライン Recall 0.4706 は本
+改修と直交する broad Grounding 非決定性 (別エントリ「2026-05-16: broad
+Grounding API run 間非決定性」+ FUTURE_WORK `F-grounding-determinism-audit`)。
+詳細は DECISION_LOG「2026-05-16: F-jp-coverage-llm-judgement-extraction」+
+`docs/runs/F-jp-coverage-llm-judgement-extraction/REPORT.md`。
+(過去の Active 記録: FUTURE_WORK 緊急度 高に F-jp-coverage-llm-judgement-extraction
+新規追加 → Phase A.5-3b 第一作着手判断と密接に関連というフロー。本問題解消後は
+F-trial-run-post-llm-extraction → 第一作着手のフローに更新。)
 
 ---
 

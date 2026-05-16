@@ -1,0 +1,33 @@
+# blind_007
+timestamp: 2026-05-16T01:30:47.796258
+elapsed_seconds: 6.44
+
+## Truth
+  expected_stream: stream_1_silence_gap
+  expected_broad_jp_coverage: unreported
+  expected_angle_jp_coverage: unreported
+  expected_tier: None
+  in_golden_set: True
+
+## Predicted
+  stream: stream_1_silence_gap
+  broad_jp_coverage: False
+  angle_jp_coverage: None
+  broad_matched_tier: None
+  angle_matched_tier: None
+  error_message: None
+  angle_query_fallback_reason: None
+
+## Queries
+  broad_query: Putin ally's $500 million Russian superyacht sails through Hormuz despite US blockade 日本 報道
+  angle_query: None
+
+## Results
+  broad: {"urls": ["https://beincrypto.com", "https://joins.com", "https://mexc.com", "https://hatena.ne.jp", "https://binance.com", "https://laodong.vn"], "matched_urls": [], "excluded_urls": ["https://hatena.ne.jp"], "matched_tier": null}
+  angle: None
+
+## Hits
+  jp_media_hits_broad: []
+  jp_media_hits_angle: []
+  excluded_count_broad: 1
+  excluded_count_angle: 0

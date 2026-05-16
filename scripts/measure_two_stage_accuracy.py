@@ -232,6 +232,14 @@ def result_to_dict(result: TwoStageVerifyResult) -> dict:
         "angle_query_fallback_reason": result.angle_query_fallback_reason,
         "error_message": result.error_message,
         "elapsed_seconds": result.elapsed_seconds,
+        # F-jp-coverage-llm-judgement-extraction Task E-fix (2026-05-16):
+        # scripts/ 例外条件適用。Task E では LLM judgement が serialize されず
+        # measurement_run.log からの事後復元を強いられた (構造的事後検証不能)。
+        # optional フィールドとして末尾追加 (既存呼び出し側影響なし)。
+        "broad_llm_judgement": result.broad_llm_judgement,
+        "broad_llm_judgement_text": result.broad_llm_judgement_text,
+        "angle_llm_judgement": result.angle_llm_judgement,
+        "angle_llm_judgement_text": result.angle_llm_judgement_text,
     }
 
 

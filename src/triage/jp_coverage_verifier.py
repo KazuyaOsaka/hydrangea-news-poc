@@ -487,20 +487,27 @@ class JpCoverageVerifier:
 
             matched_urls, matched_domains, matched_tier = self._match_whitelist(filtered_urls)
 
-            # F-jp-coverage-llm-judgement-extraction (2026-05-14): LLM judgement
-            # bypass 根本治療。response_text から LLM 判定を抽出し、B-3 表
-            # (design_spec.md) に従って WL マッチを上書きする。
+            # F-jp-coverage-llm-judgement-extraction (2026-05-14 / Task E-fix
+            # 2026-05-16): LLM judgement bypass 根本治療。response_text から LLM
+            # 判定を抽出し、B-3' 表 (design_spec_v2.md) に従って WL マッチを
+            # 上書きする。
+            #
+            # B-3' (Task E-fix で B-3 から修正):
+            #   WL あり + no_match  → False (LLM 明確否定のみ安全装置として覆す)
+            #   WL あり + match     → True
+            #   WL あり + uncertain → True ★ (旧 B-3 は False = 過剰保守 →
+            #                              Task E で Recall 崩壊。WL マッチを尊重)
+            #   WL あり + None      → True (後方互換)
+            #   WL なし + 不問      → False
             llm_judgement, llm_judgement_text = _parse_llm_judgement(response_text)
 
             wl_match = bool(matched_urls)
             if wl_match:
-                if llm_judgement == "match":
-                    has_jp_coverage = True
-                elif llm_judgement in ("no_match", "uncertain"):
-                    # ★ LLM 判定が支配 (本改修の核心)。嘘をつかない設計 (uncertain も False)。
+                if llm_judgement == "no_match":
+                    # ★ LLM が明確に「該当しない」と言った時のみ覆す (安全装置)
                     has_jp_coverage = False
                 else:
-                    # llm_judgement is None: 抽出不能 → 後方互換 (WL マッチのみで判定)
+                    # "match" / "uncertain" / None: WL マッチを尊重 (True)
                     has_jp_coverage = True
             else:
                 has_jp_coverage = False
@@ -807,19 +814,21 @@ class JpCoverageVerifier:
             self._match_whitelist(broad_filtered)
         )
 
-        # F-jp-coverage-llm-judgement-extraction (2026-05-14): broad の LLM judgement
-        # を抽出し、B-3 表 (design_spec.md) に従って WL マッチを上書きする。
+        # F-jp-coverage-llm-judgement-extraction (2026-05-14 / Task E-fix
+        # 2026-05-16): broad の LLM judgement を抽出し、B-3' 表
+        # (design_spec_v2.md) に従って WL マッチを上書きする。
+        # no_match のみ False で覆す (LLM 明確否定 = 安全装置)、
+        # match/uncertain/None は WL マッチを尊重 (True)。
         broad_llm_judgement, broad_llm_judgement_text = _parse_llm_judgement(
             broad_response_text
         )
         broad_wl_match = bool(broad_matched_urls)
         if broad_wl_match:
-            if broad_llm_judgement == "match":
-                broad_jp_coverage = True
-            elif broad_llm_judgement in ("no_match", "uncertain"):
-                broad_jp_coverage = False  # ★ LLM 判定が支配
+            if broad_llm_judgement == "no_match":
+                broad_jp_coverage = False  # ★ LLM 明確否定のみ安全装置で覆す
             else:
-                broad_jp_coverage = True  # None: 後方互換 (WL マッチのみで判定)
+                # "match" / "uncertain" / None: WL マッチを尊重 (True)
+                broad_jp_coverage = True
         else:
             broad_jp_coverage = False
 
@@ -889,19 +898,20 @@ class JpCoverageVerifier:
             self._match_whitelist(angle_filtered)
         )
 
-        # F-jp-coverage-llm-judgement-extraction (2026-05-14): angle の LLM judgement
-        # を抽出し、B-3 表に従って WL マッチを上書き。
+        # F-jp-coverage-llm-judgement-extraction (2026-05-14 / Task E-fix
+        # 2026-05-16): angle の LLM judgement を抽出し、B-3' 表に従って WL
+        # マッチを上書き。no_match のみ False で覆す、match/uncertain/None は
+        # WL マッチを尊重 (True)。
         angle_llm_judgement, angle_llm_judgement_text = _parse_llm_judgement(
             angle_response_text
         )
         angle_wl_match = bool(angle_matched_urls)
         if angle_wl_match:
-            if angle_llm_judgement == "match":
-                angle_jp_coverage = True
-            elif angle_llm_judgement in ("no_match", "uncertain"):
-                angle_jp_coverage = False  # ★ LLM 判定が支配
+            if angle_llm_judgement == "no_match":
+                angle_jp_coverage = False  # ★ LLM 明確否定のみ安全装置で覆す
             else:
-                angle_jp_coverage = True  # None: 後方互換
+                # "match" / "uncertain" / None: WL マッチを尊重 (True)
+                angle_jp_coverage = True
         else:
             angle_jp_coverage = False
 
