@@ -1,0 +1,42 @@
+{
+  "batch": "F-trial-run-post-llm-extraction",
+  "captured_at": "2026-05-16",
+  "git": {
+    "branch": "feature/F-trial-run-post-llm-extraction",
+    "main_head_commit": "ba51e5fde495bf8287599d826629e4e7db4b6ff5",
+    "main_head_short": "ba51e5f",
+    "expected_head": "ba51e5f",
+    "head_matches_expected": true,
+    "recent_commits": [
+      "ba51e5f Merge branch 'feature/F-jp-coverage-llm-judgement-extraction'",
+      "3d90f34 feat: F-jp-coverage-llm-judgement-extraction LLM judgement bypass fix (B-3' final)",
+      "f239e13 feat(WIP): F-jp-coverage-llm-judgement-extraction Task E unexpected regression detected",
+      "e97eea7 feat(WIP): F-jp-coverage-llm-judgement-extraction Task C-D complete",
+      "915ace3 Merge branch 'feature/F-wl-hit-quality-audit'"
+    ]
+  },
+  "baseline_tests": {
+    "command": "python -m pytest tests/ -x --tb=short -q",
+    "result": "1417 passed in 76.77s",
+    "expected_baseline": 1417,
+    "baseline_maintained": true
+  },
+  "python": {
+    "version": "3.11.15"
+  },
+  "key_packages": {
+    "google-genai": "1.69.0",
+    "pydantic": "2.12.5",
+    "pydantic_core": "2.41.5",
+    "pytest": "9.0.2"
+  },
+  "llm_config": {
+    "provider": ".env LLM_PROVIDER (gemini)",
+    "gemini_api_key_present": true,
+    "anthropic_package_installed": false,
+    "note": "production-pipeline uses Gemini via src/llm abstraction; GEMINI_API_KEY loaded from .env"
+  },
+  "f13b_revision_basis": {
+    "description": "F-jp-coverage-llm-judgement-extraction (B-3') merged at ba51e5f. _parse_llm_judgement / _extract_response_text added; B-3' table: WL match + no_match -> False, match/uncertain/None -> True. verify() + verify_two_stage() both wired; production main.py still calls legacy verify() (broad-only)."
+  }
+}

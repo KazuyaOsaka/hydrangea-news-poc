@@ -1,12 +1,15 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-16 (F-jp-coverage-llm-judgement-extraction 完了。4-A 新規 2 件
-追加 = 「2026-05-16: 『LLM の知性に委ねる』原則の解釈見直し (uncertain は否定では
-なく沈黙)」+「2026-05-16: broad Grounding API run 間非決定性」。4-B 既存再評価 =
-「2026-05-14: F-13.B LLM judgement bypass 問題」を Active → ★ Resolved に更新
-(Option (i) を B-3 → Task E 想定外退行 → B-3' で根本治療、WL マッチ条件下で
-Recall 1.0000 / FN=0)。前回 2026-05-14: F-wl-hit-quality-audit で LLM judgement
-bypass 問題が決定的判明、Option (i) を別バッチ案件として記録)
+最終更新: 2026-05-16 (★ F-trial-run-post-llm-extraction 完了。4-A 新規 3 件追加 =
+「2026-05-16: B-3' 本番安全装置の初発火 — LLM judgement bypass の構造的解消を
+本番実証」+「2026-05-16: video_payload に image_prompt レイヤーが存在しない —
+F-image-prompt-spec スコープ再定義」+「2026-05-16: llm_judgement_text 非永続化」。
+4-B 既存再評価 =「2026-05-11/14: F-13.B WL ヒット品質問題」を Active → ★ 本番
+是正済 (B-3' 配線で構造的解消) に更新 +「2026-05-11: production-pipeline と docs
+概念整理の乖離」に 2026-05-16 再評価 (乖離不変だが B-3' は legacy verify() 配線済
+で本配線群と直交) を追記。前回 2026-05-16: F-jp-coverage-llm-judgement-extraction
+完了で LLM judgement bypass を Option (i) B-3' で根本治療、4-A 2 件 + 4-B
+Resolved 更新)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -19,6 +22,67 @@ bypass 問題が決定的判明、Option (i) を別バッチ案件として記�
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-16: B-3' 本番安全装置の初発火 — LLM judgement bypass の構造的解消を本番実証 (F-trial-run-post-llm-extraction で観察)
+
+**内容**: F-jp-coverage-llm-judgement-extraction の B-3' は WL マッチ条件下
+ゴールデンセット評価で Recall 1.0000 / FN=0 と設計通り機能していたが、
+**本番 production-pipeline での挙動は未検証**だった。F-trial-run-post-llm-extraction
+の試運転 (batch_id=20260516_030927) で **B-3' が production verify()
+(broad-only) に確かに配線され、本番で安全装置として初発火**したことを
+実証: Slot-3 cls-02e505cc1310 が WL `tier_2_wire_service` matched=1 だが
+`llm_judgement=no_match` のため has_jp_coverage=False に B-3' で覆った。
+has_jp_coverage 分布が F-trial-run-post-tune の 3/3 True (bare-domain
+afpbb/nippon の WL マッチだけで強制 True = bypass そのもの) → 1 True /
+2 False に反転 = LLM judgement bypass が本番でも構造的に解消。Slot-1 の
+WL マッチ品質も afpbb bare-domain → tier_1 実名紙 2 件 (newsweekjapan.jp +
+yomiuri.co.jp) に向上し、`uncertain` を WL マッチが上書き (B-3': uncertain
+→True) = Task E 過剰保守退行の修正 (Recall 保護) も本番で機能。Hydrangea
+ブランドメッセージ (blind_spot_global ルート = 「日本では報道されない」) が
+2/3 Slot で復活。
+
+**出典**: `docs/runs/F-trial-run-post-llm-extraction/REPORT.md` §2.3 +
+`f13b_output_analysis.json` / DECISION_LOG「2026-05-16:
+F-trial-run-post-llm-extraction」。
+
+**ステータス**: `Active` (本番実証完了。残課題 = 候補A
+cls-6889e9e1c7ac の B-3' 改修後再確認 = F-trial-run-candidate-a-reverify
+で第一作着手前に確定予定)。
+
+### 2026-05-16: video_payload に image_prompt レイヤーが存在しない — F-image-prompt-spec スコープ再定義 (F-trial-run-post-llm-extraction Task C-4 事前調査で判明)
+
+**内容**: F-image-prompt-spec のバッチプロンプト前提 (各 scene に
+`image_prompt` フィールド + 統一シネマティック末尾 + 12-15 枚 / 80 秒) は
+**現行実装と乖離**。F-trial-run-post-llm-extraction Task C-4 で本番
+video_payload.json を確認した結果: (1) `image_prompt` フィールドが存在
+しない (`video_prompt` + `negative_prompt` のみ)、(2) **4 scene のみ**
+(script 4 ブロック hook/setup/twist/punchline に 1:1 対応)、(3) 統一
+シネマティック末尾なし (むしろ visual_safety_level=elevated で実在人物
+肖像・再現映像・戦闘映像を明示禁止する強い negative_prompt 志向)、
+(4) 4 モード anchor_style / document_style / structure_diagram /
+infographic = 抽象図解志向。F-image-prompt-spec は「既存 image_prompt の
+品質改善」ではなく「image_prompt レイヤー新設 or video_prompt 拡張の
+設計判断」バッチになる = スコープ前提自体の再定義が必要。
+
+**出典**: `docs/runs/F-trial-run-post-llm-extraction/video_payload_audit.json` /
+REPORT §6。FUTURE_WORK 緊急度 高「F-image-prompt-spec」をスコープ再定義要に更新済。
+
+**ステータス**: `Active` (FUTURE_WORK にタスク反映済、Phase A.5-3b 着手時に
+再スコーピング)。
+
+### 2026-05-16: llm_judgement_text が非永続化 — 将来のデバッグ用に response_text 保存の検討余地 (F-trial-run-post-llm-extraction で観察)
+
+**内容**: F-trial-run-post-llm-extraction の試運転で run_log には
+`llm_judgement` 分類値 (uncertain/no_match) のみ出力され、Gemini の full
+response_text は run_log にも cache (jp_coverage_cache.db は空) にも
+非永続化であることを観察。本バッチでは judgement 分類値で分析十分だが、
+将来 B-3' の誤判定デバッグ (例: なぜ no_match と判定したか) には
+response_text が必要になる可能性。スコープ拡大せず観察記録のみ。
+
+**出典**: `docs/runs/F-trial-run-post-llm-extraction/REPORT.md` §2.3 重要5。
+
+**ステータス**: `Active` (記録のみ、優先度低。F-trial-run-candidate-a-reverify
+or 本番配線判断バッチで response_text ロギング要否を併せて判断可)。
 
 ### 2026-05-16: 「LLM の知性に委ねる」原則の解釈見直し — uncertain は「LLM の否定」ではなく「LLM の沈黙」 (F-jp-coverage-llm-judgement-extraction Task E 想定外退行からの学び)
 
@@ -262,10 +326,17 @@ cls-03892eab2072 (Tehran/Iran surrender): matched_urls=["https://nippon.com"], t
   (`docs/runs/F-trial-run-post-tune/trial_run_log.json` + `f13b_output_analysis.json`)
 - `jp_coverage_cache` 保存内容 (`SELECT matched_urls FROM jp_coverage_cache`)
 
-**ステータス**: `Active` (FUTURE_WORK 緊急度 高に「F-13.B WL ヒット品質の独立
-検証」エントリを新規追加、Phase A.5-3b 第一作着手判断と同時 or 直前で実施想定。
-独立検証で誤陽性が支配的と判明した場合は F-jp-coverage-tune-followup REPORT を
-v2 に更新 + Recall covered 89.47% の信頼性を再評価する必要が出る)
+**ステータス**: ★ **本番是正済 (B-3' 配線で構造的解消)** — F-wl-hit-quality-audit
+(2026-05-14) で根本原因 = LLM judgement bypass と確定 →
+F-jp-coverage-llm-judgement-extraction (2026-05-16) で B-3' 根本治療 →
+**F-trial-run-post-llm-extraction (2026-05-16) で本番是正を実証**: bare-domain
+WL マッチが LLM no_match で覆る安全装置が production verify() で初発火
+(Slot-3 cls-02e505cc1310)。matched_urls がベアドメインのみという挙動自体は
+Grounding API 仕様上残るが、誤陽性は B-3' の no_match 判定で構造的に除去
+されるようになった。残る論点 = 候補A cls-6889e9e1c7ac の afpbb bare-domain
+マッチが改修後どう判定されるか (F-trial-run-candidate-a-reverify で第一作
+着手前に確定)。F-jp-coverage-tune-followup REPORT v2 化は別バッチ (緊急度 高、
+別エントリ)。
 
 ---
 
@@ -341,7 +412,13 @@ verify_two_stage 二段階クエリ生成実装 + WL マッチング階層判定
 追加: (1) verify_two_stage 本番配線判断、(2) particular_angle_metadata +
 sontaku_signals 本番配線判断、(3) F-stream-2-filter-design 責務範囲再評価
 (本番運用視点反映)、(4) F-13.B WL ヒット品質の独立検証 — 関連性が高いため
-1 つのバッチ群として並走進行が望ましい)
+1 つのバッチ群として並走進行が望ましい)。**★ 2026-05-16 再評価
+(F-trial-run-post-llm-extraction)**: 本バッチ試運転でも乖離は不変 =
+src/main.py は依然 legacy verify() (broad-only) のみ呼び出し、analysis_result=
+null (新ルート generate_script_with_analysis 未起動、旧ルート write_script で
+台本生成)、verify_two_stage / particular_angle_metadata / sontaku_signals は
+本番未配線。ただし B-3' は legacy verify() に配線済のため LLM judgement bypass
+是正は本配線群とは独立に本番反映済 (= 本配線判断バッチ群と B-3' は直交)。
 
 ---
 
