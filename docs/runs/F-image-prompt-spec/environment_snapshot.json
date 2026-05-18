@@ -1,0 +1,15 @@
+{
+  "batch": "F-image-prompt-spec",
+  "captured_at": "2026-05-18",
+  "branch": "feature/F-image-prompt-spec",
+  "branch_base_main_head": "8dc62dae0e5411794be6bf00ff643cb94e3fe052",
+  "branch_base_main_head_short": "8dc62da",
+  "expected_main_head_short": "8dc62da",
+  "main_head_match": true,
+  "python_version": "3.11.15",
+  "baseline_test_result": "1417 passed in 134.46s",
+  "baseline_expected": "1417 passed",
+  "baseline_match": true,
+  "scope_note": "docs-only batch. src/ tests/ configs/ scripts/ CLAUDE.md は一切変更しない。video_payload_writer.py は調査のみ (改修なし、改修は Phase A.5-3b)。",
+  "test_command": "python -m pytest tests/ -x --tb=no -q"
+}

@@ -4785,3 +4785,74 @@ Phase A.5-3b 第一作題材確定の 4 角度で測定。「観察と記録に�
   - F-trial-run-candidate-a-reverify (★ 後続案件、第一作着手前必須)
   - F-image-prompt-spec (★ スコープ再定義要、Phase A.5-3b 前提)
   - Phase A.5-3b 第一作起案 (候補A perspective_gap framing で着手)
+
+---
+
+## 2026-05-18: F-image-prompt-spec — ADR 3 件 + video_payload schema 拡張設計の固定化
+
+### 背景
+
+F-trial-run-post-llm-extraction (2026-05-16) の事前調査で、当初の
+F-image-prompt-spec バッチプロンプト前提 (各 scene に `image_prompt` +
+統一シネマティック末尾 + 12-15 枚/80秒) が現行実装と乖離していると判明
+(DISCUSSION_NOTES「2026-05-16: video_payload に image_prompt レイヤーが
+存在しない」)。Phase A.5-3b 第一作 (候補A `cls-6889e9e1c7ac`、Israel
+9,600 人、perspective_gap framing) 着手前に、2026-05-16 の 3 AI 三角測量
+3 ラウンド (claude.ai + ChatGPT + Gemini) で確立した D-minimal 仕様を
+ADR + schema として正典化し、実装の前提を固定する必要があった。
+
+### 議論
+
+- 「既存 image_prompt の品質改善」は前提が成立しない (image_prompt 非存在)
+  → 「image_prompt レイヤー新設の設計判断」バッチへ再定義。
+- 実装を前倒すか設計のみに留めるか → 「動くものを壊さない」+「負債を
+  残さない」+ BATCH_PROTOCOL 拡張性差し込み判断ルールにより、本バッチは
+  **設計のみ** (`video_payload_writer.py` 改修は Phase A.5-3b で別途)。
+- ブランドトーン語彙・5 色パレットをプロンプトに足すことがクラウド誤り 9
+  (各論コントロールの誘惑) に抵触しないか → ブランドカラー/トーンは
+  **構造データの固定**であり各論の言い回し統制ではない、構図・主題は LLM に
+  委ねる折衷を Phase A.5-3b 論点として明示 (schema_extension_design §5)。
+
+### 決定
+
+- ADR-0001 (Hydrangea 画像戦略 C': 6-8 枚ベース + 10 イベント、5 色パレット、
+  editorial 路線、cinematic/photorealistic 禁止語彙)、ADR-0002 (Remotion
+  D-minimal 境界: やること/やらないこと/失敗条件/CapCut 非常口)、ADR-0003
+  (コンテンツモラル: 実在人物 NG / ICRC 標章 NG / AI ラベル投稿前判定 /
+  高リスク事実の公開前検証 / 投稿前ゲート 6 項目) を `docs/ADR/` に新規作成。
+- video_payload schema 拡張設計を確定: 現行 4 scene を壊さず (`scenes[]`
+  残置・後方互換) `images[]` (6-8 枚) と `events[]` (10 個) を新設、
+  `scene_block` で紐付け、第一作 animation は fade-in/cut/dissolve のみ。
+
+### 結果
+
+- Task B コード読解で事前調査結果 (image_prompt 非存在・4 scene・統一末尾
+  なし) を完全裏付け、想定外結果なし (即停止条件に非該当)。
+- 現行実装の強い安全方向 (`_BASE_NEGATIVE` / visual_safety_level=elevated)
+  は ADR-0003 と方向一致、後退させないことを明文化。
+- Phase A.5-3b 第一作起案の設計前提が固定された。
+- `src/ tests/ configs/ scripts/ CLAUDE.md` 0 行変更、baseline 1417 passed
+  維持、`docs/` のみ更新。不変原則 1-5 全遵守。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規ファイル:
+  - `docs/ADR/0001-image-strategy.md`
+  - `docs/ADR/0002-remotion-mvp-scope.md`
+  - `docs/ADR/0003-content-moral-guidelines.md`
+  - `docs/runs/F-image-prompt-spec/environment_snapshot.json`
+  - `docs/runs/F-image-prompt-spec/current_schema_analysis.md`
+  - `docs/runs/F-image-prompt-spec/schema_extension_design.md`
+  - `docs/runs/F-image-prompt-spec/REPORT.md`
+- ドキュメント更新:
+  - `docs/CURRENT_STATE.md` (全置換更新)
+  - `docs/DECISION_LOG.md` (本エントリ追加)
+  - `docs/FUTURE_WORK.md` (F-image-prompt-spec 完了済み移動 + Phase A.5-3b
+    第一作起案 / 高リスク事実検証ワークフロー 新規追加)
+  - `docs/DISCUSSION_NOTES.md` (4-A 新規 1 件 + 4-B image_prompt エントリ
+    Active → Resolved)
+- 関連バッチ:
+  - F-trial-run-post-llm-extraction (前バッチ、スコープ乖離の事前調査元)
+  - F-trial-run-candidate-a-reverify (★ 後続、第一作着手前必須)
+  - Phase A.5-3b 第一作起案 (本 ADR + schema 設計が前提)

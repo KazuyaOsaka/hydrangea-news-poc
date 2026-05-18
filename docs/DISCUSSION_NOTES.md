@@ -1,15 +1,13 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-16 (★ F-trial-run-post-llm-extraction 完了。4-A 新規 3 件追加 =
-「2026-05-16: B-3' 本番安全装置の初発火 — LLM judgement bypass の構造的解消を
-本番実証」+「2026-05-16: video_payload に image_prompt レイヤーが存在しない —
-F-image-prompt-spec スコープ再定義」+「2026-05-16: llm_judgement_text 非永続化」。
-4-B 既存再評価 =「2026-05-11/14: F-13.B WL ヒット品質問題」を Active → ★ 本番
-是正済 (B-3' 配線で構造的解消) に更新 +「2026-05-11: production-pipeline と docs
-概念整理の乖離」に 2026-05-16 再評価 (乖離不変だが B-3' は legacy verify() 配線済
-で本配線群と直交) を追記。前回 2026-05-16: F-jp-coverage-llm-judgement-extraction
-完了で LLM judgement bypass を Option (i) B-3' で根本治療、4-A 2 件 + 4-B
-Resolved 更新)
+最終更新: 2026-05-18 (★ F-image-prompt-spec 完了。4-A 新規 1 件追加 =
+「2026-05-18: 3 AI 三角測量がブランドトーン + 実装範囲を確立した経緯
+(ADR 正典化)」。4-B 既存再評価 =「2026-05-16: video_payload に image_prompt
+レイヤーが存在しない — F-image-prompt-spec スコープ再定義」を Active → ★
+**Resolved** (ADR-0001/0002/0003 + schema_extension_design.md で正典化、
+Task B コード読解で事前調査結果を完全裏付け、想定外なし) に更新。前回
+2026-05-16: F-trial-run-post-llm-extraction 完了で 4-A 新規 3 件 + 4-B
+「F-13.B WL ヒット品質問題」を本番是正済に更新)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -22,6 +20,37 @@ Resolved 更新)
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-18: 3 AI 三角測量がブランドトーン + 実装範囲を確立した経緯 (F-image-prompt-spec で ADR 正典化)
+
+**内容**: Phase A.5-3b 第一作の画像戦略 / Remotion 実装範囲 / コンテンツ
+モラルは、2026-05-16 の **3 AI 三角測量 3 ラウンド** (claude.ai + ChatGPT +
+Gemini) で D-minimal 仕様に収束した。論点と収束結果:
+(1) **画像戦略**: 当初の「12-15 枚シネマティック」案は現行実装乖離
+(image_prompt 非存在・4 scene) + ブランド (シニカル × 知性、editorial) と
+不整合 → C' 案 (6-8 枚ベース + 10 イベント、5 色パレット、cinematic/
+photorealistic 禁止語彙) に収束。
+(2) **Remotion 実装範囲**: フル実装 (A) / Remotion+CapCut (B) / CapCut 手動
+(C) / Remotion 最小 (D) の 4 案 → D-minimal (やること/やらないこと/失敗条件
+1 週間/CapCut 非常口) に収束。目的は第一作公開であり Remotion 作品完成では
+ないという哲学が決め手。
+(3) **コンテンツモラル**: 政治・戦争・人権題材の法的 + 印象操作 +
+プラットフォーム規約リスク → 実在人物 NG / ICRC 標章 NG / AI ラベル投稿前
+判定 / 高リスク事実公開前検証 / 投稿前ゲート 6 項目に収束。現行実装が既に
+強い安全方向 (`_BASE_NEGATIVE`) なのを後退させない方針も確認。
+ブランドカラー/トーン語彙の固定はクラウド誤り 9 (各論コントロールの誘惑)
+に抵触しないか議論 → **構造データの固定であり各論の言い回し統制ではない**、
+構図・主題は LLM に委ねる折衷で整理。
+
+**出典**: 3 AI 三角測量議論ログ (2026-05-16、claude.ai + ChatGPT +
+Gemini)、`docs/ADR/0001-0003`、`docs/runs/F-image-prompt-spec/REPORT.md` +
+schema_extension_design.md、DECISION_LOG「2026-05-18: F-image-prompt-spec」。
+
+**ステータス**: `Resolved (ADR として正典化)` — ADR-0001/0002/0003 +
+schema_extension_design.md に確定反映。実装は Phase A.5-3b 第一作起案で実施
+(FUTURE_WORK 緊急度 高にタスク化)。schema_extension_design §5 の未決論点
+4 件 (image_prompt 生成主体 / scenes[] 責務分離 / writer 改修範囲 /
+モデル拡張) は Phase A.5-3b で決定。
 
 ### 2026-05-16: B-3' 本番安全装置の初発火 — LLM judgement bypass の構造的解消を本番実証 (F-trial-run-post-llm-extraction で観察)
 
@@ -67,8 +96,15 @@ infographic = 抽象図解志向。F-image-prompt-spec は「既存 image_prompt
 **出典**: `docs/runs/F-trial-run-post-llm-extraction/video_payload_audit.json` /
 REPORT §6。FUTURE_WORK 緊急度 高「F-image-prompt-spec」をスコープ再定義要に更新済。
 
-**ステータス**: `Active` (FUTURE_WORK にタスク反映済、Phase A.5-3b 着手時に
-再スコーピング)。
+**ステータス**: ★ **Resolved** (F-image-prompt-spec / 2026-05-18 完了)。
+スコープを「image_prompt レイヤー新設の設計判断」に再定義し、Task B コード
+読解で事前調査結果 (image_prompt 非存在・4 scene・統一末尾なし) を完全裏付け
+(想定外なし)。3 AI 三角測量 3 ラウンドで確立した D-minimal 仕様を ADR-0001
+(画像戦略 C')、ADR-0002 (Remotion D-minimal)、ADR-0003 (コンテンツモラル) +
+`schema_extension_design.md` (images[]/events[] 分離・4 scene 後方互換) として
+正典化。実装は Phase A.5-3b 第一作起案で実施 (FUTURE_WORK 緊急度 高に新規
+タスク化)。詳細は DECISION_LOG「2026-05-18: F-image-prompt-spec」+
+`docs/ADR/0001-0003` + `docs/runs/F-image-prompt-spec/REPORT.md`。
 
 ### 2026-05-16: llm_judgement_text が非永続化 — 将来のデバッグ用に response_text 保存の検討余地 (F-trial-run-post-llm-extraction で観察)
 
