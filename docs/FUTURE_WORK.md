@@ -1,17 +1,17 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-16 (★ F-trial-run-post-llm-extraction 完了。B-3' 改修後 main
-(ba51e5f) の本番試運転で **LLM judgement bypass の構造的解消を本番実証**
-(Slot-3 で B-3' 安全装置初発火、has_jp_coverage 分布 3/3 True → 1 True / 2 False
-に反転)。防衛機構 5 層全機能。axis_5 候補B=15/25。**第一作題材確定 = 候補A
-cls-6889e9e1c7ac を perspective_gap framing で確定** (editorial_mission=86.0
-機械1位、axis_5 試算 19/25)。`F-trial-run-post-llm-extraction` を完了済みに
-移動、新規残課題 `F-trial-run-candidate-a-reverify` (緊急度 高、第一作着手前
-必須) 追加 + `F-image-prompt-spec` をスコープ再定義要に更新 (image_prompt
-非存在・4 scene・統一末尾なしが事前調査で判明)。`src/ tests/ configs/ scripts/
+最終更新: 2026-05-18 (★ F-image-prompt-spec 完了。2026-05-16 の 3 AI 三角測量
+3 ラウンドで確立した D-minimal 仕様を **ADR 3 件 + video_payload schema 拡張
+設計として正典化** (ADR-0001 画像戦略 C' / ADR-0002 Remotion D-minimal /
+ADR-0003 コンテンツモラル)。Task B コード読解で事前調査結果 (image_prompt
+非存在・4 scene・統一末尾なし) を完全裏付け、想定外なし。`F-image-prompt-spec`
+を完了済みに移動、新規残課題 `Phase A.5-3b 第一作起案` (緊急度 高、ADR +
+schema 前提) + `第一作公開前の高リスク事実検証ワークフロー` (緊急度 中、
+ADR-0003 由来) 追加。実装は一切せず設計のみ、`src/ tests/ configs/ scripts/
 CLAUDE.md` 0 行変更、baseline 1417 passed 維持。前回 2026-05-16:
-F-jp-coverage-llm-judgement-extraction 完了、LLM judgement bypass を Option (i)
-B-3' で根本治療、`F-grounding-determinism-audit` (緊急度 中) 起案)
+F-trial-run-post-llm-extraction 完了、B-3' 本番試運転で LLM judgement bypass
+構造的解消を本番実証 + 第一作題材確定 (候補A cls-6889e9e1c7ac
+perspective_gap framing))
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -237,14 +237,15 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 想定工数: 集計 1 時間 + 判断議論
   - 関連ファイル: src/generation/script_writer.py (読み取りのみ), data/output/ の script.json
 
-- **F-image-prompt-spec** ★スコープ再定義要 (F-doc-backfill / 2026-05-02 登録、F-doc-backfill-supplement / 2026-05-02 改訂、F-doc-cleanup / 2026-05-03 順序見直し、★ **F-trial-run-post-llm-extraction / 2026-05-16 でスコープ前提が現行実装と乖離していることが事前調査で判明**)
-  - 背景: Phase A.5-3b 手動 PoC で「自動生成された台本 + 画像プロンプト」を使って Nano Banana Pro / ChatGPT Images 2.0 (gpt-image-2) / Flux 1.1 Pro に画像生成依頼する想定。**★ F-trial-run-post-llm-extraction (2026-05-16) の Task C-4 video_payload 事前調査で重大な乖離が判明**: 現行 video_payload.json は (1) `image_prompt` フィールドが**存在しない** (`video_prompt` + `negative_prompt` のみ)、(2) **4 scene のみ** (script 4 ブロック hook/setup/twist/punchline に 1:1 対応、想定の 12-15 枚ではない)、(3) **統一シネマティック末尾なし** (むしろ visual_safety_level=elevated で実在人物肖像・再現映像・戦闘映像を明示禁止する強い negative_prompt 志向)。詳細は `docs/runs/F-trial-run-post-llm-extraction/video_payload_audit.json`。
-  - 対応案 (★ 再定義): 本バッチは「既存 image_prompt の品質改善」ではなく **「image_prompt レイヤーが現行に無い前提での新設 or video_prompt 拡張の設計判断」バッチ**になる。(1) 現行 video_prompt 4 scene 抽象図解志向と Hydrangea ブランドトーン (シニカル×知性) + TikTok/Shorts 視聴維持要件のギャップを定義、(2) image_prompt レイヤー新設 vs video_prompt 拡張 vs scene 細分割 (4→12-15) のいずれを取るか設計判断、(3) 統一トーン末尾の要否 (現行は scene ごと独立記述 + negative_prompt で安全担保)、(4) src/generation/video_payload_writer.py + configs/prompts/ 改修方針確定。バッチプロンプトのスコープ前提自体を着手時に再定義する。
-  - 検討時期: Phase A.5-3b 着手の最初の作業として組み込む (3b 直前 or 3b 内、3b 前提性格)。**★ スコープ前提が大きく変わったため着手時に再スコーピングが必須**
-  - 想定工数: 2-3 時間 → ★ スコープ再定義により上振れ可能性 (設計判断を含むため)
-  - 関連ファイル: src/generation/video_payload_writer.py (調査 + 改修対象), configs/prompts/ (改修)
-  - 不変原則整合: video_payload_writer.py は不変原則 1-4 の対象外、必要なら configs/prompts/ 経由で改修可能
-  - 関連: F-trial-run-post-llm-extraction (★ スコープ乖離を事前調査で顕在化、`video_payload_audit.json` 参照)、Phase A.5-3b 第一作起案 (本仕様確定が前提)
+- ~~**F-image-prompt-spec** ★スコープ再定義要 (F-doc-backfill / 2026-05-02 登録、F-trial-run-post-llm-extraction / 2026-05-16 でスコープ乖離判明、**F-image-prompt-spec / 2026-05-18 完了**、完了済みセクション参照)~~
+
+- **Phase A.5-3b 第一作起案** (F-image-prompt-spec / 2026-05-18 起案、★ Hydrangea 第一作の本実装)
+  - 背景: 題材確定済 (候補A `cls-6889e9e1c7ac`、Israel 9,600 人 / ICRC 監視操作疑惑、perspective_gap framing)。ADR-0001/0002/0003 + `schema_extension_design.md` で設計前提が固定された。これらを実装に落とし込み第一作を起案・公開する。
+  - 対応案: (1) `src/shared/models.py` に `VideoImage` / `VideoEvent` を Optional default 追加 (後方互換、baseline 1417 を壊さない)、(2) `src/generation/video_payload_writer.py` を最小改変で `images[]` / `events[]` 生成 (既存 4 scene 生成は不変)、(3) image_prompt にブランドカラー 5 色 + トーン語彙を構造データとして注入 (構図・主題は LLM 折衷、schema_extension_design §5 論点 1 を決定)、(4) Remotion を D-minimal で構築 (ADR-0002)、(5) framing 指針 4 点 (9,600 虐待は日本報道済み明示 / ICRC specific 角度未報道が核心 / platform_title 誇大回避 / punchline「中間が良い」遵守) を反映。
+  - 検討時期: F-trial-run-candidate-a-reverify 完了後 (第一作着手前必須の独立確認)
+  - 想定工数: 数日〜1 週間 (ADR-0002 失敗条件: Remotion 実装 1 週間超で機能削減)
+  - 関連ファイル: src/shared/models.py, src/generation/video_payload_writer.py (不変原則 1-4 対象外), configs/prompts/, Remotion プロジェクト (新規)
+  - 関連: F-image-prompt-spec (本起案元、ADR + schema 前提)、F-trial-run-candidate-a-reverify (着手前必須)、`docs/ADR/0001-0003`、`docs/runs/F-image-prompt-spec/schema_extension_design.md`
 
 ### Phase A.5-3c 合成パート自動化 (F-doc-backfill / 2026-05-02 登録)
 
@@ -330,6 +331,14 @@ F-stream-2-filter-design 着手 OK 状態に。
 ## 緊急度 中（実運用データ収集後に判断）
 
 ---
+
+- **第一作公開前の高リスク事実検証ワークフロー** (F-image-prompt-spec / 2026-05-18 起案、ADR-0003 由来)
+  - 背景: ADR-0003 で「高リスク事実主張 (数字・固有名詞・人権侵害主張・断定的事実) は公開前検証が必須工程」+「投稿前ゲート 6 項目チェックリスト (視覚禁止 / 出典付き固有名詞 / 数字 source_card / 誇大表現なし / AI ラベル / 高リスク事実検証済)」を決定。第一作 (Israel 9,600 人 / ICRC 監視操作疑惑) はこれら全てに該当。
+  - 対応案: (1) 一次ソース確認 (TeleSUR 原文 / ICRC 公式声明) + 複数ソース突合 + 日本報道状況確認のワークフローを手順化、(2) Phase A.5-3d 投稿前ゲートにチェックリスト 6 項目を機械判定 + 人手確認のハイブリッドで実装。第一作は手動運用で先行検証。
+  - 検討時期: Phase A.5-3b 第一作起案と並走 (手動検証先行) → Phase A.5-3d でゲート実装
+  - 想定工数: ワークフロー手順化 2-3 時間 + Phase A.5-3d ゲート実装は別途
+  - 関連ファイル: `docs/ADR/0003-content-moral-guidelines.md`, Phase A.5-3d 投稿前ゲート (新規)
+  - 関連: F-image-prompt-spec (ADR-0003 起案元)、Phase A.5-3b 第一作起案、Phase A.5-3d
 
 - **F-grounding-determinism-audit** (F-jp-coverage-llm-judgement-extraction / 2026-05-16 で起案)
   - 背景: F-jp-coverage-llm-judgement-extraction Task E-fix-F 再々測定で、ゴールデンセット live-API 計測が **run 間で broad Grounding API の WL メディアドメイン返却が大きく変動** することが顕在化。v3 run では 11 件の reported event で WL ヒット 0 (うち Gemini 503 が 2) = B-3' 判定以前に False に倒れ、ヘッドライン Recall を 0.4706 まで薄めた (WL マッチ条件下では Recall 1.0000 = B-3' 自体は設計通り機能)。同一クエリでも Task E run と v3 run で WL ヒット有無が反転する event 多数 (例: covered_008/009)。
@@ -578,6 +587,26 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **F-image-prompt-spec (ADR 3 件 + video_payload schema 拡張設計の固定化)**
+  (F-image-prompt-spec / 2026-05-18 完了)
+  - 発生バッチ: F-doc-backfill (2026-05-02) 登録、F-trial-run-post-llm-extraction
+    (2026-05-16) でスコープ前提が現行実装と乖離 (image_prompt 非存在・4 scene・
+    統一末尾なし) と判明、スコープ再定義要に更新。
+  - 対応: 2026-05-16 の 3 AI 三角測量 3 ラウンド (claude.ai + ChatGPT + Gemini)
+    で確立した D-minimal 仕様を ADR 3 件 + schema 拡張設計として正典化。
+    Task B コード読解で事前調査結果を完全裏付け (想定外なし)。ADR-0001
+    (画像戦略 C': 6-8 枚 + 10 イベント、5 色パレット、editorial 路線)、
+    ADR-0002 (Remotion D-minimal 境界)、ADR-0003 (コンテンツモラル: 実在人物
+    NG / ICRC 標章 NG / AI ラベル投稿前判定 / 高リスク事実公開前検証)。
+    schema 拡張は現行 4 scene を壊さず images[]/events[] を新設・後方互換。
+  - 結果: `src/ tests/ configs/ scripts/ CLAUDE.md` 0 行変更、baseline 1417
+    passed 維持、`docs/` のみ更新。実装は一切せず設計のみ (Phase A.5-3b へ)。
+  - 新規残課題: Phase A.5-3b 第一作起案 (緊急度 高、ADR + schema 前提) +
+    第一作公開前の高リスク事実検証ワークフロー (緊急度 中、ADR-0003 由来)。
+  - 関連: `docs/ADR/0001-0003`、`docs/runs/F-image-prompt-spec/REPORT.md` +
+    current_schema_analysis.md + schema_extension_design.md、DECISION_LOG
+    「2026-05-18: F-image-prompt-spec」エントリ。
 
 - **F-jp-coverage-llm-judgement-extraction (LLM judgement bypass 根本治療)**
   (F-jp-coverage-llm-judgement-extraction / 2026-05-16 完了)
