@@ -1,15 +1,17 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-16 (F-jp-coverage-llm-judgement-extraction 完了、LLM judgement
-bypass 問題を Option (i) で根本治療。Task C-D 初版 B-3 表 → Task E 想定外退行
-(Recall 89.47%→37.50%、uncertain→False 過剰保守 = クラウド誤り 9 自己事例) →
-Task E-fix で B-3' 表 (no_match のみ False で覆す) に根本治療。WL マッチ条件下で
-Recall 1.0000 / Precision 0.8889 / FN=0 = 設計通り機能、ヘッドライン Recall 0.4706
-は broad Grounding 非決定性で薄まる (本スコープ外)。CP-3 カズヤ + クラウド web 側
-協議で選択肢 1 (Task F-G 進行 + merge) 確定。`F-jp-coverage-llm-judgement-extraction`
-を完了済みに移動、新規残課題 `F-grounding-determinism-audit` (緊急度 中) +
-`F-trial-run-post-llm-extraction` (最有力次バッチ候補) 追加。不変原則 3 例外
-(src/triage) + scripts/ 例外 (measure script) の二箇所適用、baseline 1417 passed 維持)
+最終更新: 2026-05-16 (★ F-trial-run-post-llm-extraction 完了。B-3' 改修後 main
+(ba51e5f) の本番試運転で **LLM judgement bypass の構造的解消を本番実証**
+(Slot-3 で B-3' 安全装置初発火、has_jp_coverage 分布 3/3 True → 1 True / 2 False
+に反転)。防衛機構 5 層全機能。axis_5 候補B=15/25。**第一作題材確定 = 候補A
+cls-6889e9e1c7ac を perspective_gap framing で確定** (editorial_mission=86.0
+機械1位、axis_5 試算 19/25)。`F-trial-run-post-llm-extraction` を完了済みに
+移動、新規残課題 `F-trial-run-candidate-a-reverify` (緊急度 高、第一作着手前
+必須) 追加 + `F-image-prompt-spec` をスコープ再定義要に更新 (image_prompt
+非存在・4 scene・統一末尾なしが事前調査で判明)。`src/ tests/ configs/ scripts/
+CLAUDE.md` 0 行変更、baseline 1417 passed 維持。前回 2026-05-16:
+F-jp-coverage-llm-judgement-extraction 完了、LLM judgement bypass を Option (i)
+B-3' で根本治療、`F-grounding-determinism-audit` (緊急度 中) 起案)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -112,13 +114,15 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 - ~~**F-jp-coverage-llm-judgement-extraction** ★最優先 (F-wl-hit-quality-audit / 2026-05-14 で根本原因確定、F-jp-coverage-llm-judgement-extraction / 2026-05-16 完了、完了済みセクション参照)~~
 
-- **F-trial-run-post-llm-extraction** ★最優先 (F-jp-coverage-llm-judgement-extraction / 2026-05-16 で起案、最有力次バッチ候補)
-  - 背景: F-jp-coverage-llm-judgement-extraction で LLM judgement bypass の根本治療 (B-3') が完了し本番反映済。B-3' は WL マッチ条件下で Recall 1.0000 / Precision 0.8889 と設計通り機能。本番 production-pipeline で改修後挙動を試運転し、防衛機構 5 層への影響 + 第一作題材ランクへの影響を確認する。
-  - 対応案: F-trial-run-post-tune と同形式の試運転 (3 Slot 程度) + has_jp_coverage / stream 判定の改修前後比較 + 第一作題材ランク再評価。
-  - 検討時期: F-jp-coverage-llm-judgement-extraction merge 直後 OR Phase A.5-3b 第一作着手判断と並走
-  - 想定工数: 3-5 時間 (試運転 + 防衛機構監査 + ランク再評価)
-  - 関連ファイル: `src/triage/jp_coverage_verifier.py` (改修後挙動)、`docs/runs/F-trial-run-post-tune/` (前回試運転フォーマット)
-  - 関連: F-jp-coverage-llm-judgement-extraction (前バッチ、本改修元)、F-grounding-determinism-audit (★ broad 検索分散の並走確認)、Phase A.5-3b 第一作起案 (Slot-1 perspective_gap framing 前提)
+- ~~**F-trial-run-post-llm-extraction** ★最優先 (F-jp-coverage-llm-judgement-extraction / 2026-05-16 で起案、F-trial-run-post-llm-extraction / 2026-05-16 完了、完了済みセクション参照)~~
+
+- **F-trial-run-candidate-a-reverify (仮称)** ★高 (F-trial-run-post-llm-extraction / 2026-05-16 でカズヤ起案、Phase A.5-3b 第一作着手前の必須確認)
+  - 背景: Phase A.5-3b 第一作題材 = 候補A cls-6889e9e1c7ac (Israel 9,600人、perspective_gap framing) に確定したが、候補A は F-trial-run-post-tune (2026-05-11) 時点で **afpbb bare-domain WL マッチ** (= 旧 LLM judgement bypass 経路、誤陽性懸念) で has_jp_coverage=True と判定されていた。B-3' 改修後 main (ba51e5f) では同題材の F-13.B 判定が変わる可能性がある (例: afpbb tier_2 マッチが LLM no_match で覆れば has_jp_coverage=False に転じ、silence_gap 寄りに振れる)。第一作 framing (perspective_gap 前提) の妥当性を確定するため改修後挙動の再確認が必須。
+  - 対応案: 候補A cls-6889e9e1c7ac を改修後 main で再試運転 1 回 (1 Slot 限定の軽量試運転) → afpbb bare-domain WL マッチが B-3' でどう判定されるか (matched_tier / llm_judgement / has_jp_coverage) を確認。perspective_gap 前提が維持されるか or silence_gap に振れるかで第一作 framing を最終確定。
+  - 検討時期: Phase A.5-3b 第一作起案バッチの着手前 (前提性格、軽量)
+  - 想定工数: 1-2 時間 (1 Slot 軽量試運転 + B-3' 判定確認)
+  - 関連ファイル: `src/triage/jp_coverage_verifier.py` (B-3' 改修後挙動)、`docs/runs/F-trial-run-post-llm-extraction/` (本バッチ試運転フォーマット)
+  - 関連: F-trial-run-post-llm-extraction (前バッチ、本起案元)、Phase A.5-3b 第一作起案 (候補A perspective_gap framing の前提確定)
 
 - **F-jp-coverage-tune-followup REPORT v2 化** ★高 (F-wl-hit-quality-audit / 2026-05-14 で要件確定)
   - 背景: F-wl-hit-quality-audit の独立検証で F-jp-coverage-tune-followup Step C メトリクス (F1 covered 0.8718 / Recall covered 89.47% / Precision blind 33.33%) が **broader topic-family level の値**であって、**specific event (= particular_angle) level では下振れの可能性** が確認 (試運転 + golden サンプリングで 3/8 = 37.5% で topic-family 一致 / specific 不一致パターン観察)。CP カズヤ判断 = 本バッチ (F-wl-hit-quality-audit) は記録のみ、REPORT v2 化は別バッチとして分離。
@@ -233,13 +237,14 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 想定工数: 集計 1 時間 + 判断議論
   - 関連ファイル: src/generation/script_writer.py (読み取りのみ), data/output/ の script.json
 
-- **F-image-prompt-spec** (F-doc-backfill / 2026-05-02 登録、F-doc-backfill-supplement / 2026-05-02 改訂、F-doc-cleanup / 2026-05-03 順序見直し)
-  - 背景: Phase A.5-3b 手動 PoC で「自動生成された台本 + 画像プロンプト」を使って Nano Banana Pro / ChatGPT Images 2.0 (gpt-image-2) / Flux 1.1 Pro に画像生成依頼する想定だが、現状 video_payload_writer.py がシーンごとの画像プロンプトを十分な品質で出力しているか未確認。Phase A.5-3b 着手前 or 着手と同時に仕様確認 + 必要なら改修。
-  - 対応案: (1) src/generation/video_payload_writer.py の現状調査 (シーンごとに画像プロンプトを出してるか / 統一末尾「cinematic, hyper-realistic, dark geopolitical thriller style, high contrast, dramatic lighting, vertical composition, 9:16 aspect ratio」が含まれてるか) (2) 不十分なら configs/prompts/ 配下のプロンプトファイルを改修 (3) 試運転で画像プロンプト品質を確認
-  - 検討時期: Phase A.5-3b 着手の最初の作業として組み込む (3b 直前 or 3b 内、3b 前提性格)
-  - 想定工数: 2-3 時間
-  - 関連ファイル: src/generation/video_payload_writer.py (調査のみ), configs/prompts/ (必要なら改修)
+- **F-image-prompt-spec** ★スコープ再定義要 (F-doc-backfill / 2026-05-02 登録、F-doc-backfill-supplement / 2026-05-02 改訂、F-doc-cleanup / 2026-05-03 順序見直し、★ **F-trial-run-post-llm-extraction / 2026-05-16 でスコープ前提が現行実装と乖離していることが事前調査で判明**)
+  - 背景: Phase A.5-3b 手動 PoC で「自動生成された台本 + 画像プロンプト」を使って Nano Banana Pro / ChatGPT Images 2.0 (gpt-image-2) / Flux 1.1 Pro に画像生成依頼する想定。**★ F-trial-run-post-llm-extraction (2026-05-16) の Task C-4 video_payload 事前調査で重大な乖離が判明**: 現行 video_payload.json は (1) `image_prompt` フィールドが**存在しない** (`video_prompt` + `negative_prompt` のみ)、(2) **4 scene のみ** (script 4 ブロック hook/setup/twist/punchline に 1:1 対応、想定の 12-15 枚ではない)、(3) **統一シネマティック末尾なし** (むしろ visual_safety_level=elevated で実在人物肖像・再現映像・戦闘映像を明示禁止する強い negative_prompt 志向)。詳細は `docs/runs/F-trial-run-post-llm-extraction/video_payload_audit.json`。
+  - 対応案 (★ 再定義): 本バッチは「既存 image_prompt の品質改善」ではなく **「image_prompt レイヤーが現行に無い前提での新設 or video_prompt 拡張の設計判断」バッチ**になる。(1) 現行 video_prompt 4 scene 抽象図解志向と Hydrangea ブランドトーン (シニカル×知性) + TikTok/Shorts 視聴維持要件のギャップを定義、(2) image_prompt レイヤー新設 vs video_prompt 拡張 vs scene 細分割 (4→12-15) のいずれを取るか設計判断、(3) 統一トーン末尾の要否 (現行は scene ごと独立記述 + negative_prompt で安全担保)、(4) src/generation/video_payload_writer.py + configs/prompts/ 改修方針確定。バッチプロンプトのスコープ前提自体を着手時に再定義する。
+  - 検討時期: Phase A.5-3b 着手の最初の作業として組み込む (3b 直前 or 3b 内、3b 前提性格)。**★ スコープ前提が大きく変わったため着手時に再スコーピングが必須**
+  - 想定工数: 2-3 時間 → ★ スコープ再定義により上振れ可能性 (設計判断を含むため)
+  - 関連ファイル: src/generation/video_payload_writer.py (調査 + 改修対象), configs/prompts/ (改修)
   - 不変原則整合: video_payload_writer.py は不変原則 1-4 の対象外、必要なら configs/prompts/ 経由で改修可能
+  - 関連: F-trial-run-post-llm-extraction (★ スコープ乖離を事前調査で顕在化、`video_payload_audit.json` 参照)、Phase A.5-3b 第一作起案 (本仕様確定が前提)
 
 ### Phase A.5-3c 合成パート自動化 (F-doc-backfill / 2026-05-02 登録)
 
@@ -599,6 +604,36 @@ F-stream-2-filter-design 着手 OK 状態に。
     (主軸: WL マッチ条件下評価)、`design_spec.md` (v1 B-3) /
     `design_spec_v2.md` (v2 B-3')、DECISION_LOG「2026-05-16:
     F-jp-coverage-llm-judgement-extraction」エントリ。
+
+- **F-trial-run-post-llm-extraction (B-3' 本番試運転 + 第一作題材確定)**
+  (F-trial-run-post-llm-extraction / 2026-05-16 完了)
+  - 発生バッチ: F-jp-coverage-llm-judgement-extraction (2026-05-16) で
+    起案。B-3' 改修後 main (ba51e5f) の本番試運転で改修後挙動 + 防衛機構
+    5 層影響 + 第一作題材ランク再評価。
+  - 対応: production-pipeline 試運転 (batch_id=20260516_030927)。
+    **★★★ B-3' が production verify() に確かに配線・本番で安全装置初発火**
+    (Slot-3 cls-02e505cc1310: WL tier_2 matched=1 + llm_judgement=no_match
+    → has_jp_coverage=False に B-3' で覆った)。has_jp_coverage 分布が
+    F-trial-run-post-tune の 3/3 True (bare-domain bypass) → 1 True /
+    2 False に反転 = LLM judgement bypass の構造的解消を本番実証。
+    Slot-1 WL 品質も afpbb bare-domain → tier_1 実名紙 2 件に向上。
+  - 防衛機構 5 層全機能 (F-1 369→20、F-2 Blocked 0、F-13.B B-3' 安全装置
+    1 件、F-5 救済 1 件、F-13 隠れ層 0 件 = quality floor ブロック自体なし)。
+  - axis_5: 候補B cls-e2429c77f48e = 15/25 (punchline メディア断定が
+    「中間が良い」原則と矛盾 + Meduza 単独+露発二重バイアス + 専門性過多)。
+  - 第一作題材確定 = **選択肢4: 候補A cls-6889e9e1c7ac を perspective_gap
+    framing で確定** (editorial_mission=86.0 機械1位、TeleSUR発、axis_5
+    試算 19/25、framing 指針 4 点)。
+  - F-image-prompt-spec 事前調査: video_payload は image_prompt 非存在 /
+    4 scene / 統一末尾なし = スコープ再定義要 (緊急度 高に反映)。
+  - 新規残課題起案: F-trial-run-candidate-a-reverify (候補A の B-3' 改修後
+    再確認、第一作着手前必須) + F-image-prompt-spec スコープ再定義。
+  - `src/ tests/ configs/ scripts/ CLAUDE.md` 0 行変更、`docs/` +
+    `data/output/` のみ更新、baseline 1417 passed 維持。
+  - 関連: `docs/runs/F-trial-run-post-llm-extraction/REPORT.md` +
+    f13b_output_analysis.json + video_payload_audit.json +
+    axis_5_evaluation.json、DECISION_LOG「2026-05-16:
+    F-trial-run-post-llm-extraction」エントリ。
 
 - **F-13.B WL ヒット品質の独立検証 (F-wl-hit-quality-audit)** (F-wl-hit-quality-audit /
   2026-05-14 完了)

@@ -4710,3 +4710,78 @@ Task E 想定外退行を CP で検知し commit/merge せず保留 → B-3 を�
   - F-jp-coverage-tune-followup (Step C ベースライン供給、REPORT v2 化は別バッチ)
   - F-grounding-determinism-audit (★ 後続バッチ案件、ヘッドライン Recall 主因)
   - F-trial-run-post-llm-extraction (★ 後続バッチ案件、本番反映後試運転)
+
+---
+
+## 2026-05-16: F-trial-run-post-llm-extraction — B-3' 本番試運転 + 第一作題材確定 (候補A perspective_gap framing)
+
+### 背景
+
+F-jp-coverage-llm-judgement-extraction (2026-05-16 merge、`ba51e5f`) で LLM
+judgement bypass を Option (i) B-3' で根本治療した改修後の **本番試運転**。
+改修後 F-13.B + 防衛機構 5 層の本番挙動確認、拾われた Slot の axis_5 主観
+評価、video_payload 画像プロンプト品質確認 (F-image-prompt-spec 事前調査)、
+Phase A.5-3b 第一作題材確定の 4 角度で測定。「観察と記録に集中するバッチ」+
+「動くものを壊さない」原則 (src/ tests/ configs/ scripts/ CLAUDE.md 0 変更)。
+
+### 議論
+
+- 試運転 (batch_id=20260516_030927) で 3 Slot 選定。全て前回
+  F-trial-run-post-tune とは別 RSS 日の別題材 = Slot 単位の系統判定変化
+  追跡は不可、分布・挙動レベルの比較に限定 (CP-1 でカズヤに明示)。
+- CP-1 でカズヤ判断 = 選択肢 2 (Slot-1 axis_5 評価 + 第一作題材を候補A vs
+  候補B vs 候補C で再協議)。
+- axis_5 (候補B cls-e2429c77f48e) = カズヤ + クラウド web 側協議で 15/25
+  確定 (観点1=4 / 2=3 / 3=3 / 4=3 / 5=2)。
+- 第一作題材 = カズヤ判断で **選択肢4: 候補A cls-6889e9e1c7ac を
+  perspective_gap framing で確定**。候補B は punchline メディア断定が
+  「中間が良い」原則と矛盾 + Meduza 単独+露発二重バイアス + 専門性過多 +
+  axis_5 15 < 候補A試算 19 で不採用。候補C は再試運転コスト対効果不足 +
+  perspective_gap でも Hydrangea ミッション達成可能で不採用。
+
+### 決定
+
+1. **B-3' は production verify() に確かに配線・本番で安全装置初発火**:
+   Slot-3 cls-02e505cc1310 で WL tier_2 matched=1 + llm_judgement=no_match
+   → has_jp_coverage=False に B-3' で覆った。F-trial-run-post-tune の
+   3/3 True (bare-domain bypass) → 1 True / 2 False に反転 = LLM judgement
+   bypass の構造的解消を本番実証。
+2. **Phase A.5-3b 第一作題材 = 候補A cls-6889e9e1c7ac (Israel 9,600人、
+   perspective_gap framing) で確定**。framing 指針 4 点 (9,600人虐待 itself
+   は日本報道済み明示 / ICRC 監視操作の specific 角度未報道が核心 /
+   platform_title 誇大回避 / punchline「中間が良い」原則遵守) を Phase
+   A.5-3b 第一作起案バッチで反映。
+3. F-image-prompt-spec はスコープ再定義要 (image_prompt 非存在・4 scene・
+   統一末尾なしが事前調査で判明)。
+4. 新規残課題 F-trial-run-candidate-a-reverify (候補A の B-3' 改修後再確認、
+   第一作着手前必須、緊急度 高) を起案。
+
+### 結果
+
+- 防衛機構 5 層全機能 (F-1 369→20 / F-2 Blocked 0 / F-13.B B-3' 安全装置
+  1 件 / F-5 救済 1 件 / F-13 隠れ層 0 件 = quality floor ブロック自体なし)。
+- 想定外結果なし (B-3' 挙動は設計通り、バッチプロンプト想定外閾値に非該当)。
+  観察事項: llm_judgement_text 非永続化 (記録のみ、スコープ拡大せず)。
+- baseline 1417 passed 維持、不変原則 1-5 全遵守 (docs/ + data/output/ のみ更新)。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規ファイル:
+  - `docs/runs/F-trial-run-post-llm-extraction/REPORT.md`
+  - `docs/runs/F-trial-run-post-llm-extraction/environment_snapshot.json`
+  - `docs/runs/F-trial-run-post-llm-extraction/run_log.log`
+  - `docs/runs/F-trial-run-post-llm-extraction/f13b_output_analysis.json`
+  - `docs/runs/F-trial-run-post-llm-extraction/video_payload_audit.json`
+  - `docs/runs/F-trial-run-post-llm-extraction/axis_5_evaluation.json`
+- ドキュメント更新:
+  - `docs/CURRENT_STATE.md` (全置換更新)
+  - `docs/DECISION_LOG.md` (本エントリ追加)
+  - `docs/FUTURE_WORK.md` (本バッチ完了済み移動 + F-trial-run-candidate-a-reverify 新規 + F-image-prompt-spec スコープ再定義)
+  - `docs/DISCUSSION_NOTES.md` (4-A 新規 + 4-B 既存再評価)
+- 関連バッチ:
+  - F-jp-coverage-llm-judgement-extraction (前バッチ、B-3' 改修元)
+  - F-trial-run-post-tune (前回試運転、3/3 True bypass の比較基準)
+  - F-trial-run-candidate-a-reverify (★ 後続案件、第一作着手前必須)
+  - F-image-prompt-spec (★ スコープ再定義要、Phase A.5-3b 前提)
+  - Phase A.5-3b 第一作起案 (候補A perspective_gap framing で着手)

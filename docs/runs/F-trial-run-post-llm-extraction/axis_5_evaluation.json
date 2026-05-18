@@ -1,0 +1,66 @@
+{
+  "version": "1.0",
+  "batch": "F-trial-run-post-llm-extraction",
+  "generated_at": "2026-05-16",
+  "evaluation_protocol": "F-trial-run-post-tune axis_5 形式継承 + video_payload 観点5追加。カズヤ + クラウド web 側協議で確定。",
+  "evaluated_slot": {
+    "event_id": "cls-e2429c77f48e",
+    "title": "Ukrainian drones keep straying into Baltic and Finnish airspace after being diverted by Russian electronic warfare",
+    "source_media": "Meduza (露独立系・亡命メディア)",
+    "role": "本バッチ Slot-1 (唯一 video_payload + script 生成)",
+    "editorial_mission_score": 83.0,
+    "f13b": {"has_jp_coverage": true, "matched_tier": "tier_1_newspaper", "matched_domains": ["newsweekjapan.jp", "yomiuri.co.jp"], "llm_judgement": "uncertain", "b3prime_branch": "WL あり + uncertain → True (WL 尊重)"},
+    "stream_type_assessment": "perspective_gap 型 (tier_1 実名紙2件で広範事件は日本報道済み、ロシアEW構造角度のみ未報道)"
+  },
+  "axis_5_scores": {
+    "observation_1_script_impact": {"score": 4, "max": 5, "comment": "hook + twist は強いが punchline 失速。twist のラトビア政府退陣 + 『弾丸一発使わず政治破壊』フレーズは ReHacQ 級 (カズヤ評)"},
+    "observation_2_hydrangea_brand_alignment": {"score": 3, "max": 5, "comment": "punchline のメディア断定 (『報じないのは理解していないから』) が『中間が良い』原則から外れる。修正必須: メディア無理解断定 → 『あまり伝えられない』程度に (カズヤ指示)"},
+    "observation_3_stream_classification_validity": {"score": 3, "max": 5, "comment": "perspective_gap。platform_title『日本では報道されないUkrainianの視点』は誇大 (広範事件は tier_1 で報道済み)"},
+    "observation_4_video_suitability": {"score": 3, "max": 5, "comment": "twist 165字詰めすぎで中盤失速リスク、視覚展開は抽象図解のみ"},
+    "observation_5_video_prompt_quality": {"score": 2, "max": 5, "comment": "F-image-prompt-spec スコープ再定義事案。現状 video_prompt はブランド表現不足 (実在地名・人物全排除で『見えない戦争』の緊張感を絵で出せない)。video_payload は F-image-prompt-spec で本格的に再設計が必要 (カズヤ評)"}
+  },
+  "axis_5_total": {"score": 15, "max": 25},
+  "kazuya_additional_comments": [
+    "twist のラトビア政府退陣 + 『弾丸一発使わず政治破壊』フレーズは ReHacQ 級",
+    "punchline の修正が必須 (メディア無理解断定 → 『あまり伝えられない』程度に)",
+    "video_payload は F-image-prompt-spec で本格的に再設計が必要"
+  ],
+  "cloud_web_side_assessment_basis": "クラウド暫定: 観点1=4 / 2=3.5 / 3=3 / 4=3 / 5=3 (16.5)。協議で観点2を3 (断定トーンを減点強化)、観点5を2 (F-image-prompt-spec 事案として明確減点) に確定 → 合計 15/25。",
+  "comparison_candidate_a": {
+    "event_id": "cls-6889e9e1c7ac",
+    "title": "9,600 Detainees: Israel Prison Abuses (TeleSUR発)",
+    "editorial_mission_score": 86.0,
+    "machine_4axis_total_prev_batch": 10,
+    "stream_type": "perspective_gap 確定 (F-wl-hit-quality-audit 2026-05-14)",
+    "f13b_wl_quality": "afpbb bare-domain (誤陽性懸念、旧 bypass 経路)",
+    "axis_5": "F-trial-run-post-tune では空欄、本バッチでは候補Aの再採点は実施せず (候補B のみ動画化済みのため axis_5 対象)",
+    "strengths": ["editorial_mission 最高(86)", "人権ど真ん中 (1.制度 + 3.個人/権力者)", "機械4軸 前回1位"],
+    "weaknesses": ["TeleSUR (ベネズエラ政府系) 単独ソース", "WL bare-domain 誤陽性懸念", "perspective_gap なのに platform_title『日本では報道されない』誇大"]
+  },
+  "first_video_decision": {
+    "decision": "選択肢4: 候補A cls-6889e9e1c7ac を perspective_gap framing で第一作題材として確定",
+    "event_id": "cls-6889e9e1c7ac",
+    "title": "Israel Prison 9,600 Detainees / ICRC 監視操作疑惑",
+    "source": "TeleSUR (F-trial-run-post-tune Slot-1)",
+    "editorial_mission_score": 86.0,
+    "machine_rank": "前回機械4軸1位 (10pt)",
+    "stream_classification": "perspective_gap 確定 (F-wl-hit-quality-audit 2026-05-14)",
+    "candidate_a_axis5_estimate": "19/25 (web側クラウド試算、Phase A.5-3b 第一作起案バッチで台本生成後に最終確定)",
+    "framing_guidance": [
+      "『9,600人虐待 itself は afpbb 等で日本でも報道済み』を明示",
+      "『しかし ICRC 監視操作疑惑等の specific 角度は日本主要メディアで未報道』が perspective_gap の核心",
+      "platform_title は『日本では報道されない』誇大を避け『日本では触れられない構造』『日本の報道で抜け落ちる視点』等の中立表現に修正",
+      "台本 punchline は『中間が良い』原則遵守 (シニカル × 生活実感への着地、メディア断定回避)"
+    ],
+    "candidate_b_rejection_reasons": [
+      "punchline メディア断定が『中間が良い』原則と矛盾、修正必須",
+      "Meduza 単独ソース + ロシア発情報の二重バイアス",
+      "題材専門性が高すぎる (ハイブリッド戦+電子戦+偽情報の多層構造を80秒は厳しい)",
+      "axis_5 合計 15/25 < 候補A試算 19/25"
+    ],
+    "candidate_c_rejection_reasons": [
+      "再試運転コストと効果が見合わない",
+      "perspective_gap でも Hydrangea ミッションは十分達成可能 (観点の選択的欠落=忖度を暴く構造)"
+    ]
+  }
+}
