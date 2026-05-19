@@ -21,6 +21,38 @@
 
 ## 未分類 (Active)
 
+### 2026-05-19: 3 AI 三角測量で 2026-05 Gemini モデル戦略の方向性を確立 (F-gemini-model-audit で調査)
+
+**内容**: 5/25 `gemini-3.1-flash-lite-preview` shutdown + 2026-05 Gemini
+API モデル群更新を受け、3 AI 三角測量 (claude.ai + ChatGPT + Gemini) で
+2026-05 Gemini モデル戦略の方向性を確立。合意点 4 つ:
+(1) **Lightweight 主軸 = `gemini-3.1-flash-lite`** (GA、RPD 150K = 現
+`gemini-2.5-flash` 想定 15 倍) に切替候補 → 503/429 を RPD 桁増で根本治療。
+(2) **Narrative 主軸 = PoC で確定** (`gemini-3-flash-preview` /
+`gemini-3.1-pro-preview` / `gemini-2.5-flash` の品質比較、別バッチ
+`F-gemini-quality-tier-poc`)。
+(3) **Pro = Editorial Guardian** (高リスク事実検証専用、局所使用) に限定、
+Quality 主軸にしない。
+(4) **F-13.B Grounding = `gemini-2.5` 系維持** (既存安定性 + 回帰リスク +
+active quota 確認待ち)。
+F-gemini-model-audit 調査で上記方向性 + 重大発見 (shutdown 後 404 が
+retry 非対象 = 次 Tier フォールバックせず即 raise の致命傷リスク) を確認。
+CP-1 カズヤ判断 = 両系統 Tier3 + config default + `.env.example` を
+`gemini-3.1-flash-lite` (GA) に一括置換 (選択肢1、404 即 raise リスク完全
+除去)。model id は preview/GA 状態を AI Studio で手動確認後に断定する
+(`-preview` 付きを既定維持、Claude Code は API を叩かない)。
+
+**出典**: `docs/runs/F-gemini-model-audit/REPORT.md` (§6-9) +
+grep_results.json + current_tier_analysis.json、DECISION_LOG
+「2026-05-19: F-gemini-model-audit」、CP-1 カズヤ判断 (2026-05-19)、
+本バッチ背景の 3 AI 三角測量合意点。
+
+**ステータス**: `Resolved (タスク化)` — 方向性は 3 AI + 調査で確立。
+実装は `F-gemini-model-migrate-emergency` (★★★ 緊急度 高、5/25 deadline)
++ `F-gemini-quality-tier-poc` (緊急度 高、Phase A.5-3b 前) にタスク化済。
+Lightweight Tier1 切替タイミングは AI Studio quota 実値のカズヤ手動確認後
+判断 (REPORT.md §9 残課題)。
+
 ### 2026-05-18: B-3' 改修の構造的効果を 3 連続試運転で観察 + Gemini 503 再発で F-17 候補昇格 (F-trial-run-candidate-a-reverify で確認)
 
 **内容**: F-trial-run-candidate-a-reverify (試運転 batch_id 20260518_111201、
@@ -51,9 +83,14 @@ f13b_comparison.json + trial_run_summary.json、DECISION_LOG
 「2026-05-19: F-trial-run-candidate-a-reverify」、CP-1 カズヤ判断 (2026-05-19)。
 
 **ステータス**: `Resolved (タスク化)` — B-3' 構造的効果は 3 連続試運転で
-確定 = 本バッチ目的達成。Gemini 503 対処は FUTURE_WORK 緊急度 高
-(F-gemini-503-stability-audit / F-periodic-health-check) にタスク化。axis_5
-採点は Phase A.5-3b 第一作起案バッチに移送。
+確定 = 本バッチ目的達成。axis_5 採点は Phase A.5-3b 第一作起案バッチに移送。
+★ **4-B 再評価 (F-gemini-model-audit / 2026-05-19)**: 本エントリ (2) の
+Gemini 503 対処タスク化は再構成。`F-gemini-503-stability-audit` は **撤回**
+(Gemini モデル切替 = `F-gemini-model-migrate-emergency` で 503 多発リスクは
+根本治療されるため対症療法バッチ不要)。`F-periodic-health-check` は緊急度
+**高 → 中に降格** (検討時期 = Phase A.5-3d 着手時、本番リリース前は不要、
+カズヤ確認済)。503 根本治療の方向性は上記「2026-05-19: 3 AI 三角測量で
+2026-05 Gemini モデル戦略の方向性を確立」エントリ参照。
 
 ### 2026-05-18: 3 AI 三角測量がブランドトーン + 実装範囲を確立した経緯 (F-image-prompt-spec で ADR 正典化)
 

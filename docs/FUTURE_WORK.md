@@ -1,17 +1,17 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-19 (★ F-trial-run-candidate-a-reverify 完了。候補A の B-3'
-改修後本番再確認。CP-1 で (1) 候補A 不在 (完全新規 RSS batch) + (2) Slot-1
-台本 fallback (Gemini 503 多発) 判明 → カズヤ判断 = 選択肢3 (Task C/D のみ、
-Task E/CP-2 スキップ)。B-3' 構造的効果は 3 連続試運転 (5/11 3T → 5/16 1T/2F
-→ 5/18 0T/3F) で確定 = 本バッチ目的達成。候補A は perspective_gap framing で
-維持 (機械判定 ≠ 事実)。`F-trial-run-candidate-a-reverify` を完了済みに移動、
-新規残課題 `F-gemini-503-stability-audit` (F-17 候補から昇格、緊急度 高、
-着手条件達成) + `F-periodic-health-check` (緊急度 高、Phase A.5-3d 前提) 追加。
-Phase A.5-3b 第一作起案に axis_5 採点移送を明記。`src/ tests/ configs/
-scripts/ CLAUDE.md` 0 行変更、baseline 1417 passed 維持。前回 2026-05-18:
-F-image-prompt-spec 完了、3 AI 三角測量 D-minimal 仕様を ADR 3 件 + schema
-拡張設計として正典化)
+最終更新: 2026-05-19 (★ F-gemini-model-audit 完了。Gemini モデル戦略再検討
+の影響調査専用バッチ (改修なし)。5/25 `gemini-3.1-flash-lite-preview`
+shutdown 対象の実稼働 functional 使用 = 2 箇所 (`.env` QUALITY Tier3 +
+LIGHTWEIGHT Tier3、両系統とも fallback 位置)。Interactions API 未使用
+(無関係)。`F-gemini-model-audit` を完了済みに移動、`F-gemini-503-stability-
+audit` を撤回 (モデル切替で 503 多発リスクは根本治療)、`F-periodic-health-
+check` を緊急度 高 → 中に降格 (検討時期 = Phase A.5-3d 着手時、本番リリース
+前は不要、カズヤ確認済)、新規残課題 `F-gemini-model-migrate-emergency`
+(★★★ 緊急度 高、5/25 deadline) + `F-gemini-quality-tier-poc` (緊急度 高、
+Phase A.5-3b 前) 追加。`src/ tests/ configs/ scripts/ CLAUDE.md` 0 行変更、
+baseline 1417 passed 維持。前回 2026-05-19: F-trial-run-candidate-a-reverify
+完了、B-3' 構造的効果を 3 連続試運転で確定、候補A perspective_gap 維持)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -118,21 +118,26 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 - ~~**F-trial-run-candidate-a-reverify** ★高 (F-trial-run-post-llm-extraction / 2026-05-16 でカズヤ起案、F-trial-run-candidate-a-reverify / 2026-05-19 完了、完了済みセクション参照。候補A 不在 + 3 連続試運転で B-3' 構造的効果確定 = 目的達成、候補A は perspective_gap framing で維持)~~
 
-- **F-gemini-503-stability-audit** ★高 (F-17 候補から昇格、F-trial-run-candidate-a-reverify / 2026-05-19 で着手条件「503 多発確認」達成)
-  - 背景: F-trial-run-candidate-a-reverify 試運転 (batch_id 20260518_111201、試運転時刻 2026-05-18T20:12 JST = 夜ピーク、推奨早朝 5-8 時から外れ) で Gemini `tier=1` の 503 UNAVAILABLE が多発 (8回 retry は retry.py が吸収して成功)、動画化 Slot-1 台本生成のみ `llm_error:RemoteProtocolError` で fallback テンプレに退避。F-17 候補の着手条件「503 多発が確認された場合」を満たした。
-  - 対応案: `src/llm/factory.py` + `src/llm/retry.py` のリトライ間隔動的調整、サーキットブレーカーパターン導入、Slot 別 fallback 戦略の見直し (特に動画化 Slot は fallback 落ちると axis_5 採点不能)。試運転を早朝 5-8 時に固定する運用ルール化も併せて検討。
-  - 検討時期: Phase A.5-3b 第一作起案バッチと並走可 (第一作の実台本生成が 503 で fallback 落ちるリスク低減)
-  - 着手条件: ✅ 達成 (F-trial-run-candidate-a-reverify で 503 多発確認)
-  - 関連ファイル: src/llm/factory.py, src/llm/retry.py
-  - 関連: F-trial-run-candidate-a-reverify (本昇格元)、F-periodic-health-check (503/fallback の早期検知)、Phase A.5-3b 第一作起案 (実台本生成の前提安定化)
+- **F-gemini-model-migrate-emergency** ★★★高 (F-gemini-model-audit / 2026-05-19 起案、**5/25 deadline 必達**)
+  - 背景: `gemini-3.1-flash-lite-preview` が 2026-05-25 shutdown。実稼働 functional 使用 2 箇所 (`.env` QUALITY Tier3 + LIGHTWEIGHT Tier3) + コード default 3 箇所 + テンプレ 2 箇所 + doc-drift コメント群。両 Tier3 とも fallback 位置だが、shutdown 後の 404 NOT_FOUND は `retry.is_retryable()=False` のため `factory.generate()` が次 Tier (Tier4 GA 安全網) にフォールバックせず即 raise → 503 多発時 (F-trial-run-candidate-a-reverify で実確認) に Tier1→2 連鎖失敗で Tier3 到達 → 全生成失敗の致命傷リスク。
+  - 対応案 (★ CP-1 カズヤ判断 2026-05-19 = 選択肢1): **両系統 Tier3 (QUALITY + LIGHTWEIGHT) + factory.py/config.py default + `.env.example` を `gemini-3.1-flash-lite` (GA、2026-05-07 GA) に一括置換**。shutdown モデルを Tier 階層から除去することで 404 到達自体が消滅 = retry.py 不変原則に触れず最小対処で 404 即 raise リスクを根絶 (本調査有力視、別途 retry.py 設計変更は不要)。doc-drift コメント (main.py:2471 / judge.py:72 / factory.py / config.py:142) も整理。両 Tier3 とも fallback 位置で出現頻度低く、preview→GA は Google 公式推奨のため **全 LOW リスク**。
+  - 検討時期: **即着手 (5/25 まで余裕確保のため最優先)**。AI Studio active quota + preview/GA 状態のカズヤ手動確認 (REPORT.md §6-7) を実装前提とする
+  - 想定工数: 2-3h (改修範囲は両系統に拡大したが全 LOW リスクのため工数据え置き)
+  - 関連ファイル: `.env`, `.env.example`, `src/llm/factory.py` (316/324 default), `src/shared/config.py` (76 default + 142 コメント), `src/main.py` (2471 コメント), `src/llm/judge.py` (72 docstring)
+  - 関連: F-gemini-model-audit (本起案元、`docs/runs/F-gemini-model-audit/REPORT.md`)、F-gemini-quality-tier-poc (Narrative primary は別 PoC)、Phase A.5-3b 第一作起案 (実台本生成の前提安定化)
+  - ★ 残課題 (カズヤ確認後判断): Lightweight 主軸 (Tier1) を `gemini-3.1-flash-lite` (RPD 150K) に切替えるタイミング (emergency と同時 / 別ステップ) は AI Studio quota 実値確認後に判断 (本調査は「quota 確認前提で同時実施可」を有力視)
 
-- **F-periodic-health-check** ★高 (F-trial-run-candidate-a-reverify / 2026-05-19 新規起案)
-  - 背景: Phase A.5-3d は cron 6 時間おきの完全自動投稿 (人手介入ゼロ)。F-trial-run-candidate-a-reverify で Gemini 503 多発 → Slot-1 台本 fallback 落ちが起きたように、無人運用では Gemini 503 / Grounding 0 件 / fallback 落ち等の品質劣化を検知する仕組みが前提として必要。
-  - 対応案: production パイプライン全工程 (RSS 取得 / GarbageFilter / clustering / F-1〜F-13.B / 台本生成 / video_payload) の定期ヘルスチェック。fallback 発生率 / Gemini 503 率 / Grounding ヒット率 / 防衛機構各層の通過数を集計し閾値逸脱時にアラート。run_summary.json への health フィールド追加 + 集約レポート。
-  - 検討時期: Phase A.5-3b 第一作着手前 or 並走 (Phase A.5-3d 完全自動投稿の前提)
-  - 着手条件: なし (Phase A.5-3d 着手前に必要)
-  - 関連ファイル: src/main.py, src/budget.py, data/output/run_summary.json
-  - 関連: F-gemini-503-stability-audit (503/fallback の対処)、Phase A.5-3d (cron 完全自動投稿の前提)
+- **F-gemini-quality-tier-poc** ★高 (F-gemini-model-audit / 2026-05-19 起案、Phase A.5-3b 第一作起案前)
+  - 背景: 2026-05 Gemini モデル群更新で Narrative 主軸 (QUALITY Tier1) の最適モデルが未確定。候補 = `gemini-3-flash-preview` (RPD 10K) / `gemini-3.1-pro-preview` (RPD 250、Editorial Guardian 候補) / `gemini-2.5-flash` (RPD 10K、安定 fallback)。emergency 移行は Tier3 GA 化のみで primary 品質は別途 PoC で確定する必要がある (設計判断と実装の分離)。
+  - 対応案: Narrative 系 QUALITY モデルの品質 PoC + axis_5 採点で主軸確定。Pro は Editorial Guardian (高リスク事実検証専用、局所使用) に限定し Quality 主軸にしない方針を検証。`publish_gate_flags` 構造設計も併せて検討。
+  - 検討時期: Phase A.5-3b 第一作起案前 (起案で使う確定モデルが必要)
+  - 想定工数: 3-5h + axis_5 採点
+  - 関連ファイル: `src/llm/factory.py`, `.env`, `docs/runs/F-gemini-model-audit/REPORT.md` §8-3
+  - 関連: F-gemini-model-audit (本起案元)、F-gemini-model-migrate-emergency (emergency 移行が先行)、Phase A.5-3b 第一作起案
+
+- ~~**F-gemini-503-stability-audit** ★高 (F-17 候補から昇格)~~ → ★ **撤回 (F-gemini-model-audit / 2026-05-19)**。理由: Gemini モデル切替 (`F-gemini-model-migrate-emergency` で Tier3 を GA 化 + Lightweight 主軸 RPD 150K 化候補) で 503 多発リスクは**根本治療**される。リトライ間隔調整 / サーキットブレーカー等の対症療法的個別対処は不要。503/fallback の早期検知は `F-periodic-health-check` (緊急度 中に降格、Phase A.5-3d 前提) でカバー。
+
+- ~~**F-periodic-health-check** ★高 (F-trial-run-candidate-a-reverify / 2026-05-19 新規起案)~~ → ★ **緊急度 中に降格 (F-gemini-model-audit / 2026-05-19、カズヤ確認済)**。理由: 本番リリース前は不要、Phase A.5-3d cron 完全自動投稿実装時で OK。詳細エントリは「緊急度 中」セクション参照。
 
 - **F-jp-coverage-tune-followup REPORT v2 化** ★高 (F-wl-hit-quality-audit / 2026-05-14 で要件確定)
   - 背景: F-wl-hit-quality-audit の独立検証で F-jp-coverage-tune-followup Step C メトリクス (F1 covered 0.8718 / Recall covered 89.47% / Precision blind 33.33%) が **broader topic-family level の値**であって、**specific event (= particular_angle) level では下振れの可能性** が確認 (試運転 + golden サンプリングで 3/8 = 37.5% で topic-family 一致 / specific 不一致パターン観察)。CP カズヤ判断 = 本バッチ (F-wl-hit-quality-audit) は記録のみ、REPORT v2 化は別バッチとして分離。
@@ -342,6 +347,15 @@ F-stream-2-filter-design 着手 OK 状態に。
 ## 緊急度 中（実運用データ収集後に判断）
 
 ---
+
+- **F-periodic-health-check** (F-trial-run-candidate-a-reverify / 2026-05-19 起案、F-gemini-model-audit / 2026-05-19 で緊急度 高 → 中に降格、カズヤ確認済)
+  - 背景: Phase A.5-3d は cron 6 時間おきの完全自動投稿 (人手介入ゼロ)。F-trial-run-candidate-a-reverify で Gemini 503 多発 → Slot-1 台本 fallback 落ちが起きたように、無人運用では Gemini 503 / Grounding 0 件 / fallback 落ち等の品質劣化を検知する仕組みが前提として必要。
+  - 降格理由 (F-gemini-model-audit / 2026-05-19): 本番リリース前は不要。Phase A.5-3d cron 自動投稿実装時に着手すれば足りる (カズヤ確認済)。
+  - 対応案: production パイプライン全工程 (RSS 取得 / GarbageFilter / clustering / F-1〜F-13.B / 台本生成 / video_payload) の定期ヘルスチェック。fallback 発生率 / Gemini 503 率 / Grounding ヒット率 / 防衛機構各層の通過数を集計し閾値逸脱時にアラート。run_summary.json への health フィールド追加 + 集約レポート。
+  - 検討時期: **Phase A.5-3d 着手時** (cron 完全自動投稿の前提、本番リリース前は不要)
+  - 着手条件: Phase A.5-3d 着手
+  - 関連ファイル: src/main.py, src/budget.py, data/output/run_summary.json
+  - 関連: F-gemini-model-migrate-emergency (503 多発の根本治療)、Phase A.5-3d (cron 完全自動投稿の前提)
 
 - **第一作公開前の高リスク事実検証ワークフロー** (F-image-prompt-spec / 2026-05-18 起案、ADR-0003 由来)
   - 背景: ADR-0003 で「高リスク事実主張 (数字・固有名詞・人権侵害主張・断定的事実) は公開前検証が必須工程」+「投稿前ゲート 6 項目チェックリスト (視覚禁止 / 出典付き固有名詞 / 数字 source_card / 誇大表現なし / AI ラベル / 高リスク事実検証済)」を決定。第一作 (Israel 9,600 人 / ICRC 監視操作疑惑) はこれら全てに該当。
@@ -573,7 +587,7 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 ### 観察中項目 (F-doc-backfill / 2026-05-02 登録)
 
-- ~~**F-17 候補: Gemini API 503 安定性対処** (F-doc-backfill / 2026-05-02 登録)~~ → ★ **F-gemini-503-stability-audit として緊急度 高に昇格** (F-trial-run-candidate-a-reverify / 2026-05-19、着手条件「503 多発確認」達成。上記「緊急度 高」セクション参照)
+- ~~**F-17 候補: Gemini API 503 安定性対処** (F-doc-backfill / 2026-05-02 登録)~~ → F-trial-run-candidate-a-reverify / 2026-05-19 で `F-gemini-503-stability-audit` として緊急度 高に昇格 → ★ **F-gemini-model-audit / 2026-05-19 で撤回** (Gemini モデル切替 = `F-gemini-model-migrate-emergency` で 503 多発リスクは根本治療されるため、503 専用の対症療法バッチは不要。早期検知は F-periodic-health-check でカバー)
 
 - **_FRAMING_RESULTS の LRU 化** (F-doc-backfill / 2026-05-02 登録、Phase 2 案件)
   - 背景: src/analysis/perspective_extractor.py の _FRAMING_RESULTS が無制限 dict キャッシュ。長時間稼働でメモリ肥大化の可能性。functools.lru_cache(maxsize=1000) に変更。
@@ -595,6 +609,37 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **F-gemini-model-audit (Gemini モデル戦略再検討 影響調査)**
+  (F-gemini-model-audit / 2026-05-19 完了)
+  - 発生バッチ: 5/25 `gemini-3.1-flash-lite-preview` shutdown + 2026-05
+    Gemini API モデル群更新を受けた影響調査専用バッチ (改修なし、設計判断と
+    実装の分離原則)。
+  - 対応: main `4510180` から branch 作成、baseline 1417 passed 確認。
+    grep で shutdown 対象の実稼働 functional 使用 = 2 箇所特定 (`.env` の
+    QUALITY Tier3 + LIGHTWEIGHT Tier3、両系統とも fallback 位置)。コード
+    default 3 箇所 (factory.py:316/324, config.py:76) + テンプレ
+    `.env.example` + doc-drift コメント群を整理。★ 重大発見: shutdown 後の
+    404 NOT_FOUND は retry.is_retryable()=False のため次 Tier フォール
+    バックせず即 raise = 503 多発時に全生成失敗リスク。Interactions API
+    未使用 (無関係)。出力 = `docs/runs/F-gemini-model-audit/` に
+    REPORT.md + grep_results.json + current_tier_analysis.json +
+    interactions_api_status.json + environment_snapshot.json。
+  - CP-1 カズヤ判断 (2026-05-19): 選択肢1 = 両系統 Tier3 + config default
+    + `.env.example` を `gemini-3.1-flash-lite` (GA) に一括置換 (404 即
+    raise リスク完全除去 = 「動くものを壊さない」「あるべき姿で進める」)。
+    404 対処は Tier 除去で足りる方針。Lightweight Tier1 切替タイミングは
+    quota 確認後判断として保持。
+  - 結果: `src/ tests/ configs/ scripts/ CLAUDE.md` 0 行変更、baseline
+    1417 passed 維持。`docs/runs/F-gemini-model-audit/` 新規 +
+    `docs/{CURRENT_STATE,DECISION_LOG,FUTURE_WORK,DISCUSSION_NOTES}.md`
+    更新のみ。
+  - 新規残課題: F-gemini-model-migrate-emergency (★★★ 緊急度 高、5/25
+    deadline) + F-gemini-quality-tier-poc (緊急度 高、Phase A.5-3b 前)。
+    F-gemini-503-stability-audit 撤回、F-periodic-health-check 緊急度
+    高 → 中降格。
+  - 関連: `docs/runs/F-gemini-model-audit/REPORT.md` + grep_results.json
+    + current_tier_analysis.json + interactions_api_status.json
 
 - **F-trial-run-candidate-a-reverify (候補A B-3' 改修後本番再確認)**
   (F-trial-run-candidate-a-reverify / 2026-05-19 完了)

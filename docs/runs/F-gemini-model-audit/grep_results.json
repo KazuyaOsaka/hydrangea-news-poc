@@ -1,0 +1,72 @@
+{
+  "version": "1.0",
+  "batch": "F-gemini-model-audit",
+  "generated_at": "2026-05-19",
+  "note": "classification=functional は実行時にモデル ID を解決する行 (env / os.getenv default / config default)。classification=comment は docstring / コメントのみ (実行に影響なし、ただしドキュメントドリフトとして記録)。",
+  "grep_results": {
+    "all_gemini_usage": [
+      {"file": "src/llm/model_registry.py", "line": 29, "content": "\"gemini-2.5-flash-lite\",", "classification": "functional", "context": "judge fallback resolution candidate list (models.list 解決用)"},
+      {"file": "src/llm/model_registry.py", "line": 30, "content": "\"gemini-2.5-flash\",", "classification": "functional"},
+      {"file": "src/llm/model_registry.py", "line": 31, "content": "\"gemini-2.0-flash-lite\",", "classification": "functional"},
+      {"file": "src/llm/model_registry.py", "line": 32, "content": "\"gemini-2.0-flash\",", "classification": "functional"},
+      {"file": "src/llm/model_registry.py", "line": 33, "content": "\"gemini-1.5-flash-8b\",", "classification": "functional"},
+      {"file": "src/llm/model_registry.py", "line": 34, "content": "\"gemini-1.5-flash\",", "classification": "functional"},
+      {"file": "src/llm/factory.py", "line": 314, "content": "os.getenv(\"GEMINI_LIGHTWEIGHT_TIER1\", \"gemini-2.5-flash\"),", "classification": "functional"},
+      {"file": "src/llm/factory.py", "line": 315, "content": "os.getenv(\"GEMINI_LIGHTWEIGHT_TIER2\", \"gemini-2.5-flash-lite\"),", "classification": "functional"},
+      {"file": "src/llm/factory.py", "line": 316, "content": "os.getenv(\"GEMINI_LIGHTWEIGHT_TIER3\", \"gemini-3.1-flash-lite-preview\"),", "classification": "functional", "shutdown_5_25": true},
+      {"file": "src/llm/factory.py", "line": 317, "content": "os.getenv(\"GEMINI_LIGHTWEIGHT_TIER4\", \"gemini-3-flash-preview\"),", "classification": "functional"},
+      {"file": "src/llm/factory.py", "line": 322, "content": "os.getenv(\"GEMINI_MODEL_TIER1\", \"gemini-3-flash-preview\"),", "classification": "functional"},
+      {"file": "src/llm/factory.py", "line": 323, "content": "os.getenv(\"GEMINI_MODEL_TIER2\", \"gemini-2.5-flash\"),", "classification": "functional"},
+      {"file": "src/llm/factory.py", "line": 324, "content": "os.getenv(\"GEMINI_MODEL_TIER3\", \"gemini-3.1-flash-lite-preview\"),", "classification": "functional", "shutdown_5_25": true},
+      {"file": "src/llm/factory.py", "line": 325, "content": "os.getenv(\"GEMINI_MODEL_TIER4\", \"gemini-2.5-flash-lite\"),", "classification": "functional"},
+      {"file": "src/shared/config.py", "line": 76, "content": "GEMINI_MODEL_TIER1: str = os.getenv(\"GEMINI_MODEL_TIER1\", \"gemini-3.1-flash-lite-preview\")", "classification": "functional", "shutdown_5_25": true, "note": "config.py の default。factory._get_tier_models_for_role は config.py を経由せず os.getenv を直接読むため QUALITY/LIGHTWEIGHT 階層解決には不使用。ただし GEMINI_MODEL_TIERS (verify_tier_connectivity 用) / GEMINI_INTERVAL_SEC_BY_MODEL / GEMINI_RPM_LIMIT_BY_MODEL の dict キー / 旧 alias GEMINI_SCRIPT_MODEL=GEMINI_ARTICLE_MODEL=GEMINI_MODEL_TIER1 に流れる。"},
+      {"file": "src/shared/config.py", "line": 77, "content": "GEMINI_MODEL_TIER2: str = os.getenv(\"GEMINI_MODEL_TIER2\", \"gemini-3-flash-preview\")", "classification": "functional", "note": "config.py default が factory.py default (gemini-2.5-flash) と不一致 (env で両者上書きされるため runtime 影響なし、ドキュメントドリフト)"},
+      {"file": "src/shared/config.py", "line": 78, "content": "GEMINI_MODEL_TIER3: str = os.getenv(\"GEMINI_MODEL_TIER3\", \"gemini-2.5-flash\")", "classification": "functional", "note": "config.py default が factory.py default (gemini-3.1-flash-lite-preview) と不一致"},
+      {"file": "src/shared/config.py", "line": 79, "content": "GEMINI_MODEL_TIER4: str = os.getenv(\"GEMINI_MODEL_TIER4\", \"gemini-2.5-flash-lite\")", "classification": "functional"},
+      {"file": "src/shared/config.py", "line": 219, "content": "\"JP_COVERAGE_GROUNDING_MODEL\", \"gemini-2.5-flash\"", "classification": "functional", "note": "F-13.B Grounding。2.5 系維持 (3 AI 合意点と一致、5/25 shutdown 非該当)"},
+      {"file": "src/triage/jp_coverage_verifier.py", "line": 443, "content": "model: str = \"gemini-2.5-flash\",", "classification": "functional", "note": "_search_with_grounding デフォルト引数。呼び出し側は config.JP_COVERAGE_GROUNDING_MODEL を渡す。2.5 系維持"},
+      {"file": "src/main.py", "line": 2471, "content": "# evaluate_cluster_buzz (TIER1: gemini-3.1-flash-lite-preview) で最終採用判定。", "classification": "comment", "doc_drift": true, "note": "コメントのみ。Elite Judge は実際は get_judge_llm_client() 経由で QUALITY 階層 (Tier1=gemini-3-flash-preview)。コメントが古い"},
+      {"file": "src/llm/judge.py", "line": 72, "content": "TieredGeminiClient (Tier 1 = gemini-3.1-flash-preview 優先) を使用。", "classification": "comment", "doc_drift": true, "note": "docstring のみ。'gemini-3.1-flash-preview' は config に存在しないモデル名 (タイプミス)。実際の QUALITY Tier1 は gemini-3-flash-preview"},
+      {"file": "src/llm/factory.py", "line": "4-15,82,96,309-310,346,348", "content": "docstring / コメント内のモデル ID 列挙", "classification": "comment", "doc_drift": true, "note": "性能順説明・RPM 説明コメント。5/25 移行時に文言更新推奨"},
+      {"file": ".env", "line": 12, "content": "GEMINI_MODEL_TIER1=gemini-3-flash-preview", "classification": "functional", "note": "実 runtime QUALITY Tier1"},
+      {"file": ".env", "line": 13, "content": "GEMINI_MODEL_TIER2=gemini-2.5-flash", "classification": "functional"},
+      {"file": ".env", "line": 14, "content": "GEMINI_MODEL_TIER3=gemini-3.1-flash-lite-preview", "classification": "functional", "shutdown_5_25": true, "note": "★ 実 runtime QUALITY Tier3 (judge/script/article/title/analysis のフォールバック)"},
+      {"file": ".env", "line": 15, "content": "GEMINI_MODEL_TIER4=gemini-2.5-flash-lite", "classification": "functional"},
+      {"file": ".env", "line": 19, "content": "GEMINI_LIGHTWEIGHT_TIER1=gemini-2.5-flash", "classification": "functional"},
+      {"file": ".env", "line": 20, "content": "GEMINI_LIGHTWEIGHT_TIER2=gemini-2.5-flash-lite", "classification": "functional"},
+      {"file": ".env", "line": 21, "content": "GEMINI_LIGHTWEIGHT_TIER3=gemini-3.1-flash-lite-preview", "classification": "functional", "shutdown_5_25": true, "note": "★ 実 runtime LIGHTWEIGHT Tier3 (garbage_filter/merge_batch/viral_filter/editorial_mission_filter のフォールバック)"},
+      {"file": ".env", "line": 22, "content": "GEMINI_LIGHTWEIGHT_TIER4=gemini-3-flash-preview", "classification": "functional"},
+      {"file": ".env.example", "line": "13-23", "content": ".env と同一構成 (TIER3 行が shutdown 対象)", "classification": "functional", "shutdown_5_25": true, "note": ".env.example:15 (GEMINI_MODEL_TIER3) + :22 (GEMINI_LIGHTWEIGHT_TIER3)。configs 扱いではなく repo ルートのテンプレ。本バッチでは変更しない (改修バッチで対応)"}
+    ],
+    "shutdown_target_5_25": [
+      {"file": ".env", "line": 14, "var": "GEMINI_MODEL_TIER3", "role_group": "QUALITY", "tier_position": 3, "classification": "functional", "runtime_active": true},
+      {"file": ".env", "line": 21, "var": "GEMINI_LIGHTWEIGHT_TIER3", "role_group": "LIGHTWEIGHT", "tier_position": 3, "classification": "functional", "runtime_active": true},
+      {"file": "src/llm/factory.py", "line": 324, "var": "GEMINI_MODEL_TIER3 default", "role_group": "QUALITY", "tier_position": 3, "classification": "functional", "runtime_active": "fallback_only (.env が上書き)"},
+      {"file": "src/llm/factory.py", "line": 316, "var": "GEMINI_LIGHTWEIGHT_TIER3 default", "role_group": "LIGHTWEIGHT", "tier_position": 3, "classification": "functional", "runtime_active": "fallback_only (.env が上書き)"},
+      {"file": "src/shared/config.py", "line": 76, "var": "GEMINI_MODEL_TIER1 default", "role_group": "config-derived (GEMINI_MODEL_TIERS / interval / RPM dict keys / legacy alias)", "tier_position": 1, "classification": "functional", "runtime_active": "fallback_only (.env が上書き)"},
+      {"file": ".env.example", "line": 15, "var": "GEMINI_MODEL_TIER3", "role_group": "QUALITY", "tier_position": 3, "classification": "functional", "runtime_active": false, "note": "テンプレ"},
+      {"file": ".env.example", "line": 22, "var": "GEMINI_LIGHTWEIGHT_TIER3", "role_group": "LIGHTWEIGHT", "tier_position": 3, "classification": "functional", "runtime_active": false, "note": "テンプレ"},
+      {"file": "src/main.py", "line": 2471, "classification": "comment", "doc_drift": true},
+      {"file": "src/llm/factory.py", "line": "96, comments", "classification": "comment", "doc_drift": true},
+      {"file": "src/shared/config.py", "line": "142", "classification": "comment", "doc_drift": true}
+    ],
+    "interactions_api_usage": [],
+    "factory_tier_definition": {
+      "LIGHTWEIGHT_ROLES": ["garbage_filter", "merge_batch", "viral_filter", "editorial_mission_filter"],
+      "QUALITY_ROLES": ["judge", "script", "article", "title", "analysis"],
+      "unclassified_role_behavior": "QUALITY_ROLES と同じ階層 (後方互換)",
+      "resolution_path": ".env → factory._get_tier_models_for_role (os.getenv 直読、config.py 非経由)",
+      "quality_tiers_runtime": ["gemini-3-flash-preview", "gemini-2.5-flash", "gemini-3.1-flash-lite-preview", "gemini-2.5-flash-lite"],
+      "lightweight_tiers_runtime": ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite-preview", "gemini-3-flash-preview"],
+      "max_attempts_per_tier": 2,
+      "key_lines": "factory.py:74-90 (role sets), 301-326 (_get_tier_models_for_role), 329-338 (_get_max_attempts_for_role)"
+    },
+    "retry_503_429_handling": {
+      "retryable_markers": ["429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE"],
+      "quota_markers": ["429", "RESOURCE_EXHAUSTED"],
+      "non_retryable": "404 / NOT_FOUND / JSON parse / unknown → is_retryable()=False → factory.generate() が即 raise (次 Tier に進まない)",
+      "key_lines": "retry.py:18-19 markers, 22-25 is_retryable, 28-37 is_quota_error; factory.py:250 'if not is_retryable(exc): raise'",
+      "critical_finding": "shutdown 後のモデル ID は通常 404 NOT_FOUND を返す。404 は is_retryable=False のため TieredGeminiClient.generate() が次 Tier フォールバックせず即例外送出。Tier3=gemini-3.1-flash-lite-preview が 5/25 以降に到達すると安全網 (Tier4) に降りず生成失敗 → F-gemini-model-migrate-emergency で必須対応"
+    }
+  }
+}
