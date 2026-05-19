@@ -4766,7 +4766,7 @@ Phase A.5-3b 第一作題材確定の 4 角度で測定。「観察と記録に�
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `8dc62da` (Merge branch 'feature/F-trial-run-post-llm-extraction'、F-trial-run-candidate-a-reverify / 2026-05-19 で実ハッシュ追記)
 - 新規ファイル:
   - `docs/runs/F-trial-run-post-llm-extraction/REPORT.md`
   - `docs/runs/F-trial-run-post-llm-extraction/environment_snapshot.json`
@@ -4836,7 +4836,7 @@ ADR + schema として正典化し、実装の前提を固定する必要があ�
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `3c964c7` (Merge branch 'feature/F-image-prompt-spec'、F-trial-run-candidate-a-reverify / 2026-05-19 で実ハッシュ追記)
 - 新規ファイル:
   - `docs/ADR/0001-image-strategy.md`
   - `docs/ADR/0002-remotion-mvp-scope.md`
@@ -4856,3 +4856,78 @@ ADR + schema として正典化し、実装の前提を固定する必要があ�
   - F-trial-run-post-llm-extraction (前バッチ、スコープ乖離の事前調査元)
   - F-trial-run-candidate-a-reverify (★ 後続、第一作着手前必須)
   - Phase A.5-3b 第一作起案 (本 ADR + schema 設計が前提)
+
+---
+
+## 2026-05-19: F-trial-run-candidate-a-reverify — 候補A B-3' 改修後本番再確認 (3 連続データで構造的効果確定)
+
+### 背景
+
+候補A `cls-6889e9e1c7ac` (Israel 9,600人収監・ICRC、TeleSUR 発) は
+F-trial-run-post-tune (2026-05-11) で第一作機械1位だったが、当時は LLM
+judgement bypass 解消前 (afpbb bare-domain WL マッチだけで True)。F-jp-coverage-
+llm-judgement-extraction (2026-05-16) で B-3' 根本治療 + F-trial-run-post-llm-
+extraction (2026-05-16) で本番安全装置初発火。本バッチは改修後 main (`3c964c7`)
+で候補A の B-3' 改修後判定を本番完全再現で再確認し、Phase A.5-3b 第一作前提を
+最終確定するのが目的。
+
+### 議論 / 判断 (CP-1 カズヤ判断 2026-05-19)
+
+CP-1 で 2 事実判明: (1) 候補A は拾われなかった (完全新規 RSS batch
+20260518_111201 のため母集団に不在、F-1/F-2 で落ちたのではない)、(2) 動画化
+Slot-1 の台本が fallback テンプレ (Gemini 503 多発 run、`llm_error:
+RemoteProtocolError`)。カズヤ判断 = **選択肢3 (Task C/D のみ実施、Task E/CP-2
+スキップ)**。根拠: 候補A に固執する理由なし、本バッチ目的『B-3' 改修後本番
+再確認』は 3 連続データ (5/11 → 5/16 → 5/18) で構造的効果が観察済 = 達成済み。
+axis_5 は Slot-1 fallback で無意味、Phase A.5-3b 第一作起案バッチで候補A 手動
+event 固定 + 実台本生成 + axis_5 採点が本来の流れ。Gemini 503 頻発は F-17 候補
+の着手条件「503 多発確認」に該当。
+
+### 決定
+
+- 候補A は Phase A.5-3b 第一作題材として **perspective_gap framing で維持**
+  (機械判定 ≠ 事実、perspective_gap は F-wl-hit-quality-audit 2026-05-14 で
+  WebSearch 独立検証済、機械不在は覆さない)
+- B-3' 改修の構造的効果は 3 連続試運転で確定: has_jp True 比率 3/3(5/11) →
+  1/3(5/16) → 0/3(5/18) と単調減少。本 run は WL マッチ 3/3 で 0 件 =
+  bare-domain bypass は構造的に発生せず。安全装置本番発火は post-llm-extraction
+  で 1 件実証済のため B-3' 配線は確認済 (本 run 0 発火は WL 0 の入力依存)
+- Phase A.5-3b 第一作着手 OK (前提最終確定)
+- axis_5 採点を Phase A.5-3b 第一作起案バッチに移送
+- F-17 候補「Gemini API 503 安定性対処」を **F-gemini-503-stability-audit**
+  として緊急度 高に昇格 (着手条件達成) + **F-periodic-health-check** を新規追加
+  (Phase A.5-3d cron 完全自動投稿の前提)
+
+### 結果
+
+- 防衛機構 5 層全機能 (F-1 351→19 / F-2 Blocked 0 / F-13.B 3 invocations 全
+  False, no_match x2/uncertain x1, 安全装置 0発火 (WL 0件) / F-5 0件 / F-13
+  隠れ層 0件)。異常挙動なし、即停止条件非該当
+- 想定外: Slot-1 fallback (Gemini 503 由来、防衛機構異常ではなく script_writer
+  安全網、exit 0)
+- baseline 1417 passed 維持、不変原則 1-5 全遵守 (docs/ + data/output/ のみ更新)
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規ファイル:
+  - `docs/runs/F-trial-run-candidate-a-reverify/REPORT.md`
+  - `docs/runs/F-trial-run-candidate-a-reverify/environment_snapshot.json`
+  - `docs/runs/F-trial-run-candidate-a-reverify/run_log.log`
+  - `docs/runs/F-trial-run-candidate-a-reverify/trial_run_summary.json`
+  - `docs/runs/F-trial-run-candidate-a-reverify/f13b_comparison.json`
+  - `docs/runs/F-trial-run-candidate-a-reverify/candidate_a_analysis.json`
+- ドキュメント更新:
+  - `docs/CURRENT_STATE.md` (全置換更新)
+  - `docs/DECISION_LOG.md` (本エントリ追加 + 前 2 バッチのコミットハッシュ
+    `8dc62da` / `3c964c7` 追記)
+  - `docs/FUTURE_WORK.md` (本バッチ完了済み移動 + F-gemini-503-stability-audit
+    / F-periodic-health-check 新規 + Phase A.5-3b に axis_5 移送明記)
+  - `docs/DISCUSSION_NOTES.md` (4-A 新規 1 件 + 4-B 既存再評価)
+- 関連バッチ:
+  - F-trial-run-post-tune (5/11、3/3 True bypass の比較基準)
+  - F-trial-run-post-llm-extraction (5/16、B-3' 安全装置初発火)
+  - F-image-prompt-spec (5/18、ADR + schema 設計、Phase A.5-3b 前提)
+  - Phase A.5-3b 第一作起案 (★ 後続、候補A perspective_gap framing + axis_5 採点)
+  - F-gemini-503-stability-audit (★ 本バッチで着手条件達成、緊急度 高)
+  - F-periodic-health-check (★ 新規、Phase A.5-3d 前提)

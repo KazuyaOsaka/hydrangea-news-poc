@@ -1,0 +1,24 @@
+{
+  "batch": "F-trial-run-candidate-a-reverify",
+  "captured_at_utc": "2026-05-18T11:05:09Z",
+  "git": {
+    "branch": "feature/F-trial-run-candidate-a-reverify",
+    "head_commit": "3c964c7a43ccd705abae353374689adc481464cd",
+    "head_short": "3c964c7",
+    "main_head_expected": "3c964c7",
+    "head_matches_expected": true,
+    "note": "main HEAD = 3c964c7 (F-image-prompt-spec merge 後). CURRENT_STATE.md は 8dc62da と記載されているが F-image-prompt-spec が既に merge 済みのため 3c964c7 が正。バッチプロンプトの想定 3c964c7 と一致。"
+  },
+  "python": {
+    "version": "3.11.15",
+    "pytest_version": "9.0.2"
+  },
+  "baseline_tests": {
+    "command": "python -m pytest tests/ -x --tb=short -q",
+    "result": "1417 passed",
+    "duration_sec": 139.22,
+    "matches_baseline": true,
+    "baseline_expected": 1417
+  },
+  "task_a_status": "complete"
+}

@@ -1,13 +1,13 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-18 (★ F-image-prompt-spec 完了。4-A 新規 1 件追加 =
-「2026-05-18: 3 AI 三角測量がブランドトーン + 実装範囲を確立した経緯
-(ADR 正典化)」。4-B 既存再評価 =「2026-05-16: video_payload に image_prompt
-レイヤーが存在しない — F-image-prompt-spec スコープ再定義」を Active → ★
-**Resolved** (ADR-0001/0002/0003 + schema_extension_design.md で正典化、
-Task B コード読解で事前調査結果を完全裏付け、想定外なし) に更新。前回
-2026-05-16: F-trial-run-post-llm-extraction 完了で 4-A 新規 3 件 + 4-B
-「F-13.B WL ヒット品質問題」を本番是正済に更新)
+最終更新: 2026-05-19 (★ F-trial-run-candidate-a-reverify 完了。4-A 新規 1 件
+追加 =「2026-05-18: B-3' 改修の構造的効果を 3 連続試運転で観察 + Gemini 503
+再発で F-17 候補昇格」(ステータス Resolved/タスク化)。4-B 既存再評価 =
+「2026-05-11: F-13.B WL ヒット品質問題 — matched_urls がベアドメインのみ」を
+部分的解消 → ★ **完全 Resolved** (3 連続試運転 5/11 3T → 5/16 1T/2F →
+5/18 0T/3F で bare-domain bypass の構造的解消を確定) に更新。前回
+2026-05-18: F-image-prompt-spec 完了で 4-A 新規 1 件 + 4-B image_prompt
+エントリ Active → Resolved)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -20,6 +20,40 @@ Task B コード読解で事前調査結果を完全裏付け、想定外なし)
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-18: B-3' 改修の構造的効果を 3 連続試運転で観察 + Gemini 503 再発で F-17 候補昇格 (F-trial-run-candidate-a-reverify で確認)
+
+**内容**: F-trial-run-candidate-a-reverify (試運転 batch_id 20260518_111201、
+2026-05-18T20:12 JST) で 2 つの観察。
+
+(1) **B-3' 改修の構造的効果が 3 連続試運転で一貫**: has_jp_coverage の True
+比率が単調減少 — F-trial-run-post-tune (5/11、B-3' 未実装) **3T/0F** →
+F-trial-run-post-llm-extraction (5/16、B-3' 配線後初) **1T/2F** →
+F-trial-run-candidate-a-reverify (5/18、改修後2回目) **0T/3F**。本 run は
+3 Slot 全件で WL マッチ 0 件 (tier=None) = 誤陽性 bare-domain WL マッチが
+そもそも 1 件も発生せず = bypass は構造的に発生しなかった。3 run とも別 RSS
+日の別題材だが分布レベルの構造的効果は追跡可能で、B-3' 改修 (LLM judgement
+bypass 根本治療) の効果が別題材でも一貫することを確認。安全装置 (WL あり+
+no_match→False) 本番発火は post-llm-extraction で 1 件実証済のため、本 run の
+0 発火は WL 0 件の入力依存であり異常ではない。
+
+(2) **Gemini 503 再発で F-17 候補昇格**: 試運転時刻が 2026-05-18T20:12 JST
+(夜ピーク、推奨早朝 5-8 時から外れ) で Gemini `tier=1` の 503 UNAVAILABLE
+多発 (8回 retry は retry.py が吸収して成功)、動画化 Slot-1 台本生成のみ
+`llm_error:RemoteProtocolError` で fallback テンプレに退避。これは防衛機構の
+異常ではなく script_writer 設計上の安全網 (exit 0) だが、F-17 候補
+「Gemini API 503 安定性対処」の着手条件「503 多発確認」を満たした
+→ **F-gemini-503-stability-audit** として緊急度 高に昇格 + Phase A.5-3d
+完全自動投稿の前提として **F-periodic-health-check** を新規起案。
+
+**出典**: `docs/runs/F-trial-run-candidate-a-reverify/REPORT.md` +
+f13b_comparison.json + trial_run_summary.json、DECISION_LOG
+「2026-05-19: F-trial-run-candidate-a-reverify」、CP-1 カズヤ判断 (2026-05-19)。
+
+**ステータス**: `Resolved (タスク化)` — B-3' 構造的効果は 3 連続試運転で
+確定 = 本バッチ目的達成。Gemini 503 対処は FUTURE_WORK 緊急度 高
+(F-gemini-503-stability-audit / F-periodic-health-check) にタスク化。axis_5
+採点は Phase A.5-3b 第一作起案バッチに移送。
 
 ### 2026-05-18: 3 AI 三角測量がブランドトーン + 実装範囲を確立した経緯 (F-image-prompt-spec で ADR 正典化)
 
@@ -278,6 +312,17 @@ F-trial-run-post-llm-extraction → 第一作着手のフローに更新。)
 ---
 
 ### 2026-05-11: F-13.B WL ヒット品質問題 — matched_urls がベアドメインのみで記事レベル一致が不明 (F-trial-run-post-tune で観察、F-wl-hit-quality-audit で部分的解消)
+
+**★ 2026-05-18 ステータス更新 (完全 Resolved)**: F-trial-run-candidate-a-reverify
+(2026-05-18) で B-3' 改修の構造的効果を 3 連続試運転で確認 = bare-domain bypass
+問題は **完全 Resolved**。has_jp_coverage True 比率が単調減少 (post-tune 3T/0F
+[bypass] → post-llm-extraction 1T/2F [B-3' 配線] → candidate-a-reverify 0T/3F
+[WL マッチ 0 件で誤陽性 bare-domain マッチ自体が発生せず])。F-jp-coverage-llm-
+judgement-extraction (2026-05-16) で B-3' 根本治療実装 + F-trial-run-post-llm-
+extraction で安全装置本番初発火実証 + 本バッチで 3 連続データの構造的一貫性
+確認、により『matched_urls がベアドメインのみで誤陽性 True』問題は設計・実装・
+本番実証の全段階で解消。本エントリは 部分的解消 → **完全 Resolved
+(3 連続試運転で構造的効果確定)** に更新。
 
 **2026-05-14 ステータス更新**: F-wl-hit-quality-audit (2026-05-14) で本問題を独立検証した
 結果、**構造的理解は完了** (= 根本原因は (d) LLM judgement bypass 問題、別エントリ参照)、
