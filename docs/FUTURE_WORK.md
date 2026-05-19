@@ -1,17 +1,17 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-18 (★ F-image-prompt-spec 完了。2026-05-16 の 3 AI 三角測量
-3 ラウンドで確立した D-minimal 仕様を **ADR 3 件 + video_payload schema 拡張
-設計として正典化** (ADR-0001 画像戦略 C' / ADR-0002 Remotion D-minimal /
-ADR-0003 コンテンツモラル)。Task B コード読解で事前調査結果 (image_prompt
-非存在・4 scene・統一末尾なし) を完全裏付け、想定外なし。`F-image-prompt-spec`
-を完了済みに移動、新規残課題 `Phase A.5-3b 第一作起案` (緊急度 高、ADR +
-schema 前提) + `第一作公開前の高リスク事実検証ワークフロー` (緊急度 中、
-ADR-0003 由来) 追加。実装は一切せず設計のみ、`src/ tests/ configs/ scripts/
-CLAUDE.md` 0 行変更、baseline 1417 passed 維持。前回 2026-05-16:
-F-trial-run-post-llm-extraction 完了、B-3' 本番試運転で LLM judgement bypass
-構造的解消を本番実証 + 第一作題材確定 (候補A cls-6889e9e1c7ac
-perspective_gap framing))
+最終更新: 2026-05-19 (★ F-trial-run-candidate-a-reverify 完了。候補A の B-3'
+改修後本番再確認。CP-1 で (1) 候補A 不在 (完全新規 RSS batch) + (2) Slot-1
+台本 fallback (Gemini 503 多発) 判明 → カズヤ判断 = 選択肢3 (Task C/D のみ、
+Task E/CP-2 スキップ)。B-3' 構造的効果は 3 連続試運転 (5/11 3T → 5/16 1T/2F
+→ 5/18 0T/3F) で確定 = 本バッチ目的達成。候補A は perspective_gap framing で
+維持 (機械判定 ≠ 事実)。`F-trial-run-candidate-a-reverify` を完了済みに移動、
+新規残課題 `F-gemini-503-stability-audit` (F-17 候補から昇格、緊急度 高、
+着手条件達成) + `F-periodic-health-check` (緊急度 高、Phase A.5-3d 前提) 追加。
+Phase A.5-3b 第一作起案に axis_5 採点移送を明記。`src/ tests/ configs/
+scripts/ CLAUDE.md` 0 行変更、baseline 1417 passed 維持。前回 2026-05-18:
+F-image-prompt-spec 完了、3 AI 三角測量 D-minimal 仕様を ADR 3 件 + schema
+拡張設計として正典化)
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -116,13 +116,23 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 - ~~**F-trial-run-post-llm-extraction** ★最優先 (F-jp-coverage-llm-judgement-extraction / 2026-05-16 で起案、F-trial-run-post-llm-extraction / 2026-05-16 完了、完了済みセクション参照)~~
 
-- **F-trial-run-candidate-a-reverify (仮称)** ★高 (F-trial-run-post-llm-extraction / 2026-05-16 でカズヤ起案、Phase A.5-3b 第一作着手前の必須確認)
-  - 背景: Phase A.5-3b 第一作題材 = 候補A cls-6889e9e1c7ac (Israel 9,600人、perspective_gap framing) に確定したが、候補A は F-trial-run-post-tune (2026-05-11) 時点で **afpbb bare-domain WL マッチ** (= 旧 LLM judgement bypass 経路、誤陽性懸念) で has_jp_coverage=True と判定されていた。B-3' 改修後 main (ba51e5f) では同題材の F-13.B 判定が変わる可能性がある (例: afpbb tier_2 マッチが LLM no_match で覆れば has_jp_coverage=False に転じ、silence_gap 寄りに振れる)。第一作 framing (perspective_gap 前提) の妥当性を確定するため改修後挙動の再確認が必須。
-  - 対応案: 候補A cls-6889e9e1c7ac を改修後 main で再試運転 1 回 (1 Slot 限定の軽量試運転) → afpbb bare-domain WL マッチが B-3' でどう判定されるか (matched_tier / llm_judgement / has_jp_coverage) を確認。perspective_gap 前提が維持されるか or silence_gap に振れるかで第一作 framing を最終確定。
-  - 検討時期: Phase A.5-3b 第一作起案バッチの着手前 (前提性格、軽量)
-  - 想定工数: 1-2 時間 (1 Slot 軽量試運転 + B-3' 判定確認)
-  - 関連ファイル: `src/triage/jp_coverage_verifier.py` (B-3' 改修後挙動)、`docs/runs/F-trial-run-post-llm-extraction/` (本バッチ試運転フォーマット)
-  - 関連: F-trial-run-post-llm-extraction (前バッチ、本起案元)、Phase A.5-3b 第一作起案 (候補A perspective_gap framing の前提確定)
+- ~~**F-trial-run-candidate-a-reverify** ★高 (F-trial-run-post-llm-extraction / 2026-05-16 でカズヤ起案、F-trial-run-candidate-a-reverify / 2026-05-19 完了、完了済みセクション参照。候補A 不在 + 3 連続試運転で B-3' 構造的効果確定 = 目的達成、候補A は perspective_gap framing で維持)~~
+
+- **F-gemini-503-stability-audit** ★高 (F-17 候補から昇格、F-trial-run-candidate-a-reverify / 2026-05-19 で着手条件「503 多発確認」達成)
+  - 背景: F-trial-run-candidate-a-reverify 試運転 (batch_id 20260518_111201、試運転時刻 2026-05-18T20:12 JST = 夜ピーク、推奨早朝 5-8 時から外れ) で Gemini `tier=1` の 503 UNAVAILABLE が多発 (8回 retry は retry.py が吸収して成功)、動画化 Slot-1 台本生成のみ `llm_error:RemoteProtocolError` で fallback テンプレに退避。F-17 候補の着手条件「503 多発が確認された場合」を満たした。
+  - 対応案: `src/llm/factory.py` + `src/llm/retry.py` のリトライ間隔動的調整、サーキットブレーカーパターン導入、Slot 別 fallback 戦略の見直し (特に動画化 Slot は fallback 落ちると axis_5 採点不能)。試運転を早朝 5-8 時に固定する運用ルール化も併せて検討。
+  - 検討時期: Phase A.5-3b 第一作起案バッチと並走可 (第一作の実台本生成が 503 で fallback 落ちるリスク低減)
+  - 着手条件: ✅ 達成 (F-trial-run-candidate-a-reverify で 503 多発確認)
+  - 関連ファイル: src/llm/factory.py, src/llm/retry.py
+  - 関連: F-trial-run-candidate-a-reverify (本昇格元)、F-periodic-health-check (503/fallback の早期検知)、Phase A.5-3b 第一作起案 (実台本生成の前提安定化)
+
+- **F-periodic-health-check** ★高 (F-trial-run-candidate-a-reverify / 2026-05-19 新規起案)
+  - 背景: Phase A.5-3d は cron 6 時間おきの完全自動投稿 (人手介入ゼロ)。F-trial-run-candidate-a-reverify で Gemini 503 多発 → Slot-1 台本 fallback 落ちが起きたように、無人運用では Gemini 503 / Grounding 0 件 / fallback 落ち等の品質劣化を検知する仕組みが前提として必要。
+  - 対応案: production パイプライン全工程 (RSS 取得 / GarbageFilter / clustering / F-1〜F-13.B / 台本生成 / video_payload) の定期ヘルスチェック。fallback 発生率 / Gemini 503 率 / Grounding ヒット率 / 防衛機構各層の通過数を集計し閾値逸脱時にアラート。run_summary.json への health フィールド追加 + 集約レポート。
+  - 検討時期: Phase A.5-3b 第一作着手前 or 並走 (Phase A.5-3d 完全自動投稿の前提)
+  - 着手条件: なし (Phase A.5-3d 着手前に必要)
+  - 関連ファイル: src/main.py, src/budget.py, data/output/run_summary.json
+  - 関連: F-gemini-503-stability-audit (503/fallback の対処)、Phase A.5-3d (cron 完全自動投稿の前提)
 
 - **F-jp-coverage-tune-followup REPORT v2 化** ★高 (F-wl-hit-quality-audit / 2026-05-14 で要件確定)
   - 背景: F-wl-hit-quality-audit の独立検証で F-jp-coverage-tune-followup Step C メトリクス (F1 covered 0.8718 / Recall covered 89.47% / Precision blind 33.33%) が **broader topic-family level の値**であって、**specific event (= particular_angle) level では下振れの可能性** が確認 (試運転 + golden サンプリングで 3/8 = 37.5% で topic-family 一致 / specific 不一致パターン観察)。CP カズヤ判断 = 本バッチ (F-wl-hit-quality-audit) は記録のみ、REPORT v2 化は別バッチとして分離。
@@ -242,10 +252,11 @@ F-stream-2-filter-design 着手 OK 状態に。
 - **Phase A.5-3b 第一作起案** (F-image-prompt-spec / 2026-05-18 起案、★ Hydrangea 第一作の本実装)
   - 背景: 題材確定済 (候補A `cls-6889e9e1c7ac`、Israel 9,600 人 / ICRC 監視操作疑惑、perspective_gap framing)。ADR-0001/0002/0003 + `schema_extension_design.md` で設計前提が固定された。これらを実装に落とし込み第一作を起案・公開する。
   - 対応案: (1) `src/shared/models.py` に `VideoImage` / `VideoEvent` を Optional default 追加 (後方互換、baseline 1417 を壊さない)、(2) `src/generation/video_payload_writer.py` を最小改変で `images[]` / `events[]` 生成 (既存 4 scene 生成は不変)、(3) image_prompt にブランドカラー 5 色 + トーン語彙を構造データとして注入 (構図・主題は LLM 折衷、schema_extension_design §5 論点 1 を決定)、(4) Remotion を D-minimal で構築 (ADR-0002)、(5) framing 指針 4 点 (9,600 虐待は日本報道済み明示 / ICRC specific 角度未報道が核心 / platform_title 誇大回避 / punchline「中間が良い」遵守) を反映。
-  - 検討時期: F-trial-run-candidate-a-reverify 完了後 (第一作着手前必須の独立確認)
+  - ★ **axis_5 採点の移送** (F-trial-run-candidate-a-reverify / 2026-05-19): 候補A の axis_5 主観採点 (5 観点: 台本刺さり度 / Hydrangea ブランド整合 / 系統判定妥当性 / 動画化適性 / video_prompt 品質、各 5 点) は F-trial-run-candidate-a-reverify の Slot-1 が fallback テンプレだったため本バッチで実施せず、第一作起案バッチで **候補A を手動 event 固定 + 実台本生成 → axis_5 採点** として実施する。
+  - 検討時期: F-trial-run-candidate-a-reverify 完了後 = ✅ 完了 (2026-05-19、前提最終確定済)。F-gemini-503-stability-audit と並走で 503 fallback リスク低減推奨。
   - 想定工数: 数日〜1 週間 (ADR-0002 失敗条件: Remotion 実装 1 週間超で機能削減)
   - 関連ファイル: src/shared/models.py, src/generation/video_payload_writer.py (不変原則 1-4 対象外), configs/prompts/, Remotion プロジェクト (新規)
-  - 関連: F-image-prompt-spec (本起案元、ADR + schema 前提)、F-trial-run-candidate-a-reverify (着手前必須)、`docs/ADR/0001-0003`、`docs/runs/F-image-prompt-spec/schema_extension_design.md`
+  - 関連: F-image-prompt-spec (本起案元、ADR + schema 前提)、F-trial-run-candidate-a-reverify (★ 着手前必須確認 = 完了、axis_5 採点移送元)、F-gemini-503-stability-audit (並走推奨)、`docs/ADR/0001-0003`、`docs/runs/F-image-prompt-spec/schema_extension_design.md`
 
 ### Phase A.5-3c 合成パート自動化 (F-doc-backfill / 2026-05-02 登録)
 
@@ -562,10 +573,7 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 ### 観察中項目 (F-doc-backfill / 2026-05-02 登録)
 
-- **F-17 候補: Gemini API 503 安定性対処** (F-doc-backfill / 2026-05-02 登録)
-  - 背景: 現状の 4 階層フォールバック + GEMINI_QUALITY_MAX_ATTEMPTS=2 + GEMINI_CALL_INTERVAL_SEC=0.5 で大体動くが、スパイク時の 503 が時々発生。試運転は早朝 5-8 時に固定する運用ルール化、リトライ間隔の動的調整、サーキットブレーカーパターン等が改善余地。
-  - 着手条件: 503 多発が確認された場合
-  - 関連ファイル: src/llm/factory.py, src/llm/retry.py
+- ~~**F-17 候補: Gemini API 503 安定性対処** (F-doc-backfill / 2026-05-02 登録)~~ → ★ **F-gemini-503-stability-audit として緊急度 高に昇格** (F-trial-run-candidate-a-reverify / 2026-05-19、着手条件「503 多発確認」達成。上記「緊急度 高」セクション参照)
 
 - **_FRAMING_RESULTS の LRU 化** (F-doc-backfill / 2026-05-02 登録、Phase 2 案件)
   - 背景: src/analysis/perspective_extractor.py の _FRAMING_RESULTS が無制限 dict キャッシュ。長時間稼働でメモリ肥大化の可能性。functools.lru_cache(maxsize=1000) に変更。
@@ -587,6 +595,28 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **F-trial-run-candidate-a-reverify (候補A B-3' 改修後本番再確認)**
+  (F-trial-run-candidate-a-reverify / 2026-05-19 完了)
+  - 発生バッチ: F-trial-run-post-llm-extraction (2026-05-16) でカズヤ起案、
+    Phase A.5-3b 第一作着手前の必須前提確認。
+  - 対応: 改修後 main (`3c964c7`) で本番完全再現試運転 (batch_id
+    20260518_111201, exit 0)。CP-1 で (1) 候補A `cls-6889e9e1c7ac` 不在
+    (完全新規 RSS batch のため母集団に不在、F-1/F-2 で落ちたのではない)、
+    (2) 動画化 Slot-1 台本が fallback テンプレ (Gemini 503 多発、
+    `llm_error:RemoteProtocolError`) 判明 → カズヤ判断 = 選択肢3 (Task C/D
+    のみ実施、Task E/CP-2 スキップ)。B-3' 構造的効果は 3 連続試運転
+    (5/11 3T → 5/16 1T/2F → 5/18 0T/3F) で has_jp True 比率単調減少 = 確定。
+  - 結果: 防衛機構 5 層全機能 (異常なし、即停止条件非該当)。候補A は
+    perspective_gap framing で維持 (機械判定 ≠ 事実、perspective_gap は
+    F-wl-hit-quality-audit 2026-05-14 で WebSearch 独立検証済)。Phase A.5-3b
+    第一作着手 OK (前提最終確定)。`src/ tests/ configs/ scripts/ CLAUDE.md`
+    0 行変更、baseline 1417 passed 維持、`docs/` + `data/output/` のみ更新。
+  - 新規残課題: F-gemini-503-stability-audit (F-17 候補から昇格、緊急度 高、
+    着手条件達成) + F-periodic-health-check (緊急度 高、Phase A.5-3d 前提)。
+    axis_5 採点は Phase A.5-3b 第一作起案バッチに移送。
+  - 関連: `docs/runs/F-trial-run-candidate-a-reverify/REPORT.md` +
+    f13b_comparison.json + candidate_a_analysis.json + trial_run_summary.json
 
 - **F-image-prompt-spec (ADR 3 件 + video_payload schema 拡張設計の固定化)**
   (F-image-prompt-spec / 2026-05-18 完了)

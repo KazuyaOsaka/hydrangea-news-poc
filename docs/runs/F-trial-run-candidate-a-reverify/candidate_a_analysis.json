@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "batch": "F-trial-run-candidate-a-reverify",
+  "generated_at": "2026-05-19",
+  "candidate_a": {
+    "event_id": "cls-6889e9e1c7ac",
+    "title": "9,600 Detainees: Israel Prison Abuses / ICRC 監視操作疑惑",
+    "source": "TeleSUR (ベネズエラ政府系)",
+    "origin_batch": "F-trial-run-post-tune (2026-05-11, batch_id 20260511_044914) Slot-1, editorial_mission_score 86.0 (機械1位)"
+  },
+  "picked_up_this_run": false,
+  "absence_analysis": {
+    "where_it_dropped": "F-1 / F-2 ではなく ingestion 段階で不在",
+    "accurate_reason": "本 run は完全新規 RSS batch (2026-05-18T20:12, batch_id 20260518_111201)。候補A の題材 (Israel 9,600人収監/ICRC、TeleSUR 2026-05-11 発) は本日の RSS フィードに存在しないため、ingestion → garbage_filter → clustering のいずれにも候補A は入っていない。run_log 全文 grep で cls-6889e9e1c7ac 0 ヒット = F-1 EditorialMissionFilter / F-2 EliteJudge の評価対象にすらなっていない (= 'F-1/F-2 で落ちた' のではなく 'そもそも母集団に不在')。",
+    "not_an_anomaly": "RSS は時系列フィードであり、1 週間前の TeleSUR 記事が 2026-05-18 のフィードに再出現しないのは正常挙動。バッチプロンプト『想定外結果への対処』で『候補A が拾われなかった → 本バッチ仕様により続行 (即停止しない、観察として有効)』と明示済。"
+  },
+  "machine_judgement_is_not_a_substitute_for_fact": {
+    "principle": "機械判定 (本番 pipeline が候補A を拾うか否か) は事実 (候補A の系統判定) の代替ではない。候補A の perspective_gap 系統判定は F-wl-hit-quality-audit (2026-05-14) で WebSearch による独立検証で確定済 (afpbb が 9,600 数字 + 虐待を継続報道済 = 真の silence_gap ではなく perspective_gap)。本 run で候補A が機械的に拾われなかったことは、この独立検証済の事実を一切覆さない。",
+    "kazuya_directive_2026-05-19": "候補A に固執する理由なし。本バッチ目的『B-3' 改修後本番再確認』は 3 連続データ (5/11 → 5/16 → 5/18) で構造的効果が既に観察済 = 達成済み。Slot-1 fallback で axis_5 採点は無意味、Phase A.5-3b 第一作起案バッチで候補A 手動 event 固定 + 実台本生成 + axis_5 採点が本来の流れ。",
+    "phase_a53b_first_work_decision": "候補A cls-6889e9e1c7ac を Phase A.5-3b 第一作題材として維持。framing は perspective_gap で確定 (F-trial-run-post-llm-extraction 2026-05-16 で確定済、本バッチで覆さない)。実台本生成 + axis_5 採点は Phase A.5-3b 第一作起案バッチで手動 event 固定して実施 (本 run の Slot-1 fallback では代替不可)。"
+  },
+  "this_run_video_slot": {
+    "event_id": "cls-f47e9ffde77d",
+    "title": "Why Sudan disappeared from global headlines - until the Iran war",
+    "source": "Middle East Eye",
+    "editorial_mission_score": 90.0,
+    "stream_route": "blind_spot_global",
+    "script_status": "fallback (llm_error:RemoteProtocolError, retry_count=0) — 実生成台本ではないため axis_5 採点対象外 (CP-1 カズヤ判断で Task E スキップ)",
+    "note": "本 Slot は候補A とは無関係の別題材。axis_5 採点は CP-1 判断によりスキップ、Phase A.5-3b 第一作起案バッチで候補A を対象に実施。"
+  }
+}

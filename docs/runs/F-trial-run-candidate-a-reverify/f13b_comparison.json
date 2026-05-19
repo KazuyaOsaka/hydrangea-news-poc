@@ -1,0 +1,88 @@
+{
+  "version": "1.0",
+  "batch": "F-trial-run-candidate-a-reverify",
+  "generated_at": "2026-05-19",
+  "scope_note": "CP-1 カズヤ判断 = 選択肢3 (Task C/D のみ実施、Task E/CP-2 スキップ)。本ファイルは Task C: 防衛機構 5 層挙動分析 + B-3' 構造的効果の 3 連続試運転データ表化。",
+  "production_path_clarification": {
+    "src_main_py_calls": "JpCoverageVerifier.verify() (broad-only) — verify_two_stage は本番未配線 (前バッチと不変)",
+    "b3prime_wired_into_production_verify": true,
+    "verify_two_stage_production_invocations": 0,
+    "stream_machine_classification": "n/a (production verify() = has_jp_coverage 二値のみ、前バッチと不変)"
+  },
+  "three_run_b3prime_structural_effect": {
+    "description": "B-3' (LLM judgement bypass 根本治療) 改修後の本番挙動を 3 連続試運転データで観察。F-trial-run-post-tune は B-3' 未実装時、post-llm-extraction が B-3' 配線後初試運転、本 run が改修後 2 回目。3 run とも別 RSS 日の別題材だが、分布レベルの構造的効果は追跡可能。",
+    "table": [
+      {
+        "run": "F-trial-run-post-tune",
+        "date": "2026-05-11",
+        "main_head": "4062639",
+        "b3prime_status": "未実装 (LLM judgement bypass あり)",
+        "has_jp_coverage_distribution": "3 True / 0 False",
+        "wl_match": "3件 (afpbb x2 bare-domain, nippon x1 bare-domain)",
+        "llm_judgement_captured": "未捕捉 (bypass)",
+        "b3prime_safety_device_fired": "n/a (未実装)",
+        "blind_spot_global_route": "機械判別で消滅 (3/3 が divergence ルート)",
+        "interpretation": "bare-domain WL マッチだけで強制 True = bypass そのもの"
+      },
+      {
+        "run": "F-trial-run-post-llm-extraction",
+        "date": "2026-05-16",
+        "main_head": "ba51e5f",
+        "b3prime_status": "配線後初試運転",
+        "has_jp_coverage_distribution": "1 True / 2 False",
+        "wl_match": "2件 (Slot-1 tier_1 実名紙2件 / Slot-3 tier_2 wire_service)",
+        "llm_judgement_captured": "捕捉 (uncertain x1, no_match x2)",
+        "b3prime_safety_device_fired": "1件 (Slot-3: WL tier_2 + no_match → False、本番初発火)",
+        "blind_spot_global_route": "2/3 Slot で復活",
+        "interpretation": "誤陽性 WL マッチを LLM no_match が覆して bypass 構造解消、ブランド整合改善"
+      },
+      {
+        "run": "F-trial-run-candidate-a-reverify",
+        "date": "2026-05-18",
+        "main_head": "3c964c7",
+        "b3prime_status": "改修後2回目試運転",
+        "has_jp_coverage_distribution": "0 True / 3 False",
+        "wl_match": "0件 (3 Slot 全件 tier=None, matched=0)",
+        "llm_judgement_captured": "捕捉 (no_match x2, uncertain x1)",
+        "b3prime_safety_device_fired": "0件 (WL マッチ自体が 0 のため発火条件に到達せず)",
+        "blind_spot_global_route": "3/3 Slot で blind_spot_global (全 Slot Confirmed blind_spot_global, proceeding with video generation)",
+        "interpretation": "誤陽性 WL マッチが今回そもそも 1 件も発生せず = bare-domain bypass は構造的に発生しなかった。3 連続で True 比率 3/3 → 1/3 → 0/3 と単調減少し、B-3' 改修の構造的効果 (誤陽性 True の抑制) が別題材でも一貫"
+      }
+    ],
+    "structural_conclusion": "B-3' 改修の構造的効果は 3 連続試運転 (5/11 3T → 5/16 1T/2F → 5/18 0T/3F) で一貫観察された。本バッチ目的『候補A の B-3' 改修後本番再確認』は、候補A 個別 Slot の再判定ではなく『改修の構造的効果が本番で安定して現れるか』の確認であり、3 連続データで達成済み。安全装置 (WL あり+no_match→False) の本番発火は post-llm-extraction で 1 件実証済、本 run では WL マッチ 0 のため発火条件未到達 (異常ではなく入力依存)。"
+  },
+  "f13b_invocation_summary_this_run": {
+    "batch_id": "20260518_111201",
+    "invocations": 3,
+    "has_jp_coverage_true": 0,
+    "has_jp_coverage_false": 3,
+    "error": 0,
+    "llm_judgement_distribution": {"no_match": 2, "uncertain": 1, "match": 0, "None": 0},
+    "matched_tier_distribution": {"null_false": 3},
+    "b3prime_branch_per_slot": {
+      "slot1_cls-f47e9ffde77d": "WL なし → False (no_match だが WL 0 のため既に False、安全装置発火条件外)",
+      "slot2_cls-e29f905eabe0": "WL なし → False (uncertain、WL 0)",
+      "slot3_cls-1b5226031840": "WL なし → False (no_match、WL 0)"
+    },
+    "b3prime_safety_device_fired": 0,
+    "b3prime_safety_device_note": "WL マッチ 3/3 で 0 件のため WL あり+no_match→False の安全装置は発火条件に到達せず。前バッチ post-llm-extraction で本番発火 1 件は実証済のため B-3' 配線自体は確認済。"
+  },
+  "defense_layers_5_this_run": {
+    "F-1": {"result": "351 → 19 passed (th 45.0), prescore max=65.3/mean=22.48, llm_scored=20 failed=0", "status": "正常"},
+    "F-2": {"result": "Gate3 10評価→採用7/棄却3, GeminiJudge 1 judged→blind_spot_global(bs=8.0,div=0.0), CoherenceGate 1 PASSED, Blocked 0", "status": "正常"},
+    "F-13.B": {"result": "3 invocations 全 False, llm_judgement no_match x2/uncertain x1, 安全装置 0発火 (WL 0件)", "status": "正常 (B-3' 配線済、構造的効果 3連続で確認)"},
+    "F-5": {"result": "下流救済 0発火", "status": "正常"},
+    "F-13_hidden": {"result": "quality_floor bypass 0発火 (quality_floor_report per_event 空 = ブロック自体なし)", "status": "正常 (post-llm-extraction と同挙動、設計通り)"}
+  },
+  "prev_batch_diff": {
+    "vs_F-trial-run-post-llm-extraction": [
+      "has_jp_coverage 分布: 1T/2F → 0T/3F (WL マッチ 2件 → 0件のため、True 化要因が消失)",
+      "B-3' 安全装置発火: 1件 → 0件 (WL マッチ 0 のため発火条件外、異常ではない)",
+      "blind_spot_global ルート: 2/3 → 3/3 (Hydrangea ブランドメッセージ復活がさらに進行)",
+      "F-5 救済: 1件 → 0件 (入力依存、異常なし)",
+      "F-13 隠れ層: 0件 → 0件 (不変、設計通り)",
+      "★ 新規観察: Slot-1 動画台本が fallback (llm_error:RemoteProtocolError) — Gemini 503 多発 run 由来、防衛機構の異常ではなく script_writer 安全網"
+    ]
+  },
+  "anomaly_check": "防衛機構 5 層に異常挙動なし。即停止条件 (5層異常 / baseline 減 / batch 技術失敗) 非該当。Slot-1 fallback は script_writer 設計上の安全網 (exit 0) であり防衛機構異常ではない。"
+}

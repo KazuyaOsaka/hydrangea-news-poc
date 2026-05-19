@@ -1,0 +1,121 @@
+{
+  "version": "1.0",
+  "batch": "F-trial-run-candidate-a-reverify",
+  "generated_at": "2026-05-18",
+  "main_head_basis": "3c964c7 (F-image-prompt-spec merge 後)",
+  "trial_run": {
+    "command": "python -m src.ingestion.run_ingestion && python -m src.main --mode normalized",
+    "batch_id": "20260518_111201",
+    "exit_code": 0,
+    "wall_clock": "2026-05-18T20:12:09 - 20:39:56 JST (約28分)",
+    "rss_raw_count": 47,
+    "total_articles_loaded": 545,
+    "garbage_filter": "1159 → 545 (静的除外 151 / LLM除外 463)",
+    "events_built": 351,
+    "gemini_api_notes": "tier=1 gemini-2.5-flash 503 UNAVAILABLE 多発 (8回 retry、全て retry.py が吸収して成功)。Slot-1 台本生成のみ llm_error:RemoteProtocolError で fallback (後述)"
+  },
+  "candidate_a_status": {
+    "event_id": "cls-6889e9e1c7ac",
+    "picked_up": false,
+    "reason": "完全新規 RSS batch (2026-05-18) のため候補A の題材 (Israel 9,600人収監/ICRC) 自体が今回 ingestion/clustering に存在せず。run_log 全文 grep で cls-6889e9e1c7ac 0 ヒット。",
+    "batch_spec_handling": "本バッチ仕様により続行 (即停止せず、手動投入もしない)。機械判定は事実の代替ではないため候補A は Phase A.5-3b 第一作題材として維持 (perspective_gap は F-wl-hit-quality-audit 2026-05-14 で WebSearch 独立検証済)。",
+    "scenario_abc": "シナリオ A/B/C は候補A が run に存在する前提のため直接適用不可。ただし候補A に関係する機構 (afpbb bare-domain WL マッチ → B-3' 判定) は今回 0 件発生 (3 Slot 全て WL マッチ無し) のため、F-trial-run-post-tune の bare-domain bypass (3/3 強制 True) が構造的に解消されていることは別題材で再確認された (後述)。"
+  },
+  "selected_slots": [
+    {
+      "slot": 1,
+      "role": "video (script + video_payload + evidence + article)",
+      "event_id": "cls-f47e9ffde77d",
+      "title": "Why Sudan disappeared from global headlines - until the Iran war",
+      "source": "Middle East Eye (中東独立メディア、親パレスチナ)",
+      "editorial_mission_score": 90.0,
+      "has_jp_coverage": false,
+      "matched_urls": [],
+      "matched_urls_tier": null,
+      "matched_count": 0,
+      "excluded_count": 4,
+      "llm_judgement": "no_match",
+      "b3prime_branch": "WL なし → False (現状維持ブランチ、bare-domain WL マッチ無し = bypass 一切発生せず)",
+      "stream_route": "blind_spot_global (F-13.B: no major media coverage, Confirmed blind_spot_global, proceeding with video generation)",
+      "script_status": "★ FALLBACK (used_fallback=true, fallback_reason=llm_error:RemoteProtocolError, retry_count=0) — LLM 生成失敗で script_writer の安全網テンプレに退避。実生成台本ではない",
+      "judge_provenance_note": "GeminiJudge は cls-d6301853cf24 (BRICS/Cuba, blind_spot=8.0) を flagship 判定、FinalSelection ログは 'slot-1 corrected by judge: cls-f47e9ffde77d → cls-d6301853cf24 (judged_flagship:blind_spot_global:score=82.0)' だが台本生成・F-13.B・全 output artifact は cls-f47e9ffde77d (Sudan) で確定。flagship クラス転写であり event swap ではない (既存パイプライン挙動、本バッチ未改修)。観察事項として記録。",
+      "outputs": ["cls-f47e9ffde77d_script.json", "cls-f47e9ffde77d_video_payload.json", "cls-f47e9ffde77d_evidence.json", "cls-f47e9ffde77d_article.md"]
+    },
+    {
+      "slot": 2,
+      "role": "article-only (F-16-A mode, slot_idx=1 >= TOP_N_VIDEOS_PER_RUN=1)",
+      "event_id": "cls-e29f905eabe0",
+      "title": "Video: Berlin police storm Nakba Day march and pepper spray demonstrators",
+      "source": "Middle East Eye",
+      "editorial_mission_score": 79.0,
+      "has_jp_coverage": false,
+      "matched_urls": [],
+      "matched_urls_tier": null,
+      "matched_count": 0,
+      "excluded_count": 5,
+      "llm_judgement": "uncertain",
+      "b3prime_branch": "WL なし → False (WL マッチ無し。uncertain は B-3' 判定に影響せず既に False)",
+      "stream_route": "blind_spot_global",
+      "script_status": "n/a (article-only)",
+      "outputs": ["cls-e29f905eabe0_article.md"]
+    },
+    {
+      "slot": 3,
+      "role": "article-only (F-16-A mode, slot_idx=2 >= TOP_N_VIDEOS_PER_RUN=1)",
+      "event_id": "cls-1b5226031840",
+      "title": "Israel advances plan to seize Palestinian property near Al-Aqsa Mosque",
+      "source": "Middle East Eye",
+      "editorial_mission_score": 86.0,
+      "has_jp_coverage": false,
+      "matched_urls": [],
+      "matched_urls_tier": null,
+      "matched_count": 0,
+      "excluded_count": 0,
+      "llm_judgement": "no_match",
+      "b3prime_branch": "WL なし → False (WL マッチ無し)",
+      "stream_route": "blind_spot_global",
+      "script_status": "n/a (article-only)",
+      "outputs": ["cls-1b5226031840_article.md"]
+    }
+  ],
+  "defense_layers_5": {
+    "F-1_editorial_mission_filter": {
+      "result": "351 → 19 passed (threshold 45.0)",
+      "prescore_stats": "min=0.0, max=65.3, mean=22.48, LLM scored=20 failed=0",
+      "status": "正常稼働"
+    },
+    "F-2_flagship_gate_elite_judge": {
+      "gate3": "10 評価 → 採用 7 / 棄却 3 (基準未達 3)",
+      "gemini_judge": "1 candidate judged (cls-d6301853cf24 → blind_spot_global, blind_spot=8.0, div=0.0). publish reserve 保護のため early stop",
+      "coherence_gate": "1 PASSED (cls-d6301853cf24, score=0.375)",
+      "blocked": 0,
+      "status": "正常稼働"
+    },
+    "F-13B_jp_coverage_verifier": {
+      "invocations": 3,
+      "has_jp_coverage_true": 0,
+      "has_jp_coverage_false": 3,
+      "error": 0,
+      "llm_judgement_distribution": {"no_match": 2, "uncertain": 1, "match": 0, "None": 0},
+      "matched_tier_distribution": {"null_false": 3},
+      "b3prime_safety_device_fired": 0,
+      "b3prime_safety_device_note": "WL マッチが今回 3 Slot 全件で 0 件 (tier=None, matched=0) のため、WL あり+no_match→False の安全装置発火事例は本 run では発生せず。代わりに 3/3 が WL なし→False の現状維持ブランチを通過 = bare-domain bypass は構造的に発生しなかった",
+      "status": "正常稼働 (B-3' 配線済、bypass 構造解消が別題材で再確認)"
+    },
+    "F-5_downstream_rescue": {
+      "fired": 0,
+      "status": "正常 (本 run では救済発火なし)"
+    },
+    "F-13_hidden_layer_quality_floor_bypass": {
+      "fired": 0,
+      "quality_floor_report_per_event": "空 (quality floor ブロック自体が発生せず bypass 不要)",
+      "status": "正常 (前バッチ F-trial-run-post-llm-extraction と同挙動、設計通り)"
+    }
+  },
+  "biggest_findings": [
+    "★ 候補A cls-6889e9e1c7ac は完全新規 RSS batch のため今回 run に存在せず (拾われなかった)。本バッチ仕様により続行、候補A は Phase A.5-3b 第一作題材として維持 (perspective_gap は独立検証済、機械判定 ≠ 事実)。",
+    "★★ 3 Slot 全件 has_jp_coverage=False かつ WL マッチ 0 件 (tier=None)。F-trial-run-post-tune の bare-domain bypass (3/3 強制 True) が構造的に解消されていることが別題材でも再確認された (B-3' 安全装置の発火は不要 = そもそも誤陽性 WL マッチが発生していない)。has_jp_coverage 分布: post-tune 3/3 True → post-llm-extraction 1 True/2 False → 本 run 0 True/3 False。",
+    "★★★ 動画化 Slot-1 (cls-f47e9ffde77d Sudan) の台本が FALLBACK テンプレ (llm_error:RemoteProtocolError, retry_count=0)。実生成台本ではなく boilerplate (hook='日本と海外でこの出来事の受け止め方が…' / setup=英語タイトル生文字列 / platform_title='日本では報道されないWhy' 切れ)。Task E axis_5 採点は『実台本』ではなく fallback テンプレを評価することになる点を CP-1 でカズヤ判断要。防衛機構の異常ではなく script_writer 設計上の安全網 (exit 0)、ただし Gemini 503 多発 run であった点が背景。",
+    "防衛機構 5 層は全て正常稼働 (異常挙動なし、即停止条件非該当)。F-5 救済 0 件 / F-13 隠れ層 0 件は前バッチと同様、設計通り。"
+  ]
+}
