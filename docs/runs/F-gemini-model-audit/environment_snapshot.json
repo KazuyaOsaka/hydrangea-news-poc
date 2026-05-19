@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "batch": "F-gemini-model-audit",
+  "generated_at": "2026-05-19",
+  "branch": "feature/F-gemini-model-audit",
+  "main_head_expected": "4510180",
+  "git_head": "4510180a07ce031385e83c55f9c89a3669620782",
+  "python_version": "3.11.15",
+  "google_genai_version": "1.69.0",
+  "baseline_tests": {
+    "expected": 1417,
+    "actual": 1417,
+    "result": "1417 passed in 308.64s",
+    "status": "MAINTAINED"
+  },
+  "batch_type": "investigation_only_no_code_changes",
+  "output_scope": "docs/runs/F-gemini-model-audit/ + docs/{CURRENT_STATE,DECISION_LOG,FUTURE_WORK,DISCUSSION_NOTES}.md only",
+  "invariants_check": {
+    "src_changed_lines": 0,
+    "tests_changed_lines": 0,
+    "configs_changed_lines": 0,
+    "scripts_changed_lines": 0,
+    "claude_md_changed_lines": 0
+  }
+}

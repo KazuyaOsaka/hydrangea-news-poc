@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "batch": "F-gemini-model-audit",
+  "generated_at": "2026-05-19",
+  "grep_command": "grep -rn -i \"interactions\" src/ 2>/dev/null",
+  "matches": [],
+  "match_count": 0,
+  "conclusion": "Interactions API は src/ 配下で一切使用されていない。無関係、対応不要。",
+  "deadline_relevance": "2026-05-26 / 2026-06-08 の Interactions API 関連 deadline は Hydrangea に影響しない (該当 API 未使用)。F-gemini-model-migrate-emergency のスコープ外。",
+  "verification_note": "src/ 全体の case-insensitive grep で 0 件。configs/ .env* にも該当なし (all_gemini_usage grep でも未検出)。"
+}
