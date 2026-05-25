@@ -2468,9 +2468,9 @@ def run_from_normalized(
             )
 
         # ── Gate 3: Elite Judge（編集長・一点突破判定）──────────────────────────
-        # evaluate_cluster_buzz (TIER1: gemini-3.1-flash-lite-preview) で最終採用判定。
+        # evaluate_cluster_buzz (QUALITY Tier1: gemini-3-flash-preview) で最終採用判定。
         # is_adopted=False のクラスタは即座に破棄し、台本生成には絶対進行させない。
-        # TIER1 (RPD 500) に余裕があるため全マージ済みクラスタに適用する。
+        # QUALITY Tier 階層に余裕があるため全マージ済みクラスタに適用する。
         _elite_judge_results: dict[str, EditorScore] = {}
         if ELITE_JUDGE_ENABLED and GEMINI_API_KEY:
             _elite_judge_client = get_judge_llm_client()

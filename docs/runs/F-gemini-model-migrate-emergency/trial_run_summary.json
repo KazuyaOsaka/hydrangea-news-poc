@@ -1,0 +1,48 @@
+{
+  "batch": "F-gemini-model-migrate-emergency",
+  "task": "D-2 trial run",
+  "status": "EXECUTED — clean (post CP-1 カズヤ判断: test 2行更新承認 + Tier1 据置)",
+  "executed_at": "2026-05-19",
+  "pre_trial_baseline": {
+    "command": "python -m pytest tests/ --tb=short -q",
+    "result": "1417 passed",
+    "note": "CP-1 承認の tests/test_factory_role_tier_separation.py:56/:69 期待値リテラル更新後に 1417 復帰確認済"
+  },
+  "trial_run": {
+    "ingestion": {
+      "command": "python -m src.ingestion.run_ingestion",
+      "result": "batch_id=20260519_104204, raw=47, normalized=47, new=1044, skipped_duplicates=568",
+      "status": "OK"
+    },
+    "main_pipeline": {
+      "command": "python -m src.main --mode normalized",
+      "exit_code": 0,
+      "status": "completed",
+      "slots_published": 3,
+      "model_roles": {
+        "merge_batch": {"requested": "gemini-2.5-flash", "resolved": "gemini-2.5-flash", "reason": "role_config_direct"},
+        "judge": {"requested": "gemini-2.5-flash", "resolved": "gemini-2.5-flash", "reason": "requested_model_available"},
+        "generation": {"requested": "gemini-3-flash-preview", "resolved": "gemini-3-flash-preview", "reason": "role_config_direct"}
+      },
+      "generation_outcomes": {
+        "script": {"used_fallback": false, "fallback_reason": null, "retry_count": 0},
+        "article": {"used_fallback": false, "fallback_reason": null, "retry_count": 0}
+      },
+      "judge_summary": {
+        "judged_count": 1,
+        "judge_error_type_counts": {},
+        "judge_quota_exhausted_count": 0,
+        "judge_temporary_unavailable_count": 0
+      },
+      "budget": {"run_llm_calls": 40, "run_budget": 150, "day_llm_calls": 40}
+    }
+  },
+  "verification": {
+    "404_or_NOT_FOUND_in_log": false,
+    "shutdown_model_gemini-3.1-flash-lite-preview_in_log": false,
+    "Traceback_or_ERROR_in_log": false,
+    "tier3_fallback_triggered": false,
+    "tier3_fallback_note": "本 run は 503/429 連鎖が発生せず Tier1/Tier2 GA で完結したため Tier3 fallback 経路 (改修箇所) は発火せず。CP-1 カズヤ判断のとおり実環境で fallback が発火しにくいのは想定どおりで異常ではない。改修の本質は shutdown モデル ID を Tier 階層から完全除去したこと = 5/25 以降に 404 即 raise する経路が構造的に消滅 (model_roles / 全 grep に gemini-3.1-flash-lite-preview functional 参照なし)。"
+  },
+  "conclusion": "機能回帰なし。防衛機構 (Tier フォールバック / judge リトライ / budget reserve) 正常。status=completed。5/25 shutdown 後の 404 即 raise リスクは shutdown モデル ID の階層除去により根絶 (retry.py 設計変更不要 = 最小対処で十分、F-gemini-model-audit CP-1 仮説どおり)。"
+}

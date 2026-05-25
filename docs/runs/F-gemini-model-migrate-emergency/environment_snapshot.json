@@ -1,0 +1,54 @@
+{
+  "batch": "F-gemini-model-migrate-emergency",
+  "captured_at": "2026-05-19",
+  "git": {
+    "branch": "feature/F-gemini-model-migrate-emergency",
+    "base_branch": "main",
+    "main_head": "2a73a0daba69fce71aa2a89920b2a288c08accba",
+    "main_head_short": "2a73a0d",
+    "main_head_expected": "2a73a0d",
+    "head_match": true
+  },
+  "python": {
+    "version": "3.11.15"
+  },
+  "packages": {
+    "google-genai": "1.69.0",
+    "google-auth": "2.49.1",
+    "pydantic": "2.12.5",
+    "pydantic_core": "2.41.5",
+    "pytest": "9.0.2"
+  },
+  "baseline_tests": {
+    "command": "python -m pytest tests/ -x --tb=no -q",
+    "result": "1417 passed",
+    "duration_sec": 91.67,
+    "status": "PASS (baseline maintained)"
+  },
+  "grep_consistency_check": {
+    "command": "grep -rn \"gemini-3.1-flash-lite-preview\" src/ configs/ .env .env.example",
+    "functional_shutdown_targets_found": [
+      ".env:14 GEMINI_MODEL_TIER3",
+      ".env:21 GEMINI_LIGHTWEIGHT_TIER3",
+      ".env.example:15 GEMINI_MODEL_TIER3",
+      ".env.example:22 GEMINI_LIGHTWEIGHT_TIER3",
+      "src/llm/factory.py:316 GEMINI_LIGHTWEIGHT_TIER3 default",
+      "src/llm/factory.py:324 GEMINI_MODEL_TIER3 default",
+      "src/shared/config.py:76 GEMINI_MODEL_TIER1 default"
+    ],
+    "doc_drift_comments_found": [
+      "src/main.py:2471",
+      "src/shared/config.py:142",
+      ".env:11",
+      ".env.example:12",
+      ".env.example:31",
+      "src/llm/factory.py:82",
+      "src/llm/factory.py:96",
+      "src/llm/factory.py:309",
+      "src/llm/factory.py:310"
+    ],
+    "configs_dir_hits": 0,
+    "consistent_with_F-gemini-model-audit": true,
+    "discrepancy": "none"
+  }
+}
