@@ -79,7 +79,7 @@ LIGHTWEIGHT_ROLES: set[str] = {
 }
 
 # 性能タスク (思考力重視、低頻度) → Preview 主軸
-# 公式の性能順 (gemini-3-flash-preview > gemini-2.5-flash > gemini-3.1-flash-lite-preview > gemini-2.5-flash-lite)
+# 公式の性能順 (gemini-3-flash-preview > gemini-2.5-flash > gemini-3.1-flash-lite > gemini-2.5-flash-lite)
 # に沿って Tier1 を最高性能に配置する。
 QUALITY_ROLES: set[str] = {
     "judge",
@@ -93,7 +93,7 @@ QUALITY_ROLES: set[str] = {
 _API_SEMAPHORE = threading.Semaphore(3)
 
 # 動的レートリミッタの安全率: RPM 上限の何割まで使うか。
-# 70% に設定: gemini-3.1-flash-lite-preview (RPM=15) の場合 60秒で 10 件まで許可。
+# 70% に設定: Tier1 gemini-3-flash-preview (RPM=15) の場合 60秒で 10 件まで許可。
 _RPM_SAFETY_RATIO = 0.7
 
 # RPM 不明モデル（GEMINI_RPM_LIMIT_BY_MODEL に未登録）の保守的なデフォルト。
@@ -306,14 +306,14 @@ def _get_tier_models_for_role(role: str) -> list[str]:
     その他 → QUALITY_ROLES と同じ階層 (後方互換)
 
     env 変数で各 Tier モデルを上書き可能。デフォルトは公式の性能順に基づく:
-      Quality:  gemini-3-flash-preview > gemini-2.5-flash > gemini-3.1-flash-lite-preview > gemini-2.5-flash-lite
-      Lightweight: gemini-2.5-flash > gemini-2.5-flash-lite > gemini-3.1-flash-lite-preview > gemini-3-flash-preview
+      Quality:  gemini-3-flash-preview > gemini-2.5-flash > gemini-3.1-flash-lite > gemini-2.5-flash-lite
+      Lightweight: gemini-2.5-flash > gemini-2.5-flash-lite > gemini-3.1-flash-lite > gemini-3-flash-preview
     """
     if role in LIGHTWEIGHT_ROLES:
         return [
             os.getenv("GEMINI_LIGHTWEIGHT_TIER1", "gemini-2.5-flash"),
             os.getenv("GEMINI_LIGHTWEIGHT_TIER2", "gemini-2.5-flash-lite"),
-            os.getenv("GEMINI_LIGHTWEIGHT_TIER3", "gemini-3.1-flash-lite-preview"),
+            os.getenv("GEMINI_LIGHTWEIGHT_TIER3", "gemini-3.1-flash-lite"),
             os.getenv("GEMINI_LIGHTWEIGHT_TIER4", "gemini-3-flash-preview"),
         ]
     else:
@@ -321,7 +321,7 @@ def _get_tier_models_for_role(role: str) -> list[str]:
         return [
             os.getenv("GEMINI_MODEL_TIER1", "gemini-3-flash-preview"),
             os.getenv("GEMINI_MODEL_TIER2", "gemini-2.5-flash"),
-            os.getenv("GEMINI_MODEL_TIER3", "gemini-3.1-flash-lite-preview"),
+            os.getenv("GEMINI_MODEL_TIER3", "gemini-3.1-flash-lite"),
             os.getenv("GEMINI_MODEL_TIER4", "gemini-2.5-flash-lite"),
         ]
 

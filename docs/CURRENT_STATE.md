@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-19 (★ F-gemini-model-audit 完了、Phase A.5-3a-verify ゲート完了後の **14 つ目のバッチ**。Gemini モデル戦略再検討の **影響調査専用バッチ (改修一切なし)**。5/25 `gemini-3.1-flash-lite-preview` shutdown + 2026-05 Gemini API モデル群更新の影響調査。主要発見: shutdown 対象の実稼働 functional 使用 = 2 箇所 (`.env:14` QUALITY Tier3 + `.env:21` LIGHTWEIGHT Tier3、両系統とも fallback 位置)。コード default 3 箇所 + テンプレ `.env.example` + doc-drift コメント群が付随。★★★ **重大発見**: shutdown 後の 404 NOT_FOUND は `retry.is_retryable()=False` のため `factory.generate()` が次 Tier (Tier4 GA 安全網) にフォールバックせず即 raise → 503 多発時 (F-trial-run-candidate-a-reverify で実確認) に Tier1→2 連鎖失敗で Tier3 到達 → 全生成失敗の致命傷リスク。Interactions API **未使用** (無関係)。F-13.B Grounding は `gemini-2.5-flash` で shutdown 非該当。CP-1 カズヤ判断 = **選択肢1 (両系統 Tier3 + config default + `.env.example` を `gemini-3.1-flash-lite` (GA) に一括置換)**。次バッチ `F-gemini-model-migrate-emergency` (★★★ 緊急度 高、5/25 deadline) でショットダウンモデルを Tier から除去 = 404 即 raise リスク根絶。`F-gemini-quality-tier-poc` 新規 (Narrative primary 選定 PoC)。`F-gemini-503-stability-audit` 撤回 (モデル切替で根本治療)、`F-periodic-health-check` 緊急度 高 → 中降格 (Phase A.5-3d 着手時)。`src/ tests/ configs/ scripts/ CLAUDE.md` 0 行変更、`docs/` のみ更新、baseline **1417 passed** 維持、不変原則 1-5 全遵守)
+最終更新: 2026-05-19 (★ F-gemini-model-migrate-emergency 完了、Phase A.5-3a-verify ゲート完了後の **15 つ目のバッチ**。5/25 `gemini-3.1-flash-lite-preview` shutdown の **緊急対応実装バッチ (最小改修)**。前バッチ F-gemini-model-audit で確定したスコープに基づき、両系統 Tier3 (`.env` GEMINI_MODEL_TIER3 / GEMINI_LIGHTWEIGHT_TIER3) + factory.py default (L316/L324) + config.py default (L76) + `.env.example` を `gemini-3.1-flash-lite` (GA) に一括置換。shutdown モデル ID を Tier 階層から **構造的に除去** = 5/25 以降の「404 即 raise で安全網に降りられず全生成失敗」リスクを根絶 (`src/llm/retry.py` 0 行変更 = audit CP-1 仮説「Tier 除去で 404 到達自体が消滅、最小対処で十分」が実装で確認された)。doc-drift コメント (factory.py / config.py / main.py / judge.py) 整理。★ 想定外結果: 改修後 baseline 1417→1415 (test 2 件が Tier3 default を旧モデル名 hard-pin = 機能回帰ではなく migration の default 追従) → task 規定どおり試運転前に即停止し CP-1 へ。**CP-1 カズヤ判断**: 判断1 = test 2 行更新承認 (期待値リテラルのみ、ロジック不変、BATCH_PROTOCOL 例外条件 4 点充足) → baseline **1417 passed 復帰**。判断2 = **Lightweight Tier1 据置 (選択肢 B)**、品質検証は F-gemini-quality-tier-poc に保留 (Gemini 2→3 系統変更は MEDIUM リスク、「動くものを壊さない」優先)。1 batch 試運転 = exit 0 / status=completed / 3 slots published / used_fallback=false / 404・shutdown モデル参照 0 件。`src/triage/ src/analysis/ article_writer.py retry.py configs/ scripts/ CLAUDE.md` 0 行変更、`tests/` 2 行は CP-1 明示承認済。不変原則 1-5 全遵守。次バッチ最有力 = F-gemini-quality-tier-poc (Narrative primary + Lightweight Tier1 切替を品質検証))
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -67,6 +67,14 @@ Remotion 実装範囲 + コンテンツモラルを ADR 3 件 + video_payload sc
 raise (503 多発時の致命傷)。CP-1 カズヤ判断 = 両系統 Tier3 一括 GA 置換
 (選択肢1)。F-13.B Grounding は 2.5 系維持。
 
+★★★ 2026-05-19 (F-gemini-model-migrate-emergency) で **5/25 shutdown 緊急
+対応を実装完了**。両系統 Tier3 + factory.py/config.py default +
+`.env`/`.env.example` を `gemini-3.1-flash-lite` (GA) に一括置換、shutdown
+モデル ID を Tier 階層から構造的除去 = 404 即 raise リスク根絶 (retry.py
+0 行変更)。CP-1 カズヤ判断 = test 2 行更新承認 (default 追従、ロジック不変)
++ Lightweight Tier1 据置 (B、品質検証は F-gemini-quality-tier-poc に保留)。
+baseline 1417 復帰、1 batch 試運転 status=completed。
+
 ### 系統 1 (silence_gap): 完全な情報空白 — 広範事件も特定角度も日本主要メディアで未報道
 
 完全な情報空白で、Hydrangea コアミッションど真ん中。台本表現は「日本では報じられ
@@ -93,7 +101,7 @@ raise (503 多発時の致命傷)。CP-1 カズヤ判断 = 両系統 Tier3 一�
 sontaku_signals.level=high/medium の 3 条件。25 件最終分類で **0 件** ★ 想定外
 (根本治療は Phase A.5-3b 第二作のサンプル拡充)。
 
-### ★ docs 概念整理と production-pipeline の乖離 (2026-05-11 観察、2026-05-19 再評価で不変確認)
+### ★ docs 概念整理と production-pipeline の乖離 (2026-05-11 観察、2026-05-19 F-gemini-model-migrate-emergency で再確認で不変)
 
 Phase A.5-3a-verify ゲート完了後の連続バッチで概念整理が docs 上で進んだが、
 **production-pipeline 上では未配線**:
@@ -102,11 +110,12 @@ Phase A.5-3a-verify ゲート完了後の連続バッチで概念整理が docs 
 - `particular_angle_metadata` / `sontaku_signals`: src/ 配下 grep で 0 件
 - `generate_script_with_analysis` 新ルート: 未起動 (analysis_result=null)
 
-★★★ **2026-05-19 (F-gemini-model-audit) 再評価**: 上記乖離は不変。本バッチは
-調査専用でコード非改修。なお `analysis` role (QUALITY 系統) は
-`ANALYSIS_LAYER_ENABLED=false` で本番未起動 = Gemini モデル移行の analysis
-リスクは実害なし (将来配線時に F-gemini-quality-tier-poc で再評価)。本番配線
-判断バッチ群 3 件は引き続き FUTURE_WORK 緊急度 高に並走待機。
+★★★ **2026-05-19 (F-gemini-model-migrate-emergency) 再確認**: 上記乖離は
+不変。本バッチは Gemini モデル ID の env/default 置換のみで pipeline 配線
+には非介入。`analysis` role (QUALITY 系統) は `ANALYSIS_LAYER_ENABLED=false`
+で本番未起動 = Tier3 GA 置換の analysis リスクは実害なし (将来配線時に
+F-gemini-quality-tier-poc で再評価)。本番配線判断バッチ群 3 件は引き続き
+FUTURE_WORK 緊急度 高に並走待機。
 
 ### ブランドポジション
 
@@ -135,48 +144,46 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
 
 ## 1. リポジトリ状態
 
-- **main HEAD コミット**: `4510180` (Merge branch 'feature/F-trial-run-candidate-a-reverify')。F-gemini-model-audit は feature ブランチ `feature/F-gemini-model-audit` で Task A-F 完了、本完了レポート提示後にカズヤ承認 → commit/merge 実行 (Task G)
-- **直近 5 件のログ (main)**:
+- **main HEAD コミット**: `2a73a0d` (Merge branch 'feature/F-gemini-model-audit')。F-gemini-model-migrate-emergency は feature ブランチ `feature/F-gemini-model-migrate-emergency` で Task A-F 完了、本完了レポート提示後にカズヤ承認 → commit/merge 実行 (Task G)
+- **直近 5 件のログ (main、Task G merge 前)**:
   ```
+  2a73a0d Merge branch 'feature/F-gemini-model-audit'
+  92146f6 feat: F-gemini-model-audit Gemini model strategy investigation (no code changes)
   4510180 Merge branch 'feature/F-trial-run-candidate-a-reverify'
   bc0f531 feat: F-trial-run-candidate-a-reverify candidate-A B-3' post-fix reverification
   3c964c7 Merge branch 'feature/F-image-prompt-spec'
-  5331998 feat: F-image-prompt-spec ADR 3 documents + video_payload schema extension design
-  8dc62da Merge branch 'feature/F-trial-run-post-llm-extraction'
   ```
-- **baseline テスト数**: **1417 passed** (F-gemini-model-audit は調査専用で `src/ tests/ configs/ scripts/ CLAUDE.md` 0 行変更、baseline 完全不変)
+- **baseline テスト数**: **1417 passed** (F-gemini-model-migrate-emergency は `tests/test_factory_role_tier_separation.py:56/:69` の期待値リテラル 2 行を CP-1 カズヤ承認のもと default 追従更新。改修後 1415 → test 追従後 1417 復帰。`src/ configs/ scripts/ CLAUDE.md` 0 行変更、retry.py 0 行変更)
 
 ## 2. 現在のフェーズ
 
-- **Phase**: Phase A.5-3a-verify **完了** (2026-05-07、ゲート完了後 14 バッチ目が本バッチ)
-- **進行中バッチ**: なし (F-gemini-model-audit 完了直後、Task F 完了レポート提示 → カズヤ承認待ち → commit/merge Task G)
-- **次バッチ候補と推奨** (★ F-gemini-model-audit / 2026-05-19 更新):
-  - **1st: F-gemini-model-migrate-emergency** ★★★ 最有力 (緊急度 高、**5/25 deadline 必達**)。両系統 Tier3 (QUALITY + LIGHTWEIGHT) + `factory.py`/`config.py` default + `.env.example` を `gemini-3.1-flash-lite` (GA) に一括置換。shutdown モデルを Tier から除去 = 404 即 raise リスク根絶 (retry.py 不変、最小対処)。doc-drift コメント整理。全 LOW リスク、想定 2-3h。AI Studio quota + preview/GA 状態のカズヤ手動確認 (REPORT.md §6-7) が実装前提
-  - **2nd: F-gemini-quality-tier-poc** ★ (緊急度 高、Phase A.5-3b 第一作起案前)。Narrative primary = QUALITY Tier1 のモデル選定 PoC (`gemini-3-flash-preview` / `gemini-3.1-pro-preview` / `gemini-2.5-flash`) + axis_5 採点 + publish_gate_flags 構造設計。Pro は Editorial Guardian 限定方針を検証、3-5h
-  - **3rd: Phase A.5-3b 第一作起案** ★★★ (緊急度 高、ADR-0001/0002/0003 + schema 前提、前提最終確定済。候補A cls-6889e9e1c7ac 手動 event 固定 + 実台本生成 + perspective_gap framing + axis_5 採点。確定モデル (F-gemini-quality-tier-poc 後) で実装)
-  - **4th: F-grounding-determinism-audit** ★ (緊急度 中、broad Grounding API の WL ドメイン返却率 run 間分散の集約戦略検討)
-  - **5th: 第一作公開前の高リスク事実検証ワークフロー** ★ (緊急度 中、ADR-0003 由来、Phase A.5-3b と並走)
-  - **6th: F-periodic-health-check** ★ (緊急度 中、Phase A.5-3d 着手時、cron 完全自動投稿の前提)
-  - **7th: 本番配線判断バッチ群 (3 件、並走可)**: verify_two_stage 本番配線 / particular_angle_metadata + sontaku_signals 本番配線 / F-stream-2-filter-design 責務範囲再評価
+- **Phase**: Phase A.5-3a-verify **完了** (2026-05-07、ゲート完了後 15 バッチ目が本バッチ)
+- **進行中バッチ**: なし (F-gemini-model-migrate-emergency 完了直後、Task F 完了レポート提示 → カズヤ承認待ち → commit/merge Task G)
+- **次バッチ候補と推奨** (★ F-gemini-model-migrate-emergency / 2026-05-19 更新):
+  - **1st: F-gemini-quality-tier-poc** ★★ 最有力 (緊急度 高、Phase A.5-3b 第一作起案前)。Narrative primary = QUALITY Tier1 のモデル選定 PoC (`gemini-3-flash-preview` / `gemini-3.1-pro-preview` / `gemini-2.5-flash`) + axis_5 採点 + publish_gate_flags 構造設計。Pro は Editorial Guardian 限定方針を検証。★ **内包課題**: Lightweight Tier1 を `gemini-3.1-flash-lite` (RPD 150K, 15 倍) に切替えるか (migrate-emergency CP-1 判断 B で据置、品質検証後判断)、3-5h
+  - **2nd: Phase A.5-3b 第一作起案** ★★★ (緊急度 高、ADR-0001/0002/0003 + schema 前提、前提最終確定済。候補A cls-6889e9e1c7ac 手動 event 固定 + 実台本生成 + perspective_gap framing + axis_5 採点。確定モデル (F-gemini-quality-tier-poc 後) で実装)
+  - **3rd: F-grounding-determinism-audit** ★ (緊急度 中、broad Grounding API の WL ドメイン返却率 run 間分散の集約戦略検討)
+  - **4th: 第一作公開前の高リスク事実検証ワークフロー** ★ (緊急度 中、ADR-0003 由来、Phase A.5-3b と並走)
+  - **5th: F-periodic-health-check** ★ (緊急度 中、Phase A.5-3d 着手時、cron 完全自動投稿の前提)
+  - **6th: 本番配線判断バッチ群 (3 件、並走可)**: verify_two_stage 本番配線 / particular_angle_metadata + sontaku_signals 本番配線 / F-stream-2-filter-design 責務範囲再評価
+  - **7th: config.py/factory.py default 不一致整合** ★低 (runtime 影響なし、別 doc/refactor or quality-tier-poc 同時対応)
 - **推奨フロー**:
   - commit/merge (本完了レポート提示 → カズヤ承認後)
-    → **F-gemini-model-migrate-emergency (5/25 deadline 必達、最優先)**
-    → F-gemini-quality-tier-poc (Narrative primary 確定)
+    → **F-gemini-quality-tier-poc (Narrative primary 確定 + Lightweight Tier1 切替品質検証、最優先)**
     → Phase A.5-3b 第一作起案 (確定モデルで実装、候補A perspective_gap framing + axis_5 採点)
     → 並走: F-grounding-determinism-audit + 高リスク事実検証ワークフロー + 本番配線判断バッチ群
     → Phase A.5-3b 第二作のサンプル拡充 → 3c 自動化 → Phase A.5-3d (F-periodic-health-check 並走)
 - **★ Phase A.5-3b 第一作着手前の追加確認事項** (カズヤ指示、2026-05-19 更新):
   1. ~~F-trial-run-candidate-a-reverify~~ ✅ **完了 (2026-05-19、前提最終確定、候補A perspective_gap 維持)**
   2. ~~F-image-prompt-spec スコープ再定義~~ ✅ **完了 (2026-05-18、ADR 3 件 + schema 設計)**
-  3. ★ **F-gemini-model-migrate-emergency** (5/25 deadline、第一作実台本生成の前提安定化、最優先) + **F-gemini-quality-tier-poc** (Narrative primary 確定、第一作起案前必須)
+  3. ~~F-gemini-model-migrate-emergency~~ ✅ **完了 (2026-05-19、5/25 shutdown リスク根絶、baseline 1417 維持)** + ★ **F-gemini-quality-tier-poc** (Narrative primary 確定 + Lightweight Tier1 切替判断、第一作起案前必須)
   4. ElevenLabs 声選定 (着手前 30 分作業、既存登録済み、カズヤ手作業)
   5. Remotion セットアップ (第一作で Claude Code に書かせる、Node 環境カズヤ手動準備、ADR-0002 D-minimal)
-  6. ★ AI Studio active quota + preview/GA 状態のカズヤ手動確認 (REPORT.md §6-7、migrate 実装前提)
 
-### Phase A.5-3a-verify ロードマップ (★ F-gemini-model-audit / 2026-05-19 更新版)
+### Phase A.5-3a-verify ロードマップ (★ F-gemini-model-migrate-emergency / 2026-05-19 更新版)
 
 **ゲート完了**: 1-A〜1-D''' 全段階完了で Phase A.5-3a-verify ゲート完了 (2026-05-07)。
-本バッチはゲート完了後の **14 つ目のバッチ**。
+本バッチはゲート完了後の **15 つ目のバッチ**。
 
 | 段階 | バッチ | 状態 | 概要 |
 |---|---|---|---|
@@ -187,9 +194,9 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
 | 1-I | F-trial-run-post-llm-extraction | ✅ 完了 (2026-05-16) | B-3' 本番試運転で bypass 構造解消を本番実証、第一作題材確定 |
 | 1-K | F-image-prompt-spec | ✅ 完了 (2026-05-18) | 3 AI 三角測量 D-minimal 仕様を ADR 3 件 + schema 拡張設計として正典化 (設計のみ) |
 | 1-J | F-trial-run-candidate-a-reverify | ✅ 完了 (2026-05-19) | 候補A B-3' 改修後本番再確認。B-3' 構造的効果を 3 連続試運転で確定。候補A perspective_gap 維持 |
-| **1-L** | **F-gemini-model-audit** | ✅ **完了 (2026-05-19)** | **ゲート完了後 14 つ目**。Gemini モデル戦略再検討 影響調査専用 (改修なし)。5/25 shutdown 対象 2 箇所特定 + 404 即 raise 重大発見。CP-1 = 選択肢1 (両系統 Tier3 一括 GA 置換)。`src/ tests/ configs/ scripts/ CLAUDE.md` 0 変更、baseline 1417 維持 |
-| 1-M | F-gemini-model-migrate-emergency | ★★★ 緊急度 高 (5/25 deadline 必達) | 両系統 Tier3 + config default + .env.example を gemini-3.1-flash-lite (GA) 一括置換、shutdown モデル Tier 除去で 404 即 raise リスク根絶 |
-| 1-N | F-gemini-quality-tier-poc | ★ 緊急度 高 (Phase A.5-3b 前) | Narrative primary (QUALITY Tier1) モデル選定 PoC + axis_5 + publish_gate_flags 設計 |
+| 1-L | F-gemini-model-audit | ✅ 完了 (2026-05-19) | Gemini モデル戦略再検討 影響調査専用 (改修なし)。5/25 shutdown 対象 2 箇所特定 + 404 即 raise 重大発見。CP-1 = 選択肢1。baseline 1417 維持 |
+| **1-M** | **F-gemini-model-migrate-emergency** | ✅ **完了 (2026-05-19)** | **ゲート完了後 15 つ目**。両系統 Tier3 + factory/config default + `.env`/`.env.example` を gemini-3.1-flash-lite (GA) 一括置換、shutdown モデル ID を Tier 階層から構造除去で 404 即 raise リスク根絶 (retry.py 0 変更)。CP-1 = test 2 行更新承認 + Lightweight Tier1 据置 (B)。baseline 1417 復帰、試運転 status=completed |
+| 1-N | F-gemini-quality-tier-poc | ★★ 緊急度 高 (Phase A.5-3b 前、次バッチ最有力) | Narrative primary (QUALITY Tier1) モデル選定 PoC + Lightweight Tier1 切替判断 (内包) + axis_5 + publish_gate_flags 設計 |
 | 1-O | Phase A.5-3b 第一作起案 | ★ 緊急度 高 (確定モデルで実装) | 候補A 手動固定 + perspective_gap framing + axis_5 採点 |
 | 1-P | F-grounding-determinism-audit | ★ 緊急度 中 | broad Grounding API の WL ドメイン返却率 run 間分散の集約戦略検討 |
 | 1-Q | 本番配線判断バッチ群 (3 件) | ★ 並走候補 | verify_two_stage / particular_angle_metadata+sontaku_signals / F-stream-2-filter-design |
@@ -206,7 +213,8 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 
 | 試運転 | バッチ | 動画化率 | 主要観察 |
 |---|---|---|---|
-| **2026-05-19** | **F-gemini-model-audit** | **試運転なし (調査バッチ)** | ★ Gemini モデル戦略影響調査 (改修なし)。5/25 shutdown 対象の実稼働 functional 使用 = 2 箇所 (QUALITY/LIGHTWEIGHT 両 Tier3 fallback)。重大発見 = shutdown 後 404 が retry 非対象で次 Tier フォールバックせず即 raise。Interactions API 未使用。CP-1 = 選択肢1 (両系統 Tier3 一括 GA 置換)。 |
+| **2026-05-19** | **F-gemini-model-migrate-emergency** | **1/3 動画化 + 3 articles (status=completed)** | ★ 5/25 shutdown 緊急対応の 1 batch 試運転 (batch 20260519_104204)。exit 0 / status=completed / 3 slots published。model_roles 全 GA 解決 (merge_batch・judge=gemini-2.5-flash / generation=gemini-3-flash-preview)。used_fallback=false、judge error 0、ログに 404・NOT_FOUND・shutdown モデル参照 0 件。Tier3 fallback は 503 連鎖なしのため未発火 (想定どおり)。改修の本質 = shutdown モデル ID の階層除去でリスク根絶。 |
+| 2026-05-19 | F-gemini-model-audit | 試運転なし (調査バッチ) | ★ Gemini モデル戦略影響調査 (改修なし)。5/25 shutdown 対象の実稼働 functional 使用 = 2 箇所 (QUALITY/LIGHTWEIGHT 両 Tier3 fallback)。重大発見 = shutdown 後 404 が retry 非対象で次 Tier フォールバックせず即 raise。Interactions API 未使用。CP-1 = 選択肢1 (両系統 Tier3 一括 GA 置換)。 |
 | 2026-05-18 | F-trial-run-candidate-a-reverify | 1/3 動画化 (Slot-1 cls-f47e9ffde77d, ★ fallback script) + 3 articles | ★ 候補A cls-6889e9e1c7ac 不在 (完全新規 RSS batch)。has_jp True 比率 3 連続単調減少 (5/11 3T/0F → 5/16 1T/2F → 5/18 0T/3F)。Slot-1 台本 fallback (Gemini 503 多発)。防衛機構 5 層全機能。 |
 | 2026-05-18 | F-image-prompt-spec | 試運転なし (docs バッチ) | 3 AI 三角測量 D-minimal 仕様を ADR 3 件 + schema 設計に正典化。 |
 | 2026-05-16 | F-trial-run-post-llm-extraction | 1/3 動画化 (Slot-1 cls-e2429c77f48e) + 3 articles | ★★★ B-3' が production verify() に配線・本番で安全装置初発火。has_jp 分布 3/3 True → 1 True / 2 False に反転。第一作題材確定 = 候補A perspective_gap。 |
@@ -214,11 +222,11 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 
 ## 4. Hydrangea コンセプト防衛機構の現状 (5 層)
 
-> ★ F-gemini-model-audit (2026-05-19) は調査専用バッチで試運転なし。
-> 防衛機構の挙動は前バッチ F-trial-run-candidate-a-reverify (2026-05-19)
-> 試運転 (batch_id 20260518_111201) の再確認結果が直近の正。**異常挙動なし**。
-> ★ Gemini モデル移行 (F-gemini-model-migrate-emergency) は防衛機構の
-> モデル ID のみ env/config で置換可能、防衛ロジック自体は不変。
+> ★ F-gemini-model-migrate-emergency (2026-05-19) の 1 batch 試運転
+> (batch_id 20260519_104204) で防衛機構 **異常挙動なし**を再確認
+> (status=completed、judge error 0、used_fallback=false)。Gemini モデル
+> 移行は Tier3 の shutdown モデル ID を GA に置換しただけで防衛ロジック
+> 自体 (retry.py / Tier フォールバック) は 0 行変更・完全不変。
 
 | 層 | バッチ | 場所 | 役割 | 状態 |
 |---|---|---|---|---|
@@ -244,8 +252,8 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 - `src/generation/video_payload_writer.py` (不変原則 1-4 対象外、★ Phase A.5-3b 第一作起案で images[]/events[] 追加の最小改変対象)
 - `src/shared/models.py` (★ Phase A.5-3b で VideoImage/VideoEvent Optional 追加予定、後方互換必須)
 - `src/main.py` (不変原則対象外、★ verify_two_stage 本番配線判断バッチで改修対象)
-- `src/llm/factory.py` / `src/llm/retry.py` / `src/shared/config.py` の Gemini モデル ID (★ F-gemini-model-migrate-emergency で改修対象、不変原則対象外。ただし retry.py のリトライ判定ロジック自体は不変、shutdown モデルを Tier から除去する最小対処)
-- `.env` / `.env.example` (リポジトリルート直下、★ F-gemini-model-migrate-emergency で Tier3 GA 置換対象)
+- `src/llm/factory.py` / `src/shared/config.py` の Gemini モデル ID default (★ F-gemini-model-migrate-emergency / 2026-05-19 で Tier3 GA 置換済、不変原則対象外。`src/llm/retry.py` はリトライ判定ロジック不変で 0 行変更 = shutdown モデルを Tier から除去する最小対処で足りた)
+- `.env` / `.env.example` (リポジトリルート直下、★ F-gemini-model-migrate-emergency / 2026-05-19 で Tier3 GA 置換済)
 
 ### 触ってはいけない領域
 - `src/generation/article_writer.py` (不変原則 1)
@@ -270,10 +278,16 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 
 ## 7. カズヤの直近フィードバック要点
 
-- **「動くものを壊さない」+「あるべき姿で進める」** (★ F-gemini-model-audit
-  2026-05-19) — Gemini モデル移行は両系統 Tier3 を一括 GA 置換 (選択肢1)。
-  分割対処は Quality 系 503 多発時の 404 即 raise = 第一作品質直結の致命傷、
-  かつ同一 shutdown モデル共有を分割するのは対症療法。一括が論理的に正しい
+- **「動くものを壊さない」+「あるべき姿で進める」** (★ F-gemini-model-migrate-emergency
+  2026-05-19) — emergency 移行は両系統 Tier3 を一括 GA 置換しつつ、
+  Lightweight Tier1 主軸変更 (Gemini 2→3 系統変更 = MEDIUM リスク) は据置
+  (CP-1 判断 B)。「5/25 shutdown リスク根絶」と「主軸品質の未検証変更回避」を
+  分離し、Tier1 切替は axis_5 品質検証 (F-gemini-quality-tier-poc) 後に判断
+- **「default を変える migration は default を pin する test と整合必須」**
+  (★ F-gemini-model-migrate-emergency CP-1 判断1) — Tier3 default を旧
+  shutdown モデル名で hard-pin する test 2 件は機能回帰ではなく migration の
+  同一スコープ。期待値リテラル 2 行更新を承認 (ロジック不変、BATCH_PROTOCOL
+  例外条件 4 点充足)。想定外結果は task 規定どおり試運転前に即停止し CP-1 へ
 - **「対症療法じゃなくて根本治療」** — F-gemini-503-stability-audit 撤回
   (リトライ間隔調整等の対症療法ではなく Gemini モデル切替で 503 多発を
   根本治療)
@@ -302,11 +316,12 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 - バッチ運用ルール → `docs/BATCH_PROTOCOL.md`
 - アーキテクチャ全体像 → `docs/ARCHITECTURE.md`
 - 技術的負債リスト → `docs/TECH_DEBT.md`
-- Gemini 無料枠 / RPM 対策の経緯 → `docs/GEMINI_QUOTA_NOTES.md` (★ 2026-04-26 時点で陳腐化、F-gemini-model-migrate-emergency で更新予定)
+- Gemini 無料枠 / RPM 対策の経緯 → `docs/GEMINI_QUOTA_NOTES.md` (★ 2026-04-26 時点で陳腐化、未更新。FUTURE_WORK 残課題、別 doc バッチ or F-gemini-quality-tier-poc 同時対応)
 - 編集ミッションフィルタ設計 (F-13 隠れ層含む) → `docs/EDITORIAL_MISSION_FILTER_DESIGN.md`
 - ★ 「特定角度」概念正典 → `docs/PARTICULAR_ANGLE_DEFINITION.md`
 - Claude Code 振る舞い指針 → `CLAUDE.md`
-- ★ **F-gemini-model-audit REPORT + 調査出力** → `docs/runs/F-gemini-model-audit/REPORT.md` + grep_results.json + current_tier_analysis.json + interactions_api_status.json + environment_snapshot.json
+- ★ **F-gemini-model-migrate-emergency REPORT + 試運転出力** → `docs/runs/F-gemini-model-migrate-emergency/REPORT.md` + trial_run_summary.json + environment_snapshot.json
+- F-gemini-model-audit REPORT + 調査出力 → `docs/runs/F-gemini-model-audit/REPORT.md` + grep_results.json + current_tier_analysis.json + interactions_api_status.json + environment_snapshot.json
 - ★ **Phase A.5-3b 画像戦略 / Remotion / モラル ADR** → `docs/ADR/0001-image-strategy.md` + `0002-remotion-mvp-scope.md` + `0003-content-moral-guidelines.md`
 - ★ F-trial-run-candidate-a-reverify REPORT → `docs/runs/F-trial-run-candidate-a-reverify/REPORT.md`
 - F-image-prompt-spec REPORT + 設計 → `docs/runs/F-image-prompt-spec/REPORT.md` + `schema_extension_design.md`
@@ -315,22 +330,22 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 
 *このドキュメントは F-state-protocol (2026-05-01) で導入。Claude Code が
 バッチ完了時に全置換更新する運用 (BATCH_PROTOCOL.md Task 5)。
-F-gemini-model-audit (2026-05-19) は **ゲート完了後の 14 つ目のバッチ
-(1-L)**。Gemini モデル戦略再検討の影響調査専用 (改修一切なし)。5/25
-`gemini-3.1-flash-lite-preview` shutdown 対象の実稼働 functional 使用 = 2
-箇所 (`.env` QUALITY Tier3 + LIGHTWEIGHT Tier3、両系統とも fallback 位置)。
-★★★ 重大発見: shutdown 後 404 NOT_FOUND は `retry.is_retryable()=False`
-のため `factory.generate()` が次 Tier フォールバックせず即 raise = 503
-多発時の致命傷。Interactions API 未使用 (無関係)。F-13.B Grounding は
-gemini-2.5-flash で shutdown 非該当 (2.5 系維持)。CP-1 カズヤ判断 =
-選択肢1 (両系統 Tier3 + config default + `.env.example` を
-gemini-3.1-flash-lite (GA) 一括置換、shutdown モデルを Tier から除去 =
-404 即 raise リスク根絶)。F-gemini-503-stability-audit 撤回 (モデル切替で
-根本治療)、F-periodic-health-check 緊急度 高 → 中降格 (Phase A.5-3d
-着手時)。新規残課題 F-gemini-model-migrate-emergency (★★★ 緊急度 高、
-5/25 deadline) + F-gemini-quality-tier-poc (緊急度 高、Phase A.5-3b 前)。
-`src/ tests/ configs/ scripts/ CLAUDE.md` 0 行変更、`docs/` のみ更新、
-baseline **1417 passed** 維持、不変原則 1-5 全遵守。次バッチ候補 =
-F-gemini-model-migrate-emergency (★ 最優先、5/25 deadline) →
-F-gemini-quality-tier-poc → Phase A.5-3b 第一作起案 (確定モデルで実装)。
+F-gemini-model-migrate-emergency (2026-05-19) は **ゲート完了後の 15 つ目の
+バッチ (1-M)**。5/25 `gemini-3.1-flash-lite-preview` shutdown の緊急対応
+実装 (最小改修)。前バッチ F-gemini-model-audit 確定スコープに基づき、両系統
+Tier3 (`.env` GEMINI_MODEL_TIER3 / GEMINI_LIGHTWEIGHT_TIER3) +
+factory.py default (L316/L324) + config.py default (L76) + `.env.example`
+を `gemini-3.1-flash-lite` (GA) に一括置換。shutdown モデル ID を Tier
+階層から構造除去 = 404 即 raise リスク根絶 (`src/llm/retry.py` 0 行変更、
+audit CP-1 仮説どおり最小対処で十分)。doc-drift コメント整理。★ 想定外
+結果: 改修後 baseline 1417→1415 (test 2 件が Tier3 default を旧モデル名
+hard-pin = 機能回帰ではなく default 追従) → 試運転前に即停止し CP-1 へ。
+CP-1 カズヤ判断: 判断1 = test 2 行更新承認 (期待値リテラルのみ、ロジック
+不変、BATCH_PROTOCOL 例外条件 4 点充足) → baseline 1417 復帰。判断2 =
+Lightweight Tier1 据置 (選択肢 B、品質検証は F-gemini-quality-tier-poc に
+保留)。1 batch 試運転 status=completed / used_fallback=false / 404 参照
+0 件。`src/triage/ src/analysis/ article_writer.py retry.py configs/
+scripts/ CLAUDE.md` 0 行変更、`tests/` 2 行は CP-1 明示承認済、不変原則
+1-5 全遵守。次バッチ候補 = F-gemini-quality-tier-poc (★ 最有力、Narrative
+primary + Lightweight Tier1 切替品質検証) → Phase A.5-3b 第一作起案。
 過去の経緯は DECISION_LOG.md / FUTURE_WORK.md / DISCUSSION_NOTES.md を参照。*

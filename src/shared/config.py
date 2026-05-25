@@ -73,7 +73,7 @@ EN_CANDIDATES_PER_JP_CLUSTER: int = int(os.getenv("EN_CANDIDATES_PER_JP_CLUSTER"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # 階層型フォールバック (TIER1 → TIER4 の順に試行、各 Tier は 3回指数バックオフ後に次へ)
-GEMINI_MODEL_TIER1: str = os.getenv("GEMINI_MODEL_TIER1", "gemini-3.1-flash-lite-preview")
+GEMINI_MODEL_TIER1: str = os.getenv("GEMINI_MODEL_TIER1", "gemini-3.1-flash-lite")
 GEMINI_MODEL_TIER2: str = os.getenv("GEMINI_MODEL_TIER2", "gemini-3-flash-preview")
 GEMINI_MODEL_TIER3: str = os.getenv("GEMINI_MODEL_TIER3", "gemini-2.5-flash")
 GEMINI_MODEL_TIER4: str = os.getenv("GEMINI_MODEL_TIER4", "gemini-2.5-flash-lite")
@@ -139,7 +139,7 @@ GEMINI_CALL_INTERVAL_SEC: float = float(os.getenv("GEMINI_CALL_INTERVAL_SEC", "0
 
 # ── Tier 別呼び出しインターバル (秒) — 各モデルの RPM 上限を尊重 ──────────────
 # 安全マージン 70% を考慮した値をデフォルトに採用:
-#   TIER1 (gemini-3.1-flash-lite-preview, RPM=15): 60 / (15 * 0.7) ≈ 5.7s
+#   TIER1 (gemini-3-flash-preview, RPM=15): 60 / (15 * 0.7) ≈ 5.7s
 #   TIER2 (gemini-2.5-flash-lite,        RPM=10): 60 / (10 * 0.7) ≈ 8.6s
 #   TIER3 (gemini-3-flash-preview,        RPM=5):  60 / (5  * 0.7) ≈ 17.2s
 #   TIER4 (gemini-2.5-flash,              RPM=5):  60 / (5  * 0.7) ≈ 17.2s

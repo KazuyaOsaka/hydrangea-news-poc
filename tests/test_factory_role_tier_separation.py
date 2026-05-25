@@ -53,7 +53,7 @@ class TestTierModelsForRole:
         assert len(models) == 4
         assert models[0] == "gemini-2.5-flash"
         assert models[1] == "gemini-2.5-flash-lite"
-        assert models[2] == "gemini-3.1-flash-lite-preview"
+        assert models[2] == "gemini-3.1-flash-lite"
         assert models[3] == "gemini-3-flash-preview"
 
     def test_quality_role_uses_preview_primary(self, monkeypatch):
@@ -66,7 +66,7 @@ class TestTierModelsForRole:
         assert len(models) == 4
         assert models[0] == "gemini-3-flash-preview"
         assert models[1] == "gemini-2.5-flash"
-        assert models[2] == "gemini-3.1-flash-lite-preview"
+        assert models[2] == "gemini-3.1-flash-lite"
         assert models[3] == "gemini-2.5-flash-lite"
 
     def test_unknown_role_falls_back_to_quality(self, monkeypatch):

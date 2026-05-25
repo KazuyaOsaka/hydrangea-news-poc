@@ -1,13 +1,13 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-19 (★ F-trial-run-candidate-a-reverify 完了。4-A 新規 1 件
-追加 =「2026-05-18: B-3' 改修の構造的効果を 3 連続試運転で観察 + Gemini 503
-再発で F-17 候補昇格」(ステータス Resolved/タスク化)。4-B 既存再評価 =
-「2026-05-11: F-13.B WL ヒット品質問題 — matched_urls がベアドメインのみ」を
-部分的解消 → ★ **完全 Resolved** (3 連続試運転 5/11 3T → 5/16 1T/2F →
-5/18 0T/3F で bare-domain bypass の構造的解消を確定) に更新。前回
-2026-05-18: F-image-prompt-spec 完了で 4-A 新規 1 件 + 4-B image_prompt
-エントリ Active → Resolved)
+最終更新: 2026-05-19 (★ F-gemini-model-migrate-emergency 完了。4-A 新規 1 件
+追加 =「2026-05-19: 5/25 shutdown 緊急対応完了 — 両系統 Tier3 GA 置換 +
+Lightweight Tier1 判断 B (据置)」(ステータス Resolved/タスク化)。4-B 既存
+再評価 =「2026-05-19: 3 AI 三角測量で 2026-05 Gemini モデル戦略の方向性を
+確立」を `Resolved (実装完了 + 一部タスク化)` に更新 (emergency 移行は実装
+完了、Narrative 主軸 + Lightweight Tier1 品質検証は F-gemini-quality-tier-poc
+にタスク化)。前回 2026-05-19: F-trial-run-candidate-a-reverify 完了で
+4-A/4-B 各 1 件)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -20,6 +20,35 @@
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-19: 5/25 shutdown 緊急対応完了 — 両系統 Tier3 GA 置換 + Lightweight Tier1 判断 B (据置) (F-gemini-model-migrate-emergency)
+
+**内容**: `gemini-3.1-flash-lite-preview` 5/25 shutdown の緊急対応を実装完了。
+両系統 Tier3 + factory.py/config.py default + `.env`/`.env.example` を
+`gemini-3.1-flash-lite` (GA) に一括置換。shutdown モデル ID を Tier 階層から
+**構造的に除去** することで、F-gemini-model-audit が重大発見とした「shutdown 後
+404 が retry 非対象 → 次 Tier フォールバックせず即 raise = 503 多発時に全生成
+失敗」リスクを根絶。retry.py は 0 行変更 (audit CP-1 仮説「Tier 除去で 404 到達
+自体が消滅 = 最小対処で十分」が正しかったことを実装で確認)。
+CP-1 カズヤ判断 2 点: (判断1) Tier3 default を pin する test 2 件 (machine
+回帰ではなく migration の default 追従) の期待値リテラル 2 行更新を承認 —
+default を変える migration が default を pin する test と整合必須 = 同一スコープ。
+(判断2) **Lightweight Tier1 切替 = 選択肢 B (据置)**。3 AI 合意点 (1) の
+「Lightweight 主軸 = gemini-3.1-flash-lite (RPD 15 倍)」は方向性として有効だが、
+Gemini 2→3 系の系統変更は MEDIUM リスクで 1 batch 試運転だけでは品質検証
+不十分。「動くものを壊さない」優先で emergency では据置し、axis_5 品質検証
+(F-gemini-quality-tier-poc) 後に投入判断する方針を確立。
+
+**出典**: `docs/runs/F-gemini-model-migrate-emergency/REPORT.md` (§4 CP-1
+判断、§3 試運転) + trial_run_summary.json、DECISION_LOG「2026-05-19:
+F-gemini-model-migrate-emergency」、CP-1 カズヤ判断 (2026-05-19)。
+
+**ステータス**: `Resolved (タスク化)` — 5/25 緊急対応は完了
+(shutdown リスク根絶 + baseline 1417 維持 + 試運転 status=completed)。
+保留分の Lightweight Tier1 切替品質検証は `F-gemini-quality-tier-poc`
+(★★高、次バッチ最有力) に内包課題としてタスク化済。
+
+---
 
 ### 2026-05-19: 3 AI 三角測量で 2026-05 Gemini モデル戦略の方向性を確立 (F-gemini-model-audit で調査)
 
@@ -47,11 +76,13 @@ grep_results.json + current_tier_analysis.json、DECISION_LOG
 「2026-05-19: F-gemini-model-audit」、CP-1 カズヤ判断 (2026-05-19)、
 本バッチ背景の 3 AI 三角測量合意点。
 
-**ステータス**: `Resolved (タスク化)` — 方向性は 3 AI + 調査で確立。
-実装は `F-gemini-model-migrate-emergency` (★★★ 緊急度 高、5/25 deadline)
-+ `F-gemini-quality-tier-poc` (緊急度 高、Phase A.5-3b 前) にタスク化済。
-Lightweight Tier1 切替タイミングは AI Studio quota 実値のカズヤ手動確認後
-判断 (REPORT.md §9 残課題)。
+**ステータス**: `Resolved (実装完了 + 一部タスク化)` — 方向性は 3 AI +
+調査で確立。emergency 移行 (両系統 Tier3 GA 化 + 404 即 raise リスク根絶)
+は `F-gemini-model-migrate-emergency` (2026-05-19 完了) で実装済。
+合意点 (2) Narrative 主軸確定 + (1) Lightweight Tier1 切替の品質検証は
+`F-gemini-quality-tier-poc` (★★高、次バッチ最有力) にタスク化済 (CP-1
+判断 B で emergency では Tier1 据置、品質検証後に投入判断)。
+合意点 (3)(4) は方針維持。
 
 ### 2026-05-18: B-3' 改修の構造的効果を 3 連続試運転で観察 + Gemini 503 再発で F-17 候補昇格 (F-trial-run-candidate-a-reverify で確認)
 

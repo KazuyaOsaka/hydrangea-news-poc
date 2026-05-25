@@ -1,9 +1,10 @@
 # Hydrangea — 意思決定ログ (DECISION_LOG)
 
-最終更新: 2026-05-09 (F-jp-coverage-tune-followup 完了、verdict=fail のまま
-ただし WL マッチング階層判定化 + WL 拡張 3 ドメインで Recall covered +47.36pp /
-F1 covered +27.92pp の大幅改善 + F1 covered 0.8718 で threshold 初突破、残課題
-4 軸に分離して FUTURE_WORK 記録)
+最終更新: 2026-05-19 (F-gemini-model-migrate-emergency 完了。5/25 shutdown
+緊急対応 = 両系統 Tier3 + factory.py/config.py default + `.env`/`.env.example`
+を gemini-3.1-flash-lite (GA) に一括置換、shutdown モデル ID を Tier 階層から
+構造的に除去。CP-1 カズヤ判断 = test 2 行更新承認 + Lightweight Tier1 据置 (B)。
+baseline 1417 passed 維持。前回 2026-05-09: F-jp-coverage-tune-followup 完了)
 
 このドキュメントは Hydrangea プロジェクトにおける重要な意思決定の履歴を記録する。
 コードや設定の「結果」ではなく、「なぜそうなったか」の判断プロセスを残すことが目的。
@@ -5016,7 +5017,10 @@ Tier3 が同一 shutdown モデル共有 = 同一スコープ一括置換が論�
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `92146f6` (feat: F-gemini-model-audit Gemini model strategy
+  investigation (no code changes)) / `2a73a0d` (Merge branch
+  'feature/F-gemini-model-audit') ★ F-gemini-model-migrate-emergency /
+  2026-05-19 で実ハッシュ追記
 - 新規ファイル:
   - `docs/runs/F-gemini-model-audit/REPORT.md`
   - `docs/runs/F-gemini-model-audit/environment_snapshot.json`
@@ -5036,3 +5040,91 @@ Tier3 が同一 shutdown モデル共有 = 同一スコープ一括置換が論�
   - F-gemini-model-migrate-emergency (★ 後続、5/25 deadline、本調査が前段)
   - F-gemini-quality-tier-poc (★ 後続、Phase A.5-3b 前)
   - Phase A.5-3b 第一作起案 (確定モデルで実装)
+
+---
+
+## 2026-05-19: F-gemini-model-migrate-emergency — 5/25 shutdown 緊急対応 (Tier3 GA 一括置換)
+
+### 背景
+
+`gemini-3.1-flash-lite-preview` が 2026-05-25 に shutdown。前バッチ
+`F-gemini-model-audit` で、当該モデルが QUALITY/LIGHTWEIGHT 両系統の Tier3
+fallback + factory.py/config.py default + `.env`/`.env.example` で実稼働
+functional 参照されていること、および「shutdown 後 404 は retry 非対象 →
+次 Tier フォールバックせず即 raise = 503 多発時に最終安全網 (Tier4) へ
+降りられず全生成失敗」の致命傷リスクを確認済。本バッチはその最小改修実装。
+
+### 議論
+
+- スコープ: audit で確定した両系統 Tier3 + factory/config default +
+  `.env`/`.env.example` の `gemini-3.1-flash-lite-preview` →
+  `gemini-3.1-flash-lite` (GA) 一括置換 + doc-drift コメント整理のみ。
+- retry.py 設計変更の要否: audit CP-1 仮説「shutdown モデル ID を Tier
+  階層から除去すれば 404 到達自体が消滅 = 最小対処で十分」を採用。
+  retry.py は 0 行変更 (= 根本治療かつ最小)。
+- 想定外結果: 改修後 baseline が 1417→1415 に減少。原因は
+  `tests/test_factory_role_tier_separation.py:56/:69` が Tier3 default を
+  旧 shutdown モデル名で hard-pin (機能回帰ではなく、migration が意図的に
+  変える default 値をテストが固定 = migration と同一スコープの追従)。
+  task 規定どおり Task D-2 試運転前に即停止、CP-1 へエスカレーション。
+
+### 決定 (CP-1 カズヤ判断)
+
+- **判断 1 (test 対処) = 選択肢 1 (2 行テスト更新承認)**: 機能ロジック変更
+  ゼロ、default 値追従のみ。default を変える migration が default を pin する
+  テストと論理的に整合必須 = 本来同一スコープ。BATCH_PROTOCOL 不変原則 5 の
+  本旨 (機能回帰防止) と矛盾なし、例外条件 (バグ修正類 / 設計変更ではない /
+  DECISION_LOG 明記 / カズヤ承認) 4 点を全充足。
+  → `tests/test_factory_role_tier_separation.py:56/:69` の期待値リテラルのみ
+  更新 (各 1 トークン、assert 構造・mock・docstring 不変)。
+- **判断 2 (Lightweight Tier1 切替) = 選択肢 B (Tier1 据置)**: 「動くものを
+  壊さない」優先。5/25 対応は Tier3 置換で達成済。Tier1 主軸変更は Gemini
+  2 系 → 3 系の系統変更で MEDIUM リスク (Lightweight 4 role の出力品質に
+  微妙な影響あり得る、1 batch 試運転だけでは検証不十分)。RPD 150K (15 倍)
+  の quota メリットは F-gemini-quality-tier-poc で axis_5 品質検証後に投入。
+
+### 結果
+
+- 改修 6 ファイル (機能ロジック変更なし): `.env` / `.env.example` /
+  `src/llm/factory.py` (default + doc-drift) / `src/shared/config.py`
+  (default + doc-drift) / `src/main.py` (doc-drift) / `src/llm/judge.py`
+  (doc-drift) + `tests/test_factory_role_tier_separation.py` (CP-1 承認の
+  2 行追従)。tracked diff +18/-17、`.env` は gitignored。
+- baseline: test 更新後 **1417 passed 復帰**。
+- 1 batch 試運転: exit 0, status=completed, 3 slots published、
+  used_fallback=false、judge error 0、ログに 404/NOT_FOUND/shutdown
+  モデル参照 0 件。Tier3 fallback は本 run 未発火 (503 連鎖なし = 想定どおり、
+  異常ではない)。改修の本質 = shutdown モデル ID の階層除去でリスク根絶。
+- 不変原則違反なし。`src/triage/` `src/analysis/`
+  `src/generation/article_writer.py` `src/llm/retry.py` `configs/`
+  `scripts/` `CLAUDE.md` = 0 行変更。`tests/` 2 行は CP-1 明示承認済。
+- 残課題: Lightweight Tier1 切替判断は F-gemini-quality-tier-poc に保留。
+  config.py:77-79 の default 不一致整合 (runtime 影響なし) は低優先で残置。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 改修ファイル:
+  - `.env` (gitignored、GEMINI_MODEL_TIER3 + GEMINI_LIGHTWEIGHT_TIER3)
+  - `.env.example` (同 2 行 + doc-drift コメント)
+  - `src/llm/factory.py` (L316/L324 default + L82/L96/L309-310 doc-drift)
+  - `src/shared/config.py` (L76 default + L142 doc-drift)
+  - `src/main.py` (L2471-2473 doc-drift)
+  - `src/llm/judge.py` (L72 docstring typo 修正)
+  - `tests/test_factory_role_tier_separation.py` (L56/L69 期待値追従、CP-1 承認)
+- 新規ファイル:
+  - `docs/runs/F-gemini-model-migrate-emergency/REPORT.md`
+  - `docs/runs/F-gemini-model-migrate-emergency/environment_snapshot.json`
+  - `docs/runs/F-gemini-model-migrate-emergency/trial_run_summary.json`
+- ドキュメント更新:
+  - `docs/CURRENT_STATE.md` (全置換更新、15 つ目バッチ)
+  - `docs/DECISION_LOG.md` (本エントリ + F-gemini-model-audit のコミット
+    ハッシュ `92146f6` / `2a73a0d` 追記)
+  - `docs/FUTURE_WORK.md` (本バッチ完了済み移動 + F-gemini-quality-tier-poc
+    最有力格上げ)
+  - `docs/DISCUSSION_NOTES.md` (4-A 新規 1 件)
+- 関連バッチ:
+  - F-gemini-model-audit (5/19、前段調査、本バッチが実装)
+  - F-gemini-quality-tier-poc (★ 後続、Narrative primary + Lightweight
+    Tier1 切替を品質検証、次バッチ最有力)
+  - Phase A.5-3b 第一作起案 (2nd 候補)

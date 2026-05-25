@@ -69,7 +69,7 @@ _SYSTEM_PROMPT = """\
 def evaluate_cluster_buzz(cluster_data: dict) -> EditorScore:
     """クラスタデータを Hydrangea 5大評価軸で採点し EditorScore を返す。
 
-    TieredGeminiClient (Tier 1 = gemini-3.1-flash-preview 優先) を使用。
+    TieredGeminiClient (QUALITY Tier 1 = gemini-3-flash-preview 優先) を使用。
     """
     client = get_judge_llm_client()
     if client is None:
