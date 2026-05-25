@@ -1,16 +1,14 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-19 (★ F-gemini-model-migrate-emergency 完了。5/25
-`gemini-3.1-flash-lite-preview` shutdown 緊急対応 = 両系統 Tier3 +
-factory.py/config.py default + `.env`/`.env.example` を `gemini-3.1-flash-lite`
-(GA) に一括置換、shutdown モデル ID を Tier 階層から構造的除去で 404 即
-raise リスク根絶 (retry.py 0 行変更)。CP-1 カズヤ判断 = test 2 行更新承認
-(default 追従、ロジック不変) + Lightweight Tier1 据置 (B、品質検証は
-F-gemini-quality-tier-poc に保留)。`F-gemini-model-migrate-emergency` を
-完了済みに移動、`F-gemini-quality-tier-poc` を ★★高 次バッチ最有力に格上げ
-(Lightweight Tier1 切替を内包課題化)、config.py default 不一致整合を ★低
-新規追加。baseline 1417 passed 維持、1 batch 試運転 status=completed。
-前回 2026-05-19: F-gemini-model-audit 完了、Gemini モデル戦略影響調査)
+最終更新: 2026-05-25 (★ F-f1-locale-key-fix 完了。`src/triage/editorial_mission_filter.py`
+の locale key bug (`get("jp"/"en")` → `"japan"` + 非 japan 合算) を 3 AI
+三角測量レビュー由来で根本治療、機能ロジック不変。`F-f1-locale-key-fix` を
+完了済みに移動。同レビューで発見の **F-jp-coverage-cache-judgement-persist**
+(★★高、F-13.B llm_judgement cache 永続化、ChatGPT+Gemini 両者指摘、次バッチ
+最有力) + **F-script-writer-target-enemy-fix** (★★★高、target_enemy 定義修正、
+Gemini 独自指摘) を緊急度 高に新規追加。baseline 1417 passed 維持、1 batch
+試運転 status=completed。前回 2026-05-19: F-gemini-model-migrate-emergency
+完了、5/25 shutdown 緊急対応 (Tier3 GA 一括置換))
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -118,6 +116,24 @@ F-stream-2-filter-design 着手 OK 状態に。
 - ~~**F-trial-run-candidate-a-reverify** ★高 (F-trial-run-post-llm-extraction / 2026-05-16 でカズヤ起案、F-trial-run-candidate-a-reverify / 2026-05-19 完了、完了済みセクション参照。候補A 不在 + 3 連続試運転で B-3' 構造的効果確定 = 目的達成、候補A は perspective_gap framing で維持)~~
 
 - ~~**F-gemini-model-migrate-emergency** ★★★高 (F-gemini-model-audit / 2026-05-19 起案、**5/25 deadline 必達**)~~ → ★ **完了 (F-gemini-model-migrate-emergency / 2026-05-19)**。両系統 Tier3 + factory.py/config.py default + `.env`/`.env.example` を `gemini-3.1-flash-lite` (GA) に一括置換、shutdown モデル ID を Tier 階層から構造的に除去 = 404 即 raise リスク根絶 (retry.py 0 行変更)。CP-1 カズヤ判断 = test 2 行更新承認 + Lightweight Tier1 据置 (B)。baseline 1417 passed 維持、1 batch 試運転 status=completed。詳細は完了済みセクション + `docs/runs/F-gemini-model-migrate-emergency/REPORT.md`。
+
+- ~~**F-f1-locale-key-fix** ★★高 (3 AI 三角測量レビュー / 2026-05-25 起案)~~ → ★ **完了 (F-f1-locale-key-fix / 2026-05-25)**。`src/triage/editorial_mission_filter.py` の `_editorial_mission_prescore` 内 `sources_by_locale.get("jp"/"en")` を実データ構造の正しいキー (`"japan"` + 非 japan 合算 = main.py overseas_count パターン) に修正。機能ロジック不変、locale key 参照の正本化のみ。CP-1 カズヤ判断 = 選択肢 1 (非 japan 合算) + test data キー同時更新。★ クラウド初期想定 (「不当に高い誤爆」) を grep で訂正 = 実態は「中間解像度 8〜12 点の永久喪失 (false negative 方向)」、緊急度 ★★★→★★ (クラウド誤り 10 記録)。baseline 1417 維持、1 batch 試運転 status=completed。詳細は完了済みセクション + `docs/runs/F-f1-locale-key-fix/REPORT.md`。
+
+- **F-jp-coverage-cache-judgement-persist** ★★高 (3 AI 三角測量レビュー / 2026-05-25 起案、★ **次バッチ最有力**、ChatGPT + Gemini 両者独立指摘)
+  - 背景: `src/triage/jp_coverage_verifier.py` の `CoverageCheckResult` は `llm_judgement` / `llm_judgement_text` / `broad_llm_judgement` / `angle_llm_judgement` フィールドを持つが (B-3' で導入)、24h SQLite キャッシュ (`jp_coverage_cache` テーブル) に **llm_judgement が永続化されていない可能性** を ChatGPT + Gemini が独立指摘。キャッシュヒット時に B-3' の LLM judgement (no_match の明示的否定) が復元されず、後方互換パス (沈黙=uncertain) に落ちると Recall が劣化しうる。
+  - 対応案: `_get_cached` / キャッシュ書込経路で `llm_judgement*` フィールドを永続化・復元するよう拡張。読み取り専用の影響測定 (キャッシュヒット時に llm_judgement が None に落ちる頻度) を先行 → 永続化実装 → golden 再測定で Recall 非劣化を確認。不変原則 3 例外条件 (バグ修正類) の該当性を CP で判断。
+  - 検討時期: F-f1-locale-key-fix 完了直後 (次バッチ最有力)
+  - 想定工数: 2-4h (影響測定 + キャッシュ schema/シリアライズ拡張 + golden 再測定)
+  - 関連ファイル: `src/triage/jp_coverage_verifier.py` (`CoverageCheckResult` L378-423 / `_get_cached` L471 / SQLite `jp_coverage_cache` テーブル L433)
+  - 関連: F-jp-coverage-llm-judgement-extraction (B-3' llm_judgement 抽出元)、3 AI 三角測量レビュー (2026-05-25)
+
+- **F-script-writer-target-enemy-fix** ★★★高 (3 AI 三角測量レビュー / 2026-05-25 起案、Gemini 独自指摘)
+  - 背景: `target_enemy` (台本の「敵=構造的対象」定義) のプロンプト/モデル定義に不整合がある可能性を Gemini が独自指摘。`target_enemy` は `src/shared/models.py` / `src/generation/script_writer.py` / `src/generation/video_payload_writer.py` / `configs/prompts/analysis/geo_lens/script_with_analysis.md` に跨って参照されており、定義のズレが台本品質に影響しうる。★ 詳細は読み取り専用調査で確定要 (F-f1 と同型の grep-first アプローチ推奨)。
+  - 対応案: 4 ファイルの `target_enemy` 参照を grep で棚卸し → 定義の正本と実際のプロンプト記述のズレを特定 → CP でスコープ確定 (プロンプトは主戦場 = 触ってよい領域だが、クラウド誤り 9「各論コントロールの誘惑」に留意し構造データ側で表現できないか先に検討)。
+  - 検討時期: F-jp-coverage-cache-judgement-persist 完了後 (2nd 候補)
+  - 想定工数: 調査 1-2h + 修正 (スコープ次第)
+  - 関連ファイル: `src/shared/models.py`, `src/generation/script_writer.py`, `src/generation/video_payload_writer.py`, `configs/prompts/analysis/geo_lens/script_with_analysis.md`
+  - 関連: 3 AI 三角測量レビュー (2026-05-25、Gemini 独自指摘)、クラウド誤り 9 (各論コントロールの誘惑、プロンプト改修時の留意)
 
 - **F-gemini-quality-tier-poc** ★★高 (F-gemini-model-audit / 2026-05-19 起案、★ **次バッチ最有力に格上げ** (F-gemini-model-migrate-emergency / 2026-05-19)、Phase A.5-3b 第一作起案前)
   - 背景: 2026-05 Gemini モデル群更新で Narrative 主軸 (QUALITY Tier1) の最適モデルが未確定。候補 = `gemini-3-flash-preview` (RPD 10K) / `gemini-3.1-pro-preview` (RPD 250、Editorial Guardian 候補) / `gemini-2.5-flash` (RPD 10K、安定 fallback)。emergency 移行は Tier3 GA 化のみで primary 品質は別途 PoC で確定する必要がある (設計判断と実装の分離)。

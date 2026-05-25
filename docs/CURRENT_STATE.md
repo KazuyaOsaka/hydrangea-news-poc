@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-19 (★ F-gemini-model-migrate-emergency 完了、Phase A.5-3a-verify ゲート完了後の **15 つ目のバッチ**。5/25 `gemini-3.1-flash-lite-preview` shutdown の **緊急対応実装バッチ (最小改修)**。前バッチ F-gemini-model-audit で確定したスコープに基づき、両系統 Tier3 (`.env` GEMINI_MODEL_TIER3 / GEMINI_LIGHTWEIGHT_TIER3) + factory.py default (L316/L324) + config.py default (L76) + `.env.example` を `gemini-3.1-flash-lite` (GA) に一括置換。shutdown モデル ID を Tier 階層から **構造的に除去** = 5/25 以降の「404 即 raise で安全網に降りられず全生成失敗」リスクを根絶 (`src/llm/retry.py` 0 行変更 = audit CP-1 仮説「Tier 除去で 404 到達自体が消滅、最小対処で十分」が実装で確認された)。doc-drift コメント (factory.py / config.py / main.py / judge.py) 整理。★ 想定外結果: 改修後 baseline 1417→1415 (test 2 件が Tier3 default を旧モデル名 hard-pin = 機能回帰ではなく migration の default 追従) → task 規定どおり試運転前に即停止し CP-1 へ。**CP-1 カズヤ判断**: 判断1 = test 2 行更新承認 (期待値リテラルのみ、ロジック不変、BATCH_PROTOCOL 例外条件 4 点充足) → baseline **1417 passed 復帰**。判断2 = **Lightweight Tier1 据置 (選択肢 B)**、品質検証は F-gemini-quality-tier-poc に保留 (Gemini 2→3 系統変更は MEDIUM リスク、「動くものを壊さない」優先)。1 batch 試運転 = exit 0 / status=completed / 3 slots published / used_fallback=false / 404・shutdown モデル参照 0 件。`src/triage/ src/analysis/ article_writer.py retry.py configs/ scripts/ CLAUDE.md` 0 行変更、`tests/` 2 行は CP-1 明示承認済。不変原則 1-5 全遵守。次バッチ最有力 = F-gemini-quality-tier-poc (Narrative primary + Lightweight Tier1 切替を品質検証))
+最終更新: 2026-05-25 (★ F-f1-locale-key-fix 完了、Phase A.5-3a-verify ゲート完了後の **16 つ目のバッチ**。3 AI 三角測量 (ChatGPT + Gemini) のレビューで両者独立に指摘された `src/triage/editorial_mission_filter.py` の **locale key bug** を根本治療。`_editorial_mission_prescore` 内の `sources_by_locale.get("jp", [])` / `get("en", [])` を実データ構造の正しいキー (`"japan"` + 非 japan locale の合算 = `main.py` overseas_count パターン) に修正。機能ロジック (blindspot の if/elif・係数・cap) は不変、locale key 参照の正本化のみ。grep で当該ファイルが src/ 全体で `"jp"`/`"en"` を使う唯一のファイルと確定。★ **クラウド初期想定の訂正**: 初期バッチプロンプトは「日本ソース数が常に 0 で blindspot が不当に高く誤爆 (false positive)」と記載していたが、grep + コード精読で実態判明 = `jp_count`/`en_count` が両方常に 0 で中間 elif (12.0/10.0/8.0) が **dead code**、実害は「中間解像度 8〜12 点の永久喪失 (false negative 方向)」、第1分岐 `has_en and not has_jp → 15.0` は score_breakdown 由来で正常動作 (代替経路あり) → 緊急度 ★★★→★★。この経緯を **クラウド誤り 10 (Project Knowledge 過信 + grep 不足)** として記録 (採番は docs 正本 1-7+9 の次 = 10、Web 側メモの 17 は不採用)。**CP-1 カズヤ判断**: 判断1 = en_count 修正 = 選択肢 1 (非 japan 合算)、判断2 = test data キー本バッチ同時更新 (不変原則 5 例外条件 4 点充足)、判断3 = クラウド初期想定の訂正受容。改修 2 ファイル (editorial_mission_filter.py + test、機能ロジック不変)、baseline **1417 passed 維持**、1 batch 試運転 = exit 0 / status=completed / 3 slots published / used_fallback=false / 404・Traceback 0 件。before_after_prescore.json で blindspot 中間段階の復活 (0→8〜12) を決定的に確認。不変原則 3 例外条件 **5 点全充足**。`src/triage/` の editorial_mission_filter.py 以外 / `src/analysis/` / `article_writer.py` / `script_writer.py` 既存ルート / `retry.py` / `configs/` / `scripts/` / `CLAUDE.md` 0 行変更。次バッチ最有力 = F-jp-coverage-cache-judgement-persist (F-13.B llm_judgement cache 永続化、同レビュー両者指摘))
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -34,46 +34,25 @@ Hydrangea のコアミッションは **2 系統並立** で、片方だけで�
 **ドメイン階層判定** に置換 + `JP_MEDIA_WHITELIST` 30 ドメイン化。Step C
 再測定: F1 covered 0.8718 (threshold 0.85 初突破)。
 
-★★★ 2026-05-14 (F-wl-hit-quality-audit) で **LLM judgement bypass の設計
-判断レベルの欠陥** を決定的に発見。Slot-1 cls-6889e9e1c7ac の系統判定 =
-**perspective_gap 確定** (afpbb で 9,600 数字 + 虐待を継続報道済み、WebSearch
-独立検証)。
-
 ★★★ 2026-05-16 (F-jp-coverage-llm-judgement-extraction) で **LLM judgement
 bypass 問題を Option (i) で根本治療完了**。`_parse_llm_judgement` 新規 +
-B-3' 表。WL マッチ条件下評価で Recall 1.0000 / Precision 0.8889 / FN=0。
-LLM の **明示的否定 (no_match)** のみ尊重し **沈黙 (uncertain)** を否定と
-読み替えない。
-
-★★★ 2026-05-16 (F-trial-run-post-llm-extraction) で **B-3' 改修後の本番
-挙動を実証**。production verify() (broad-only) に B-3' が配線され、本番で
-安全装置が初発火。has_jp_coverage 分布が前回 3/3 True → 1 True / 2 False に
-反転。Phase A.5-3b 第一作題材 = 候補A cls-6889e9e1c7ac を perspective_gap
-framing で確定。
-
-★ 2026-05-18 (F-image-prompt-spec) で **Phase A.5-3b 第一作の画像戦略 +
-Remotion 実装範囲 + コンテンツモラルを ADR 3 件 + video_payload schema 拡張
-設計として正典化** (設計のみ、実装は Phase A.5-3b)。
+B-3' 表。LLM の **明示的否定 (no_match)** のみ尊重し **沈黙 (uncertain)** を
+否定と読み替えない。
 
 ★★★ 2026-05-19 (F-trial-run-candidate-a-reverify) で **B-3' 改修の構造的
-効果を 3 連続試運転で確定**。has_jp_coverage True 比率が 3 連続で単調減少
-(3T/0F → 1T/2F → 0T/3F)。候補A は perspective_gap framing で維持 (機械判定
-≠ 事実)。Phase A.5-3b 第一作着手 OK (前提最終確定)。
-
-★★★ 2026-05-19 (F-gemini-model-audit) で **2026-05 Gemini モデル戦略を
-影響調査** (改修なし)。5/25 shutdown 対象 `gemini-3.1-flash-lite-preview`
-の実稼働 functional 使用 = 2 箇所 (QUALITY/LIGHTWEIGHT 両 Tier3 fallback)。
-重大発見 = shutdown 後 404 が retry 非対象で次 Tier フォールバックせず即
-raise (503 多発時の致命傷)。CP-1 カズヤ判断 = 両系統 Tier3 一括 GA 置換
-(選択肢1)。F-13.B Grounding は 2.5 系維持。
+効果を 3 連続試運転で確定**。候補A は perspective_gap framing で維持。
 
 ★★★ 2026-05-19 (F-gemini-model-migrate-emergency) で **5/25 shutdown 緊急
-対応を実装完了**。両系統 Tier3 + factory.py/config.py default +
-`.env`/`.env.example` を `gemini-3.1-flash-lite` (GA) に一括置換、shutdown
-モデル ID を Tier 階層から構造的除去 = 404 即 raise リスク根絶 (retry.py
-0 行変更)。CP-1 カズヤ判断 = test 2 行更新承認 (default 追従、ロジック不変)
-+ Lightweight Tier1 据置 (B、品質検証は F-gemini-quality-tier-poc に保留)。
-baseline 1417 復帰、1 batch 試運転 status=completed。
+対応を実装完了**。両系統 Tier3 + factory/config default + `.env` を
+`gemini-3.1-flash-lite` (GA) に一括置換、shutdown モデル ID を Tier 階層から
+構造除去で 404 即 raise リスク根絶 (retry.py 0 行変更)。
+
+★★ 2026-05-25 (F-f1-locale-key-fix) で **F-1 EditorialMissionFilter の
+locale key bug を根本治療**。`_editorial_mission_prescore` の
+`sources_by_locale.get("jp"/"en")` を `"japan"` + 非 japan 合算に修正
+(機能ロジック不変)。grep で当該ファイルが src/ で `"jp"`/`"en"` を使う唯一の
+ファイルと確定。クラウド初期想定 (false positive) を grep で訂正 (実態 =
+中間解像度喪失 = false negative 方向) → クラウド誤り 10 記録。
 
 ### 系統 1 (silence_gap): 完全な情報空白 — 広範事件も特定角度も日本主要メディアで未報道
 
@@ -92,8 +71,7 @@ baseline 1417 復帰、1 batch 試運転 status=completed。
 は触れられていない」。25 件最終分類で **20 件 (80%)**。
 
 ★★★ Phase A.5-3b 第一作 (候補A cls-6889e9e1c7ac) は本系統の framing で起案する
-(2026-05-16 確定、2026-05-19 F-trial-run-candidate-a-reverify で **最終確定**:
-機械判定 ≠ 事実のため候補A 機械不在は perspective_gap 確定を覆さない)。
+(2026-05-16 確定、2026-05-19 F-trial-run-candidate-a-reverify で **最終確定**)。
 
 ### 系統 3 (framing_inversion): 報道差の背景解説 — 特定角度も報道済み + 解釈差 + 忖度シグナル
 
@@ -101,7 +79,7 @@ baseline 1417 復帰、1 batch 試運転 status=completed。
 sontaku_signals.level=high/medium の 3 条件。25 件最終分類で **0 件** ★ 想定外
 (根本治療は Phase A.5-3b 第二作のサンプル拡充)。
 
-### ★ docs 概念整理と production-pipeline の乖離 (2026-05-11 観察、2026-05-19 F-gemini-model-migrate-emergency で再確認で不変)
+### ★ docs 概念整理と production-pipeline の乖離 (2026-05-11 観察、2026-05-25 F-f1-locale-key-fix で再確認で不変)
 
 Phase A.5-3a-verify ゲート完了後の連続バッチで概念整理が docs 上で進んだが、
 **production-pipeline 上では未配線**:
@@ -110,12 +88,10 @@ Phase A.5-3a-verify ゲート完了後の連続バッチで概念整理が docs 
 - `particular_angle_metadata` / `sontaku_signals`: src/ 配下 grep で 0 件
 - `generate_script_with_analysis` 新ルート: 未起動 (analysis_result=null)
 
-★★★ **2026-05-19 (F-gemini-model-migrate-emergency) 再確認**: 上記乖離は
-不変。本バッチは Gemini モデル ID の env/default 置換のみで pipeline 配線
-には非介入。`analysis` role (QUALITY 系統) は `ANALYSIS_LAYER_ENABLED=false`
-で本番未起動 = Tier3 GA 置換の analysis リスクは実害なし (将来配線時に
-F-gemini-quality-tier-poc で再評価)。本番配線判断バッチ群 3 件は引き続き
-FUTURE_WORK 緊急度 高に並走待機。
+★★ **2026-05-25 (F-f1-locale-key-fix) 再確認**: 上記乖離は不変。本バッチは
+F-1 prescore の locale key 参照のみ修正 (機能ロジック不変) で pipeline 配線
+には非介入。本番配線判断バッチ群 3 件は引き続き FUTURE_WORK 緊急度 高に
+並走待機。
 
 ### ブランドポジション
 
@@ -144,62 +120,62 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
 
 ## 1. リポジトリ状態
 
-- **main HEAD コミット**: `2a73a0d` (Merge branch 'feature/F-gemini-model-audit')。F-gemini-model-migrate-emergency は feature ブランチ `feature/F-gemini-model-migrate-emergency` で Task A-F 完了、本完了レポート提示後にカズヤ承認 → commit/merge 実行 (Task G)
+- **main HEAD コミット**: `231decd` (Merge branch 'feature/F-gemini-model-migrate-emergency')。F-f1-locale-key-fix は feature ブランチ `feature/F-f1-locale-key-fix` で Task A-F 完了、本完了レポート提示後にカズヤ承認 → commit/merge 実行 (Task G)
 - **直近 5 件のログ (main、Task G merge 前)**:
   ```
+  231decd Merge branch 'feature/F-gemini-model-migrate-emergency'
+  7624f93 feat: F-gemini-model-migrate-emergency 5/25 shutdown deadline 緊急対応
   2a73a0d Merge branch 'feature/F-gemini-model-audit'
   92146f6 feat: F-gemini-model-audit Gemini model strategy investigation (no code changes)
   4510180 Merge branch 'feature/F-trial-run-candidate-a-reverify'
-  bc0f531 feat: F-trial-run-candidate-a-reverify candidate-A B-3' post-fix reverification
-  3c964c7 Merge branch 'feature/F-image-prompt-spec'
   ```
-- **baseline テスト数**: **1417 passed** (F-gemini-model-migrate-emergency は `tests/test_factory_role_tier_separation.py:56/:69` の期待値リテラル 2 行を CP-1 カズヤ承認のもと default 追従更新。改修後 1415 → test 追従後 1417 復帰。`src/ configs/ scripts/ CLAUDE.md` 0 行変更、retry.py 0 行変更)
+- **baseline テスト数**: **1417 passed** (F-f1-locale-key-fix は `src/triage/editorial_mission_filter.py` の locale key 修正 + `tests/test_editorial_mission_filter.py:175-184` の data キー 2 行を CP-1 カズヤ承認のもと整合更新。機能ロジック不変のため改修後も 1417 維持。`src/` の他ファイル / `configs/` / `scripts/` / `CLAUDE.md` / `retry.py` 0 行変更)
 
 ## 2. 現在のフェーズ
 
-- **Phase**: Phase A.5-3a-verify **完了** (2026-05-07、ゲート完了後 15 バッチ目が本バッチ)
-- **進行中バッチ**: なし (F-gemini-model-migrate-emergency 完了直後、Task F 完了レポート提示 → カズヤ承認待ち → commit/merge Task G)
-- **次バッチ候補と推奨** (★ F-gemini-model-migrate-emergency / 2026-05-19 更新):
-  - **1st: F-gemini-quality-tier-poc** ★★ 最有力 (緊急度 高、Phase A.5-3b 第一作起案前)。Narrative primary = QUALITY Tier1 のモデル選定 PoC (`gemini-3-flash-preview` / `gemini-3.1-pro-preview` / `gemini-2.5-flash`) + axis_5 採点 + publish_gate_flags 構造設計。Pro は Editorial Guardian 限定方針を検証。★ **内包課題**: Lightweight Tier1 を `gemini-3.1-flash-lite` (RPD 150K, 15 倍) に切替えるか (migrate-emergency CP-1 判断 B で据置、品質検証後判断)、3-5h
-  - **2nd: Phase A.5-3b 第一作起案** ★★★ (緊急度 高、ADR-0001/0002/0003 + schema 前提、前提最終確定済。候補A cls-6889e9e1c7ac 手動 event 固定 + 実台本生成 + perspective_gap framing + axis_5 採点。確定モデル (F-gemini-quality-tier-poc 後) で実装)
-  - **3rd: F-grounding-determinism-audit** ★ (緊急度 中、broad Grounding API の WL ドメイン返却率 run 間分散の集約戦略検討)
-  - **4th: 第一作公開前の高リスク事実検証ワークフロー** ★ (緊急度 中、ADR-0003 由来、Phase A.5-3b と並走)
-  - **5th: F-periodic-health-check** ★ (緊急度 中、Phase A.5-3d 着手時、cron 完全自動投稿の前提)
-  - **6th: 本番配線判断バッチ群 (3 件、並走可)**: verify_two_stage 本番配線 / particular_angle_metadata + sontaku_signals 本番配線 / F-stream-2-filter-design 責務範囲再評価
-  - **7th: config.py/factory.py default 不一致整合** ★低 (runtime 影響なし、別 doc/refactor or quality-tier-poc 同時対応)
+- **Phase**: Phase A.5-3a-verify **完了** (2026-05-07、ゲート完了後 16 バッチ目が本バッチ)
+- **進行中バッチ**: なし (F-f1-locale-key-fix 完了直後、Task F 完了レポート提示 → カズヤ承認待ち → commit/merge Task G)
+- **次バッチ候補と推奨** (★ F-f1-locale-key-fix / 2026-05-25 更新):
+  - **1st: F-jp-coverage-cache-judgement-persist** ★★高 最有力 (3 AI 三角測量レビュー / 2026-05-25 起案、ChatGPT + Gemini 両者独立指摘)。F-13.B `CoverageCheckResult` の `llm_judgement*` フィールドが 24h SQLite キャッシュ (`jp_coverage_cache`) に永続化されていない可能性 → キャッシュヒット時に B-3' の no_match 判定が復元されず Recall 劣化リスク。読み取り専用の影響測定 → 永続化実装 → golden 再測定。2-4h
+  - **2nd: F-script-writer-target-enemy-fix** ★★★高 (Gemini 独自指摘)。`target_enemy` プロンプト/モデル定義の不整合修正。`src/shared/models.py` / `script_writer.py` / `video_payload_writer.py` / `configs/prompts/analysis/geo_lens/script_with_analysis.md` に跨る参照を grep 棚卸し → CP でスコープ確定 (クラウド誤り 9 留意)。調査 1-2h + 修正
+  - **3rd: F-gemini-quality-tier-poc** ★★高 (Phase A.5-3b 第一作起案前)。Narrative primary = QUALITY Tier1 のモデル選定 PoC + Lightweight Tier1 切替判断 (migrate-emergency CP-1 保留分) + axis_5 採点 + publish_gate_flags 構造設計。3-5h
+  - **4th: Phase A.5-3b 第一作起案** ★ (緊急度 高、確定モデルで実装。候補A cls-6889e9e1c7ac 手動 event 固定 + 実台本生成 + perspective_gap framing + axis_5 採点)
+  - **5th: F-grounding-determinism-audit** ★ (緊急度 中、broad Grounding API の WL ドメイン返却率 run 間分散の集約戦略検討)
+  - **6th: 第一作公開前の高リスク事実検証ワークフロー** ★ (緊急度 中、ADR-0003 由来、Phase A.5-3b と並走)
+  - **7th: F-periodic-health-check** ★ (緊急度 中、Phase A.5-3d 着手時、cron 完全自動投稿の前提)
+  - **8th: 本番配線判断バッチ群 (3 件、並走可)**: verify_two_stage 本番配線 / particular_angle_metadata + sontaku_signals 本番配線 / F-stream-2-filter-design 責務範囲再評価
+  - **9th: config.py/factory.py default 不一致整合** ★低 / locale key 定数一元化 (選択肢 3) ★低 (runtime 影響なし、別 doc/refactor or quality-tier-poc 同時対応)
 - **推奨フロー**:
   - commit/merge (本完了レポート提示 → カズヤ承認後)
-    → **F-gemini-quality-tier-poc (Narrative primary 確定 + Lightweight Tier1 切替品質検証、最優先)**
+    → **F-jp-coverage-cache-judgement-persist (F-13.B キャッシュ永続化、最優先)**
+    → F-script-writer-target-enemy-fix (target_enemy 定義整合)
+    → F-gemini-quality-tier-poc (Narrative primary 確定 + Lightweight Tier1 切替品質検証)
     → Phase A.5-3b 第一作起案 (確定モデルで実装、候補A perspective_gap framing + axis_5 採点)
     → 並走: F-grounding-determinism-audit + 高リスク事実検証ワークフロー + 本番配線判断バッチ群
-    → Phase A.5-3b 第二作のサンプル拡充 → 3c 自動化 → Phase A.5-3d (F-periodic-health-check 並走)
-- **★ Phase A.5-3b 第一作着手前の追加確認事項** (カズヤ指示、2026-05-19 更新):
+- **★ Phase A.5-3b 第一作着手前の追加確認事項** (カズヤ指示、2026-05-25 更新):
   1. ~~F-trial-run-candidate-a-reverify~~ ✅ **完了 (2026-05-19、前提最終確定、候補A perspective_gap 維持)**
   2. ~~F-image-prompt-spec スコープ再定義~~ ✅ **完了 (2026-05-18、ADR 3 件 + schema 設計)**
-  3. ~~F-gemini-model-migrate-emergency~~ ✅ **完了 (2026-05-19、5/25 shutdown リスク根絶、baseline 1417 維持)** + ★ **F-gemini-quality-tier-poc** (Narrative primary 確定 + Lightweight Tier1 切替判断、第一作起案前必須)
+  3. ~~F-gemini-model-migrate-emergency~~ ✅ **完了 (2026-05-19、5/25 shutdown リスク根絶)** + ★ **F-gemini-quality-tier-poc** (Narrative primary 確定 + Lightweight Tier1 切替判断、第一作起案前必須、3rd に後退 = cache/target_enemy 修正を先行)
   4. ElevenLabs 声選定 (着手前 30 分作業、既存登録済み、カズヤ手作業)
   5. Remotion セットアップ (第一作で Claude Code に書かせる、Node 環境カズヤ手動準備、ADR-0002 D-minimal)
 
-### Phase A.5-3a-verify ロードマップ (★ F-gemini-model-migrate-emergency / 2026-05-19 更新版)
+### Phase A.5-3a-verify ロードマップ (★ F-f1-locale-key-fix / 2026-05-25 更新版)
 
 **ゲート完了**: 1-A〜1-D''' 全段階完了で Phase A.5-3a-verify ゲート完了 (2026-05-07)。
-本バッチはゲート完了後の **15 つ目のバッチ**。
+本バッチはゲート完了後の **16 つ目のバッチ**。
 
 | 段階 | バッチ | 状態 | 概要 |
 |---|---|---|---|
-| 1-A〜1-D''' | (F-verify-jp-coverage-golden 〜 F-trial-run-post-fix) | ✅ 完了 | ゲート完了 (2026-05-07) |
-| 1-E〜1-F''' | (F-particular-angle-design 〜 F-task-e-finalize) | ✅ 完了 | 特定角度概念正典化 + 4 分類化 + sontaku_signals 独立化 |
-| 1-G〜1-G''' | (F-jp-coverage-tune 〜 F-wl-hit-quality-audit) | ✅ 完了 | WL 階層判定化 + LLM judgement bypass 決定的発見 |
-| 1-H | F-jp-coverage-llm-judgement-extraction | ✅ 完了 (2026-05-16) | LLM judgement bypass を Option (i) B-3' で根本治療、Recall 1.0000 / FN=0 |
-| 1-I | F-trial-run-post-llm-extraction | ✅ 完了 (2026-05-16) | B-3' 本番試運転で bypass 構造解消を本番実証、第一作題材確定 |
-| 1-K | F-image-prompt-spec | ✅ 完了 (2026-05-18) | 3 AI 三角測量 D-minimal 仕様を ADR 3 件 + schema 拡張設計として正典化 (設計のみ) |
-| 1-J | F-trial-run-candidate-a-reverify | ✅ 完了 (2026-05-19) | 候補A B-3' 改修後本番再確認。B-3' 構造的効果を 3 連続試運転で確定。候補A perspective_gap 維持 |
-| 1-L | F-gemini-model-audit | ✅ 完了 (2026-05-19) | Gemini モデル戦略再検討 影響調査専用 (改修なし)。5/25 shutdown 対象 2 箇所特定 + 404 即 raise 重大発見。CP-1 = 選択肢1。baseline 1417 維持 |
-| **1-M** | **F-gemini-model-migrate-emergency** | ✅ **完了 (2026-05-19)** | **ゲート完了後 15 つ目**。両系統 Tier3 + factory/config default + `.env`/`.env.example` を gemini-3.1-flash-lite (GA) 一括置換、shutdown モデル ID を Tier 階層から構造除去で 404 即 raise リスク根絶 (retry.py 0 変更)。CP-1 = test 2 行更新承認 + Lightweight Tier1 据置 (B)。baseline 1417 復帰、試運転 status=completed |
-| 1-N | F-gemini-quality-tier-poc | ★★ 緊急度 高 (Phase A.5-3b 前、次バッチ最有力) | Narrative primary (QUALITY Tier1) モデル選定 PoC + Lightweight Tier1 切替判断 (内包) + axis_5 + publish_gate_flags 設計 |
-| 1-O | Phase A.5-3b 第一作起案 | ★ 緊急度 高 (確定モデルで実装) | 候補A 手動固定 + perspective_gap framing + axis_5 採点 |
-| 1-P | F-grounding-determinism-audit | ★ 緊急度 中 | broad Grounding API の WL ドメイン返却率 run 間分散の集約戦略検討 |
-| 1-Q | 本番配線判断バッチ群 (3 件) | ★ 並走候補 | verify_two_stage / particular_angle_metadata+sontaku_signals / F-stream-2-filter-design |
+| 1-A〜1-I | (F-verify-jp-coverage-golden 〜 F-trial-run-post-llm-extraction) | ✅ 完了 | ゲート完了 + 特定角度正典化 + LLM judgement bypass 根本治療 |
+| 1-J〜1-K | F-trial-run-candidate-a-reverify / F-image-prompt-spec | ✅ 完了 (2026-05-18〜19) | 候補A 前提最終確定 + ADR 3 件 + schema 設計 |
+| 1-L | F-gemini-model-audit | ✅ 完了 (2026-05-19) | Gemini モデル戦略 影響調査 (改修なし)。5/25 shutdown 対象 2 箇所特定 + 404 即 raise 重大発見 |
+| 1-M | F-gemini-model-migrate-emergency | ✅ 完了 (2026-05-19) | 両系統 Tier3 + default + `.env` を gemini-3.1-flash-lite (GA) 一括置換、404 即 raise リスク根絶 (retry.py 0 変更)。baseline 1417 維持 |
+| **1-N** | **F-f1-locale-key-fix** | ✅ **完了 (2026-05-25)** | **ゲート完了後 16 つ目**。3 AI 三角測量由来で F-1 EditorialMissionFilter の locale key bug (`get("jp"/"en")` → `"japan"` + 非 japan 合算) を根本治療、機能ロジック不変。CP-1 = 選択肢 1 + test 同時更新 + クラウド初期想定の訂正 (クラウド誤り 10)。baseline 1417 維持、試運転 status=completed。blindspot 中間段階 (8/10/12) を dead code から復活 |
+| 1-O | F-jp-coverage-cache-judgement-persist | ★★高 (次バッチ最有力) | F-13.B llm_judgement の 24h cache 永続化 (ChatGPT + Gemini 両者指摘) |
+| 1-P | F-script-writer-target-enemy-fix | ★★★高 | target_enemy プロンプト/モデル定義の不整合修正 (Gemini 独自指摘) |
+| 1-Q | F-gemini-quality-tier-poc | ★★高 (Phase A.5-3b 前) | Narrative primary モデル選定 PoC + Lightweight Tier1 切替判断 + axis_5 + publish_gate_flags 設計 |
+| 1-R | Phase A.5-3b 第一作起案 | ★ 緊急度 高 (確定モデルで実装) | 候補A 手動固定 + perspective_gap framing + axis_5 採点 |
+| 1-S | F-grounding-determinism-audit / 本番配線判断バッチ群 | ★ 並走候補 | broad Grounding 分散集約 / verify_two_stage 等の本番配線 |
 
 ### Phase A.5-3d 投稿対象の補足
 
@@ -213,26 +189,24 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 
 | 試運転 | バッチ | 動画化率 | 主要観察 |
 |---|---|---|---|
-| **2026-05-19** | **F-gemini-model-migrate-emergency** | **1/3 動画化 + 3 articles (status=completed)** | ★ 5/25 shutdown 緊急対応の 1 batch 試運転 (batch 20260519_104204)。exit 0 / status=completed / 3 slots published。model_roles 全 GA 解決 (merge_batch・judge=gemini-2.5-flash / generation=gemini-3-flash-preview)。used_fallback=false、judge error 0、ログに 404・NOT_FOUND・shutdown モデル参照 0 件。Tier3 fallback は 503 連鎖なしのため未発火 (想定どおり)。改修の本質 = shutdown モデル ID の階層除去でリスク根絶。 |
-| 2026-05-19 | F-gemini-model-audit | 試運転なし (調査バッチ) | ★ Gemini モデル戦略影響調査 (改修なし)。5/25 shutdown 対象の実稼働 functional 使用 = 2 箇所 (QUALITY/LIGHTWEIGHT 両 Tier3 fallback)。重大発見 = shutdown 後 404 が retry 非対象で次 Tier フォールバックせず即 raise。Interactions API 未使用。CP-1 = 選択肢1 (両系統 Tier3 一括 GA 置換)。 |
-| 2026-05-18 | F-trial-run-candidate-a-reverify | 1/3 動画化 (Slot-1 cls-f47e9ffde77d, ★ fallback script) + 3 articles | ★ 候補A cls-6889e9e1c7ac 不在 (完全新規 RSS batch)。has_jp True 比率 3 連続単調減少 (5/11 3T/0F → 5/16 1T/2F → 5/18 0T/3F)。Slot-1 台本 fallback (Gemini 503 多発)。防衛機構 5 層全機能。 |
-| 2026-05-18 | F-image-prompt-spec | 試運転なし (docs バッチ) | 3 AI 三角測量 D-minimal 仕様を ADR 3 件 + schema 設計に正典化。 |
-| 2026-05-16 | F-trial-run-post-llm-extraction | 1/3 動画化 (Slot-1 cls-e2429c77f48e) + 3 articles | ★★★ B-3' が production verify() に配線・本番で安全装置初発火。has_jp 分布 3/3 True → 1 True / 2 False に反転。第一作題材確定 = 候補A perspective_gap。 |
+| **2026-05-25** | **F-f1-locale-key-fix** | **1/3 動画化 + 3 articles (status=completed)** | ★ locale key 修正後の 1 batch 試運転 (batch 20260525_085458)。exit 0 / status=completed / 3 slots published (Slot-1 video cls-b0a1e9bebbd5 + Slot-2/3 article)。used_fallback=false、retries=0、404/Traceback/ERROR 0 件。F-13.B は Slot-2/3 で llm_judgement=no_match 確定 (blind_spot_global)。防衛機構 5 層異常なし、動画化候補消失なし。run_summary prescore_stats min=0.0/max=65.2/mean=21.62 (入力 369 cands)。blindspot 中間段階の復活は before_after_prescore.json で決定的に確認 (run_summary 比較は入力差で confounded)。 |
+| 2026-05-19 | F-gemini-model-migrate-emergency | 1/3 動画化 + 3 articles (status=completed) | ★ 5/25 shutdown 緊急対応の 1 batch 試運転 (batch 20260519_104204)。exit 0 / status=completed / 3 slots published。model_roles 全 GA 解決。used_fallback=false、404・shutdown モデル参照 0 件。Tier3 fallback は 503 連鎖なしで未発火 (想定どおり)。 |
+| 2026-05-18 | F-trial-run-candidate-a-reverify | 1/3 動画化 (Slot-1 cls-f47e9ffde77d, ★ fallback script) + 3 articles | ★ 候補A cls-6889e9e1c7ac 不在。has_jp True 比率 3 連続単調減少 (3T/0F → 1T/2F → 0T/3F)。防衛機構 5 層全機能。 |
+| 2026-05-16 | F-trial-run-post-llm-extraction | 1/3 動画化 (Slot-1 cls-e2429c77f48e) + 3 articles | ★★★ B-3' が production verify() に配線・本番で安全装置初発火。第一作題材確定 = 候補A perspective_gap。 |
 | 2026-05-14 | F-wl-hit-quality-audit | (試運転なし、WebSearch 検証) | ★★★ LLM judgement bypass 問題が決定的判明。Slot-1 cls-6889e9e1c7ac = perspective_gap 確定。 |
 
 ## 4. Hydrangea コンセプト防衛機構の現状 (5 層)
 
-> ★ F-gemini-model-migrate-emergency (2026-05-19) の 1 batch 試運転
-> (batch_id 20260519_104204) で防衛機構 **異常挙動なし**を再確認
-> (status=completed、judge error 0、used_fallback=false)。Gemini モデル
-> 移行は Tier3 の shutdown モデル ID を GA に置換しただけで防衛ロジック
-> 自体 (retry.py / Tier フォールバック) は 0 行変更・完全不変。
+> ★ F-f1-locale-key-fix (2026-05-25) の 1 batch 試運転 (batch_id 20260525_085458)
+> で防衛機構 **異常挙動なし** を再確認 (status=completed、used_fallback=false、
+> 404/Traceback 0 件)。F-1 の locale key 修正は blindspot prescore の参照キー
+> 正本化のみで判定ロジック (if/elif・係数・cap) は完全不変。
 
 | 層 | バッチ | 場所 | 役割 | 状態 |
 |---|---|---|---|---|
-| F-1 | F-1 / F-1.5 | EditorialMissionFilter | 編集ミッション適合度で score 算出 (>= 45.0 で通過) | ✅ 稼働中 (直近 run 351→19 通過) |
-| F-2 | F-2 / F-5 | FlagshipGate / EliteJudge | 海外発の重要ニュースを優先 | ✅ 稼働中 (直近 run Blocked 0) |
-| F-13.B | … / F-trial-run-candidate-a-reverify | JpCoverageVerifier (WL 30 ドメイン階層判定 + LLM judgement 抽出 B-3') | JP 報道カバレッジを WL + LLM judgement で検証 | ✅ **B-3' 改修の構造的効果を 3 連続試運転で確定** (has_jp True 比率 3T/0F → 1T/2F → 0T/3F)。verify_two_stage 系統機械判別は依然本番未配線 (B-3' とは直交) |
+| F-1 | F-1 / F-1.5 / **F-f1-locale-key-fix** | EditorialMissionFilter | 編集ミッション適合度で score 算出 (>= 45.0 で通過) | ✅ 稼働中。★ **2026-05-25 で blindspot prescore の locale key bug を根本治療** (`get("jp"/"en")` → `"japan"` + 非 japan 合算)。中間 elif (8/10/12) が dead code から復活、binary 15.0 経路 (has_*_view 由来) は従来から正常 = 不変。直近 run 369 cands → 20 通過 |
+| F-2 | F-2 / F-5 | FlagshipGate / EliteJudge | 海外発の重要ニュースを優先 | ✅ 稼働中 |
+| F-13.B | … / F-trial-run-candidate-a-reverify | JpCoverageVerifier (WL 30 ドメイン階層判定 + LLM judgement 抽出 B-3') | JP 報道カバレッジを WL + LLM judgement で検証 | ✅ 稼働中 (直近 run Slot-2/3 で llm_judgement=no_match 確定)。★ llm_judgement の 24h cache 永続化が未確認 = 次バッチ F-jp-coverage-cache-judgement-persist で対応 (ChatGPT + Gemini 指摘) |
 | F-5 | F-5 | FlagshipGate 下流救済 | 上流ガードを通過した候補の最終整合 | ✅ 稼働中 (直近 run 0 件発火 = 入力依存、異常なし) |
 | F-13 (隠れ層) | F-13 / F-doc-cleanup | script_writer.py quality_floor_miss bypass | analysis_result 等が成立すれば appraisal の [抑制] を上書き | ✅ 稼働中 (直近 run 0 件発火 = 設計通り) |
 
@@ -243,7 +217,7 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 - `docs/` 配下全般 (★ `docs/ADR/` 配下に ADR 新規作成可)
 - `tests/` 配下に新規テストファイル追加 (既存ファイルは原則変更しない、
   ただし API contract 整合化に伴うフィクスチャ更新 + 既存ファイルへの新規
-  テストクラス追加は許容)
+  テストクラス追加 + 仕様/データ構造整合に伴う既存期待値修正 (構造変更なし) は許容)
 - `scripts/` 配下に新規スクリプト追加
 - `src/triage/` に新規ファイル追加
 - `src/generation/script_writer.py` の **新ルート**
@@ -252,18 +226,18 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 - `src/generation/video_payload_writer.py` (不変原則 1-4 対象外、★ Phase A.5-3b 第一作起案で images[]/events[] 追加の最小改変対象)
 - `src/shared/models.py` (★ Phase A.5-3b で VideoImage/VideoEvent Optional 追加予定、後方互換必須)
 - `src/main.py` (不変原則対象外、★ verify_two_stage 本番配線判断バッチで改修対象)
-- `src/llm/factory.py` / `src/shared/config.py` の Gemini モデル ID default (★ F-gemini-model-migrate-emergency / 2026-05-19 で Tier3 GA 置換済、不変原則対象外。`src/llm/retry.py` はリトライ判定ロジック不変で 0 行変更 = shutdown モデルを Tier から除去する最小対処で足りた)
+- `src/llm/factory.py` / `src/shared/config.py` の Gemini モデル ID default (★ F-gemini-model-migrate-emergency / 2026-05-19 で Tier3 GA 置換済、不変原則対象外)
 - `.env` / `.env.example` (リポジトリルート直下、★ F-gemini-model-migrate-emergency / 2026-05-19 で Tier3 GA 置換済)
 
 ### 触ってはいけない領域
 - `src/generation/article_writer.py` (不変原則 1)
 - `src/generation/script_writer.py` の **既存ルート**
   (`write_script` / `_PROMPT_TEMPLATE` / `_build_script_from_llm`) (不変原則 2)
-- `src/triage/` の既存ファイル (不変原則 3、過去に例外条件適用済)
+- `src/triage/` の既存ファイル (不変原則 3、★ 過去に例外条件適用済 = F-f1-locale-key-fix / 2026-05-25 で `editorial_mission_filter.py` の locale key bug 修正に例外条件 5 点全充足で適用)
 - `src/analysis/` 配下全般 (不変原則 4)
 - 既存テスト (不変原則 5、baseline **1417 passed** 維持 — ただし
   フィクスチャの API contract 整合化 + 既存テストファイルへの新規テスト
-  クラス追加 + 仕様変更に伴う既存テスト期待値修正 (構造変更なし) は許容)
+  クラス追加 + 仕様/データ構造整合に伴う既存テスト期待値修正 (構造変更なし) は許容)
 
 ## 6. 不変原則 5 つ (リマインダ、正本: BATCH_PROTOCOL.md)
 
@@ -271,42 +245,38 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 2. **`src/generation/script_writer.py` の既存ルート (`write_script` /
    `_PROMPT_TEMPLATE` / `_build_script_from_llm`) は変更不可**
 3. **`src/triage/` の既存ファイル変更不可**。新規追加は OK。
-   **例外条件**: 実装バグ修正 + 設計変更ではない + DECISION_LOG 明記 +
-   Hydrangea ミッション中核機構ならカズヤ承認必須、の 4 条件全て満たす場合のみ。
+   **例外条件** (5 点全充足で適用): 実装バグ修正 + 設計変更ではない +
+   既存メソッド contract 完全維持 + baseline 維持 + カズヤ承認。
+   ★ F-f1-locale-key-fix (2026-05-25) で `editorial_mission_filter.py` の
+   locale key bug に適用 (5 点全充足)。
 4. **`src/analysis/` 変更不可**
 5. **既存テスト破壊しない** (baseline **1417 passed**)
 
 ## 7. カズヤの直近フィードバック要点
 
-- **「動くものを壊さない」+「あるべき姿で進める」** (★ F-gemini-model-migrate-emergency
-  2026-05-19) — emergency 移行は両系統 Tier3 を一括 GA 置換しつつ、
-  Lightweight Tier1 主軸変更 (Gemini 2→3 系統変更 = MEDIUM リスク) は据置
-  (CP-1 判断 B)。「5/25 shutdown リスク根絶」と「主軸品質の未検証変更回避」を
-  分離し、Tier1 切替は axis_5 品質検証 (F-gemini-quality-tier-poc) 後に判断
-- **「default を変える migration は default を pin する test と整合必須」**
-  (★ F-gemini-model-migrate-emergency CP-1 判断1) — Tier3 default を旧
-  shutdown モデル名で hard-pin する test 2 件は機能回帰ではなく migration の
-  同一スコープ。期待値リテラル 2 行更新を承認 (ロジック不変、BATCH_PROTOCOL
-  例外条件 4 点充足)。想定外結果は task 規定どおり試運転前に即停止し CP-1 へ
-- **「対症療法じゃなくて根本治療」** — F-gemini-503-stability-audit 撤回
-  (リトライ間隔調整等の対症療法ではなく Gemini モデル切替で 503 多発を
-  根本治療)
-- **「機械判定は事実の代替ではない」** — 候補A が機械的に拾われなくても
-  perspective_gap 確定 (WebSearch 独立検証済) は覆らない
-- **「中間が良い」** — シニカル一辺倒でも生活実感一辺倒でもなく両立
-- **「考え方で制御」** — NG リスト方式は廃止、原則ベースのプロンプト
-- **「LLM の知性に委ねる」** — no_match のみ尊重し uncertain を否定と
-  読み替えない (B-3')
-- **「言い回しを個別ルールで指定するのは避けたい」** (クラウド誤り 9)
-- **「Hydrangea のメディアとしてのリスクは嘘をつくこと」** — 疑わしきは低く
-  見積もる。ADR-0003 で高リスク事実主張の公開前検証を必須工程化
-- **「観点の選択的欠落 = 忖度」** — 第一作 (候補A perspective_gap) を
-  「観点の選択的欠落を暴く構造」として確定
-- **「負の遺産残さないように」** / **「カズヤの手作業はバッチプロンプトの
-  コピペ 1 回のみ」** / **「過剰拡張性の罠」**
-- **「整合の説明であって検証ではない」** — 独立検証バッチの価値
-- **「設計判断と実装の分離」** — F-gemini-model-audit は調査専用、実装は
-  F-gemini-model-migrate-emergency に分離
+- **「LLM の知性に委ねる前に構造データの正しさを担保する」** (★ F-f1-locale-key-fix
+  2026-05-25) — locale key の正本化は「分析フェーズ LLM への期待」の前提となる
+  構造データの整合性確保。選択肢 1 (非 japan 合算) は「対症療法じゃなく根本治療」
+  かつ多様な locale の正しい意味解釈
+- **「整合の説明であって検証ではない」/ Project Knowledge を鵜呑みにしない**
+  (★ F-f1-locale-key-fix CP-1) — クラウド初期想定 (false positive) を grep +
+  コード精読で訂正 (実態 = 中間解像度喪失 = false negative 方向)。Claude Web 側の
+  個人作業ログを docs 正本と取り違える誤りを クラウド誤り 10 として記録、docs
+  連番 (1-7+9 の次 = 10) を正本として再確立
+- **「将来に負債を残さない」** (★ F-f1-locale-key-fix CP-1 判断2) — dead code
+  テストデータ (`"en"`/`"jp"` キー) を残さず本バッチで同時更新 (不変原則 5
+  例外条件 4 点充足)
+- **「動くものを壊さない」+「あるべき姿で進める」** (F-gemini-model-migrate-emergency)
+  — 機能ロジック不変を保ちつつ構造データの正しさを是正
+- **「対症療法じゃなくて根本治療」** — locale key は `"global"` 単独 (対症療法、
+  middle_east 取りこぼし) ではなく非 japan 合算 (根本治療)
+- **「機械判定は事実の代替ではない」** — 候補A perspective_gap 確定は機械不在で覆らない
+- **「中間が良い」/「考え方で制御」/「LLM の知性に委ねる」** — no_match のみ尊重 (B-3')
+- **「言い回しを個別ルールで指定するのは避けたい」** (クラウド誤り 9) — target_enemy
+  修正でもプロンプト各論化に留意
+- **「Hydrangea のメディアとしてのリスクは嘘をつくこと」** — 疑わしきは低く見積もる
+- **「観点の選択的欠落 = 忖度」** — 第一作 (候補A perspective_gap) を確定
+- **「負の遺産残さないように」/「カズヤの手作業はバッチプロンプトのコピペ 1 回のみ」/「過剰拡張性の罠」**
 
 ## 8. 関連ドキュメントへの導線
 
@@ -316,36 +286,40 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 - バッチ運用ルール → `docs/BATCH_PROTOCOL.md`
 - アーキテクチャ全体像 → `docs/ARCHITECTURE.md`
 - 技術的負債リスト → `docs/TECH_DEBT.md`
-- Gemini 無料枠 / RPM 対策の経緯 → `docs/GEMINI_QUOTA_NOTES.md` (★ 2026-04-26 時点で陳腐化、未更新。FUTURE_WORK 残課題、別 doc バッチ or F-gemini-quality-tier-poc 同時対応)
 - 編集ミッションフィルタ設計 (F-13 隠れ層含む) → `docs/EDITORIAL_MISSION_FILTER_DESIGN.md`
 - ★ 「特定角度」概念正典 → `docs/PARTICULAR_ANGLE_DEFINITION.md`
 - Claude Code 振る舞い指針 → `CLAUDE.md`
-- ★ **F-gemini-model-migrate-emergency REPORT + 試運転出力** → `docs/runs/F-gemini-model-migrate-emergency/REPORT.md` + trial_run_summary.json + environment_snapshot.json
-- F-gemini-model-audit REPORT + 調査出力 → `docs/runs/F-gemini-model-audit/REPORT.md` + grep_results.json + current_tier_analysis.json + interactions_api_status.json + environment_snapshot.json
+- ★ **F-f1-locale-key-fix REPORT + 調査/試運転出力** → `docs/runs/F-f1-locale-key-fix/REPORT.md` + grep_results.json + locale_key_inventory.json + impact_analysis.json + diff_summary.md + trial_run_summary.json + before_after_prescore.json + environment_snapshot.json
+- F-gemini-model-migrate-emergency REPORT → `docs/runs/F-gemini-model-migrate-emergency/REPORT.md`
 - ★ **Phase A.5-3b 画像戦略 / Remotion / モラル ADR** → `docs/ADR/0001-image-strategy.md` + `0002-remotion-mvp-scope.md` + `0003-content-moral-guidelines.md`
-- ★ F-trial-run-candidate-a-reverify REPORT → `docs/runs/F-trial-run-candidate-a-reverify/REPORT.md`
 - F-image-prompt-spec REPORT + 設計 → `docs/runs/F-image-prompt-spec/REPORT.md` + `schema_extension_design.md`
 
 ---
 
 *このドキュメントは F-state-protocol (2026-05-01) で導入。Claude Code が
 バッチ完了時に全置換更新する運用 (BATCH_PROTOCOL.md Task 5)。
-F-gemini-model-migrate-emergency (2026-05-19) は **ゲート完了後の 15 つ目の
-バッチ (1-M)**。5/25 `gemini-3.1-flash-lite-preview` shutdown の緊急対応
-実装 (最小改修)。前バッチ F-gemini-model-audit 確定スコープに基づき、両系統
-Tier3 (`.env` GEMINI_MODEL_TIER3 / GEMINI_LIGHTWEIGHT_TIER3) +
-factory.py default (L316/L324) + config.py default (L76) + `.env.example`
-を `gemini-3.1-flash-lite` (GA) に一括置換。shutdown モデル ID を Tier
-階層から構造除去 = 404 即 raise リスク根絶 (`src/llm/retry.py` 0 行変更、
-audit CP-1 仮説どおり最小対処で十分)。doc-drift コメント整理。★ 想定外
-結果: 改修後 baseline 1417→1415 (test 2 件が Tier3 default を旧モデル名
-hard-pin = 機能回帰ではなく default 追従) → 試運転前に即停止し CP-1 へ。
-CP-1 カズヤ判断: 判断1 = test 2 行更新承認 (期待値リテラルのみ、ロジック
-不変、BATCH_PROTOCOL 例外条件 4 点充足) → baseline 1417 復帰。判断2 =
-Lightweight Tier1 据置 (選択肢 B、品質検証は F-gemini-quality-tier-poc に
-保留)。1 batch 試運転 status=completed / used_fallback=false / 404 参照
-0 件。`src/triage/ src/analysis/ article_writer.py retry.py configs/
-scripts/ CLAUDE.md` 0 行変更、`tests/` 2 行は CP-1 明示承認済、不変原則
-1-5 全遵守。次バッチ候補 = F-gemini-quality-tier-poc (★ 最有力、Narrative
-primary + Lightweight Tier1 切替品質検証) → Phase A.5-3b 第一作起案。
+F-f1-locale-key-fix (2026-05-25) は **ゲート完了後の 16 つ目のバッチ (1-N)**。
+3 AI 三角測量 (ChatGPT + Gemini) のレビューで両者独立に指摘された
+`src/triage/editorial_mission_filter.py` の locale key bug
+(`_editorial_mission_prescore` の `sources_by_locale.get("jp"/"en")`) を、実データ
+構造の正しいキー (`"japan"` + 非 japan locale 合算 = `main.py` overseas_count
+パターン) に修正。機能ロジック (blindspot if/elif・係数・cap) 不変、locale key
+参照の正本化のみ。grep で当該ファイルが src/ で `"jp"`/`"en"` を使う唯一の
+ファイルと確定。★ クラウド初期想定 (「不当に高い誤爆 = false positive」) を
+grep + コード精読で訂正 = 実態は「中間解像度 8〜12 点の永久喪失 (false
+negative 方向)」、`jp_count`/`en_count` 両方常に 0 で中間 elif が dead code、
+第1分岐 15.0 は score_breakdown 由来で正常動作 (代替経路あり) → 緊急度
+★★★→★★。この経緯を クラウド誤り 10 (Project Knowledge 過信 + grep 不足)
+として記録 (採番は docs 正本 1-7+9 の次 = 10、Web 側メモの 17 は不採用)。
+CP-1 カズヤ判断: 判断1 = en_count 修正 = 選択肢 1 (非 japan 合算)、判断2 =
+test data キー本バッチ同時更新 (不変原則 5 例外条件 4 点充足)、判断3 =
+クラウド初期想定の訂正受容。改修 2 ファイル (機能ロジック不変)、baseline
+1417 passed 維持、1 batch 試運転 status=completed / used_fallback=false /
+404・Traceback 0 件。before_after_prescore.json で blindspot 中間段階 (0→8〜12)
+の復活を決定的に確認。不変原則 3 例外条件 5 点全充足。`src/triage/` の
+editorial_mission_filter.py 以外 / `src/analysis/` / `article_writer.py` /
+`script_writer.py` 既存ルート / `retry.py` / `configs/` / `scripts/` /
+`CLAUDE.md` 0 行変更、`tests/` 2 行は CP-1 明示承認済、不変原則 1-5 全遵守。
+次バッチ候補 = F-jp-coverage-cache-judgement-persist (★ 最有力、F-13.B
+llm_judgement cache 永続化、ChatGPT + Gemini 両者指摘)。
 過去の経緯は DECISION_LOG.md / FUTURE_WORK.md / DISCUSSION_NOTES.md を参照。*

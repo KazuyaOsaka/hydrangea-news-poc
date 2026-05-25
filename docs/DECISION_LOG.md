@@ -1,10 +1,13 @@
 # Hydrangea — 意思決定ログ (DECISION_LOG)
 
-最終更新: 2026-05-19 (F-gemini-model-migrate-emergency 完了。5/25 shutdown
-緊急対応 = 両系統 Tier3 + factory.py/config.py default + `.env`/`.env.example`
-を gemini-3.1-flash-lite (GA) に一括置換、shutdown モデル ID を Tier 階層から
-構造的に除去。CP-1 カズヤ判断 = test 2 行更新承認 + Lightweight Tier1 据置 (B)。
-baseline 1417 passed 維持。前回 2026-05-09: F-jp-coverage-tune-followup 完了)
+最終更新: 2026-05-25 (F-f1-locale-key-fix 完了。3 AI 三角測量レビュー由来で
+`src/triage/editorial_mission_filter.py` の locale key bug (`get("jp"/"en")` →
+`"japan"` + 非 japan 合算) を根本治療、機能ロジック不変。CP-1 カズヤ判断 =
+選択肢 1 (非 japan 合算) + test data キー同時更新 + クラウド初期想定 (false
+positive) を grep で訂正 (実態 = 中間解像度喪失、クラウド誤り 10 記録)。
+不変原則 3 例外条件 5 点全充足。baseline 1417 維持、試運転 status=completed。
+前バッチ F-gemini-model-migrate-emergency のコミットハッシュ 7624f93/231decd
+追記。前回 2026-05-19: F-gemini-model-migrate-emergency 完了)
 
 このドキュメントは Hydrangea プロジェクトにおける重要な意思決定の履歴を記録する。
 コードや設定の「結果」ではなく、「なぜそうなったか」の判断プロセスを残すことが目的。
@@ -5103,7 +5106,7 @@ functional 参照されていること、および「shutdown 後 404 は retry 
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `7624f93` (feat: F-gemini-model-migrate-emergency) / `231decd` (Merge branch 'feature/F-gemini-model-migrate-emergency')。★ F-f1-locale-key-fix / 2026-05-25 で実ハッシュ追記。
 - 改修ファイル:
   - `.env` (gitignored、GEMINI_MODEL_TIER3 + GEMINI_LIGHTWEIGHT_TIER3)
   - `.env.example` (同 2 行 + doc-drift コメント)
@@ -5128,3 +5131,93 @@ functional 参照されていること、および「shutdown 後 404 は retry 
   - F-gemini-quality-tier-poc (★ 後続、Narrative primary + Lightweight
     Tier1 切替を品質検証、次バッチ最有力)
   - Phase A.5-3b 第一作起案 (2nd 候補)
+
+---
+
+## 2026-05-25: F-f1-locale-key-fix — F-1 EditorialMissionFilter の locale key 修正
+
+### 背景
+
+3 AI 三角測量 (ChatGPT + Gemini) のレビューが、`src/triage/editorial_mission_filter.py`
+の `_editorial_mission_prescore` 内で `sources_by_locale.get("jp", [])` /
+`get("en", [])` を参照している点を **両者独立に指摘**。実データ構造の正しい
+キーは `"japan"` / 非 japan 地域名 (`"global"`/`"middle_east"`/`"europe"`/
+`"east_asia"`/`"global_south"`)。grep の結果、当該ファイルは src/ 全体で
+`"jp"`/`"en"` キーを使う **唯一のファイル** で、他は全て `"japan"` +
+「非 japan = 海外」パターンで統一済みと確定。
+
+### 議論 (Task B 調査 + CP-1)
+
+- バグの実害 (★ クラウド初期想定の訂正): 初期バッチプロンプトは「日本ソース数が
+  常に 0 で blindspot が **不当に高く誤爆 (false positive)**」と記載していたが、
+  grep + コード精読で実態が判明 — `jp_count`/`en_count` が**両方**常に 0 のため
+  blindspot 中間 elif (12.0/10.0/8.0) は **dead code**。実害は「不当に高い誤爆」
+  ではなく「**中間解像度 8〜12 点の永久喪失 (false negative 方向)**」。第1分岐
+  `has_en and not has_jp → 15.0` は score_breakdown 由来で従来から正常動作
+  (代替経路あり)。緊急度 ★★★ → ★★ に下方修正。
+- en_count の修正先: `"global"` 単独 (選択肢 2) は middle_east/europe 等を
+  取りこぼし別 bug を生む → `main.py:941-946` の overseas_count パターン
+  (非 japan 合算) が正本。
+- 既存テスト: `tests/test_editorial_mission_filter.py:173-190`
+  `test_blindspot_intermediate_tiers` が data キーに `"en"`/`"jp"` を hard-pin。
+
+### 決定 (CP-1 カズヤ判断)
+
+- **判断 1 (en_count 修正) = 選択肢 1 (非 japan 合算)**: `main.py` overseas_count
+  と完全一致 = 既存パターン統一。「対症療法じゃなく根本治療」+「構造データの
+  正しさを担保」。選択肢 3 (定数一元化) は「1 バッチで欲張らない」で別バッチ任意。
+  → `jp_count = len(get("japan"))` / `en_count = sum(len(refs) for loc,refs in
+  items() if loc != "japan")`。
+- **判断 2 (テスト) = 本バッチで同時更新** (CP-2 にせず): 不変原則 5 例外条件
+  4 点充足 (バグ修正類追従 / 設計変更ではない / DECISION_LOG 明記 / カズヤ承認)。
+  「将来に負債を残さない」= dead code テストデータを残さない。data キー
+  `"en"`→`"global"`、`"jp"`→`"japan"`、assert 構造・期待値 (12.0)・ロジック不変。
+- **判断 3 (クラウド初期想定の訂正受容)**: バグの実害評価を「false positive」→
+  「false negative 方向 (中間解像度喪失)」に訂正。この経緯を **クラウド誤り 10
+  (Project Knowledge 過信 + grep 不足)** として DISCUSSION_NOTES に登録。
+  ★ 採番: docs 登録済の 1-7 + 9 の次 = **10**。Claude Web 側の個人メモ上の
+  8/10-16/17 は docs 正本に存在しない (この取り違え自体が誤り 10 の本質、
+  カズヤ訂正で確定)。
+
+### 結果
+
+- 改修 2 ファイル (機能ロジック変更なし): `src/triage/editorial_mission_filter.py`
+  (L161-162 locale key、blindspot の if/elif・係数・cap 不変) +
+  `tests/test_editorial_mission_filter.py` (data キー 2 行、CP-1 承認)。
+  tracked diff +11/-4。
+- baseline: 改修後 **1417 passed 維持** (targeted 32 passed、full 1417 passed)。
+- 1 batch 試運転 (batch 20260525_085458): exit 0, status=completed, 3 slots
+  published (Slot-1 video + Slot-2/3 article)、used_fallback=false、retries=0、
+  404/Traceback/ERROR 0 件、防衛機構 5 層異常なし、動画化候補消失なし。
+- prescore 効果の決定的確認 (before_after_prescore.json): blindspot 中間 elif
+  (8/10/12) が dead code から復活、海外多数・日本少数イベントが 0→8〜12 に上昇
+  (中東のみシナリオが選択肢 1 の根拠 = global 単独なら 0 のまま)。binary 15.0
+  経路は不変。run_summary レベル比較は入力バッチ差 (753 vs 369) で confounded。
+- 不変原則違反なし。不変原則 3 例外条件 **5 点全充足** (バグ修正 + 設計変更では
+  ない + 既存メソッド contract 完全維持 + baseline 1417 維持 + カズヤ承認済)。
+  `src/triage/` の editorial_mission_filter.py 以外 / `src/analysis/` /
+  `article_writer.py` / `script_writer.py` 既存ルート / `retry.py` / `configs/` /
+  `scripts/` / `CLAUDE.md` = 0 行変更。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 改修ファイル:
+  - `src/triage/editorial_mission_filter.py` (L161-167 locale key、不変原則 3 例外)
+  - `tests/test_editorial_mission_filter.py` (L175-184 data キー、CP-1 承認)
+- 新規ファイル (`docs/runs/F-f1-locale-key-fix/`):
+  - `REPORT.md` / `environment_snapshot.json` / `grep_results.json` /
+    `locale_key_inventory.json` / `impact_analysis.json` / `diff_summary.md` /
+    `trial_run_summary.json` / `before_after_prescore.json` /
+    `run_summary_before_prefix.json`
+- ドキュメント更新:
+  - `docs/CURRENT_STATE.md` (全置換更新、16 つ目バッチ)
+  - `docs/DECISION_LOG.md` (本エントリ + F-gemini-model-migrate-emergency の
+    コミットハッシュ `7624f93` / `231decd` 追記)
+  - `docs/FUTURE_WORK.md` (本バッチ完了済み移動 +
+    F-jp-coverage-cache-judgement-persist / F-script-writer-target-enemy-fix 新規)
+  - `docs/DISCUSSION_NOTES.md` (4-A 新規 1 件 + クラウド誤り 10 登録)
+- レビュー出典: ChatGPT レビュー / Gemini レビュー (2026-05-25、両者独立指摘)
+- 関連バッチ:
+  - F-jp-coverage-cache-judgement-persist (★ 後続、同レビュー由来、次バッチ最有力)
+  - F-script-writer-target-enemy-fix (★ 後続、Gemini 独自指摘)

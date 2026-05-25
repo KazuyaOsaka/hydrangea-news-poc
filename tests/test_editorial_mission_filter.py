@@ -174,12 +174,13 @@ class TestPrescoreFormula:
         """has_en_count >= 3, jp_count <= 1 → 12.0"""
         event = _make_event(
             sources_by_locale={
-                "en": [
+                # 実データ構造の locale key に整合 (海外 = 非 japan、日本 = "japan")
+                "global": [
                     SourceRef(name="A", url="http://a"),
                     SourceRef(name="B", url="http://b"),
                     SourceRef(name="C", url="http://c"),
                 ],
-                "jp": [SourceRef(name="J", url="http://j")],
+                "japan": [SourceRef(name="J", url="http://j")],
             }
         )
         se = ScoredEvent(

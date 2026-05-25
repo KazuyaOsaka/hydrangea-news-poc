@@ -158,8 +158,14 @@ def _editorial_mission_prescore(se: ScoredEvent) -> tuple[float, dict]:
     has_en = bd.get("editorial:has_en_view", 0.0) > 0
 
     # ソース数（ブラインドスポット計算用）
-    en_count = len(se.event.sources_by_locale.get("en", []))
-    jp_count = len(se.event.sources_by_locale.get("jp", []))
+    # locale key は実データ構造に合わせる: 日本は "japan"、海外は非 japan locale
+    # （"global"/"middle_east"/"europe" 等）の合算。main.py の overseas_count と同一パターン。
+    jp_count = len(se.event.sources_by_locale.get("japan", []))
+    en_count = sum(
+        len(refs)
+        for loc, refs in se.event.sources_by_locale.items()
+        if loc != "japan"
+    )
 
     # 軸1: 視点ギャップ (25点) — 最重要
     perspective_gap = min(pg * 1.5 + cg * 1.0, 25.0)

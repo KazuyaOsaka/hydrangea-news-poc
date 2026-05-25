@@ -1,0 +1,42 @@
+{
+  "batch": "F-f1-locale-key-fix",
+  "task": "B-1 locale key 参照箇所の grep",
+  "buggy_references": [
+    {
+      "file": "src/triage/editorial_mission_filter.py",
+      "line": 161,
+      "content": "en_count = len(se.event.sources_by_locale.get(\"en\", []))",
+      "issue": "key \"en\" は実データ構造に存在しない。海外ソース数の意図だが常に 0。"
+    },
+    {
+      "file": "src/triage/editorial_mission_filter.py",
+      "line": 162,
+      "content": "jp_count = len(se.event.sources_by_locale.get(\"jp\", []))",
+      "issue": "key \"jp\" は実データ構造に存在しない。正しいキーは \"japan\"。常に 0。"
+    }
+  ],
+  "canonical_japan_references": [
+    {"file": "src/main.py", "line": 937, "content": "jp_count = len(se.event.sources_by_locale.get(\"japan\", []))"},
+    {"file": "src/main.py", "lines": "941-946", "content": "overseas_count = sum(len(refs) for loc, refs in sources_by_locale.items() if loc != \"japan\")", "note": "★ 海外ソース数の正本パターン (= en_count の意図)"},
+    {"file": "src/triage/gemini_judge.py", "line": 150, "content": "event.sources_by_locale.get(\"japan\", [])"},
+    {"file": "src/triage/gemini_judge.py", "line": 321, "content": "se.event.sources_by_locale.get(\"japan\", [])"},
+    {"file": "src/triage/coherence_gate.py", "line": 213, "content": "se.event.sources_by_locale.get(\"japan\", [])"},
+    {"file": "src/triage/coherence_gate.py", "line": 432, "content": "se.event.sources_by_locale.get(\"japan\", [])"},
+    {"file": "src/ingestion/discovery_audit.py", "lines": "37-38", "content": "\"japan\" in se.event.sources_by_locale"},
+    {"file": "src/analysis/perspective_extractor.py", "lines": "37-38,101-102", "content": "ev.sources_by_locale[\"japan\"]"},
+    {"file": "src/generation/video_payload_writer.py", "lines": "121-122,300-352", "content": "\"japan\" in regions / r != \"japan\""},
+    {"file": "src/generation/article_writer.py", "lines": "128,146", "content": "loc != \"japan\" / loc == \"japan\""},
+    {"file": "src/shared/models.py", "lines": "46,61,66,74", "content": "キー例コメント \"japan\"/\"global\"... + derive validator が region 未設定時に \"japan\"/\"global\" にフォールバック"}
+  ],
+  "conclusion": {
+    "buggy_file_count": 1,
+    "buggy_file": "src/triage/editorial_mission_filter.py",
+    "summary": "editorial_mission_filter.py は src/ 全体で \"jp\"/\"en\" キーを使う唯一のファイル。他の triage/ analysis/ generation/ main.py は全て \"japan\" + (非 japan = 海外) パターンで統一済み。",
+    "test_hardpin": {
+      "file": "tests/test_editorial_mission_filter.py",
+      "lines": "177,182",
+      "content": "test_blindspot_intermediate_tiers が sources_by_locale={\"en\":[...], \"jp\":[...]} とバグキーで data を組んでいる",
+      "note": "L376/L399 の japan_view=\"jp\"/global_view=\"en\" は locale key ではなく view 本文文字列 → 変更不要"
+    }
+  }
+}

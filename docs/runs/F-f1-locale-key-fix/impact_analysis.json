@@ -1,0 +1,35 @@
+{
+  "batch": "F-f1-locale-key-fix",
+  "task": "B-3 影響範囲の評価",
+  "buggy_code_location": "src/triage/editorial_mission_filter.py:161-181 (_editorial_mission_prescore の blindspot_severity 計算)",
+  "precise_runtime_behavior": {
+    "en_count": "get(\"en\") は実キーが存在しないため常に 0",
+    "jp_count": "get(\"jp\") は実キーが存在しないため常に 0",
+    "consequence": "en_count と jp_count が **両方** 常に 0 → blindspot の elif 段階 (12.0 / 10.0 / 8.0) は **全て dead code** で一度も発火しない",
+    "effective_branches": [
+      "if has_en and not has_jp: blindspot = 15.0  (← score_breakdown の editorial:has_*_view 由来、正常動作)",
+      "else: blindspot = 0.0"
+    ],
+    "current_blindspot_is_binary": "0.0 か 15.0 のみ。中間段階 (8/10/12) は構造的に到達不能。"
+  },
+  "task_premise_correction": {
+    "task_claim": "日本ソース数が常に 0 扱いとなり blindspot_severity が不当に高く算出される誤爆バグ",
+    "actual_finding": "jp_count が常に 0 なのは事実だが、en_count も同時に常に 0 のため count ベースの elif は全て dead → 『不当に高く』にはならない。blindspot は has_jp_view/has_en_view 経由の binary (0 or 15) で動作中。バグの実害は『graduated 中間段階 8-12 点が永久に死んでいる』こと。",
+    "direction_of_change_after_fix": "修正で elif が復活すると、has_jp=true (第1分岐 false) かつ海外多数・日本少数のイベントが 0 → 8〜12 に上がりうる = むしろスコアが上がる方向。誤爆 (false positive) の抑制ではなく、設計どおりの graduated 評価の復元。"
+  },
+  "rescue_path": {
+    "exists": true,
+    "mechanism": "blindspot の第1分岐 `has_en and not has_jp → 15.0` は score_breakdown の editorial:has_jp_view / has_en_view を参照しており (scoring.py:546-547 で正しく設定)、sources_by_locale のバグキーとは独立。よって blindspot が完全に死んでいるわけではなく binary 信号は機能していた。",
+    "implication": "本バグは『安全網が全壊』ではなく『中間解像度の喪失』。緊急度は中 (構造バグだが production を破壊していない)。"
+  },
+  "downstream_impact": {
+    "prescore_role": "blindspot は Step1 prescore の 7 軸の 1 つ (最大 15/100)。prescore 上位 top_n(=20) は Step2 LLM スコアで上書きされる。",
+    "non_top_n_events": "top-20 圏外のイベントは prescore が最終 editorial_mission_score となり threshold(45.0) ゲートに直接効く → 中間段階の喪失で本来 8-12 点得るべきイベントが 0 点になり、45.0 を超えられず誤って除外されうる (=機会損失型のバグ、過剰通過型ではない)",
+    "top_n_selection": "prescore は top-20 への入場順位も決める → blindspot 中間段階の喪失で本来上位に来るべきイベントが LLM 評価に届かない可能性"
+  },
+  "scope_recommendation": {
+    "jp_fix": "get(\"jp\") → get(\"japan\")  (議論の余地なし)",
+    "en_fix_recommended": "get(\"en\") → 非 japan locale の合算 (main.py:941-946 の overseas_count パターンに一致)。\"global\" 単独だと middle_east/europe 等を取りこぼす。",
+    "test_impact": "tests/test_editorial_mission_filter.py:173-190 test_blindspot_intermediate_tiers が data キーに \"en\"/\"jp\" を使用。overseas-sum 方式なら baseline は green を維持するが (en+jp 両方が非 japan として合算され 12.0 を満たす)、data が意味的に誤りのため CP-2 で data キーを \"global\"/\"japan\" に更新するのが honest。"
+  }
+}
