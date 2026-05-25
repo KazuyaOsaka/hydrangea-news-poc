@@ -1,0 +1,30 @@
+{
+  "batch": "F-f1-locale-key-fix",
+  "task": "B-2 実データ構造の正本確認",
+  "model_definition": {
+    "file": "src/shared/models.py",
+    "field": "NewsEvent.sources_by_locale: dict[str, list[SourceRef]]",
+    "key_examples_comment_L46": ["japan", "global", "middle_east", "europe", "east_asia", "global_south"],
+    "derive_validator_L53_83": "sources_by_locale が空の場合、後方互換 sources_jp → region or 'japan'、sources_en → region or 'global' にフォールバック。SourceRef.region が明示されていればそれを採用 (多地域)。"
+  },
+  "event_builder": {
+    "file": "src/ingestion/event_builder.py",
+    "region_assignment": [
+      {"line": 1275, "content": "region=a.get(\"region\", \"japan\")"},
+      {"line": 1295, "content": "r = a.get(\"region\") or (\"japan\" if a.get(\"country\") == \"JP\" else \"global\")"},
+      {"line": 1402, "content": "同上"}
+    ],
+    "note": "region は記事メタの region、なければ country==JP で japan / それ以外 global。さらに middle_east 等の地域名も入りうる。"
+  },
+  "confirmed_keys": {
+    "japan": "日本ソース (旧 sources_jp 相当)",
+    "global": "欧米英語圏 (旧 sources_en のデフォルト相当)",
+    "middle_east": "中東",
+    "europe": "欧州",
+    "east_asia": "東アジア (非日本)",
+    "global_south": "グローバルサウス"
+  },
+  "key_jp_does_not_exist": true,
+  "key_en_does_not_exist": true,
+  "overseas_definition_canonical": "main.py:941-946 と一致 = sources_by_locale のうち loc != \"japan\" の全 locale を海外ソースとして合算する (\"global\" 単独ではない)"
+}

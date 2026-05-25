@@ -1,13 +1,10 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-19 (★ F-gemini-model-migrate-emergency 完了。4-A 新規 1 件
-追加 =「2026-05-19: 5/25 shutdown 緊急対応完了 — 両系統 Tier3 GA 置換 +
-Lightweight Tier1 判断 B (据置)」(ステータス Resolved/タスク化)。4-B 既存
-再評価 =「2026-05-19: 3 AI 三角測量で 2026-05 Gemini モデル戦略の方向性を
-確立」を `Resolved (実装完了 + 一部タスク化)` に更新 (emergency 移行は実装
-完了、Narrative 主軸 + Lightweight Tier1 品質検証は F-gemini-quality-tier-poc
-にタスク化)。前回 2026-05-19: F-trial-run-candidate-a-reverify 完了で
-4-A/4-B 各 1 件)
+最終更新: 2026-05-25 (★ F-f1-locale-key-fix 完了。4-A 新規 1 件追加 =
+「2026-05-25: 3 AI 三角測量で F-1 locale key bug 発見 → 即座に根本治療」
+(ステータス Resolved/タスク化)。クラウド誤り 10 (Project Knowledge 過信 +
+grep 不足) を クラウド誤り 9 の直後に新規登録。前回 2026-05-19:
+F-gemini-model-migrate-emergency 完了で 4-A 新規 1 件 + 4-B 既存再評価 1 件)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -20,6 +17,42 @@ Lightweight Tier1 判断 B (据置)」(ステータス Resolved/タスク化)。
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-25: 3 AI 三角測量で F-1 locale key bug 発見 → 即座に根本治療 (F-f1-locale-key-fix)
+
+**内容**: ChatGPT + Gemini の独立レビューが、`src/triage/editorial_mission_filter.py`
+の `_editorial_mission_prescore` 内で `sources_by_locale.get("jp", [])` /
+`get("en", [])` を参照している点を **両者独立に指摘**。実データ構造の正しい
+キーは `"japan"` / 非 japan 地域名 (`"global"`/`"middle_east"` 等)。grep の結果、
+当該ファイルは src/ 全体で `"jp"`/`"en"` キーを使う **唯一のファイル** で、他の
+triage / analysis / generation / main.py は全て `"japan"` + 「非 japan = 海外」
+パターンで統一済みと確定。CP-1 カズヤ判断 = 選択肢 1 (非 japan 合算、
+main.py:941-946 の overseas_count と同一パターン) + テスト data キー同時更新。
+機能ロジック不変、locale key 参照の正本化のみ。baseline 1417 維持。
+
+★ **クラウド初期想定の訂正**: Claude Web 側が起案した初期バッチプロンプトは
+「日本ソース数が常に 0 で blindspot が**不当に高く誤爆 (false positive)**」と
+記載していたが、Claude Code の grep で精密な実態が判明: `jp_count`/`en_count`
+が**両方**常に 0 のため blindspot の中間 elif (12.0/10.0/8.0) は **dead code**。
+実害は「不当に高い誤爆」ではなく「**中間解像度 8〜12 点の永久喪失
+(false negative 方向)**」。第1分岐 `has_en and not has_jp → 15.0` は
+score_breakdown 由来で従来から正常動作 (代替経路あり) → 安全網は全壊して
+いなかった。緊急度を ★★★ → ★★ に下方修正 (production 破壊なし、ただし
+設計どおり動いていない事実は不変で修正は妥当)。この経緯は **クラウド誤り 10
+(Project Knowledge 過信 + grep 不足の典型例)** として下記に登録。
+
+**出典**: `docs/runs/F-f1-locale-key-fix/REPORT.md` + grep_results.json +
+locale_key_inventory.json + impact_analysis.json、DECISION_LOG「2026-05-25:
+F-f1-locale-key-fix」、CP-1 カズヤ判断 (2026-05-25)。ChatGPT / Gemini レビュー
+(2026-05-25)。
+
+**ステータス**: `Resolved (タスク化)` — 構造バグは根本治療完了
+(baseline 1417 維持 + 試運転 status=completed)。残課題 = locale key 定数
+一元化 (選択肢 3) は「1 バッチで欲張らない」原則で別バッチ任意。同レビューで
+発見の F-jp-coverage-cache-judgement-persist (★★高) / F-script-writer-target-enemy-fix
+(★★★高) を FUTURE_WORK にタスク化済。
+
+---
 
 ### 2026-05-19: 5/25 shutdown 緊急対応完了 — 両系統 Tier3 GA 置換 + Lightweight Tier1 判断 B (据置) (F-gemini-model-migrate-emergency)
 
@@ -764,6 +797,62 @@ Hydrangea ミッション徹底) だが、ルール累積で全体劣化を招�
 - F-particular-angle-redesign-extension 完了 (2026-05-08)
 - `CLAUDE.md` クラウド誤りセクション
 - `docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 3.6 / 3.7
+
+### 2026-05-25: クラウド誤り 10 — Project Knowledge 過信 + grep 不足 (F-f1-locale-key-fix で記録)
+
+> ★ 採番について: 本エントリは docs 登録済の クラウド誤り 1-7 + 9 に続く **10** を
+> 採番した。Claude Web 側で内部メモとして 8 や 10-16 番に該当する誤りが蓄積して
+> いたが、docs に登録されていなかったため正本としては存在しない。Claude Web 側の
+> 個人作業ログを docs の真実と取り違えること自体が本誤り (Project Knowledge 過信)
+> と同じ構造であり、本訂正で docs 連番を正本として再確立する。
+
+**背景**:
+F-f1-locale-key-fix の起案時、Claude Web 側 (3 AI 三角測量のレビュー集約役) が
+作成した初期バッチプロンプトは、F-1 locale key bug の実害を「日本ソース数が
+常に 0 で blindspot_severity が **不当に高く算出される誤爆 (false positive)**」と
+断定的に記載していた。しかし Claude Code の grep + コード精読で実態が異なる
+ことが判明:
+- `jp_count` (`get("jp")`) と `en_count` (`get("en")`) が **両方** 常に 0
+- → blindspot の count ベース中間 elif (12.0/10.0/8.0) は **全て dead code**
+  で一度も発火しない
+- → 実害は「不当に高い誤爆」ではなく「**中間解像度 8〜12 点の永久喪失
+  (false negative 方向)**」。修正後はむしろ一部スコアが 0→8〜12 に上がる
+- → 第1分岐 `has_en and not has_jp → 15.0` は score_breakdown 由来で従来から
+  正常動作 (代替経路あり) = 安全網は全壊していなかった
+
+**誤りの本質**:
+- **Project Knowledge 過信**: バグの「方向 (高く/低く)」を実コードのトレース
+  なしに推定で断定した。`elif` の発火条件 (en_count も 0 = 全分岐 dead) を
+  読まずに「jp_count=0 → 条件が緩くなる → 高くなる」と短絡。
+- **grep 不足**: 「`"jp"`/`"en"` が実データ構造に存在するか」を grep で確認
+  すれば、両キー不在 = 両 count が 0 という事実に即到達できた。
+
+**害**:
+- バグの緊急度を誤評価 (★★★ と起案 → 実態は ★★、production 破壊なし)
+- 誤った実害記述が DECISION_LOG / CURRENT_STATE に転記されると、将来の
+  保守者が「過剰通過を抑制する修正」と誤解し、逆方向 (機会損失の解消) の
+  本質を見失う
+
+**正しい作法**:
+- バグの実害・方向を記述する前に、必ず **当該コードの全分岐をトレース** する
+- 「キーが存在する」前提を置く前に **grep で実データ構造を確認** する
+  (本ファイルは src/ で `"jp"`/`"en"` を使う唯一のファイルだった)
+- Project Knowledge / 過去ログの記述は **仮説** として扱い、コードで検証する
+  (CURRENT_STATE「整合の説明であって検証ではない」カズヤ原則と同根)
+
+**類似誤り**:
+- クラウド誤り 3 (直近のチャットしか振り返らず過去経緯無視、2026-05-02): 別系統
+- 「整合の説明であって検証ではない」(独立検証バッチの価値、CURRENT_STATE §7): 同根
+
+**ステータス**: `Resolved (記録済み + 訂正反映)` — F-f1-locale-key-fix の
+REPORT.md / DECISION_LOG / 本 4-A エントリで実害の正確な評価に訂正済。
+バグ自体は選択肢 1 で根本治療完了 (baseline 1417 維持)。
+
+**出典**:
+- F-f1-locale-key-fix CP-1 カズヤ判断 (2026-05-25、クラウド初期想定の訂正受容)
+- `docs/runs/F-f1-locale-key-fix/impact_analysis.json` (precise_runtime_behavior /
+  task_premise_correction)
+- `docs/runs/F-f1-locale-key-fix/grep_results.json`
 
 ### 2026-05-08: 系統 3 (旧系統 2) の典型パターン:日本-海外の評価対立 (カズヤ提起、F-particular-angle-redesign-extension で記録)
 

@@ -1,0 +1,12 @@
+{
+  "batch": "F-f1-locale-key-fix",
+  "captured_at": "2026-05-25T08:44:18Z",
+  "git_branch": "feature/F-f1-locale-key-fix",
+  "git_head_at_branch": "231decdf2bc1c8bb35ffd1e61690fff856c581ee",
+  "main_head_expected": "231decd",
+  "main_head_actual": "231decdf2bc1c8bb35ffd1e61690fff856c581ee",
+  "python_version": "Python 3.11.15",
+  "pytest_version": "pytest 9.0.2",
+  "platform": "Darwin 25.2.0 arm64",
+  "baseline_expected": "1417 passed"
+}

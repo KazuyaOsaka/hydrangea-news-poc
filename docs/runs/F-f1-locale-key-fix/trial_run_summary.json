@@ -1,0 +1,64 @@
+{
+  "batch": "F-f1-locale-key-fix",
+  "task": "D-2 trial run",
+  "status": "EXECUTED — clean (post CP-1 カズヤ判断: 選択肢 1 非 japan 合算 + test data キー同時更新)",
+  "executed_at": "2026-05-25",
+  "pre_trial_baseline": {
+    "command": "python -m pytest tests/ --tb=short -q",
+    "result": "1417 passed",
+    "note": "Task C 改修 (editorial_mission_filter.py locale key + test data キー) 後に 1417 維持確認済。targeted tests/test_editorial_mission_filter.py 32 passed (test_blindspot_intermediate_tiers が新キー global/japan + overseas-sum で 12.0 を再現)。"
+  },
+  "trial_run": {
+    "ingestion": {
+      "command": "python -m src.ingestion.run_ingestion",
+      "result": "batch_id=20260525_085458, normalized=47, new=1355, skipped_duplicates=176",
+      "status": "OK"
+    },
+    "main_pipeline": {
+      "command": "python -m src.main --mode normalized",
+      "exit_code": 0,
+      "status": "completed",
+      "slots_published": 3,
+      "slot_breakdown": "Slot-1 video (cls-b0a1e9bebbd5) + Slot-2/3 article-only (F-16-A TOP_N_VIDEOS_PER_RUN=1)",
+      "generation_outcomes": {
+        "script": {"used_fallback": false, "retries": 0, "sections": 4, "duration_s": 80},
+        "article": {"used_fallback": false, "retries": 0, "slot2_chars": 1889, "slot3_chars": 1740}
+      },
+      "budget": {"run_llm_calls": 42, "run_budget": 150, "day_llm_calls": 42, "publish_reserve_preserved": true, "slot1_budget_guaranteed": true}
+    }
+  },
+  "editorial_mission_filter_after_fix": {
+    "total_candidates": 369,
+    "passed_threshold": 20,
+    "rejected_before_generation": 349,
+    "llm_scored_count": 20,
+    "llm_failed_count": 0,
+    "prescore_stats": {"min": 0.0, "max": 65.2, "mean": 21.62}
+  },
+  "prescore_distribution_comparison": {
+    "method_note": "run_summary レベルの before/after は入力 RSS バッチが異なる (before=753 cands / after=369 cands) ため confounded で blindspot 修正の効果を分離できない。よって blindspot 計算式を旧キー/新キーで決定的に比較 (before_after_prescore.json)。",
+    "run_summary_before_prefix": {"source": "data/output/run_summary.json の前回 run (pre-fix)", "total": 753, "prescore_stats": {"min": 0.0, "max": 72.4, "mean": 23.3}},
+    "run_summary_after_fix": {"total": 369, "prescore_stats": {"min": 0.0, "max": 65.2, "mean": 21.62}},
+    "deterministic_blindspot_proof": {
+      "file": "before_after_prescore.json",
+      "findings": [
+        "海外3+日本1: OLD blind=0.0 (en=0,jp=0 ← キー不在) → NEW blind=12.0 (en=3,jp=1)  Δ=+12.0",
+        "中東のみ3+日本1: OLD blind=0.0 → NEW blind=12.0 (en=3,jp=1)  Δ=+12.0  ★ 選択肢 1 が選択肢 2(global単独)より正しい根拠 (middle_east を海外として算入)",
+        "海外2+日本0: OLD 0.0 → NEW 10.0  Δ=+10.0",
+        "海外2+日本1: OLD 0.0 → NEW 8.0  Δ=+8.0",
+        "海外1+日本view無 (has_jp=F,has_en=T): OLD 15.0 → NEW 15.0  Δ=0.0  ★ 第1分岐は score_breakdown 由来で従来から正常動作 = 代替経路"
+      ],
+      "conclusion": "修正で blindspot の中間 elif (8/10/12) が dead code から復活し、海外多数・日本少数のイベントが 0 → 8〜12 に上がる (= 設計どおりの graduated 評価の復元、false negative 方向の是正)。binary 15.0 経路は不変。タスク初期想定『不当に高く誤爆 (false positive)』は誤りで、実態は『中間解像度の喪失』であることを決定的に確認 (クラウド誤り 10)。"
+    }
+  },
+  "verification": {
+    "404_or_NOT_FOUND_in_log": false,
+    "Traceback_in_log": false,
+    "ERROR_in_log": false,
+    "used_fallback": false,
+    "defense_layers_5_normal": true,
+    "video_candidate_lost": false,
+    "note": "防衛機構 5 層 (F-1/F-2/F-13.B/F-5/F-13 隠れ層) 異常挙動なし。F-13.B は Slot-1/2/3 で has_jp_coverage 判定 (Slot-2/3 = no_match 確定で blind_spot_global)。動画化候補消失なし (Slot-1 video + Slot-2/3 article、F-16-A 通常挙動)。"
+  },
+  "conclusion": "機能回帰なし。status=completed、3 slots published、used_fallback=false、404/Traceback/ERROR 0 件。locale key 修正は機能ロジック不変で production 挙動に異常なし。blindspot 中間段階の復活は決定的に確認 (before_after_prescore.json)。"
+}

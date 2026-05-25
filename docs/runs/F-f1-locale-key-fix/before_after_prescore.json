@@ -1,0 +1,75 @@
+{
+  "note": "_editorial_mission_prescore の blindspot 計算を旧キー(get(en)/get(jp))と新キー(非japan合算+japan)で比較。第1分岐(has_en and not has_jp→15.0)は score_breakdown 由来で両者同一。",
+  "scenarios": [
+    {
+      "scenario": "海外3(global)+日本1, has_jp=T has_en=T",
+      "old": {
+        "en": 0,
+        "jp": 0,
+        "blindspot": 0.0
+      },
+      "new": {
+        "en": 3,
+        "jp": 1,
+        "blindspot": 12.0
+      },
+      "delta": 12.0
+    },
+    {
+      "scenario": "中東のみ3+日本1, has_jp=T has_en=T",
+      "old": {
+        "en": 0,
+        "jp": 0,
+        "blindspot": 0.0
+      },
+      "new": {
+        "en": 3,
+        "jp": 1,
+        "blindspot": 12.0
+      },
+      "delta": 12.0
+    },
+    {
+      "scenario": "海外2(global+europe)+日本0, has_jp=T has_en=T",
+      "old": {
+        "en": 0,
+        "jp": 0,
+        "blindspot": 0.0
+      },
+      "new": {
+        "en": 2,
+        "jp": 0,
+        "blindspot": 10.0
+      },
+      "delta": 10.0
+    },
+    {
+      "scenario": "海外2(global)+日本1, has_jp=T has_en=T",
+      "old": {
+        "en": 0,
+        "jp": 0,
+        "blindspot": 0.0
+      },
+      "new": {
+        "en": 2,
+        "jp": 1,
+        "blindspot": 8.0
+      },
+      "delta": 8.0
+    },
+    {
+      "scenario": "海外1+日本view無, has_jp=F has_en=T",
+      "old": {
+        "en": 0,
+        "jp": 0,
+        "blindspot": 15.0
+      },
+      "new": {
+        "en": 1,
+        "jp": 0,
+        "blindspot": 15.0
+      },
+      "delta": 0.0
+    }
+  ]
+}
