@@ -99,18 +99,58 @@ CREATE INDEX IF NOT EXISTS idx_recency_channel_published
 -- has_jp_coverage = True  → 大手メディア報道あり (divergence パターンで生成)
 -- has_jp_coverage = False → 真の blind_spot_global (Hydrangea ミッション本丸)
 -- 24h キャッシュで重複検証を抑制する。
+-- F-jp-coverage-cache-judgement-persist (2026-05-26): B-3' LLM judgement の
+-- cache 永続化欠落を根本治療。llm_judgement / llm_judgement_text は
+-- JpCoverageResult が持つが従来 cache に保存されておらず、cache hit 時に
+-- None で復元されていた (has_jp_coverage 自体は保存済のため Recall 劣化は
+-- ないが、判定根拠テキストの監査トレースが round-trip で消失)。新列は
+-- DEFAULT NULL = 既存行の cache hit 挙動と完全一致 (後方互換)。既存 DB には
+-- init_db 内の _migrate_jp_coverage_cache() で idempotent に ADD COLUMN する
+-- (DDL は CREATE TABLE IF NOT EXISTS のため作成済テーブルには列が増えない)。
 CREATE TABLE IF NOT EXISTS jp_coverage_cache (
-    event_id         TEXT PRIMARY KEY,
-    has_jp_coverage  INTEGER NOT NULL,
-    matched_tier     TEXT,
-    matched_urls     TEXT,           -- JSON 配列
-    matched_domains  TEXT,           -- JSON 配列
-    excluded_urls    TEXT,           -- JSON 配列
-    search_query     TEXT,
-    cached_at        TEXT NOT NULL,  -- ISO 8601
-    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    event_id            TEXT PRIMARY KEY,
+    has_jp_coverage     INTEGER NOT NULL,
+    matched_tier        TEXT,
+    matched_urls        TEXT,           -- JSON 配列
+    matched_domains     TEXT,           -- JSON 配列
+    excluded_urls       TEXT,           -- JSON 配列
+    search_query        TEXT,
+    cached_at           TEXT NOT NULL,  -- ISO 8601
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    llm_judgement       TEXT,           -- B-3' LLM 判定 "match"/"no_match"/"uncertain"/NULL
+    llm_judgement_text  TEXT            -- B-3' 判定該当文 (監査・デバッグ用)
 );
 """
+
+
+# F-jp-coverage-cache-judgement-persist (2026-05-26): jp_coverage_cache に
+# 後付けで追加する列の一覧 (列名 -> SQL 型)。init_db で idempotent に適用する。
+_JP_COVERAGE_CACHE_ADDED_COLUMNS: dict[str, str] = {
+    "llm_judgement": "TEXT",
+    "llm_judgement_text": "TEXT",
+}
+
+
+def _migrate_jp_coverage_cache(conn: sqlite3.Connection) -> None:
+    """jp_coverage_cache に B-3' LLM judgement 列を idempotent に追加する。
+
+    DDL は CREATE TABLE IF NOT EXISTS のため、既に作成済みの本番 DB には新列が
+    追加されない。PRAGMA table_info で既存列を確認し、欠けている列のみ
+    ALTER TABLE ADD COLUMN する。ADD COLUMN は DEFAULT NULL なので既存行は
+    NULL となり、従来の cache hit 挙動 (llm_judgement=None 復元) と完全一致する
+    (= 後方互換、テーブル再構築不要で安全)。
+    """
+    try:
+        existing = {row[1] for row in conn.execute("PRAGMA table_info(jp_coverage_cache)")}
+    except sqlite3.OperationalError as exc:  # pragma: no cover — テーブル未作成等
+        logger.warning(f"[DB] jp_coverage_cache migration skipped ({exc})")
+        return
+    for column, sql_type in _JP_COVERAGE_CACHE_ADDED_COLUMNS.items():
+        if column not in existing:
+            conn.execute(
+                f"ALTER TABLE jp_coverage_cache ADD COLUMN {column} {sql_type}"
+            )
+            logger.info(f"[DB] jp_coverage_cache: added column {column} {sql_type}")
 
 
 def _connect(db_path: Path) -> sqlite3.Connection:
@@ -140,6 +180,9 @@ def init_db(db_path: Path) -> None:
     """テーブルを初期化する。"""
     with _connect(db_path) as conn:
         conn.executescript(_DDL)
+        # F-jp-coverage-cache-judgement-persist (2026-05-26): 作成済 DB への
+        # B-3' LLM judgement 列の後付け追加 (idempotent、後方互換)。
+        _migrate_jp_coverage_cache(conn)
     logger.info(f"DB initialized at {db_path}")
 
 

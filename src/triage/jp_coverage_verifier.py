@@ -678,7 +678,8 @@ class JpCoverageVerifier:
                     """
                     SELECT
                         has_jp_coverage, matched_tier, matched_urls, matched_domains,
-                        excluded_urls, search_query, cached_at
+                        excluded_urls, search_query, cached_at,
+                        llm_judgement, llm_judgement_text
                     FROM jp_coverage_cache
                     WHERE event_id = ?
                     """,
@@ -713,6 +714,11 @@ class JpCoverageVerifier:
             search_query=row[5] or "",
             cached=True,
             cached_at=cached_at_str,
+            # F-jp-coverage-cache-judgement-persist (2026-05-26): B-3' LLM
+            # judgement を cache から復元 (round-trip 忠実性)。列が NULL の
+            # 既存行は None となり従来挙動と一致 (後方互換)。
+            llm_judgement=row[7],
+            llm_judgement_text=row[8],
         )
 
     def _save_cache(self, result: JpCoverageResult) -> None:
@@ -723,8 +729,9 @@ class JpCoverageVerifier:
                     """
                     INSERT OR REPLACE INTO jp_coverage_cache (
                         event_id, has_jp_coverage, matched_tier, matched_urls,
-                        matched_domains, excluded_urls, search_query, cached_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        matched_domains, excluded_urls, search_query, cached_at,
+                        llm_judgement, llm_judgement_text
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         result.event_id,
@@ -735,6 +742,10 @@ class JpCoverageVerifier:
                         json.dumps(result.excluded_urls, ensure_ascii=False),
                         result.search_query,
                         datetime.now().isoformat(),
+                        # F-jp-coverage-cache-judgement-persist (2026-05-26):
+                        # B-3' LLM judgement を cache に永続化 (round-trip 忠実性)。
+                        result.llm_judgement,
+                        result.llm_judgement_text,
                     ),
                 )
                 conn.commit()

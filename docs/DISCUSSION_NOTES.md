@@ -18,6 +18,51 @@ F-gemini-model-migrate-emergency 完了で 4-A 新規 1 件 + 4-B 既存再評�
 
 ## 未分類 (Active)
 
+### 2026-05-26: 3 AI 三角測量で F-13.B cache 監査欠落を発見 → 根本治療 (案 A) + クラウド誤り 10 の 2 回目発生 (F-jp-coverage-cache-judgement-persist)
+
+**内容**: ChatGPT + Gemini の独立レビューが、`JpCoverageResult.llm_judgement` /
+`llm_judgement_text` (B-3' で導入) が 24h SQLite cache (`jp_coverage_cache`) に
+永続化されていない点を **両者独立に指摘** (ChatGPT = score_breakdown 経由案、
+Gemini = DB schema 拡張案)。CP-1 カズヤ判断 = **案 A (DB schema 拡張)**: cache 層で
+round-trip を lossless 化 (DDL 2 列 + idempotent migration + verifier の save/get
+拡張、判定ロジック不変)。案 B (evidence 監査トレース新設) は新機能のため別バッチ
+(F-evidence-jp-coverage-audit-trail) に分離。baseline 1417 維持、1 batch 試運転で
+cache hit 時 llm_judgement 忠実復元を実証 (Slot-2 no_match = B-3' 安全装置 +
+判定根拠テキスト復元、API call 0)。
+
+★ **バッチプロンプト記載の実害を grep + 本番 DB 実測で訂正**: プロンプトは
+「cache hit で llm_judgement=None → 後方互換パス (沈黙=uncertain) → **Recall 劣化
+リスク**」「evidence/run_summary での**監査不能化**」と記載していたが、コード精読
+で実態判明: `verify()` は cache hit 時 `_get_cached()` を**そのまま return** し
+has_jp_coverage を再計算しない (B-3' 安全装置の効果は boolean として保存済 =
+**Recall 劣化なし**)。`grep llm_judgement src/` は verifier 以外 0 件 = evidence/
+run_summary に元々出力されておらず**失う既存監査トレースは存在しない**。本番 DB
+24 行で B-3' 発火行は 1 行 (4.2%)、それも has_jp_coverage は正しく保存済。→ 真の
+defect = 「cache round-trip のデータ忠実性欠落 (判定根拠テキスト消失)」、実害は
+潜在的・将来面。緊急度 ★★ → ★ に下方修正。
+
+★★ **クラウド誤り 10 の 2 回目発生**: F-f1-locale-key-fix (2026-05-25) で誤り 10
+(Project Knowledge 過信 + grep 不足) を docs 正本に記録した**直後**、本バッチ起案
+でも同じパターンを再発 = 外部レビュー (ChatGPT + Gemini 共通) の「Recall 劣化」
+「監査不能化」指摘を grep + 実測なしに鵜呑みにした。**本質は再番号付け不要で同一
+= 「Project Knowledge / 外部指摘の鵜呑み = 検証なしの仮説受容」**。今後の作法:
+外部レビュー指摘 (3 AI 三角測量含む) も**起案前に grep + コード精読で検証**する。
+「整合の説明であって検証ではない」(カズヤ哲学) を外部レビューにも適用。
+
+**出典**: `docs/runs/F-jp-coverage-cache-judgement-persist/REPORT.md` +
+cache_schema_audit.json + cache_hit_behavior.json + impact_estimate.json +
+implementation_options.md + golden_accuracy.json + trial_run_summary.json、
+DECISION_LOG「2026-05-26: F-jp-coverage-cache-judgement-persist」、CP-1 カズヤ判断
+(2026-05-26)。ChatGPT / Gemini レビュー (2026-05-25)。
+
+**ステータス**: `Resolved (タスク化)` — cache 永続化は根本治療完了 (baseline 1417
+維持 + 試運転 cache hit 実証)。残課題 = F-evidence-jp-coverage-audit-trail (★中、
+案 B = evidence 監査トレース新設) + scripts schema doc-drift (★低) を FUTURE_WORK
+にタスク化済。クラウド誤り 10 の 2 回目発生は本エントリで記録 (再発防止 = 外部
+指摘の grep-first 検証)。
+
+---
+
 ### 2026-05-25: 3 AI 三角測量で F-1 locale key bug 発見 → 即座に根本治療 (F-f1-locale-key-fix)
 
 **内容**: ChatGPT + Gemini の独立レビューが、`src/triage/editorial_mission_filter.py`
@@ -252,8 +297,14 @@ response_text が必要になる可能性。スコープ拡大せず観察記録
 
 **出典**: `docs/runs/F-trial-run-post-llm-extraction/REPORT.md` §2.3 重要5。
 
-**ステータス**: `Active` (記録のみ、優先度低。F-trial-run-candidate-a-reverify
-or 本番配線判断バッチで response_text ロギング要否を併せて判断可)。
+**ステータス**: `部分的解消` — ★ F-jp-coverage-cache-judgement-persist
+(2026-05-26) で `llm_judgement` / `llm_judgement_text` (= 判定該当文) を
+`jp_coverage_cache` に**永続化** (案 A)。これにより cache hit 時も判定分類値 +
+判定該当文が忠実復元され、B-3' 誤判定デバッグの第一歩 (なぜ no_match か) が cache
+から追える。残課題 = Gemini の **full response_text** (判定該当文より広い全文) の
+ロギングは未対応 (`_parse_llm_judgement` が抽出した matched_text のみ保存)。full
+response_text が要る場合は別途検討 (本番配線判断バッチ or
+F-evidence-jp-coverage-audit-trail で併せ判断可)。
 
 ### 2026-05-16: 「LLM の知性に委ねる」原則の解釈見直し — uncertain は「LLM の否定」ではなく「LLM の沈黙」 (F-jp-coverage-llm-judgement-extraction Task E 想定外退行からの学び)
 

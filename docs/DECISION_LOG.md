@@ -5201,7 +5201,7 @@ functional 参照されていること、および「shutdown 後 404 は retry 
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `ddc2117` (feat: F-f1-locale-key-fix F-1 EditorialMissionFilter の locale key 修正) / `d6ed916` (Merge branch 'feature/F-f1-locale-key-fix')。★ F-jp-coverage-cache-judgement-persist / 2026-05-26 で実ハッシュ追記。
 - 改修ファイル:
   - `src/triage/editorial_mission_filter.py` (L161-167 locale key、不変原則 3 例外)
   - `tests/test_editorial_mission_filter.py` (L175-184 data キー、CP-1 承認)
@@ -5220,4 +5220,109 @@ functional 参照されていること、および「shutdown 後 404 は retry 
 - レビュー出典: ChatGPT レビュー / Gemini レビュー (2026-05-25、両者独立指摘)
 - 関連バッチ:
   - F-jp-coverage-cache-judgement-persist (★ 後続、同レビュー由来、次バッチ最有力)
+  - F-script-writer-target-enemy-fix (★ 後続、Gemini 独自指摘)
+
+---
+
+## 2026-05-26: F-jp-coverage-cache-judgement-persist — F-13.B llm_judgement の 24h cache 永続化
+
+### 背景
+
+3 AI 三角測量 (ChatGPT + Gemini) のレビューが、`src/triage/jp_coverage_verifier.py`
+の `JpCoverageResult.llm_judgement` / `llm_judgement_text` (B-3' で導入) が
+24h SQLite cache (`jp_coverage_cache`) に永続化されていない点を **両者独立に
+指摘**。ChatGPT は score_breakdown 経由案、Gemini は DB schema 拡張案を提示。
+
+### 議論 (Task B 調査 + CP-1、★ クラウド誤り 10 の 2 回目発生)
+
+- **バッチプロンプト記載の実害が実態と乖離 (grep + 本番 DB 実測で訂正)**:
+  - プロンプトは「cache hit で llm_judgement=None → 後方互換パス (沈黙=uncertain)
+    に落ちる → **Recall 劣化リスク**」「evidence/run_summary での**監査不能化**」と
+    記載。
+  - コード精読の結果: `verify()` は cache hit 時 `_get_cached()` の結果を
+    **そのまま return** し、`has_jp_coverage` を `llm_judgement` から**再計算しない**
+    (verifier.py:471-478)。B-3' 安全装置の効果 (has_jp_coverage=False) は
+    **boolean として cache 保存済**で完全復元 → **Recall 劣化は発生しない**。
+  - `grep llm_judgement src/` = verifier 以外 0 件。main.py は `has_jp_coverage` を
+    log するのみで evidence/run_summary に書かない → **既存の監査トレースは存在しない**
+    (cache hit/miss 問わず)。
+  - 本番 DB 実測 (24 行): B-3' 安全装置発火行 (False + WL マッチ) = **1 行 (4.2%)**。
+    その行も `has_jp_coverage=False` は正しく保存済。
+  - → 真の defect = 「cache round-trip が `llm_judgement` / `llm_judgement_text` の
+    **フィールド値 (判定根拠テキスト) を失うデータ忠実性の不整合**」。実害は
+    **潜在的・将来面** (将来 evidence 監査を足したとき cache hit/miss で値が割れる
+    土台問題)。緊急度 ★★ → ★ に下方修正。
+- **★ クラウド誤り 10 の 2 回目発生**: F-f1-locale-key-fix (2026-05-25) で誤り 10
+  (Project Knowledge 過信 + grep 不足) を docs 正本に記録した直後、本バッチ起案でも
+  同じパターンを再発 = 外部レビュー (ChatGPT + Gemini 共通) の「Recall 劣化」
+  「監査不能化」指摘を grep + 実測なしに鵜呑みにした。本質は「Project Knowledge /
+  外部指摘の鵜呑み = 検証なしの仮説受容」(再番号付けは不要)。今後の作法: 外部
+  レビュー指摘も grep + コード精読で検証してから起案する。
+- **実装方針 3 案**: 案 A (DB schema 拡張) / 案 B (score_breakdown 経由) / 案 C
+  (A+B 併用)。案 B 単独は cache hit で llm_judgement=None のまま注入 → 不整合を
+  新設し defect を解消しない。案 C はバグ修正 + 新機能の混載でスコープ膨張。
+
+### 決定 (CP-1 カズヤ判断)
+
+- **実装方針 = 案 A (DB schema 拡張、クラウド推奨採用)**: defect の根本原因
+  (cache が llm_judgement を失う) を cache 層で lossless 化 = 「対症療法じゃなく
+  根本治療」。案 B (evidence 監査トレース新設) は**バグ修正でなく新機能**のため
+  別バッチ FUTURE_WORK 化 (F-evidence-jp-coverage-audit-trail)。
+- **実害訂正受容**: Recall 劣化なし・既存監査トレース不在を実態として受容。緊急度
+  ★★ → ★ 下方修正受容、ただしバッチ中止せず (改修最小・低リスク + 「負債を残さ
+  ない」+ Phase A.5-3c 自動化の前提)。
+- **クラウド誤り 10 の 2 回目発生を DISCUSSION_NOTES に記録**。
+
+### 結果
+
+- 改修 2 ファイル (判定ロジック不変、既存メソッド contract 完全維持):
+  - `src/storage/db.py`: `jp_coverage_cache` DDL に `llm_judgement` /
+    `llm_judgement_text` (TEXT) 追加 + idempotent migration
+    `_migrate_jp_coverage_cache()` (PRAGMA table_info → 欠列のみ ALTER TABLE
+    ADD COLUMN ... DEFAULT NULL) を `init_db` に組込。
+  - `src/triage/jp_coverage_verifier.py` (不変原則 3 例外): `_get_cached()` SELECT
+    + `JpCoverageResult` 復元に 2 列追加、`_save_cache()` INSERT に 2 列追加。
+    判定パス (B-3' if/else) の diff = **空** (decision-path 不変を git diff で確認)。
+- baseline: 改修後 **1417 passed 維持** (既存 cache テスト非破壊)。
+- migration 検証: 本番 DB コピー + 実本番 DB で 24 行保全 / 2 列追加 / 既存行 NULL
+  (後方互換) / 二重実行 idempotent。
+- golden (D-2): Recall 非劣化を**決定パス不変性の証明**で確認 (decision-path diff 空
+  + B-3' 判定テスト 27 passed)。live golden 再測定は Gemini Grounding の run 間
+  分散による confound + canonical REPORT 上書き副作用 + script の自前 temp schema
+  (改修を exercise しない) のため primary verification に**非採用** (カズヤ承認下で
+  実行可能)。
+- 1 batch 試運転 (batch 20260526_035220): exit 0 / status=completed / 3 slots
+  published (Slot-1 video + Slot-2/3 article) / retries=0 / 404・Traceback 0。
+  F-13.B 3 件で llm_judgement を cache 永続化 (Slot-1 uncertain / **Slot-2 no_match**
+  = B-3' 安全装置発火 + 判定根拠テキスト保存 / Slot-3 uncertain)。run 2 (verifier
+  replay、API call が来たら fail する client) で 3 件全て cached=True + run 1 と完全
+  一致 + 0 API call = **cache hit 時の llm_judgement 忠実復元を本番フローで実証**。
+- 不変原則違反なし。不変原則 3 例外条件 **5 点全充足** (実装バグ修正 = 永続化欠落の
+  不整合修正 + 設計変更ではない = cache 列追加 + シリアライズ拡張のみ判定ロジック
+  不変 + 既存メソッド contract 完全維持 + baseline 1417 維持 + カズヤ承認済)。
+  `src/triage/` の jp_coverage_verifier.py 以外 / `src/analysis/` /
+  `article_writer.py` / `script_writer.py` 既存ルート / `retry.py` / `configs/` /
+  `scripts/` / `CLAUDE.md` / `tests/` = 0 行変更。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 改修ファイル:
+  - `src/storage/db.py` (jp_coverage_cache DDL 2 列 + `_migrate_jp_coverage_cache`)
+  - `src/triage/jp_coverage_verifier.py` (`_get_cached` / `_save_cache`、不変原則 3 例外)
+- 新規ファイル (`docs/runs/F-jp-coverage-cache-judgement-persist/`):
+  - `REPORT.md` / `environment_snapshot.json` / `cache_schema_audit.json` /
+    `cache_hit_behavior.json` / `impact_estimate.json` / `implementation_options.md` /
+    `diff_summary.md` / `golden_accuracy.json` / `trial_run_summary.json`
+- ドキュメント更新:
+  - `docs/CURRENT_STATE.md` (全置換更新、17 つ目バッチ 1-O)
+  - `docs/DECISION_LOG.md` (本エントリ + F-f1-locale-key-fix のコミットハッシュ
+    `ddc2117` / `d6ed916` 追記)
+  - `docs/FUTURE_WORK.md` (本バッチ完了済み移動 + F-evidence-jp-coverage-audit-trail
+    新規 ★中 + scripts schema doc-drift 新規 ★低)
+  - `docs/DISCUSSION_NOTES.md` (4-A 新規 1 件 + クラウド誤り 10 の 2 回目発生 追記)
+- レビュー出典: ChatGPT レビュー / Gemini レビュー (2026-05-25、両者独立指摘)
+- 関連バッチ:
+  - F-f1-locale-key-fix (★ 前バッチ、同レビュー由来)
+  - F-evidence-jp-coverage-audit-trail (★ 後続候補、案 B 単独 = evidence 監査トレース新設)
   - F-script-writer-target-enemy-fix (★ 後続、Gemini 独自指摘)
