@@ -1,14 +1,16 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-25 (★ F-f1-locale-key-fix 完了。`src/triage/editorial_mission_filter.py`
-の locale key bug (`get("jp"/"en")` → `"japan"` + 非 japan 合算) を 3 AI
-三角測量レビュー由来で根本治療、機能ロジック不変。`F-f1-locale-key-fix` を
-完了済みに移動。同レビューで発見の **F-jp-coverage-cache-judgement-persist**
-(★★高、F-13.B llm_judgement cache 永続化、ChatGPT+Gemini 両者指摘、次バッチ
-最有力) + **F-script-writer-target-enemy-fix** (★★★高、target_enemy 定義修正、
-Gemini 独自指摘) を緊急度 高に新規追加。baseline 1417 passed 維持、1 batch
-試運転 status=completed。前回 2026-05-19: F-gemini-model-migrate-emergency
-完了、5/25 shutdown 緊急対応 (Tier3 GA 一括置換))
+最終更新: 2026-05-26 (★ F-jp-coverage-cache-judgement-persist 完了。F-13.B の
+`llm_judgement` / `llm_judgement_text` を `jp_coverage_cache` に永続化 (案 A、DB
+schema 2 列 + idempotent migration + verifier の save/get 拡張、判定ロジック不変)。
+`F-jp-coverage-cache-judgement-persist` を完了済みに移動。★ CP-1 実害訂正:
+Recall 劣化なし・既存監査トレース不在 = 真の defect は cache round-trip のデータ
+忠実性欠落、緊急度 ★★→★ (クラウド誤り 10 の 2 回目発生を記録)。新規分離 =
+**F-evidence-jp-coverage-audit-trail** (★中、案 B = evidence 監査トレース新設) +
+**scripts schema doc-drift** (★低)。**F-script-writer-target-enemy-fix** (★★★高、
+Gemini 独自指摘) を次バッチ最有力に格上げ。baseline 1417 passed 維持、1 batch
+試運転 status=completed。前回 2026-05-25: F-f1-locale-key-fix 完了
+(locale key bug 根本治療))
 
 このドキュメントは「今は対応せず、将来検討・対応すべき項目」を記録する。各バッチ完了時に新しい項目が追加され、対応完了したら「完了済み」セクションに移動する。
 
@@ -119,13 +121,23 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 - ~~**F-f1-locale-key-fix** ★★高 (3 AI 三角測量レビュー / 2026-05-25 起案)~~ → ★ **完了 (F-f1-locale-key-fix / 2026-05-25)**。`src/triage/editorial_mission_filter.py` の `_editorial_mission_prescore` 内 `sources_by_locale.get("jp"/"en")` を実データ構造の正しいキー (`"japan"` + 非 japan 合算 = main.py overseas_count パターン) に修正。機能ロジック不変、locale key 参照の正本化のみ。CP-1 カズヤ判断 = 選択肢 1 (非 japan 合算) + test data キー同時更新。★ クラウド初期想定 (「不当に高い誤爆」) を grep で訂正 = 実態は「中間解像度 8〜12 点の永久喪失 (false negative 方向)」、緊急度 ★★★→★★ (クラウド誤り 10 記録)。baseline 1417 維持、1 batch 試運転 status=completed。詳細は完了済みセクション + `docs/runs/F-f1-locale-key-fix/REPORT.md`。
 
-- **F-jp-coverage-cache-judgement-persist** ★★高 (3 AI 三角測量レビュー / 2026-05-25 起案、★ **次バッチ最有力**、ChatGPT + Gemini 両者独立指摘)
-  - 背景: `src/triage/jp_coverage_verifier.py` の `CoverageCheckResult` は `llm_judgement` / `llm_judgement_text` / `broad_llm_judgement` / `angle_llm_judgement` フィールドを持つが (B-3' で導入)、24h SQLite キャッシュ (`jp_coverage_cache` テーブル) に **llm_judgement が永続化されていない可能性** を ChatGPT + Gemini が独立指摘。キャッシュヒット時に B-3' の LLM judgement (no_match の明示的否定) が復元されず、後方互換パス (沈黙=uncertain) に落ちると Recall が劣化しうる。
-  - 対応案: `_get_cached` / キャッシュ書込経路で `llm_judgement*` フィールドを永続化・復元するよう拡張。読み取り専用の影響測定 (キャッシュヒット時に llm_judgement が None に落ちる頻度) を先行 → 永続化実装 → golden 再測定で Recall 非劣化を確認。不変原則 3 例外条件 (バグ修正類) の該当性を CP で判断。
-  - 検討時期: F-f1-locale-key-fix 完了直後 (次バッチ最有力)
-  - 想定工数: 2-4h (影響測定 + キャッシュ schema/シリアライズ拡張 + golden 再測定)
-  - 関連ファイル: `src/triage/jp_coverage_verifier.py` (`CoverageCheckResult` L378-423 / `_get_cached` L471 / SQLite `jp_coverage_cache` テーブル L433)
-  - 関連: F-jp-coverage-llm-judgement-extraction (B-3' llm_judgement 抽出元)、3 AI 三角測量レビュー (2026-05-25)
+- ~~**F-jp-coverage-cache-judgement-persist** ★★高 (3 AI 三角測量レビュー / 2026-05-25 起案)~~ → ★ **完了 (F-jp-coverage-cache-judgement-persist / 2026-05-26)**。`src/storage/db.py` の `jp_coverage_cache` DDL に `llm_judgement` / `llm_judgement_text` 列追加 + idempotent migration、`src/triage/jp_coverage_verifier.py` の `_save_cache` / `_get_cached` を 2 列対応に拡張 (案 A、判定ロジック不変)。★ CP-1 で実害訂正: `verify()` は cache hit を再計算せずそのまま return し has_jp_coverage は保存済 → **Recall 劣化は発生せず**、また llm_judgement は evidence/run_summary に未出力で**既存監査トレースも不在** = 真の defect は「cache round-trip のデータ忠実性欠落 (判定根拠テキスト消失)」、緊急度 ★★→★。クラウド誤り 10 の 2 回目発生 (外部レビュー指摘の鵜呑み) を DISCUSSION_NOTES に記録。baseline 1417 維持、golden Recall 非劣化を決定パス不変性で確認、1 batch 試運転で cache hit 時 llm_judgement 忠実復元を実証 (Slot-2 no_match)。不変原則 3 例外条件 5 点全充足。詳細は完了済みセクション + `docs/runs/F-jp-coverage-cache-judgement-persist/REPORT.md`。
+
+- **F-evidence-jp-coverage-audit-trail** ★中 (F-jp-coverage-cache-judgement-persist / 2026-05-26 起案、案 B 単独を分離)
+  - 背景: F-jp-coverage-cache-judgement-persist の Task B で判明 — `llm_judgement` は src/ で verifier 以外から参照されず、evidence.json / run_summary.json に出力されていない (main.py は has_jp_coverage を log するのみ)。F-13.B の判定根拠を事後監査するには evidence への証跡化が必要。ChatGPT レビューの「score_breakdown 経由案」がこれに相当 (= 案 B、本体バッチでは新機能のためスコープ外に分離)。
+  - 対応案: main.py で `score_breakdown["jp_coverage_verification"]` に has_jp_coverage / matched_domains / matched_tier / llm_judgement を積む経路を追加 (evidence_writer は score_breakdown を保存するため writer 改修なし)。★ cache lossless 化 (本体バッチ案 A 完了) が前提として整ったため、cache hit/miss で値が割れない。クラウド誤り 9 (各論コントロール) に留意し構造データ注入に留める。
+  - 検討時期: F-script-writer-target-enemy-fix の後など任意 (新機能、緊急度 中)
+  - 想定工数: 1-2h (score_breakdown 注入 + evidence 出力確認 + 試運転)
+  - 関連ファイル: `src/main.py` (F-13.B 呼び出し L3168-3212 周辺), `src/generation/evidence_writer.py` (score_breakdown 保存経路、writer 不変)
+  - 関連: F-jp-coverage-cache-judgement-persist (案 A = cache lossless 化の土台)、3 AI 三角測量レビュー ChatGPT 案
+
+- **F-script-writer-target-enemy-fix** ★★★高 (3 AI 三角測量レビュー / 2026-05-25 起案、Gemini 独自指摘、★ **次バッチ最有力**)
+  - 背景: `target_enemy` (台本の「敵=構造的対象」定義) のプロンプト/モデル定義に不整合がある可能性を Gemini が独自指摘。`target_enemy` は `src/shared/models.py` / `src/generation/script_writer.py` / `src/generation/video_payload_writer.py` / `configs/prompts/analysis/geo_lens/script_with_analysis.md` に跨って参照されており、定義のズレが台本品質に影響しうる。★ 詳細は読み取り専用調査で確定要 (F-f1 / F-jp-coverage-cache と同型の grep-first アプローチ推奨。クラウド誤り 10 の 2 回目発生を踏まえ外部指摘も grep で検証してから起案)。
+  - 対応案: 4 ファイルの `target_enemy` 参照を grep で棚卸し → 定義の正本と実際のプロンプト記述のズレを特定 → CP でスコープ確定 (プロンプトは主戦場 = 触ってよい領域だが、クラウド誤り 9「各論コントロールの誘惑」に留意し構造データ側で表現できないか先に検討)。
+  - 検討時期: F-jp-coverage-cache-judgement-persist 完了後 (★ 次バッチ最有力に格上げ)
+  - 想定工数: 調査 1-2h + 修正 (スコープ次第)
+  - 関連ファイル: `src/shared/models.py`, `src/generation/script_writer.py`, `src/generation/video_payload_writer.py`, `configs/prompts/analysis/geo_lens/script_with_analysis.md`
+  - 関連: 3 AI 三角測量レビュー (2026-05-25、Gemini 独自指摘)、クラウド誤り 9 (各論コントロールの誘惑、プロンプト改修時の留意)
 
 - **F-script-writer-target-enemy-fix** ★★★高 (3 AI 三角測量レビュー / 2026-05-25 起案、Gemini 独自指摘)
   - 背景: `target_enemy` (台本の「敵=構造的対象」定義) のプロンプト/モデル定義に不整合がある可能性を Gemini が独自指摘。`target_enemy` は `src/shared/models.py` / `src/generation/script_writer.py` / `src/generation/video_payload_writer.py` / `configs/prompts/analysis/geo_lens/script_with_analysis.md` に跨って参照されており、定義のズレが台本品質に影響しうる。★ 詳細は読み取り専用調査で確定要 (F-f1 と同型の grep-first アプローチ推奨)。
@@ -149,6 +161,12 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 対応案: config.py の default を factory.py と整合させる (安全側 default 化)。
   - 検討時期: 低優先、別 doc/refactor バッチ or F-gemini-quality-tier-poc 同時対応
   - 関連ファイル: `src/shared/config.py:77-79`, `src/llm/factory.py:322-325`
+
+- **scripts/verify_jp_coverage_measure.py の inline schema doc-drift** ★低 (F-jp-coverage-cache-judgement-persist / 2026-05-26 検出)
+  - 背景: 測定スクリプトが自前の `_TEMP_DB_SCHEMA` で `jp_coverage_cache` DDL を複製しており (「src/storage/db.py 102-112 と一致」コメント付き)、F-jp-coverage-cache-judgement-persist の 2 列追加 (`llm_judgement` / `llm_judgement_text`) で db.py 正本と乖離した。scripts/ は当該バッチで変更不可だったため未修正。fresh モードでは cache 非依存のため accuracy に影響なし。
+  - 対応案: スクリプトの temp DB 構築を `init_db()` 呼び出しに置換 (DDL 複製を廃し正本に一元化)、または `_TEMP_DB_SCHEMA` に 2 列追記。
+  - 検討時期: 低優先、scripts/ を触る別バッチ or doc-drift 整理時
+  - 関連ファイル: `scripts/verify_jp_coverage_measure.py` (`_TEMP_DB_SCHEMA`), `src/storage/db.py` (DDL 正本 + `_migrate_jp_coverage_cache`)
 
 - ~~**F-gemini-503-stability-audit** ★高 (F-17 候補から昇格)~~ → ★ **撤回 (F-gemini-model-audit / 2026-05-19)**。理由: Gemini モデル切替 (`F-gemini-model-migrate-emergency` で Tier3 を GA 化 + Lightweight 主軸 RPD 150K 化候補) で 503 多発リスクは**根本治療**される。リトライ間隔調整 / サーキットブレーカー等の対症療法的個別対処は不要。503/fallback の早期検知は `F-periodic-health-check` (緊急度 中に降格、Phase A.5-3d 前提) でカバー。
 

@@ -1,0 +1,32 @@
+{
+  "batch": "F-jp-coverage-cache-judgement-persist",
+  "task": "B-3 — real-world impact measurement on production cache (read-only)",
+  "db_path": "data/db/hydrangea.db",
+
+  "measurement": {
+    "total_cached_rows": 24,
+    "true_rows": 6,
+    "false_with_wl_match__B3_no_match_override": 1,
+    "false_without_wl_match__llm_judgement_irrelevant": 17
+  },
+
+  "interpretation": {
+    "rows_where_llm_judgement_was_decisive": 1,
+    "rows_where_llm_judgement_was_decisive_pct": "4.2% (1/24)",
+    "explanation": "A False row with a WL match means the B-3' safety device fired (WL matched, but llm_judgement='no_match' forced has_jp_coverage=False). Exactly 1 such row exists. For the 17 False rows with no WL match, has_jp_coverage=False regardless of llm_judgement. For the 6 True rows, llm_judgement was match/uncertain/None (all -> True).",
+    "critical_point": "For ALL 24 rows including the 1 B-3' override, has_jp_coverage is correctly stored and restored. The cache gap loses only the llm_judgement audit text, NOT the decision."
+  },
+
+  "recall_degradation_estimate": {
+    "value": "0 (none)",
+    "reasoning": "has_jp_coverage (the post-B-3' boolean) is persisted and returned verbatim on cache hit. Golden Recall cannot regress from the cache gap. This will be re-confirmed empirically in Task D-2 (golden re-measurement) regardless."
+  },
+
+  "audit_trail_status_today": {
+    "llm_judgement_in_evidence_json": false,
+    "llm_judgement_in_run_summary_json": false,
+    "note": "main.py logs has_jp_coverage but never serializes llm_judgement to any artifact, in either cache-hit or cache-miss. So there is no existing audit trail for the cache to 'break'; the audit gap is total and pre-existing, not cache-specific."
+  },
+
+  "verdict": "The defect is REAL (cache round-trip drops llm_judgement/llm_judgement_text — a data-fidelity inconsistency in the verify() path) but its SEVERITY as stated in the batch prompt is OVERSTATED: there is no Recall degradation and no loss of an existing audit trail. The value of fixing is (1) root-cause data fidelity / lossless cache round-trip, (2) removing a latent inconsistency that would corrupt any future evidence audit path. Recommended urgency: keep as a clean correctness fix, downgrade the framing from 'Recall degradation risk' to 'data-fidelity + future-audit-correctness fix'."
+}

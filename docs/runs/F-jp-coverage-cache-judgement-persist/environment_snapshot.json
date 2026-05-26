@@ -1,0 +1,16 @@
+{
+  "batch": "F-jp-coverage-cache-judgement-persist",
+  "captured_at": "2026-05-26",
+  "branch": "feature/F-jp-coverage-cache-judgement-persist",
+  "main_head_expected": "d6ed916",
+  "head_commit": "d6ed9163498e9972d370fee05fd14f33a3f6e40c",
+  "python_version": "3.11.15",
+  "platform": "macOS-26.2-arm64-arm-64bit",
+  "pytest_version": "9.0.2",
+  "baseline_test_result": "1417 passed in 101.31s",
+  "baseline_exit_code": 0,
+  "prev_batch_decision_log_hashes": {
+    "F-f1-locale-key-fix_feat": "ddc2117",
+    "F-f1-locale-key-fix_merge": "d6ed916"
+  }
+}

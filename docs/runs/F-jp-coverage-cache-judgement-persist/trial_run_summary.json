@@ -1,0 +1,63 @@
+{
+  "batch": "F-jp-coverage-cache-judgement-persist",
+  "task": "D-3 — 1 batch 試運転 (cache hit シナリオ最終確認)",
+  "date": "2026-05-26",
+
+  "ingestion": {
+    "batch_id": "20260526_035220",
+    "raw_files": 47,
+    "normalized_files": 47,
+    "new_items": 844,
+    "skipped_duplicates": 676,
+    "network": "OK (RSS fetch 成功)"
+  },
+
+  "run_1_full_pipeline": {
+    "command": "python -m src.main --mode normalized",
+    "exit_code": 0,
+    "job_id": "f4c30f10-a4d1-4280-9a8c-fb1a71c2e877",
+    "status": "completed",
+    "slots_published": 3,
+    "video_slots": 1,
+    "article_slots": 3,
+    "video_event": "cls-0741c099c775 (Slot-1, 4 scenes, 80s, evidence=partial, safety=elevated)",
+    "script_generation": "via gemini (NOT fallback), retries=0",
+    "article_generation": "via gemini x3, retries=0",
+    "traceback_error_404_count": 0,
+    "db_migration_at_startup": "init_db ran _migrate_jp_coverage_cache cleanly on production DB (24 legacy rows preserved, 2 columns present)",
+    "f13b_activity": [
+      {"slot": 1, "event_id": "cls-0741c099c775", "has_jp_coverage": true,  "matched_tier": "tier_1_newspaper",   "llm_judgement": "uncertain", "note": "WL match + uncertain -> True (B-3' 尊重)"},
+      {"slot": 2, "event_id": "cls-c87c121e9def", "has_jp_coverage": false, "matched_tier": "tier_2_wire_service", "llm_judgement": "no_match",  "note": "★ B-3' 安全装置発火: WL match (3 hits) + no_match -> False。llm_judgement_text='該当する記事はありません' を保存"},
+      {"slot": 3, "event_id": "cls-49450ad2fefd", "has_jp_coverage": true,  "matched_tier": "tier_1_newspaper",   "llm_judgement": "uncertain", "note": "WL match + uncertain -> True"}
+    ],
+    "persistence_check": {
+      "rows_written_with_llm_judgement_not_null": 3,
+      "total_cache_rows_after": 27,
+      "legacy_rows_still_null": 24,
+      "verdict": "★ 改修により F-13.B の 3 件すべてが llm_judgement を cache に永続化。改修前は NULL になっていた。"
+    }
+  },
+
+  "run_2_cache_hit_confirmation": {
+    "method": "verifier-level replay — 同 batch の F-13.B 3 event_id に対し verify() を再実行 (production DB)。client は呼ばれたら AssertionError を投げる設定で、cache hit = 0 API call を厳密に証明。",
+    "why_not_literal_second_main_run": "run 1 が 3 event を pool で published/consumed に marked したため、2 回目の `main --mode normalized` は別 event を選定し、同一 event_id の cache hit シナリオを再現しない (むしろ新規 F-13.B 呼び出しになる)。よって cache hit + 結果一致の検証は verifier replay が技術的に正しい (= カズヤ意図『2 回目で cache hit が発生、結果が一致』の忠実な実現)。",
+    "results": [
+      {"event_id": "cls-0741c099c775", "cached": true, "has_jp_coverage": true,  "matched_tier": "tier_1_newspaper",   "llm_judgement": "uncertain", "matches_run1": true},
+      {"event_id": "cls-c87c121e9def", "cached": true, "has_jp_coverage": false, "matched_tier": "tier_2_wire_service", "llm_judgement": "no_match",  "llm_judgement_text": "restored", "matches_run1": true},
+      {"event_id": "cls-49450ad2fefd", "cached": true, "has_jp_coverage": true,  "matched_tier": "tier_1_newspaper",   "llm_judgement": "uncertain", "matches_run1": true}
+    ],
+    "api_calls_attempted": 0,
+    "verdict": "★ 全 3 件で cached=True、has_jp_coverage / matched_tier / llm_judgement が run 1 と完全一致、Slot-2 の no_match 判定根拠テキストも復元。API call 0 = 真の cache hit。改修前はここで llm_judgement=None になっていた = 本バッチの core fix が本番フローで実証された。"
+  },
+
+  "defense_mechanisms_5_layers": {
+    "F-1_editorial_mission_filter": "稼働 (editorial_mission スコア 79-87 で F-5 fallback 経由 flagship 認定)",
+    "F-2_F-5_flagship_gate": "F-5 fallback applied (input 依存、正常、3 件 flagship 認定)",
+    "F-13.B_jp_coverage": "★ 稼働 + 本バッチ改修で llm_judgement 永続化確認 (Slot-2 で no_match 安全装置発火)",
+    "F-13_hidden_layer": "異常なし",
+    "abnormal_behavior": "なし"
+  },
+
+  "immediate_stop_conditions": "非該当 (status=completed / exit 0 / used_fallback 相当なし / 404・Traceback 0 / cache hit が cache miss と一致)",
+  "overall_verdict": "PASS — 本番パイプラインで migration がクリーンに走り、F-13.B の llm_judgement が cache に永続化 → cache hit で忠実復元、判定 (has_jp_coverage) は不変。動画化候補消失なし、防衛機構異常なし。"
+}

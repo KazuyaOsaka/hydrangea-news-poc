@@ -1,0 +1,59 @@
+{
+  "batch": "F-jp-coverage-cache-judgement-persist",
+  "task": "B-1 — current cache schema + persistence path audit",
+  "method": "read-only code inspection (grep + full read of jp_coverage_verifier.py, db.py) — per クラウド誤り 10, conclusions are based on code, not Project Knowledge",
+
+  "ddl_source_of_truth": "src/storage/db.py:102-112 (CREATE TABLE IF NOT EXISTS jp_coverage_cache)",
+  "ddl_columns": [
+    "event_id (TEXT PRIMARY KEY)",
+    "has_jp_coverage (INTEGER NOT NULL)",
+    "matched_tier (TEXT)",
+    "matched_urls (TEXT, JSON)",
+    "matched_domains (TEXT, JSON)",
+    "excluded_urls (TEXT, JSON)",
+    "search_query (TEXT)",
+    "cached_at (TEXT NOT NULL, ISO8601)",
+    "created_at (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+  ],
+
+  "JpCoverageResult_fields": [
+    "event_id", "title", "has_jp_coverage", "matched_urls", "matched_domains",
+    "matched_tier", "excluded_urls", "search_query", "raw_grounding_response",
+    "error", "cached", "cached_at",
+    "llm_judgement (Optional[str])  <-- B-3' field",
+    "llm_judgement_text (Optional[str])  <-- B-3' field"
+  ],
+
+  "save_cache_persisted_fields": [
+    "event_id", "has_jp_coverage", "matched_tier", "matched_urls",
+    "matched_domains", "excluded_urls", "search_query", "cached_at"
+  ],
+  "get_cached_restored_fields": [
+    "has_jp_coverage", "matched_tier", "matched_urls", "matched_domains",
+    "excluded_urls", "search_query", "cached_at", "cached(=True)"
+  ],
+
+  "fields_NOT_persisted": [
+    "llm_judgement",
+    "llm_judgement_text"
+  ],
+  "fields_NOT_persisted_note": "title/raw_grounding_response/error are intentionally transient (title is re-supplied by caller on cache hit: verifier.py:473). The only B-3' audit fields dropped by the cache round-trip are llm_judgement / llm_judgement_text.",
+
+  "two_stage_cache_status": {
+    "verify_two_stage_uses_cache": false,
+    "detail": "verify_two_stage() calls _search_with_grounding_two_stage directly and never calls _get_cached/_save_cache. Therefore broad_llm_judgement / angle_llm_judgement (TwoStageVerifyResult fields) are NEVER cached — they cannot be 'lost' by the cache because no cache path exists. They are also NOT production-wired (CURRENT_STATE: main.py uses legacy verify() only).",
+    "implication": "The cache-persistence gap concerns ONLY JpCoverageResult.llm_judgement / llm_judgement_text (the verify() path)."
+  },
+
+  "production_db": {
+    "path": "data/db/hydrangea.db",
+    "jp_coverage_cache_rows": 24,
+    "columns_present": ["event_id","has_jp_coverage","matched_tier","matched_urls","matched_domains","excluded_urls","search_query","cached_at","created_at"],
+    "llm_judgement_columns_present": false
+  },
+
+  "schema_init_mechanism": {
+    "init_db": "src/storage/db.py:139-143 runs CREATE TABLE IF NOT EXISTS",
+    "implication": "Because the DDL is IF NOT EXISTS, adding columns to the DDL string does NOT auto-migrate the existing production table (24 rows). Approach A therefore requires an explicit ALTER TABLE ADD COLUMN migration (idempotent, DEFAULT NULL) to upgrade the live DB."
+  }
+}

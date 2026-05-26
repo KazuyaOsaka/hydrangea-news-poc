@@ -1,0 +1,48 @@
+{
+  "batch": "F-jp-coverage-cache-judgement-persist",
+  "task": "D-2 — golden Recall 非劣化確認",
+  "verification_method": "deterministic decision-path invariance proof (NOT a live golden re-run)",
+
+  "judgment_and_rationale": {
+    "decision": "本バッチの Recall 非劣化は『決定パス不変性の証明』で確認した。live golden 再測定 (19 件の実 Gemini Grounding 呼び出し) は primary verification としては採用しなかった。",
+    "why_not_live_run": [
+      "(1) 本改修は has_jp_coverage 判定パスを 1 行も変更していない (decision-path diff = 空)。よって golden Recall/Precision は本改修の前後で数学的に不変。",
+      "(2) live 再測定は Gemini Grounding の run 間分散 (既知の非決定性、CURRENT_STATE の F-grounding-determinism-audit 課題) を含むため、もし historical baseline (Recall 1.0000) と差分が出ても、それは本改修ではなく API drift に起因する = 本改修の効果を測れず confound する (クラウド誤り 10 = 検証なしの混同を避ける原則)。",
+      "(3) 測定スクリプト scripts/verify_jp_coverage_measure.py は自前の旧スキーマ temp DB を使う (llm_judgement 列なし) ため、live 実行しても本改修の cache 永続化を exercise しない。",
+      "(4) スクリプトは canonical な docs/runs/F-verify-jp-coverage/REPORT.md / measurement_result.json を上書きする副作用がある。",
+      "(5) GEMINI_API_KEY は present で live 実行は feasible だが、上記より zero incremental assurance に budget を使うことになる。"
+    ],
+    "offered_alternative": "カズヤが現時点の Gemini 実精度を数値で再取得したい場合は live 実行可能 (要承認、上記の confound / 上書き副作用を許容する前提)。"
+  },
+
+  "decision_path_invariance_evidence": {
+    "verify_two_stage_and_verify_decision_diff": "EMPTY — git diff の has_jp_coverage / llm_judgement== / broad_jp / angle_jp / wl_match / _parse_llm を含む行に追加・削除なし",
+    "changed_lines_scope": "src/triage/jp_coverage_verifier.py の変更は _get_cached の SELECT 列 + JpCoverageResult 復元 2 行、_save_cache の INSERT 列 + values 2 個のみ。判定ロジック (B-3' if/else)・戻り値型は不変。",
+    "b3_decision_unit_tests": {
+      "file": "tests/test_jp_coverage_verifier_llm_judgement.py",
+      "result": "27 passed",
+      "covers_B3_table": [
+        "WL あり + match -> True",
+        "WL あり + no_match -> False (安全装置)",
+        "WL あり + uncertain -> True",
+        "WL あり + None(response_text 空) -> True (後方互換)",
+        "WL なし -> False",
+        "two_stage broad/angle の no_match -> stream_1 / stream_2"
+      ]
+    }
+  },
+
+  "golden_baseline_reference": {
+    "source": "docs/runs/F-jp-coverage-llm-judgement-extraction/REPORT.md (B-3' 達成水準)",
+    "golden_set": "docs/runs/F-verify-jp-coverage/golden_set.json v1.3 (19 entries, expected_has_jp_coverage)",
+    "baseline_metrics_WL_match_condition": {"Recall": 1.0000, "Precision": 0.8889, "FN": 0},
+    "post_change_metrics": "identical (Recall 1.0000 / Precision 0.8889 / FN 0) — 判定パス不変のため baseline と同値。本改修で劣化する経路は存在しない。"
+  },
+
+  "baseline_test_suite": {
+    "result": "1417 passed",
+    "note": "B-3' 判定テスト 27 件を含む全 1417 件が通過 = 判定テーブル健全性を担保"
+  },
+
+  "residual_note_doc_drift": "scripts/verify_jp_coverage_measure.py の inline _TEMP_DB_SCHEMA が db.py の DDL を複製しており、本バッチの 2 列追加で乖離した (scripts/ は本バッチ変更不可のため未修正)。fresh モードでは accuracy に影響なし (cache 非依存)。FUTURE_WORK に doc-drift 解消候補として記録。"
+}

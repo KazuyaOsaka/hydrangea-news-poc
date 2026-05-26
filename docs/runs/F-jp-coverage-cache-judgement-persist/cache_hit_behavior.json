@@ -1,0 +1,28 @@
+{
+  "batch": "F-jp-coverage-cache-judgement-persist",
+  "task": "B-2 — cache-hit behavior simulation (qualitative, code-grounded)",
+
+  "key_code_fact": "verify() on cache hit (jp_coverage_verifier.py:471-478) does `cached = self._get_cached(event_id); if cached is not None: return cached`. It returns the cached object DIRECTLY. It does NOT recompute has_jp_coverage from llm_judgement.",
+
+  "consequence_for_has_jp_coverage": {
+    "claim_in_batch_prompt": "cache hit -> llm_judgement=None -> falls into backward-compat path (silence=uncertain) -> Recall degradation risk",
+    "code_reality": "FALSE for the functional decision. has_jp_coverage is computed ONCE at first verification (lines 504-513), applying B-3' (no_match -> False) at that time, and the resulting boolean is persisted (_save_cache). On cache hit it is restored verbatim. There is NO recomputation from llm_judgement, so the 'silence=uncertain backward-compat path' is NEVER re-entered on a cache hit. B-3''s SAFETY-DEVICE EFFECT (has_jp_coverage=False on no_match) is fully preserved across cache hits.",
+    "recall_impact": "none — the cached boolean already encodes the B-3' decision"
+  },
+
+  "what_is_actually_lost_on_cache_hit": {
+    "fields": ["llm_judgement", "llm_judgement_text"],
+    "restored_value": "None (defaults, because _get_cached never sets them)",
+    "nature": "audit/provenance loss only — the REASON a row was judged is gone, but the JUDGEMENT (has_jp_coverage) survives"
+  },
+
+  "downstream_consumption_check": {
+    "grep_llm_judgement_outside_verifier": "0 matches in src/ (only jp_coverage_verifier.py defines/uses it)",
+    "main_py_usage": "src/main.py:3187-3207 calls verify() and reads ONLY has_jp_coverage / matched_tier / matched_domains / excluded_urls — for LOGGING. The result is discarded after logging; it does NOT alter the generation flow (both branches proceed to generation) and is NOT written to score_breakdown / evidence.json / run_summary.json.",
+    "implication": "No production code re-decides anything from result.llm_judgement. Therefore the cache-hit loss of llm_judgement currently has ZERO behavioral effect and ZERO audit effect (because llm_judgement is not surfaced to any artifact in EITHER cache-hit OR cache-miss today)."
+  },
+
+  "reproduction_condition_for_silence_uncertain_backward_compat": "The backward-compat path (llm_judgement=None -> WL match respected as True) executes only on a FRESH computation when _parse_llm_judgement returns None (e.g. mocked/empty response_text). It does NOT execute on a cache hit. So the batch prompt's reproduction premise does not occur via the cache.",
+
+  "true_risk_if_left_unfixed": "Latent / future-facing, not current: if a future batch wires result.llm_judgement into evidence.json/run_summary.json (e.g. ChatGPT's score_breakdown proposal), cache-hit rows would silently emit llm_judgement=None while cache-miss rows emit the real value — an inconsistency that would corrupt the very audit trail that change intends to add. Persisting the fields now (Approach A) removes that latent inconsistency at the source."
+}
