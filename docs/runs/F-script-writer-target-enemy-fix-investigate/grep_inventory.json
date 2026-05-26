@@ -1,0 +1,127 @@
+{
+  "task": "B-1: 4 ファイル (+ tests) の target_enemy 参照を全棚卸し",
+  "grep_command": "grep -rn 'target_enemy' src/ configs/ tests/",
+  "summary": {
+    "total_references_src_configs": 11,
+    "total_references_tests": 9,
+    "files_touched": 5,
+    "hardcoded_outside_4_files": false,
+    "note": "★ 起案前 Project Knowledge 仮説 1 は『script_writer.py:80-88 にハードコード』と記載していたが、実際の行番号は 113-118 (ScriptDraft フィールド) / 317 (STEP1 指示) / 444-446 (出力例) であった。行番号ドリフトのみで内容は一致 (80-88 は実際には _REFERENCE_ARTICLE_HEADER セクション)。"
+  },
+  "references": [
+    {
+      "file": "src/shared/models.py",
+      "line": 221,
+      "context": "target_enemy: Optional[str] = None",
+      "classification": "shared_model",
+      "detail": "VideoScript の additive/optional フィールド。default None、型制約なし。旧ルート・新ルート両方の出力先。",
+      "invariant": "不変原則対象外 (models.py は CURRENT_STATE 触ってよい領域、後方互換必須)"
+    },
+    {
+      "file": "src/generation/script_writer.py",
+      "line": "113-118",
+      "context": "ScriptDraft.target_enemy: str = Field(description='財務省/日銀・大手メディア・米国政府/中国共産党・GAFAM・既存秩序 等')",
+      "classification": "old_route",
+      "detail": "★ 旧ルート LLM 出力スキーマ。target_enemy は REQUIRED (str、Optional ではない)。候補リストが description にハードコード。",
+      "invariant": "不変原則 2 対象 (ScriptDraft は _build_script_from_llm が消費 = 既存ルート、変更不可)"
+    },
+    {
+      "file": "src/generation/script_writer.py",
+      "line": 317,
+      "context": "_PROMPT_TEMPLATE STEP 1: '**target_enemy** — 財務省/日銀・大手メディア・米国政府/中国共産党・GAFAM・既存秩序 から選べ。視聴者が「そいつか！」と感じる仮想敵を明確にする。'",
+      "classification": "old_route",
+      "detail": "★ 旧ルートプロンプトが LLM に仮想敵 (target_enemy) の選択を能動的に指示。候補リストをハードコード。",
+      "invariant": "不変原則 2 対象 (_PROMPT_TEMPLATE、変更不可)"
+    },
+    {
+      "file": "src/generation/script_writer.py",
+      "line": 417,
+      "context": "_PROMPT_TEMPLATE Twist 必達チェックリスト: '[ ] target_enemy が存在感を持っているか？ (「誰がトクしているか」が見える)'",
+      "classification": "old_route",
+      "detail": "旧ルートが台本本文 (twist) で target_enemy framing を要求 = メタデータでなく viewer-facing 表現に影響。",
+      "invariant": "不変原則 2 対象"
+    },
+    {
+      "file": "src/generation/script_writer.py",
+      "line": "445-446",
+      "context": "_PROMPT_TEMPLATE 出力例: 'director_thought': '...target_enemyは〇〇...', 'target_enemy': '大手メディア'",
+      "classification": "old_route",
+      "detail": "出力例が target_enemy=大手メディア を例示 = LLM への few-shot 的誘導。",
+      "invariant": "不変原則 2 対象"
+    },
+    {
+      "file": "src/generation/script_writer.py",
+      "line": 715,
+      "context": "_draft_to_video_script: target_enemy=draft.target_enemy",
+      "classification": "old_route",
+      "detail": "旧ルートで ScriptDraft.target_enemy を VideoScript.target_enemy に転記。",
+      "invariant": "不変原則 2 対象 (_draft_to_video_script は旧ルートヘルパ)"
+    },
+    {
+      "file": "src/generation/script_writer.py",
+      "line": 782,
+      "context": "_build_script_from_llm: enemy = data.get('target_enemy', '')  # ログ出力",
+      "classification": "old_route",
+      "detail": "旧ルートのログ出力。pattern/enemy/loop を INFO ログ。",
+      "invariant": "不変原則 2 対象"
+    },
+    {
+      "file": "src/generation/script_writer.py",
+      "line": 1097,
+      "context": "ScriptWithAnalysisDraft docstring: '既存 ScriptDraft から target_enemy を排除し、selected_pattern は情報密度型 4 種に制限する。'",
+      "classification": "new_route",
+      "detail": "★ 新ルート出力スキーマには target_enemy フィールドが存在しない (意図的排除)。",
+      "invariant": "変更可 (新ルート、CURRENT_STATE 触ってよい領域)"
+    },
+    {
+      "file": "src/generation/script_writer.py",
+      "line": 1306,
+      "context": "_analysis_draft_to_video_script: target_enemy=None,  # 仕様: 仮想敵濫用を抑止するため新ルートでは付与しない",
+      "classification": "new_route",
+      "detail": "★ 新ルートは VideoScript.target_enemy を常に None で出力。コメントに排除理由明記。",
+      "invariant": "変更可 (新ルートヘルパ)"
+    },
+    {
+      "file": "src/generation/video_payload_writer.py",
+      "line": "457-458",
+      "context": "if script.target_enemy: director_meta['target_enemy'] = script.target_enemy",
+      "classification": "shared_route_agnostic",
+      "detail": "★ ルート非依存の条件付き露出。truthy のとき director_meta に追加 = 旧ルート (値あり) では露出、新ルート (None) では非露出。コード自体は両ルートで正しく分岐する。",
+      "invariant": "不変原則対象外 (video_payload_writer.py は CURRENT_STATE 触ってよい領域)"
+    },
+    {
+      "file": "configs/prompts/analysis/geo_lens/script_with_analysis.md",
+      "line": "152-156",
+      "context": "## 仮想敵設定の禁止 (再強調): 'target_enemy として「大手メディア」「マスコミ」「NHK」を単独で指す表現' を禁止",
+      "classification": "new_route_prompt",
+      "detail": "★ 新ルートプロンプトは target_enemy 概念を明示的に禁止済み (起案前仮説 3 を確認)。「日銀が」「財務省が」と仮想敵を名指す構文も禁止 (line 156)。",
+      "invariant": "変更可 (configs、CURRENT_STATE 触ってよい領域 = 主戦場)"
+    }
+  ],
+  "test_references_additional": [
+    {
+      "file": "tests/test_script_writer_with_analysis.py",
+      "lines": "254-255, 351-357",
+      "detail": "新ルート契約をテストで固定: 'assert script.target_enemy is None' / 'assert not hasattr(draft, \"target_enemy\")'。= 排除は設計契約として codified。",
+      "classification": "new_route_contract_test"
+    },
+    {
+      "file": "tests/test_e2e_analysis_layer.py",
+      "line": 298,
+      "detail": "E2E で 'assert script_data.get(\"target_enemy\") is None' = 新ルート経由の payload に target_enemy が乗らないことを保証。",
+      "classification": "new_route_contract_test"
+    },
+    {
+      "file": "tests/test_script_writer_f13_quality_floor_redesign.py",
+      "line": 59,
+      "detail": "旧ルート入力フィクスチャ 'target_enemy': '大手メディア' = 旧ルート挙動の前提として使用。",
+      "classification": "old_route_fixture"
+    },
+    {
+      "file": "tests/test_script_writer_with_article.py",
+      "line": 240,
+      "detail": "旧ルート入力フィクスチャ 'target_enemy': '大手メディア'。",
+      "classification": "old_route_fixture"
+    }
+  ]
+}

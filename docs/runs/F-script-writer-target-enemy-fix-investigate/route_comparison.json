@@ -1,0 +1,60 @@
+{
+  "task": "B-2: 旧ルート vs 新ルートの実態確認",
+  "old_route": {
+    "entry": "write_script (= generate_script_legacy エイリアス, script_writer.py:933)",
+    "draft_schema": "ScriptDraft (script_writer.py:105-140)",
+    "target_enemy_field": {
+      "present": true,
+      "required": true,
+      "type": "str (Optional ではない)",
+      "candidate_list": ["財務省/日銀", "大手メディア", "米国政府/中国共産党", "GAFAM", "既存秩序"],
+      "candidate_list_locations": ["script_writer.py:114-118 (Field description)", "script_writer.py:317 (STEP1)", "script_writer.py:445-446 (出力例)"],
+      "viewer_facing_influence": "★ メタデータに留まらず台本本文に影響。STEP1 で『視聴者が「そいつか！」と感じる仮想敵を明確にする』、Twist 必達チェックリスト (line 417) で『target_enemy が存在感を持っているか』を要求 = twist/punchline 本文の framing を仮想敵中心に誘導する。"
+    },
+    "invariant": "不変原則 2 (write_script / _PROMPT_TEMPLATE / _build_script_from_llm) = 変更不可"
+  },
+  "new_route": {
+    "entry": "generate_script_with_analysis (script_writer.py:1427)",
+    "draft_schema": "ScriptWithAnalysisDraft (script_writer.py:1094-1121)",
+    "target_enemy_field": {
+      "present": false,
+      "exclusion_evidence": [
+        "script_writer.py:1097-1099 docstring: '既存 ScriptDraft から target_enemy を排除し、selected_pattern は情報密度型 4 種に制限する'",
+        "script_writer.py:1306: '_analysis_draft_to_video_script' が target_enemy=None を固定設定 (コメント '仕様: 仮想敵濫用を抑止するため新ルートでは付与しない')",
+        "configs/prompts/analysis/geo_lens/script_with_analysis.md:152-156: '仮想敵設定の禁止 (再強調)' セクションで target_enemy=大手メディア/マスコミ/NHK を明示禁止",
+        "tests/test_script_writer_with_analysis.py:255,357 + test_e2e_analysis_layer.py:298: 排除を契約テストで固定"
+      ],
+      "allowed_patterns": ["Breaking Shock", "Geopolitics", "Paradigm Shift", "Cultural Divide"],
+      "forbidden_patterns_with_enemy_framing": ["Media Critique", "Anti-Sontaku"]
+    },
+    "invariant": "変更可 (新ルート、CURRENT_STATE 触ってよい領域)"
+  },
+  "production_wiring": {
+    "decision_file": "src/main.py:1937-2025",
+    "flag": {
+      "name": "ANALYSIS_LAYER_ENABLED",
+      "default": "false",
+      "set_in_dotenv": false,
+      "evidence": ".env に ANALYSIS_LAYER_ENABLED 行なし → os.getenv(..., 'false') で false 解決。.env.example:79 にのみ 'ANALYSIS_LAYER_ENABLED=false' が存在"
+    },
+    "deprecation_gate": {
+      "location": "main.py:1942",
+      "logic": "if _analysis_layer_enabled AND analysis_result is None: skip generation (扇動的台本の再発防止)",
+      "active_in_production": false,
+      "reason": "ANALYSIS_LAYER_ENABLED=false のため gate 非作動 = 生成は継続"
+    },
+    "route_selection": {
+      "location": "main.py:2000",
+      "logic": "if top.analysis_result is not None: generate_script_with_analysis (新ルート) else: write_script (旧ルート)",
+      "production_actual": "analysis_result は常に None (analysis layer 未配線、CURRENT_STATE で確認) → else 分岐 = write_script (旧ルート) が稼働",
+      "nuance": "★ 起案前仮説 4 は『analysis_result=null で旧ルート fallback』と表現したが、正確には fallback ではなく else 分岐の primary route。機能的結論 (旧ルート稼働) は一致。"
+    },
+    "conclusion": "★ production では ANALYSIS_LAYER_ENABLED=false + analysis_result=None のため、旧ルート write_script が常時稼働 → target_enemy (仮想敵) が必ず出力される。新ルートの target_enemy 排除設計は production に未到達。"
+  },
+  "philosophy_divergence": {
+    "nature": "コードの broken reference ではなく、2 ルート間の設計哲学の意図的乖離 (migration in progress)",
+    "old_route": "target_enemy (仮想敵) framing を能動的に推奨 = 旧設計 (Media Critique / Anti-Sontaku 含む 6 パターン)",
+    "new_route": "target_enemy を排除 + 情報密度型 4 パターンのみ + 仮想敵/煽り表現を明示禁止 (2026-05-01 設計判断、クラウド誤り 9 各論コントロール回避哲学と整合)",
+    "resolution_path": "新ルートを production 配線すれば target_enemy は自動的に production から消える (新ルートは設計上既に解決済み)"
+  }
+}

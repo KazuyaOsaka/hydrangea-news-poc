@@ -1,10 +1,12 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-25 (★ F-f1-locale-key-fix 完了。4-A 新規 1 件追加 =
-「2026-05-25: 3 AI 三角測量で F-1 locale key bug 発見 → 即座に根本治療」
-(ステータス Resolved/タスク化)。クラウド誤り 10 (Project Knowledge 過信 +
-grep 不足) を クラウド誤り 9 の直後に新規登録。前回 2026-05-19:
-F-gemini-model-migrate-emergency 完了で 4-A 新規 1 件 + 4-B 既存再評価 1 件)
+最終更新: 2026-05-26 (★ F-script-writer-target-enemy-fix-investigate 完了。
+4-A 新規 1 件 =「2026-05-26: target_enemy 問題の実態調査 — 真因 a 確定 + X1
+(新ルート配線統合)」(ステータス Resolved/タスク化)。4-B 既存再評価 1 件 =
+「2026-05-01: 新ルートで target_enemy を排除した設計判断」を Resolved 化。
+★ クラウド誤り 10 の 3 回目発生なし = grep-first で起案前仮説 1-5 が CONFIRMED。
+前回 2026-05-26: F-jp-coverage-cache-judgement-persist 完了で 4-A 新規 1 件 +
+クラウド誤り 10 の 2 回目発生記録)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -17,6 +19,38 @@ F-gemini-model-migrate-emergency 完了で 4-A 新規 1 件 + 4-B 既存再評�
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-26: target_enemy 問題の実態調査 (Gemini Round 1 由来) — 真因 a 確定 + X1 (新ルート配線統合) (F-script-writer-target-enemy-fix-investigate)
+
+**内容**: Gemini Round 1 (2026-05-25) が「`target_enemy` のプロンプト/モデル定義に不整合が
+ある可能性 (models.py / script_writer.py / video_payload_writer.py / script_with_analysis.md
+に跨る参照のズレが台本品質に影響)」と独自指摘。**調査専用バッチ** (改修なし) で grep +
+コード精読 + 試運転観察により実態確定:
+- **真因 a 確定**: production 稼働中の旧ルート `write_script` が `target_enemy` (仮想敵) を
+  REQUIRED フィールド + ハードコード候補リスト (財務省/日銀・大手メディア・米国政府/中国共産党・
+  GAFAM・既存秩序) から出力し、STEP1 + Twist 必達チェックリスト経由で viewer-facing な煽り
+  framing を誘導 (直近 Slot-1 で「真っ赤な嘘」「日本のメディアが報じない」「情報を鵜呑みに
+  する人が損をする」を観察)。旧ルートは不変原則 2 で**直接修正不可**。
+- 新ルート `generate_script_with_analysis` は設計上既に target_enemy 排除済み (契約テストで
+  固定) = **新ルート配線が唯一の sanctioned 解消経路**。
+- 真因 b (configs 改修) = production 効果ゼロで REJECTED、c (両対応) = 新ルート問題なしで
+  REJECTED、d (修正不要) = 「broken な参照のズレ」前提は不成立だが品質懸念は実在で PARTIAL。
+- **production 配線**: `.env` に `ANALYSIS_LAYER_ENABLED` 行なし → default false +
+  `analysis_result=None` → `main.py:2019` else 分岐で旧ルート常時稼働。
+- **★ クラウド誤り 10 の 3 回目発生なし**: 起案前 Project Knowledge 仮説 1-5 は grep で
+  概ね CONFIRMED (軽微な行番号ドリフト + 用語精度訂正のみ)。F-f1 / F-jp-coverage-cache では
+  仮説が実態と乖離したが、本バッチでは grep-first で仮説が検証され整合 = 外部指摘を grep で
+  検証してから起案する作法が機能した好例。
+
+**CP-1 カズヤ判断**: **X1 (新ルート配線バッチに統合)**。FUTURE_WORK「particular_angle_metadata
++ sontaku_signals の本番配線判断」(想定 8-16h) に target_enemy 解消を吸収。新ルート配線で
+target_enemy は自動的に production から退役 (根本治療)。
+
+**出典**: Gemini Round 1 レビュー (2026-05-25)、`docs/runs/F-script-writer-target-enemy-fix-investigate/REPORT.md` +
+root_cause_analysis.json、CP-1 カズヤ判断 (2026-05-26)
+
+**ステータス**: `Resolved/タスク化` (真因 a 確定 → X1 = particular_angle_metadata 本番配線
+判断に統合済み)
 
 ### 2026-05-26: 3 AI 三角測量で F-13.B cache 監査欠落を発見 → 根本治療 (案 A) + クラウド誤り 10 の 2 回目発生 (F-jp-coverage-cache-judgement-persist)
 
@@ -1962,7 +1996,17 @@ F-stream-2-filter-design 着手 OK。F-jp-coverage-tune は別系で並走可能
   記録されていない。忘れ去られた実装判断の典型例。
 - **出典**: 引き継ぎプロンプト v3 / src/generation/script_writer.py の
   新ルート関連コード
-- **ステータス**: `昇格候補(DECISION_LOG)`
+- **★ 再評価 (2026-05-26, F-script-writer-target-enemy-fix-investigate)**:
+  本調査でこの設計判断を実コードで再確認・正本化 — 新ルートは
+  `ScriptWithAnalysisDraft` に target_enemy フィールドを持たず、
+  `_analysis_draft_to_video_script` が `target_enemy=None` 固定、
+  `script_with_analysis.md:152-156` で仮想敵設定を明示禁止、契約テスト
+  (test_script_writer_with_analysis.py:255,357 / test_e2e_analysis_layer.py:298)
+  で固定済 = **設計上既に解決済み**。一方 production は旧ルートのみ稼働で
+  target_enemy が出力され続けている (真因 a)。本設計判断の経緯は
+  F-script-writer-target-enemy-fix-investigate の DECISION_LOG エントリ
+  (2026-05-26) に記録済 = 昇格完了。今後の解消は X1 (新ルート本番配線) に集約。
+- **ステータス**: `Resolved` (2026-05-26 DECISION_LOG に記録済 + 解消経路 X1 確定)
 
 ### 2026-05-01: F-12-B-1.5 (文字数制約緩和) と不変原則 2 の現記述の不整合
 - **内容**: F-12-B-1.5 で予定している `_CHAR_BOUNDS` 調整 (文字数制約緩和)

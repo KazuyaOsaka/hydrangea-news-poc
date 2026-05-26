@@ -1,0 +1,40 @@
+{
+  "task": "B-3: 直近 production 試運転での target_enemy 出力実態",
+  "latest_run": {
+    "batch_id": "20260526_035220",
+    "batch": "F-jp-coverage-cache-judgement-persist 試運転",
+    "status": "completed",
+    "published_count": 3,
+    "used_fallback": false,
+    "route": "旧ルート (write_script) — analysis_result=None + ANALYSIS_LAYER_ENABLED=false、used_fallback=false = LLM 生成された旧ルート台本 (template fallback ではない)"
+  },
+  "slot_1_video": {
+    "event_id": "cls-0741c099c775",
+    "title": "Middle East crisis live: Iran says progress made on many issues with US but warns deal not 'imminent'",
+    "target_enemy": "米国政府",
+    "selected_pattern": "Geopolitics",
+    "director_meta_exposed": true,
+    "video_payload_line": "cls-0741c099c775_video_payload.json:157 ('target_enemy': '米国政府')",
+    "viewer_facing_leakage": {
+      "detected": true,
+      "evidence": [
+        "hook: 'トランプの「合意間近」は、真っ赤な嘘です。' (= 断定的煽り '真っ赤な嘘')",
+        "punchline: '日本のメディアが報じないのは、エネルギーを人質にした覇権争いです。情報を鵜呑みにする人が損をする。' (= 'マスコミは報じない' 系 + '情報を鵜呑みにする人が損をする' 系)"
+      ],
+      "note": "★ これらは新ルートプロンプト script_with_analysis.md が明示禁止する表現 (line 142 '綺麗事を信じる側が損をする' 系 / line 149 'マスコミは報じない' / lines 152-156 仮想敵設定)。target_enemy は単なるメタデータでなく、旧ルートの仮想敵 framing 哲学全体の可視マーカーであり、viewer-facing 台本本文に煽り表現として顕在化している。"
+    }
+  },
+  "cross_run_pattern": {
+    "comment": "data/output 配下の旧ルート生成 script/video_payload を横断観察 (LLM 生成 = target_enemy 値あり / template fallback = null)",
+    "observed_target_enemy_values": {
+      "米国政府": ["cls-0741c099c775", "cls-b0a1e9bebbd5"],
+      "大手メディア": ["cls-6889e9e1c7ac", "cls-a83e0f0a56a5", "cls-ccdac99d90dc", "cls-d46a2a504636", "cls-e2429c77f48e"],
+      "大手メディア・米国政府": ["cls-2d791f7f4b17"],
+      "米国政府/中国共産党": ["cls-6be4fc09d9ed"],
+      "既存秩序": ["cls-56c4197b6fd2"],
+      "null (template fallback)": ["複数 (cls-3165c4e2f049, cls-37a708b96a94, cls-579833967531 等)"]
+    },
+    "f_trial_run_post_tune_2026_05_11_match": "★ 起案前仮説 5 (2026-05-11 Slot-1 で 'target_enemy: 大手メディア' 出力) と同パターンを直近 run でも複数観察 (大手メディア 5 件 / 米国政府 2 件 等)。旧ルート稼働中は target_enemy=大手メディア が反復的に出力されることを確認。"
+  },
+  "conclusion": "★ target_enemy は production で実際に出力されており (旧ルート稼働、template fallback ではない LLM 生成)、director_meta 経由で video_payload に露出。さらに直近 Slot-1 では仮想敵 framing が viewer-facing な hook/punchline の煽り表現として顕在化 = Gemini Round 1 指摘の『台本品質への影響』は production で実在する。"
+}

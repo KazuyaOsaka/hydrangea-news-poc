@@ -131,21 +131,7 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 関連ファイル: `src/main.py` (F-13.B 呼び出し L3168-3212 周辺), `src/generation/evidence_writer.py` (score_breakdown 保存経路、writer 不変)
   - 関連: F-jp-coverage-cache-judgement-persist (案 A = cache lossless 化の土台)、3 AI 三角測量レビュー ChatGPT 案
 
-- **F-script-writer-target-enemy-fix** ★★★高 (3 AI 三角測量レビュー / 2026-05-25 起案、Gemini 独自指摘、★ **次バッチ最有力**)
-  - 背景: `target_enemy` (台本の「敵=構造的対象」定義) のプロンプト/モデル定義に不整合がある可能性を Gemini が独自指摘。`target_enemy` は `src/shared/models.py` / `src/generation/script_writer.py` / `src/generation/video_payload_writer.py` / `configs/prompts/analysis/geo_lens/script_with_analysis.md` に跨って参照されており、定義のズレが台本品質に影響しうる。★ 詳細は読み取り専用調査で確定要 (F-f1 / F-jp-coverage-cache と同型の grep-first アプローチ推奨。クラウド誤り 10 の 2 回目発生を踏まえ外部指摘も grep で検証してから起案)。
-  - 対応案: 4 ファイルの `target_enemy` 参照を grep で棚卸し → 定義の正本と実際のプロンプト記述のズレを特定 → CP でスコープ確定 (プロンプトは主戦場 = 触ってよい領域だが、クラウド誤り 9「各論コントロールの誘惑」に留意し構造データ側で表現できないか先に検討)。
-  - 検討時期: F-jp-coverage-cache-judgement-persist 完了後 (★ 次バッチ最有力に格上げ)
-  - 想定工数: 調査 1-2h + 修正 (スコープ次第)
-  - 関連ファイル: `src/shared/models.py`, `src/generation/script_writer.py`, `src/generation/video_payload_writer.py`, `configs/prompts/analysis/geo_lens/script_with_analysis.md`
-  - 関連: 3 AI 三角測量レビュー (2026-05-25、Gemini 独自指摘)、クラウド誤り 9 (各論コントロールの誘惑、プロンプト改修時の留意)
-
-- **F-script-writer-target-enemy-fix** ★★★高 (3 AI 三角測量レビュー / 2026-05-25 起案、Gemini 独自指摘)
-  - 背景: `target_enemy` (台本の「敵=構造的対象」定義) のプロンプト/モデル定義に不整合がある可能性を Gemini が独自指摘。`target_enemy` は `src/shared/models.py` / `src/generation/script_writer.py` / `src/generation/video_payload_writer.py` / `configs/prompts/analysis/geo_lens/script_with_analysis.md` に跨って参照されており、定義のズレが台本品質に影響しうる。★ 詳細は読み取り専用調査で確定要 (F-f1 と同型の grep-first アプローチ推奨)。
-  - 対応案: 4 ファイルの `target_enemy` 参照を grep で棚卸し → 定義の正本と実際のプロンプト記述のズレを特定 → CP でスコープ確定 (プロンプトは主戦場 = 触ってよい領域だが、クラウド誤り 9「各論コントロールの誘惑」に留意し構造データ側で表現できないか先に検討)。
-  - 検討時期: F-jp-coverage-cache-judgement-persist 完了後 (2nd 候補)
-  - 想定工数: 調査 1-2h + 修正 (スコープ次第)
-  - 関連ファイル: `src/shared/models.py`, `src/generation/script_writer.py`, `src/generation/video_payload_writer.py`, `configs/prompts/analysis/geo_lens/script_with_analysis.md`
-  - 関連: 3 AI 三角測量レビュー (2026-05-25、Gemini 独自指摘)、クラウド誤り 9 (各論コントロールの誘惑、プロンプト改修時の留意)
+- ~~**F-script-writer-target-enemy-fix** ★★★高 (3 AI 三角測量レビュー / 2026-05-25 起案、Gemini 独自指摘) [★ 重複 2 エントリを統合]~~ → ★ **調査完了 (F-script-writer-target-enemy-fix-investigate / 2026-05-26)**。読み取り専用調査 (grep + コード精読 + 試運転観察) で実態確定。**真因 a 確定**: production 稼働中の旧ルート `write_script` が `target_enemy` (仮想敵) をハードコード候補リストから出力し viewer-facing な煽り framing を誘導するが、旧ルートは不変原則 2 で直接修正不可。新ルート `generate_script_with_analysis` は設計上既に target_enemy 排除済み (契約テストで固定) = **新ルート配線が唯一の sanctioned 解消経路**。CP-1 カズヤ判断 = **X1 (新ルート配線バッチに統合)** = 下記「particular_angle_metadata + sontaku_signals の本番配線判断」エントリに target_enemy 解消を吸収。★ 起案前 Project Knowledge 仮説 1-5 は grep で概ね CONFIRMED = クラウド誤り 10 の 3 回目発生なし (外部指摘を grep で検証してから起案する作法が機能)。詳細は `docs/runs/F-script-writer-target-enemy-fix-investigate/REPORT.md`。
 
 - **F-gemini-quality-tier-poc** ★★高 (F-gemini-model-audit / 2026-05-19 起案、★ **次バッチ最有力に格上げ** (F-gemini-model-migrate-emergency / 2026-05-19)、Phase A.5-3b 第一作起案前)
   - 背景: 2026-05 Gemini モデル群更新で Narrative 主軸 (QUALITY Tier1) の最適モデルが未確定。候補 = `gemini-3-flash-preview` (RPD 10K) / `gemini-3.1-pro-preview` (RPD 250、Editorial Guardian 候補) / `gemini-2.5-flash` (RPD 10K、安定 fallback)。emergency 移行は Tier3 GA 化のみで primary 品質は別途 PoC で確定する必要がある (設計判断と実装の分離)。
@@ -196,8 +182,9 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 関連ファイル: `src/main.py` (3170-3220 行帯の F-13.B 呼び出し箇所、★ 不変原則対象外)、`src/triage/jp_coverage_verifier.py` (既存メソッド完全不変)、`src/shared/models.py` (`AnalysisResult` から `particular_angle` を導出する論理)、関連 docs (`docs/PARTICULAR_ANGLE_DEFINITION.md`)
   - 関連: F-stream-2-filter-design (★ 配線後の系統 3 候補処理を担う)、Phase A.5-3b 第一作起案 (試運転で本配線効果を確認)、F-particular-angle-redesign-extension (4 分類化 + sontaku_signals 独立化の本番反映を兼ねる)
 
-- **particular_angle_metadata + sontaku_signals の本番配線判断** (F-trial-run-post-tune / 2026-05-11 で観察)
+- **particular_angle_metadata + sontaku_signals の本番配線判断** (F-trial-run-post-tune / 2026-05-11 で観察、★ **F-script-writer-target-enemy-fix-investigate / 2026-05-26 で target_enemy 解消 (X1) を統合**)
   - 背景: F-particular-angle-redesign-extension (2026-05-08) で `particular_angle_metadata` (3 要素 + confidence) + `sontaku_signals` (level + type + extraction_confidence) を別軸メタデータとして正典化、`docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 3.7 で台本表現方向性も正典化したが、**src/ 配下 grep で 0 件 = 本番未配線**。F-trial-run-post-tune Slot-1 (cls-6889e9e1c7ac、editorial_mission_score=86.0、Hydrangea ど真ん中) でも `analysis_result=null` で旧ルート + F-13 隠れ層 bypass で台本生成 = 新ルート `generate_script_with_analysis` 未起動。
+  - ★ **target_enemy 解消の統合 (X1、F-script-writer-target-enemy-fix-investigate / 2026-05-26 CP-1 確定)**: 同調査で「production 稼働中の旧ルートが `target_enemy` (仮想敵) を出力し viewer-facing な煽り framing を誘導するが旧ルートは不変原則 2 で修正不可、新ルートは設計上既に target_enemy 排除済み」と判明 (真因 a)。→ 本配線バッチ完了 = 新ルート起動 = **target_enemy が production から自動退役**。本配線の成果検証項目に「video_payload.json で target_enemy が None になること (新ルート経由)」+「hook/punchline から仮想敵 framing・煽り表現が消えること」を追加する。詳細は `docs/runs/F-script-writer-target-enemy-fix-investigate/REPORT.md`。
   - 対応案: (a) `src/shared/models.py` に `ParticularAngleMetadata` + `SontakuSignals` Pydantic クラスを追加、`AnalysisResult` に optional フィールドとして組み込む (新規追加のみ、不変原則 4 例外条件適用要)、(b) `src/analysis/` 配下に LLM 抽出ロジック (`scripts/extract_particular_angle.py` のロジックを `src/analysis/particular_angle_extractor.py` に移植)、(c) `src/generation/script_writer.py` `generate_script_with_analysis` 新ルートの引数に追加、(d) `configs/prompts/analysis/geo_lens/script_with_analysis.md` に `particular_angle_metadata` + `sontaku_signals` を渡すプロンプト改修 (LLM の自律判断に委ねる設計、クラウド誤り 9 各論コントロール回避)
   - 検討時期: verify_two_stage 本番配線と同時 OR Phase A.5-3b 第一作着手後の並走バッチ。F-stream-2-filter-design は本配線を前提に動作する設計が望ましい。
   - 想定工数: 8-16 時間 (model 追加 + analysis 配線 + script_writer 新ルート改修 + プロンプト改修 + テスト + 試運転)

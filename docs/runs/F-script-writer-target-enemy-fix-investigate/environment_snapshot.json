@@ -1,0 +1,32 @@
+{
+  "batch": "F-script-writer-target-enemy-fix-investigate",
+  "type": "investigation_only_no_code_change",
+  "date": "2026-05-26",
+  "git": {
+    "branch": "feature/F-script-writer-target-enemy-fix-investigate",
+    "head_full": "4aa6f54545ee3a521e0ba97adab0c6acd9e231b7",
+    "head_short": "4aa6f54",
+    "expected_head": "4aa6f54",
+    "head_match": true,
+    "base_branch": "main",
+    "working_tree_clean_before_docs": true
+  },
+  "baseline_tests": {
+    "command": "python -m pytest tests/ -x --tb=no -q",
+    "result": "1417 passed",
+    "duration_sec": 84.68,
+    "expected_baseline": 1417,
+    "match": true,
+    "note": "調査専用バッチのため src/ tests/ configs/ scripts/ は 0 行変更 = baseline 維持は自動"
+  },
+  "runtime": {
+    "python": "3.11.15",
+    "platform": "darwin 25.2.0"
+  },
+  "prev_batch_decision_log_hashes": {
+    "batch": "F-jp-coverage-cache-judgement-persist",
+    "feat": "817ba66",
+    "merge": "4aa6f54",
+    "note": "Task F で DECISION_LOG の '(push 後追記)' を上記ハッシュで更新する"
+  }
+}
