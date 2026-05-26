@@ -5306,7 +5306,7 @@ functional 参照されていること、および「shutdown 後 404 は retry 
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `817ba66` (feat: F-jp-coverage-cache-judgement-persist F-13.B llm_judgement の 24h cache 永続化) / `4aa6f54` (Merge branch 'feature/F-jp-coverage-cache-judgement-persist')。★ F-script-writer-target-enemy-fix-investigate / 2026-05-26 で実ハッシュ追記。
 - 改修ファイル:
   - `src/storage/db.py` (jp_coverage_cache DDL 2 列 + `_migrate_jp_coverage_cache`)
   - `src/triage/jp_coverage_verifier.py` (`_get_cached` / `_save_cache`、不変原則 3 例外)
@@ -5326,3 +5326,91 @@ functional 参照されていること、および「shutdown 後 404 は retry 
   - F-f1-locale-key-fix (★ 前バッチ、同レビュー由来)
   - F-evidence-jp-coverage-audit-trail (★ 後続候補、案 B 単独 = evidence 監査トレース新設)
   - F-script-writer-target-enemy-fix (★ 後続、Gemini 独自指摘)
+
+---
+
+## 2026-05-26: F-script-writer-target-enemy-fix-investigate — target_enemy 問題の実態調査 (調査専用、改修なし)
+
+### 背景
+
+3 AI 三角測量 (Gemini Round 1 / 2026-05-25) が「`target_enemy` (台本の『敵=構造的対象』
+定義) のプロンプト/モデル定義に不整合がある可能性。`src/shared/models.py` /
+`src/generation/script_writer.py` / `src/generation/video_payload_writer.py` /
+`configs/prompts/analysis/geo_lens/script_with_analysis.md` に跨る参照のズレが台本品質に
+影響しうる」と独自指摘。起案前 Project Knowledge grep で仮説 1-5 が得られたが、クラウド誤り
+10 (外部指摘の鵜呑み) の 4 回目発生を回避するため、本バッチを**調査専用 (改修なし)** に
+縮小し、grep + コード精読 + 試運転観察で実態を確認してから CP-1 でカズヤ判断を仰ぐ構成とした。
+
+### 議論 (Task B 調査 + CP-1)
+
+- **真因 a 確定 (confidence: high)**: production で稼働するのは旧ルート `write_script` のみ
+  (`.env` に `ANALYSIS_LAYER_ENABLED` 行なし → default false + `analysis_result=None` →
+  `main.py:2019` else 分岐)。旧ルートは `target_enemy` を `ScriptDraft` の REQUIRED str
+  フィールドとして仮想敵選択を能動指示し、候補リスト (財務省/日銀・大手メディア・米国政府/
+  中国共産党・GAFAM・既存秩序) を `_PROMPT_TEMPLATE` にハードコード。STEP1 + Twist 必達
+  チェックリスト経由で台本本文 framing を仮想敵中心に誘導 = メタデータに留まらず viewer-facing
+  に影響。旧ルートは不変原則 2 で**直接修正不可**。
+- **新ルートは設計上既に解決済み**: `ScriptWithAnalysisDraft` に target_enemy フィールド無し、
+  `_analysis_draft_to_video_script` が `target_enemy=None` 固定 (コメント「仮想敵濫用を抑止」)、
+  `script_with_analysis.md:152-156` で仮想敵設定を明示禁止、契約テスト
+  (test_script_writer_with_analysis.py:255,357 / test_e2e_analysis_layer.py:298) で固定済。
+- **production 試運転観察**: 直近 batch 20260526_035220 Slot-1 (cls-0741c099c775,
+  used_fallback=false) が `target_enemy: 米国政府` を出力。さらに hook「真っ赤な嘘」/
+  punchline「日本のメディアが報じない」「情報を鵜呑みにする人が損をする」= 新ルートが
+  禁止する煽り表現が viewer-facing に顕在化。横断観察で大手メディア 5 件等を確認 (起案前
+  仮説 5 と整合)。
+- **真因 b/c/d 棄却**: b (configs 改修) = 新ルートプロンプトは既に禁止記述十分 + 新ルート
+  未稼働で production 効果ゼロ + 旧ルートプロンプトは Python 定数で不変原則 2 = REJECTED。
+  c (両対応) = 新ルートに問題なし = REJECTED。d (修正不要) = 「broken な参照のズレ」前提は
+  厳密には不成立 (意図的な migration 途上の設計乖離) だが品質懸念は production で実在 =
+  PARTIAL。
+- **★ クラウド誤り 10 の 3 回目発生は無し**: 起案前 Project Knowledge 仮説 1-5 は grep +
+  試運転で **概ね一致 (CONFIRMED)**。軽微訂正のみ (仮説 1 の行番号「80-88」は実際
+  113-118/317/445-446 のドリフト / 仮説 4 の「fallback」は正確には else 分岐 primary route)。
+  F-f1 / F-jp-coverage-cache では仮説が実態と乖離したが、本バッチでは grep-first で仮説が
+  検証され整合 = 外部指摘も grep で検証してから起案する作法が機能した好例。
+- **スコープ洞察**: target_enemy は「旧ルート全体の仮想敵/煽り framing 哲学」の最も可視な
+  マーカー。pinpoint 修正でなく旧→新ルート移行が根本治療。新ルートは既に「メタデータ構造 +
+  LLM の知性に委ねる」設計 = クラウド誤り 9 (各論コントロール回避) と整合。
+
+### 決定 (CP-1 カズヤ判断)
+
+- **後続バッチ方針 = X1 (新ルート配線バッチに統合)**: FUTURE_WORK 既登録
+  「particular_angle_metadata + sontaku_signals の本番配線判断」(想定 8-16h) に target_enemy
+  解消を吸収。新ルート配線で target_enemy は自動的に production から消える (新ルートは設計上
+  既に解決済み = 根本治療)。X2 (configs 改修、production 効果ゼロ) / X3 (両対応、新ルート
+  問題なし) / X4 (修正不要、品質懸念実在) は不採用。
+- **本バッチは調査専用、改修なし、不変原則 1-5 完全遵守** (例外条件適用なし)。
+
+### 結果
+
+- `src/` `tests/` `configs/` `scripts/` `CLAUDE.md` = **0 行変更**。baseline **1417 passed
+  維持** (改修なしのため自動維持、Task A で確認済)。
+- `docs/runs/F-script-writer-target-enemy-fix-investigate/` に調査出力 6 件を新規作成。
+- 不変原則違反なし。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 調査対象ファイル (読み取りのみ、0 行変更):
+  - `src/shared/models.py` (L221 target_enemy フィールド)
+  - `src/generation/script_writer.py` (旧ルート L113-118/317/445-446/715/782、新ルート L1097/1306)
+  - `src/generation/video_payload_writer.py` (L457-458 director_meta 露出)
+  - `configs/prompts/analysis/geo_lens/script_with_analysis.md` (L152-156 仮想敵禁止)
+  - `src/main.py` (L1937-2025 ルート選択 + deprecation gate)、`.env` (ANALYSIS_LAYER_ENABLED 未設定)
+- 新規ファイル (`docs/runs/F-script-writer-target-enemy-fix-investigate/`):
+  - `REPORT.md` / `environment_snapshot.json` / `grep_inventory.json` /
+    `route_comparison.json` / `production_observation.json` / `root_cause_analysis.json`
+- ドキュメント更新:
+  - `docs/CURRENT_STATE.md` (全置換更新、18 つ目バッチ 1-P)
+  - `docs/DECISION_LOG.md` (本エントリ + F-jp-coverage-cache-judgement-persist のコミット
+    ハッシュ `817ba66` / `4aa6f54` 追記)
+  - `docs/FUTURE_WORK.md` (F-script-writer-target-enemy-fix 重複 2 エントリを完了済み移動 +
+    particular_angle_metadata 配線エントリに target_enemy 統合追記)
+  - `docs/DISCUSSION_NOTES.md` (4-A 新規 1 件 + 4-B 既存「2026-05-01 新ルートで target_enemy
+    排除」再評価)
+- レビュー出典: Gemini Round 1 レビュー (2026-05-25、Gemini 独自指摘)
+- 関連バッチ:
+  - F-jp-coverage-cache-judgement-persist (★ 前バッチ、同 3 AI 三角測量由来)
+  - particular_angle_metadata + sontaku_signals 本番配線判断 = X1 統合先 (FUTURE_WORK)
+  - verify_two_stage 本番配線判断 / F-stream-2-filter-design (X1 と密接に関連)

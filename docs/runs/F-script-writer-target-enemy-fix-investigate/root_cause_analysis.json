@@ -1,0 +1,54 @@
+{
+  "task": "B-4: Gemini Round 1 レビュー指摘の真因確定",
+  "gemini_round1_claim": "target_enemy (台本の「敵=構造的対象」定義) のプロンプト/モデル定義に不整合がある可能性。models.py / script_writer.py / video_payload_writer.py / script_with_analysis.md に跨る参照のズレが台本品質に影響しうる。",
+  "determination": {
+    "primary_root_cause": "a",
+    "label": "旧ルートのハードコード仮想敵リスト (script_writer.py:113-118 / 317 / 445-446) が問題 → 不変原則 2 対象で直接修正不可 = 新ルート配線バッチに集約すべき",
+    "confidence": "high",
+    "reasoning": [
+      "production で稼働しているのは旧ルート write_script のみ (ANALYSIS_LAYER_ENABLED=false + analysis_result=None)。旧ルートは target_enemy を REQUIRED フィールドとして仮想敵選択を能動的に指示し、候補リスト (財務省/日銀・大手メディア・米国政府/中国共産党・GAFAM・既存秩序) をハードコードしている。",
+      "この target_enemy framing は単なるメタデータでなく、STEP1 + Twist 必達チェックリスト (line 417) 経由で台本本文 (twist/punchline) の framing を仮想敵中心に誘導 → 直近 Slot-1 (cls-0741c099c775) で 'マスコミは報じない' 系 + '情報を鵜呑みにする人が損をする' 系の煽り表現が viewer-facing に顕在化。",
+      "旧ルート (write_script / _PROMPT_TEMPLATE / _build_script_from_llm / ScriptDraft / _draft_to_video_script) は不変原則 2 で全て変更不可 → target_enemy を旧ルート側で除去・抑制する改修は不可能。",
+      "新ルート (generate_script_with_analysis / ScriptWithAnalysisDraft) は 2026-05-01 設計判断で target_enemy を意図的に排除済み + script_with_analysis.md で仮想敵設定を明示禁止済み + 契約テストで固定済み = 設計上既に解決済み。",
+      "→ target_enemy を production から消す唯一の sanctioned 経路は『新ルートの production 配線』(analysis layer の本番起動)。これは FUTURE_WORK 既登録 (particular_angle_metadata + sontaku_signals 本番配線判断、想定 8-16h) に吸収できる。"
+    ]
+  },
+  "rejected_causes": {
+    "b": {
+      "label": "新ルートのプロンプト禁止記述が不十分 → configs/prompts/ 改修で対応可能",
+      "verdict": "REJECTED (production への効果なし)",
+      "reason": "新ルートプロンプト script_with_analysis.md は target_enemy=大手メディア/マスコミ/NHK を既に明示禁止 (lines 152-156) + 仮想敵名指し構文も禁止 (line 156)。禁止記述は十分。かつ新ルートは production 未稼働のため、ここを更に強化しても production 出力は一切変わらない。旧ルートプロンプト (_PROMPT_TEMPLATE) は configs ファイルでなく script_writer.py 内の Python 定数 = 不変原則 2 で改修不可。= configs 改修で解決できる production 問題は存在しない。"
+    },
+    "c": {
+      "label": "新旧両ルートで問題 → 両方対応の本格修正バッチ",
+      "verdict": "REJECTED (新ルートに問題なし)",
+      "reason": "新ルートは設計上 target_enemy を排除済み = 問題なし。旧ルートのみが問題で、かつ不変原則 2 で直接修正不可。両方対応は不要。"
+    },
+    "d": {
+      "label": "そもそも問題が顕在化していない (Gemini レビュー指摘の前提が成立しない)",
+      "verdict": "PARTIAL (前提の一部は不成立だが懸念は実在)",
+      "reason": "Gemini の『プロンプト/モデル定義の不整合 = broken な参照のズレ』という前提は厳密には不成立 — 4 ファイルの参照は coherent で、旧/新ルートの差は意図的な migration 途上の設計乖離 (コードは両ルートで正しく分岐)。しかし『台本品質に影響しうる』という根底の懸念は production で実在 (旧ルートが仮想敵 framing を viewer-facing に出力)。よって『修正不要』とは結論できない。"
+    }
+  },
+  "scope_insight": {
+    "note": "★ Gemini は target_enemy を特定して指摘したが、grep 実態では target_enemy は『旧ルート全体の仮想敵/Media-Critique/Anti-Sontaku framing 哲学』の最も可視なマーカーに過ぎない。同じ旧ルート出力には '真っ赤な嘘' 'マスコミは報じない' '情報を鵜呑みにする人が損をする' 等、新ルートが禁止する煽り表現が併発する。= target_enemy 単独の pinpoint 修正ではなく、旧ルートから新ルートへの移行が根本治療。",
+    "cloud_error_9_link": "旧ルートに各論禁止ルールを追加する誘惑 (クラウド誤り 9) は回避すべき。新ルートは既に『メタデータ構造 + LLM の知性に委ねる』設計でこれを達成済み = 新ルート配線が正しい設計選択。"
+  },
+  "hypothesis_vs_grep": {
+    "cloud_error_10_3rd_occurrence": false,
+    "verdict": "★ 起案前 Project Knowledge 仮説 1-5 は grep + コード精読 + 試運転観察で概ね一致 (CONFIRMED)。クラウド誤り 10 の 3 回目発生は無し = 今回は仮説が実態と整合。",
+    "matches": [
+      "仮説 1 (旧ルートに target_enemy 候補リストがハードコード): CONFIRMED (但し行番号は 80-88 でなく 113-118/317/445-446 = 行番号ドリフトのみ)",
+      "仮説 2 (新ルートで target_enemy 排除): CONFIRMED (script_writer.py:1097,1306 + 契約テスト)",
+      "仮説 3 (script_with_analysis.md に仮想敵禁止記述): CONFIRMED (lines 152-156)",
+      "仮説 4 (production は旧ルートのみ稼働): CONFIRMED (但し 'fallback' でなく else 分岐 primary route という用語精度の訂正あり)",
+      "仮説 5 (2026-05-11 target_enemy=大手メディア 出力): CONFIRMED (直近 run でも 大手メディア 5 件等を観察)"
+    ],
+    "minor_corrections": [
+      "行番号ドリフト: 仮説 1 の '80-88' は実際 113-118/317/445-446",
+      "用語精度: 仮説 4 の '旧ルート fallback' は正確には else 分岐の primary route (main.py:2019)。機能的結論は同一。",
+      "追加発見 (仮説外): ANALYSIS_LAYER_ENABLED=true + analysis_result=None の場合は deprecation gate (main.py:1942) で生成自体が skip される。現 production は false のため gate 非作動 = 旧ルート稼働。"
+    ]
+  },
+  "recommendation": "X1 (新ルート配線バッチに統合)。理由: 旧ルートは不変原則 2 で直接修正不可、新ルートは設計上既に target_enemy を排除済み、production への唯一の sanctioned 効果経路は新ルート配線 (FUTURE_WORK 既登録 8-16h)。X2 (configs 改修) は production 効果ゼロ。"
+}
