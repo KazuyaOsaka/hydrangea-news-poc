@@ -5485,7 +5485,7 @@ F-script-writer-target-enemy-fix-investigate と同型の **調査専用バッ�
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `de06887` (investigate: F-gemini-3.5-flash-api-audit Gemini 3.5 Flash API 影響範囲調査) / `2f99ebd` (Merge branch 'feature/F-gemini-3.5-flash-api-audit')。★ F-docs-update-chatgpt-round2-and-error10 / 2026-05-27 で実ハッシュ追記。
 - 調査対象ファイル (読み取りのみ、0 行変更):
   - `src/llm/factory.py` (Tier 階層 / GenerateContentConfig 構成 / generation_config=None 既定)
   - `src/shared/config.py` (Gemini モデル ID default / JP_COVERAGE_GROUNDING_MODEL)
@@ -5510,3 +5510,89 @@ F-script-writer-target-enemy-fix-investigate と同型の **調査専用バッ�
   - F-gemini-model-migrate-emergency (1-M、2026-05-19、5/25 shutdown 緊急対応)
   - F-script-writer-target-enemy-fix-investigate (★ 前バッチ、同型の調査専用バッチ)
   - F-gemini-quality-tier-poc (1-Q、★ 後続、本調査が前提情報を整備)
+
+## 2026-05-27: F-docs-update-chatgpt-round2-and-error10 — ChatGPT Round 2 レビュー由来の新規 3 タスク FUTURE_WORK 追加 + クラウド誤り 10 系統 CLAUDE.md 明文化 (docs-only)
+
+### 背景
+
+ChatGPT/Gemini に Gemini モデル布陣のセカンドオピニオン依頼を投げた際、ChatGPT が
+当該依頼を保留して **Phase A.5-3b 第一作前のコードレビュー Round 2 を返してきた**。
+指摘 7 点を docs 正本と grep 裏取りで照合した結果、半数が「既に解消済み」(古い
+Project Knowledge 由来) であり、残りに新規タスク化 + 既存タスク統合が必要と判明した。
+本バッチは docs-only (改修なし) で、新規 3 タスクの FUTURE_WORK 起案 + 既存
+F-periodic-health-check のスコープ拡張 + クラウド誤り 10 系統の CLAUDE.md 明文化を行う。
+
+### 議論
+
+ChatGPT Round 2 の 7 指摘を Task B で grep + コード精読により裏取りした (★ 起案者が
+「指摘 3/4 は解消済み」と断定していたが、クラウド誤り 10 系統の作法に従い起案者前提も
+検証対象とした):
+
+| # | 指摘 | grep verdict | 対応 |
+|---|---|---|---|
+| 1 | F-13.B 結果が evidence に残らない | — | 既に FUTURE_WORK 登録済 (F-evidence-jp-coverage-audit-trail) |
+| 2 | title_generator.py 誇大タイトル | REAL | ★ 新規 = F-title-guard-coverage-claim-policy ★★高 |
+| 3 | F-1 locale key bug | RESOLVED (古い PK) | editorial_mission_filter.py:163 `get("japan")` 確認 (F-f1-locale-key-fix / 1-N) |
+| 4 | F-13.B llm_judgement cache 永続化 | RESOLVED (古い PK) | db.py:120-121 + verifier 2 列対応確認 (F-jp-coverage-cache-judgement-persist / 1-O) |
+| 5 | LLM factory model drift + retry 観測 | — | F-periodic-health-check スコープ拡張 |
+| 6 | analysis max_output_tokens 不足 | REAL (env 可) | ★ 新規 = F-analysis-max-tokens-tune ★中 |
+| 7 | JobRecord AV path 未保存 | REAL | ★ 新規 = F-job-record-av-path ★低 |
+
+★ 指摘 6 で起案前提を訂正: 「config.py default 2000」は不正確 = config.py に
+ANALYSIS_LLM_MAX_TOKENS 定数は 0 件、default は factory.py:516 の os.getenv フォール
+バックのみ (default 化箇所は config.py でなく factory.py:516)。
+
+★ Task D で起案前提を訂正: 起案プロンプトは指摘 5 の受け皿を「F-pipeline-health-check
+(1-Q.5)」と呼称したが、grep で該当エントリは存在せず = health-check の正本は
+**F-periodic-health-check** (緊急度 中)。スコープが 503/fallback 検知で一致するため、
+新規重複エントリを作らず本エントリにスコープ統合した (最も保守的な選択、クラウド誤り 10
+の作法 = 起案者前提も grep で検証)。
+
+### 決定
+
+- **新規 3 タスクを FUTURE_WORK に追加**: F-title-guard-coverage-claim-policy (高) /
+  F-analysis-max-tokens-tune (中) / F-job-record-av-path (低)。
+- **F-periodic-health-check のスコープ拡張** (指摘 5 統合、tier fallback / retry 観測強化)。
+- **クラウド誤り 10 系統を CLAUDE.md に明文化** (誤り 9 直後に挿入)。発生実例 4 件
+  (1-N / 1-O / 1-P 回避 / 1-P.5 回避) + ChatGPT Round 2 で外部 AI 側発生を観察した実例を記録。
+- **不変原則 1-5 完全遵守** (docs-only、例外条件適用なし): `src/` `tests/` `configs/`
+  `scripts/` `.env` `.env.example` は 0 行変更。CLAUDE.md は明文化対象 (不変原則対象外)。
+
+### 結果
+
+- ChatGPT Round 2 の半数指摘 (3/4) が古い Project Knowledge 由来の誤認 (= ChatGPT 側で
+  クラウド誤り 10 系統発生) と確定 = 重複作業の未然防止。
+- 第一作着手前の品質リスク (誇大タイトル) を構造データ (coverage_claim_policy) で
+  防止する設計方針を起案 (クラウド誤り 9 各論コントロール回避と整合)。
+- baseline **1417 passed 維持** (改修なしのため自動維持、Task A で確認済 = 99.31s)。
+- 不変原則違反なし。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- grep 裏取り対象ファイル (読み取りのみ、0 行変更):
+  - `src/triage/editorial_mission_filter.py` L163/166 (指摘 3 解消確認)
+  - `src/storage/db.py` L14-20/110-153/189-200 (指摘 4 / 7 確認)
+  - `src/triage/jp_coverage_verifier.py` L673-748 (指摘 4 確認)
+  - `src/generation/title_generator.py` L41-72/136/149/203/380/394 (指摘 2 確認)
+  - `src/llm/factory.py` L496-525 (指摘 6 確認)、`src/shared/config.py` (ANALYSIS_LLM 0 件確認)
+  - `src/shared/models.py` L335-343 (指摘 7 確認)
+  - `docs/PARTICULAR_ANGLE_DEFINITION.md` L512 / `scripts/extract_particular_angle.py` L253 (4096 推奨確認)
+- 新規ファイル (`docs/runs/F-docs-update-chatgpt-round2-and-error10/`):
+  - `REPORT.md` / `environment_snapshot.json` / `grep_evidence_3_4.json` /
+    `title_guard_analysis.json` / `analysis_tokens_analysis.json` / `job_record_analysis.json`
+- ドキュメント更新:
+  - `CLAUDE.md` (クラウド誤り 10 明文化 + 導線表 + 最終更新日、他セクション不変)
+  - `docs/CURRENT_STATE.md` (全置換更新、20 つ目バッチ 1-P.6)
+  - `docs/DECISION_LOG.md` (本エントリ + F-gemini-3.5-flash-api-audit のコミットハッシュ
+    `de06887` / `2f99ebd` 追記)
+  - `docs/FUTURE_WORK.md` (新規 3 タスク追加 + F-periodic-health-check スコープ拡張 +
+    本バッチ完了済み移動)
+  - `docs/DISCUSSION_NOTES.md` (4-A 新規 1 件 + 4-B 既存クラウド誤り 10 エントリ再評価)
+- 起案出典: カズヤ共有の ChatGPT Round 2 レビュー (2026-05-27、7 指摘)
+- 関連バッチ:
+  - F-f1-locale-key-fix (1-N、2026-05-25、指摘 3 解消元 + クラウド誤り 10 の 1 回目記録)
+  - F-jp-coverage-cache-judgement-persist (1-O、2026-05-26、指摘 4 解消元 + 2 回目記録)
+  - F-script-writer-target-enemy-fix-investigate (1-P、2026-05-26、grep-first 好例)
+  - F-gemini-3.5-flash-api-audit (1-P.5、2026-05-27、外部情報を grep 検証した好例)
+  - F-gemini-quality-tier-poc (1-Q、★ 次バッチ最有力)

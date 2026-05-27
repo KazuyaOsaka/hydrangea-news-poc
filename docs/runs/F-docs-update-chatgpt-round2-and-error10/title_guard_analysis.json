@@ -1,0 +1,45 @@
+{
+  "batch": "F-docs-update-chatgpt-round2-and-error10",
+  "task": "Task B-3 — ChatGPT Round 2 指摘 2 (title_generator.py 誇大タイトル) の実態確認",
+  "method": "grep + コード精読 (読み取り専用、改修なし)",
+  "chatgpt_claim": "title_generator.py が perspective_gap の事象に対しても silence_gap 表現 (絶対的な未報道断定) を出力するリスク",
+  "urgency_claimed": "高",
+  "verdict": "REAL → 新規タスク化 = F-title-guard-coverage-claim-policy ★★高",
+
+  "absolute_silence_gap_phrasing_found": [
+    {"file": "src/generation/title_generator.py", "line": 136, "appraisal_type": "Perspective Inversion", "is_strong": true, "phrase": "日本では報道されない{topic}の視点"},
+    {"file": "src/generation/title_generator.py", "line": 149, "appraisal_type": "Media Blind Spot", "is_strong": true, "phrase": "日本では報道されない{topic}"},
+    {"file": "src/generation/title_generator.py", "line": 203, "appraisal_type": "Blind Spot Global", "is_strong": true, "phrase": "日本では報道されない{topic}"},
+    {"file": "src/generation/title_generator.py", "line": 380, "appraisal_type": "Media Blind Spot (thumbnail_text)", "is_strong": true, "phrase": "日本で無報道"},
+    {"file": "src/generation/title_generator.py", "line": 394, "appraisal_type": "Blind Spot Global (thumbnail_text)", "is_strong": true, "phrase": "日本で無報道"}
+  ],
+
+  "is_strong_gate": {
+    "function": "_is_strong_evidence (title_generator.py L41-72)",
+    "trigger_condition": "has_en_signal (海外ソース or has_en_view>0) AND has_depth (gap_reasoning OR editorial:perspective_gap_score >= 3.0 OR editorial:background_inference_potential >= 3.0)",
+    "key_finding": "perspective_gap_score >= 3.0 が has_depth を真にする (L66, L70) = 系統 2 (perspective_gap) の事象でも is_strong=True になり、上記の絶対的 silence_gap 表現 (『日本では報道されない』『日本で無報道』) が選択され得る",
+    "lines": "L47 (docstring 条件), L66 (pg 取得), L70 (has_depth 判定)"
+  },
+
+  "candidate_a_mismatch": {
+    "candidate": "cls-6889e9e1c7ac (Israel 9,600 人 / ICRC 監視操作疑惑)",
+    "stream_classification": "perspective_gap (系統 2 = 広範事件は日本報道済 + 特定角度のみ未報道、2026-05-19 F-trial-run-candidate-a-reverify で最終確定)",
+    "risk": "perspective_gap_score >= 3 で is_strong=True になると platform_title / thumbnail に『日本では報道されない{topic}』『日本で無報道』が出力され得る。しかし広範事件 (9,600 人虐待) は AFPBB 等で日本報道済 = 絶対的 silence_gap 表現は事実誤認 → 視聴者の『いや報じてるじゃん』突っ込みリスク + Hydrangea ミッション『検証可能な事実で殴る』に矛盾 + ADR-0003『誇大表現回避』と衝突",
+    "note": "perspective_gap で正しい表現は『日本でも事件は取り上げられたが、◯◯という構造には触れられていない』(CURRENT_STATE 系統 2 定義) = silence_gap 絶対表現とは別物"
+  },
+
+  "coverage_claim_policy_introduction_room": {
+    "grep_coverage_claim_policy": {"pattern": "coverage_claim_policy / allowed_claim_level / forbidden_title_claims", "scope": "src/ configs/ docs/ manual_poc/", "hits": 0},
+    "grep_manual_poc_dir": {"exists": false, "note": "manual_poc/ ディレクトリ未作成 = Phase A.5-3b 第一作隔離原則で新規作成する場所"},
+    "grep_candidate_a_editorial_brief": {"exists": false},
+    "grep_title_layer_guard_or_publish_gate": {"src_scripts_hits": 0, "note": "title_layer_guard / publish_gate スクリプトは未実装"},
+    "interpretation": "coverage_claim_policy 構造データ + title_layer_guard はいずれもグリーンフィールド = 新規追加で対応 (既存破壊なし)。クラウド誤り 9 (各論コントロール回避) と整合 = 各論プロンプト制御でなく構造データ (allowed_claim_level / forbidden_title_claims) に基づく虚偽防止"
+  },
+
+  "invariant_consideration": {
+    "title_generator_py_status": "不変原則 1-5 の明示対象外 (article_writer.py / script_writer.py 既存ルート / triage 既存 / analysis ではない)",
+    "note": "ただし title_generator.py 本体改修は新規タスク (F-title-guard-coverage-claim-policy) で例外条件適用判断要。本バッチでは grep 確認のみ、0 行変更。対応案は manual_poc/ 配下の構造データ + 生成後 guard (新規スクリプト or publish_gate) を主軸とし、title_generator.py 直接改修は最小化する設計を推奨"
+  },
+
+  "conclusion": "ChatGPT 指摘 2 は実在 = perspective_gap の事象に silence_gap 絶対表現が出力され得る構造。第一作候補A (perspective_gap 確定) で顕在化リスク高 → Phase A.5-3b 第一作着手前必須の新規タスク F-title-guard-coverage-claim-policy ★★高 として起案。"
+}

@@ -1,0 +1,36 @@
+{
+  "batch": "F-docs-update-chatgpt-round2-and-error10",
+  "task": "Task B-4 — ChatGPT Round 2 指摘 6 (analysis max_output_tokens default 2000 不足) の実態確認",
+  "method": "grep + コード精読 (読み取り専用、改修なし)",
+  "chatgpt_claim": "analysis の max_output_tokens default 2000 では JSON 途中切断リスク (4096 推奨)",
+  "urgency_claimed": "中",
+  "verdict": "REAL (env 指定で対応可、コード改修不要) → 新規タスク化 = F-analysis-max-tokens-tune ★中",
+
+  "current_default_location": {
+    "file": "src/llm/factory.py",
+    "line": 516,
+    "code": "max_tokens = int(os.getenv(\"ANALYSIS_LLM_MAX_TOKENS\", \"2000\"))",
+    "function": "get_analysis_llm_client() (L496-)",
+    "temperature_line": {"line": 512, "code": "temperature = float(os.getenv(\"ANALYSIS_LLM_TEMPERATURE\", \"0.3\"))"},
+    "docstring": "factory.py L502-503: 「temperature と max_output_tokens は環境変数 ANALYSIS_LLM_TEMPERATURE / ANALYSIS_LLM_MAX_TOKENS で上書き可能 (デフォルト 0.3 / 2000)」"
+  },
+
+  "config_py_correction": {
+    "chatgpt_premise": "src/shared/config.py で ANALYSIS_LLM_MAX_TOKENS default 2000",
+    "grep_result": {"pattern": "ANALYSIS_LLM in src/shared/config.py", "hits": 0},
+    "actual": "config.py に ANALYSIS_LLM_MAX_TOKENS 定数は存在しない。default 2000 は factory.py:516 の os.getenv フォールバックのみ。env 未指定時に 2000 が使われる。",
+    "implication": "X1 で default 化する場合の改修箇所は config.py ではなく factory.py:516。起案プロンプト C-2 の『config.py default を 4096 化』は factory.py:516 に訂正。"
+  },
+
+  "doc_recommendation_4096": [
+    {"file": "docs/PARTICULAR_ANGLE_DEFINITION.md", "line": 512, "text": "max_output_tokens は 4096 を明示指定する (既定の analysis ... を踏襲しつつ拡張)"},
+    {"file": "scripts/extract_particular_angle.py", "line": 241, "text": "analysis role の Tier 階層を流用しつつ、max_output_tokens を 4096 に拡張。"},
+    {"file": "scripts/extract_particular_angle.py", "line": 253, "code": "generation_config={\"temperature\": 0.3, \"max_output_tokens\": 4096}"}
+  ],
+
+  "related_future_work": "FUTURE_WORK.md L52-56 「AnalysisLayer LLM の max_tokens / 切れ防止 (F-14 で workaround 済)」= max_output_tokens 不足の根本対応が既に課題登録済 (本指摘と同根、F-analysis-max-tokens-tune で具体化)",
+
+  "production_status_note": "本番生成系 (旧ルート write_script) は ANALYSIS_LAYER_ENABLED=false で analysis client 未起動 (CURRENT_STATE 確認済) のため、現状 default 2000 が production を破壊しているわけではない。X1 で AnalysisLayer 本番起動時に 2000 だと不足の可能性 = 起動前に env=4096 で先行回避し、X1 配線時に factory.py:516 default 化を判断。",
+
+  "conclusion": "ChatGPT 指摘 6 は実在 (4096 推奨が docs 正本にあり)。ただし env 指定 (ANALYSIS_LLM_MAX_TOKENS=4096) で改修なしに対応可能。default 化箇所は config.py でなく factory.py:516。Phase A.5-3b 実行時 env 指定 → X1 配線時 default 化判断の 2 段構えで F-analysis-max-tokens-tune ★中 として起案。"
+}

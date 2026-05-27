@@ -1,6 +1,18 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-26 (★ F-jp-coverage-cache-judgement-persist 完了。F-13.B の
+最終更新: 2026-05-27 (★ F-docs-update-chatgpt-round2-and-error10 完了、docs-only。
+ChatGPT Round 2 レビュー (2026-05-27) の 7 指摘を grep 裏取りで照合し、新規 3 タスク追加 +
+既存 1 タスクのスコープ拡張: ★★高 **F-title-guard-coverage-claim-policy** (緊急度 高、指摘 2 =
+title_generator.py の perspective_gap に対する silence_gap 絶対表現リスク) + ★中
+**F-analysis-max-tokens-tune** (緊急度 中、指摘 6 = factory.py:516 default 2000 → 4096 推奨) +
+★低 **F-job-record-av-path** (緊急度 低、指摘 7 = JobRecord AV path が jobs DDL に未保存) +
+**F-periodic-health-check** のスコープ拡張 (指摘 5 = tier fallback / retry 観測強化、★ 起案の
+「F-pipeline-health-check」呼称を正本 F-periodic-health-check に統合)。指摘 3 (F-1 locale key) /
+指摘 4 (F-13.B cache 永続化) は grep で解消済確認 (古い Project Knowledge 由来 = ChatGPT 側でも
+クラウド誤り 10 系統発生)。指摘 1 は F-evidence-jp-coverage-audit-trail で登録済。クラウド誤り 10
+系統を CLAUDE.md に明文化。baseline 1417 passed 維持 (改修なし自動維持)、src/ tests/ configs/
+scripts/ .env .env.example 0 行変更。前回 2026-05-26: F-jp-coverage-cache-judgement-persist 完了。
+F-13.B の
 `llm_judgement` / `llm_judgement_text` を `jp_coverage_cache` に永続化 (案 A、DB
 schema 2 列 + idempotent migration + verifier の save/get 拡張、判定ロジック不変)。
 `F-jp-coverage-cache-judgement-persist` を完了済みに移動。★ CP-1 実害訂正:
@@ -142,6 +154,14 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 関連ファイル: `src/llm/factory.py`, `.env`, `docs/runs/F-gemini-model-audit/REPORT.md` §8-3, `docs/runs/F-gemini-model-migrate-emergency/REPORT.md` §4, `docs/runs/F-gemini-3.5-flash-api-audit/REPORT.md` §5 (候補リスト更新提案) + `adoption_simulation.json` (RPD/RPM 試算)
   - ★ 追加留意点 (F-gemini-3.5-flash-api-audit / 2026-05-27): 3.5 Flash 投入時に Thought preservation 自動 ON による output_token/レイテンシ増加を PoC 試運転で実測観察 (機能破壊なし、改修不要のコスト面留意点)。LIGHTWEIGHT Tier1 切替は `gemini-3.1-flash-lite` (RPD 150K) が本命 (高頻度・低難度に spike 耐性、3.5 Flash は RPD 10K を Narrative primary と共有しないため使わない)。
   - 関連: F-gemini-model-audit (本起案元)、F-gemini-model-migrate-emergency (emergency 移行完了、Lightweight Tier1 切替を本 PoC に保留)、F-gemini-3.5-flash-api-audit (★ 候補リスト更新 + API 破壊的変更なし確定)、Phase A.5-3b 第一作起案
+
+- **F-title-guard-coverage-claim-policy** ★★高 (ChatGPT Round 2 レビュー / 2026-05-27 起案、F-docs-update-chatgpt-round2-and-error10 で grep 裏取り、Phase A.5-3b 第一作着手前必須)
+  - 背景: `src/generation/title_generator.py` が evidence strong 時に絶対的 silence_gap 表現「日本では報道されない{topic}」(L136/149/203) / サムネ「日本で無報道」(L380/394) を出力する仕組みが残存。`is_strong` ゲート (`_is_strong_evidence` L41-72) は `editorial:perspective_gap_score >= 3.0` でも真になる (L66/L70) ため、**系統 2 (perspective_gap) の事象でも絶対的 silence_gap 表現が選択され得る**。第一作候補A (cls-6889e9e1c7ac) は perspective_gap = 「広範事件 (9,600 人虐待) は日本報道済 (AFPBB 等) + 特定角度 (ICRC 監視操作) のみ未報道」のため、silence_gap 絶対表現がタイトル/サムネに出ると「いや AFPBB で報じてるじゃん」と視聴者から突っ込まれるリスク。ADR-0003 の「誇大表現回避」と衝突し、Hydrangea ミッション「検証可能な事実で殴る」に直接矛盾。★ grep 裏取り: `coverage_claim_policy` / `title_layer_guard` / `publish_gate` / `manual_poc/` はいずれも 0 件 = グリーンフィールド (既存破壊なし)。
+  - 対応案: (a) `manual_poc/` 配下の candidate_a_editorial_brief (Phase A.5-3b 第一作の手動固定データ、隔離原則で新規作成) に `coverage_claim_policy` 構造データ追加 (`allowed_claim_level: perspective_gap_only` / `forbidden_title_claims: [absolute_silence_gap, event_not_reported_in_japan]`) (b) 生成後に title_layer_guard (新規スクリプト or publish_gate) で `coverage_claim_policy` と title/thumbnail の整合チェック。各論プロンプト制御でなく構造データに基づく虚偽防止 = LLM の知性に委ねる設計と整合 (クラウド誤り 9 各論コントロール回避)。title_generator.py 本体改修は最小化し、構造データ + 生成後 guard を主軸とする設計を推奨。
+  - 検討時期: Phase A.5-3b 第一作起案前 (= F-gemini-quality-tier-poc 完了後、第一作着手前のロードマップ追加)
+  - 想定工数: 3-5h
+  - 関連ファイル: `src/generation/title_generator.py` (現状確認のみ = 不変原則対象外だが本体改修時は例外条件適用判断要)、`manual_poc/` 配下に新規 (Phase A.5-3b 隔離原則)、`docs/ADR/0003-content-moral-guidelines.md` (整合確認)、`docs/runs/F-docs-update-chatgpt-round2-and-error10/title_guard_analysis.json` (grep 裏取り)
+  - 関連: ChatGPT Round 2 レビュー (2026-05-27 指摘 2)、ADR-0003、Phase A.5-3b 第一作起案、Hydrangea ミッション「検証可能な事実で殴る」
 
 - **config.py/factory.py default 不一致整合** ★低 (F-gemini-model-audit §9-3 / F-gemini-model-migrate-emergency 2026-05-19 残置)
   - 背景: `src/shared/config.py:77-79` の GEMINI_MODEL_TIER2-4 default が `factory.py` default と不一致。runtime 影響なし (env が常に上書き) かつ 5/25 shutdown 非該当のため emergency 最小スコープから除外。
@@ -377,6 +397,20 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 着手条件: Phase A.5-3d 着手
   - 関連ファイル: src/main.py, src/budget.py, data/output/run_summary.json
   - 関連: F-gemini-model-migrate-emergency (503 多発の根本治療)、Phase A.5-3d (cron 完全自動投稿の前提)
+  - ★ 追加スコープ (ChatGPT Round 2 レビュー / 2026-05-27 指摘 5 統合、F-docs-update-chatgpt-round2-and-error10。★ 起案プロンプトは本タスクを「F-pipeline-health-check (1-Q.5)」と呼称したが該当エントリは存在せず、health-check の正本は本 F-periodic-health-check のため本エントリにスコープ統合):
+    - **model_role 解決状況の runtime snapshot (tier fallback 検出)**: factory.py の Tier1/2/3 解決経路を 1 batch 試運転で trace し、tier fallback (Gemini 503 等で primary → 下位 Tier に落ちる事象) が発生したかを観測。直近 run_summary では `used_fallback` / `model_roles` を記録済 = これを health フィールドに集約。
+    - **BudgetTracker の retry count 観測強化 (factory tier fallback の見える化)**: TieredGeminiClient.generate() 内部の tier retry が budget 記録に反映されているか観測 + 必要なら最小修正案を CP で起案。
+    - 工数 +1-2h (合計 3-5h、元の本番リリース前不要スコープから観測強化分を加算)
+    - ★ ChatGPT 指摘の懸念: 「Gemini 503 / fallback が第一作品質に直撃している状況では、どの tier が何回落ちたかが見えないと診断しづらい」= Phase A.5-3b 第一作の事故率を下げるための観測強化。
+  - 関連 (追加): ChatGPT Round 2 レビュー (2026-05-27 指摘 5)、F-gemini-quality-tier-poc (1-Q、tier 選定と並走)
+
+- **F-analysis-max-tokens-tune** ★中 (ChatGPT Round 2 レビュー / 2026-05-27 起案、F-docs-update-chatgpt-round2-and-error10 で grep 裏取り、Phase A.5-3b 実行時 env 指定 → X1 配線時 default 化判断)
+  - 背景: `src/llm/factory.py` の `get_analysis_llm_client()` (L516) で `max_tokens = int(os.getenv("ANALYSIS_LLM_MAX_TOKENS", "2000"))` = env 未指定時 default 2000。一方、特定角度抽出の正典 docs は 4096 推奨 (`docs/PARTICULAR_ANGLE_DEFINITION.md` L512「max_output_tokens は 4096 を明示指定する」+ `scripts/extract_particular_angle.py` L253 で 4096 実使用) = JSON 途中切断リスク回避。X1 で AnalysisLayer 本番起動時に 2000 だと不足の可能性。★ grep 裏取り訂正: 起案プロンプトの「config.py default 2000」は不正確 = config.py に ANALYSIS_LLM_MAX_TOKENS 定数は **0 件**、default は factory.py:516 の os.getenv フォールバックのみ。default 化の改修箇所は config.py でなく **factory.py:516**。現状 production は ANALYSIS_LAYER_ENABLED=false で analysis client 未起動のため default 2000 が本番を破壊しているわけではない (FUTURE_WORK 高「AnalysisLayer LLM の max_tokens / 切れ防止」と同根)。
+  - 対応案: (a) Phase A.5-3b 実行時に env で `ANALYSIS_LLM_MAX_TOKENS=4096` `ANALYSIS_LLM_TEMPERATURE=0.3` 指定 (コード改修なし) (b) X1 (particular_angle_metadata + sontaku_signals 本番配線) 完了時に factory.py:516 default を 4096 化判断 (X1 スコープ拡張)
+  - 検討時期: Phase A.5-3b 第一作実行直前 (env 指定) → X1 配線時 (default 化)
+  - 想定工数: 0.5h (env 指定のみ) + X1 配線時に default 変更
+  - 関連ファイル: `src/llm/factory.py` L516 (現状確認のみ、env 指定で対応 → X1 配線時に default 4096 化判断)、`.env` (Phase A.5-3b 実行時のみ追加)、`docs/runs/F-docs-update-chatgpt-round2-and-error10/analysis_tokens_analysis.json` (grep 裏取り)
+  - 関連: ChatGPT Round 2 レビュー (2026-05-27 指摘 6)、X1 (新ルート配線統合)、Phase A.5-3b 第一作実行、FUTURE_WORK 高「AnalysisLayer LLM の max_tokens / 切れ防止」(同根)
 
 - **第一作公開前の高リスク事実検証ワークフロー** (F-image-prompt-spec / 2026-05-18 起案、ADR-0003 由来)
   - 背景: ADR-0003 で「高リスク事実主張 (数字・固有名詞・人権侵害主張・断定的事実) は公開前検証が必須工程」+「投稿前ゲート 6 項目チェックリスト (視覚禁止 / 出典付き固有名詞 / 数字 source_card / 誇大表現なし / AI ラベル / 高リスク事実検証済)」を決定。第一作 (Israel 9,600 人 / ICRC 監視操作疑惑) はこれら全てに該当。
@@ -507,6 +541,14 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 ---
 
+- **F-job-record-av-path** ★低 (ChatGPT Round 2 レビュー / 2026-05-27 起案、F-docs-update-chatgpt-round2-and-error10 で grep 裏取り、Phase A.5-3c 以降)
+  - 背景: `src/shared/models.py` の `JobRecord` (L335) に `voiceover_path` (L342) / `review_mp4_path` (L343) フィールドが存在するが、`src/storage/db.py` の jobs テーブル DDL (L14) + `save_job()` (L189) には `script_path` / `article_path` / `video_payload_path` (L18-20) までしか対応していない = AV path は INSERT/UPSERT いずれにも含まれず DB に永続化されない (grep 裏取り済)。Remotion 化後 (Phase A.5-3c) の成果物追跡を DB に寄せたい際に「あれ、MP4 path が DB にない」が発生する未来負債。現状は run_summary / manifest で追えるため致命的ではない。
+  - 対応案: Phase A.5-3c の合成パート自動化 (ElevenLabs + Remotion + 画像生成の本番統合) で DB schema を整理。jobs テーブル DDL + save_job() を JobRecord 全フィールド対応に拡張 + idempotent migration 適用 (F-jp-coverage-cache-judgement-persist の `_migrate_jp_coverage_cache` パターン踏襲)。Phase 1-C「DB マイグレーション」(channel_id 追加) と並走整理可能。
+  - 検討時期: Phase A.5-3c 着手時
+  - 想定工数: 1-2h (DB migration + テスト + 関連書き込み箇所更新)
+  - 関連ファイル: `src/storage/db.py` (jobs DDL L14 + save_job L189 拡張、idempotent migration)、`src/shared/models.py` (JobRecord 既存維持)、`docs/runs/F-docs-update-chatgpt-round2-and-error10/job_record_analysis.json` (grep 裏取り)
+  - 関連: ChatGPT Round 2 レビュー (2026-05-27 指摘 7)、Phase A.5-3c (ElevenLabs + Remotion + 画像生成 本番統合)、Phase 1-C (DB マイグレーション、並走整理候補)
+
 - **README 全面書き直し** (TECH_DEBT.md 7.1 由来)
   - 背景: 初期 PoC 時代のまま、現状と乖離
   - 対応案: 全フェーズ完了時に書き直し
@@ -630,6 +672,28 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **F-docs-update-chatgpt-round2-and-error10 (ChatGPT Round 2 レビュー統合 + クラウド誤り 10 明文化)**
+  (F-docs-update-chatgpt-round2-and-error10 / 2026-05-27 完了、docs-only・改修なし)
+  - 発生バッチ: ChatGPT が Gemini モデル布陣セカンドオピニオン依頼を保留して Phase A.5-3b
+    第一作前のコードレビュー Round 2 (7 指摘) を返却。docs 正本との grep 裏取り照合 + 新規
+    タスク化 + クラウド誤り 10 系統の CLAUDE.md 明文化を行う docs-only バッチ。
+  - 対応: main `2f99ebd` から branch 作成、baseline 1417 passed 確認 (99.31s)。7 指摘を grep 裏取り:
+    - 指摘 3 (F-1 locale key) / 指摘 4 (F-13.B cache 永続化) = **RESOLVED** (古い Project
+      Knowledge 由来、editorial_mission_filter.py:163 `get("japan")` + db.py:120-121 で確認)
+    - 指摘 1 = 既に FUTURE_WORK 登録済 (F-evidence-jp-coverage-audit-trail)
+    - 指摘 2 (title 誇大) / 指摘 6 (analysis max_tokens) / 指摘 7 (JobRecord AV path) =
+      **REAL → 新規 3 タスク起案** (F-title-guard-coverage-claim-policy 高 /
+      F-analysis-max-tokens-tune 中 / F-job-record-av-path 低)
+    - 指摘 5 (model drift + retry 観測) = F-periodic-health-check スコープ拡張 (★ 起案の
+      「F-pipeline-health-check」呼称を正本 F-periodic-health-check に統合)
+  - 判定: ★ ChatGPT 側でも古い Project Knowledge 由来で「解消済みを新規発見と誤認」=
+    **クラウド誤り 10 系統が外部 AI レビューでも発生**することを観察。クラウド誤り 10 を
+    CLAUDE.md に明文化 (発生実例 4 件 + ChatGPT Round 2 観察)。起案前提を 2 点訂正
+    (指摘 6 default 箇所 = factory.py:516 / 指摘 5 受け皿エントリ名)。
+  - baseline 1417 passed 維持 (改修なし自動維持)、src/ tests/ configs/ scripts/ .env
+    .env.example 0 行変更。不変原則 1-5 完全遵守 (例外条件適用なし)。
+  - 詳細: `docs/runs/F-docs-update-chatgpt-round2-and-error10/REPORT.md` + grep 裏取り JSON 4 件。
 
 - **F-gemini-3.5-flash-api-audit (Gemini 3.5 Flash API 影響範囲調査)**
   (F-gemini-3.5-flash-api-audit / 2026-05-27 完了、調査専用・改修なし)
