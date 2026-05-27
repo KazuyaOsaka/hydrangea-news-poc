@@ -1,0 +1,54 @@
+{
+  "batch": "F-gemini-3.5-flash-api-audit",
+  "task": "B-3 Gemini 3.5 Flash 採用の影響範囲シミュレーション",
+  "date": "2026-05-27",
+  "official_spec_3_5_flash": {
+    "model_code": "gemini-3.5-flash (Stable) / gemini-3-flash-preview (Preview)",
+    "input_token_limit": 1048576,
+    "output_token_limit": 65536,
+    "capabilities": "Thinking / Function calling / Structured outputs / Search grounding / URL context / File search / Caching / Batch API すべて Supported",
+    "knowledge_cutoff": "January 2025",
+    "rate_limits_kazuya_account": {"RPM": 1000, "TPM": 2000000, "RPD": 10000}
+  },
+
+  "scenario_A_narrative_primary": {
+    "proposal": "gemini-3.5-flash を QUALITY Tier1 (Narrative primary = generation role 主軸) に投入",
+    "rpd_analysis": {
+      "cron_runs_per_day": 4,
+      "total_llm_calls_per_run_observed": 41,
+      "quality_tier1_share_per_run_est": "5-10 (script 1 + article 3 + title + validation retry。残り ~31 は LIGHTWEIGHT garbage_filter/merge + judge=gemini-2.5-flash で QUALITY Tier1 非該当)",
+      "quality_tier1_calls_per_day_est": "20-40",
+      "worst_case_all_calls_tier1": "4 runs × 41 = 164/day",
+      "rpd_limit": 10000,
+      "verdict": "RPD 10K に対し実使用 20-40/day = 250-500x の余裕。worst case 164/day でも 60x 余裕。★ RPD 上限到達リスクなし。"
+    },
+    "rpm_tpm": {"RPM_1K": "単一 run は throttle 込みで分散実行 = RPM 1K 余裕大", "TPM_2M": "QUALITY Tier1 1 呼び出し ~5-20K tokens × 10 = ~200K/run << 2M/min 余裕大"},
+    "api_param_compat": "本番生成パスは generation_config=None で temperature/top_p/top_k 非指定 = API デフォルト依存。3.5 Flash 切替でパラメータ互換問題ゼロ。",
+    "function_structured_compat": "カスタム function calling / structured outputs 未使用。Grounding (google_search) は別モデル (gemini-2.5-flash) で 3.5 Flash 切替対象外。",
+    "verdict": "★ Narrative primary 投入は API 互換・RPD/RPM/TPM すべてクリア。残る判断軸は品質 (gemini-3-flash-preview vs gemini-3.5-flash Stable) = F-gemini-quality-tier-poc の PoC 対象。"
+  },
+
+  "scenario_B_lightweight_tier1": {
+    "question": "LIGHTWEIGHT Tier1 (garbage_filter/merge_batch/viral_filter/editorial_mission_filter) を 3.5 Flash に切替えるべきか / 3.1 Flash Lite (RPD 150K) を維持すべきか",
+    "current": "gemini-2.5-flash (RPD 10K)",
+    "lightweight_volume_est": "~30 calls/run × 4 runs = ~120/day。ただし garbage_filter はソース件数に比例し spike しうる (大量ソース日)",
+    "options": {
+      "3.5_flash": {"RPD": 10000, "RPM": 1000, "verdict": "Narrative primary と RPD 10K を共有すると合算で枯渇リスク。LIGHTWEIGHT は高頻度・低難度 = 3.5 Flash の frontier 知性は過剰。"},
+      "3.1_flash_lite": {"RPD": 150000, "RPM": 4000, "verdict": "★ 推奨。高頻度タスクに RPD 150K (15x) + RPM 4K の余裕 = spike 耐性。低難度タスクに最適コスト。migrate-emergency CP-1 で保留した LIGHTWEIGHT 主軸切替の本命。"}
+    },
+    "recommendation": "LIGHTWEIGHT Tier1 → gemini-3.1-flash-lite (RPD 150K)。3.5 Flash は使わない。F-gemini-quality-tier-poc で確定 (本バッチは候補整理まで)。"
+  },
+
+  "scenario_C_editorial_guardian": {
+    "candidate": "gemini-3.1-pro (RPD 250)",
+    "current_wiring": "未配線 (grep 0 件)",
+    "role_division": "高リスク事実検証専用 (ADR-0003 由来、第一作公開前ワークフロー) の局所使用。RPD 250 は局所呼び出し (1 日数件) には十分だが Narrative primary には不適。3.5 Flash (Narrative primary) と役割分担: 3.5 Flash = 全 slot 生成主軸 / 3.1 Pro = 公開ゲート前の重い事実検証のみ。",
+    "verdict": "3.5 Flash 投入とは独立。Editorial Guardian は別途 FUTURE_WORK (高リスク事実検証ワークフロー) で配線判断。"
+  },
+
+  "thought_preservation_cost_note": {
+    "concern": "事前情報 4 = Thought preservation 自動 ON の可能性",
+    "hydrangea_exposure": "thinking 機能未使用 + response.text のみ読む。自動 thought 付与があっても出力テキスト解析には影響しないが、output token / latency / cost が増える可能性は残る。",
+    "verdict": "機能破壊はないが、3.5 Flash 投入時に output_token / レイテンシ実測を quality-tier-poc 試運転で観察推奨 (コスト面の軽微な留意点、改修不要)。"
+  }
+}

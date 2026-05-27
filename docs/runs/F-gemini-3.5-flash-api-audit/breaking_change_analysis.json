@@ -1,0 +1,53 @@
+{
+  "batch": "F-gemini-3.5-flash-api-audit",
+  "task": "B-4 API 破壊的変更の実態判定",
+  "date": "2026-05-27",
+  "method": "事前情報 (2026-05-19 Google I/O 由来、仮説) を grep 実態で検証 (クラウド誤り 10 系統の作法)",
+
+  "pre_filing_hypotheses_vs_grep": [
+    {
+      "hypothesis": "1. temperature / top_p / top_k が非推奨化された可能性",
+      "grep_reality": "top_p = 0 件 / top_k = 0 件 (Gemini パラメータとして)。temperature は analysis client (ANALYSIS_LAYER_ENABLED=false で本番未起動) + 手動スクリプト 3 件のみ。本番生成系は generation_config=None で非指定。",
+      "exposure": "MINIMAL",
+      "verdict": "本番生成パスに top_p/top_k 不在、temperature も未配線パスのみ = 仮に非推奨化されても production 影響ゼロ。公式仕様も temperature 廃止に言及なし。"
+    },
+    {
+      "hypothesis": "2. thinking_budget → thinking_level への rename の可能性",
+      "grep_reality": "thinking_budget = 0 件 / thinking_level = 0 件。thinking/thought のヒットは全て Hydrangea ドメインフィールド director_thought。",
+      "exposure": "NONE",
+      "verdict": "Hydrangea は thinking 系パラメータを一切使用しない = rename の影響面ゼロ。"
+    },
+    {
+      "hypothesis": "3. Function calling の厳密マッチ必須化の可能性",
+      "grep_reality": "カスタム FunctionDeclaration / function_call = 0 件。tools= は Grounding 組込み google_search (jp_coverage_verifier ×2 + デバッグスクリプト) のみ。",
+      "exposure": "NONE (カスタム function calling) / 別モデル (Grounding は gemini-2.5-flash で 3.5 切替対象外)",
+      "verdict": "厳密マッチ必須化はカスタム関数宣言が対象 = Hydrangea 非該当。google_search は 3.5 Flash でも Supported。"
+    },
+    {
+      "hypothesis": "4. Thought preservation 自動 ON の可能性",
+      "grep_reality": "thinking 機能未使用。response.text のみ消費。",
+      "exposure": "MINIMAL (機能破壊なし、output token/cost の軽微な留意点のみ)",
+      "verdict": "テキスト解析には無影響。3.5 Flash 投入時に output_token/レイテンシを試運転観察推奨 (改修不要)。"
+    }
+  ],
+
+  "structured_outputs_check": {
+    "grep_reality": "response_schema / response_mime_type = 0 件。Hydrangea は構造化出力 API 未使用、free-text から自前 JSON パース。",
+    "verdict": "Structured outputs の仕様変更があっても Hydrangea 影響面ゼロ。"
+  },
+
+  "verdict": {
+    "classification": "真因 b: API 破壊的変更は無いか軽微 → Hydrangea コードベースは migration 不要、F-gemini-quality-tier-poc にそのまま進める",
+    "rationale": "事前情報の 4 つの破壊的変更候補 + structured outputs はいずれも Hydrangea コードベースに該当箇所がほぼゼロ。構造的理由: (a) Tier ベースのモデル ID 解決で本番生成系は API パラメータを非指定 (generation_config=None)、(b) 構造化出力 API でなく free-text JSON パース、(c) カスタム function calling 不使用で tools= は Grounding 組込み google_search のみ。これら 3 つの設計特性が破壊的変更への露出を構造的に最小化している。",
+    "rejected": {
+      "真因 a (migration 必要)": "REJECTED — 破壊的変更の影響箇所が本番パスに不在",
+      "真因 c (部分 migration 必要)": "REJECTED — 軽微な留意点 (thought preservation の output token 観察) はあるが改修対象なし"
+    }
+  },
+
+  "cloud_error_10_verification": {
+    "result": "★ 起案前事前情報 (2026-05-19 Google I/O 由来、4 破壊的変更候補) は grep 実態で『Hydrangea には当てはまらない』ことが判明 = 事前情報を仮説として扱い grep で検証する作法が機能。",
+    "divergence": "事前情報は『破壊的変更の可能性』を強調したが、Hydrangea コードベースの設計特性 (Tier ベース解決 + free-text パース + Grounding 限定 tools) により実際の露出はほぼゼロ。F-script-writer-target-enemy 同様、外部/事前情報を grep-first で検証してから断定する作法を継続。",
+    "note": "事前情報そのものが誤りとは限らない (他コードベースには破壊的変更が該当しうる)。あくまで『Hydrangea には影響軽微』が grep で確定したという検証結果。"
+  }
+}

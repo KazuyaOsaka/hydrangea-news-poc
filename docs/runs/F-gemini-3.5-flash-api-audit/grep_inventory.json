@@ -1,0 +1,83 @@
+{
+  "batch": "F-gemini-3.5-flash-api-audit",
+  "task": "B-1 codebase grep inventory (read-only)",
+  "date": "2026-05-27",
+  "scope": "src/ configs/ tests/ scripts/ .env .env.example",
+  "method": "grep -rn per keyword (full text), classified by 不変原則対象 + production-path 実稼働判定",
+
+  "api_parameters": {
+    "temperature": {
+      "total_hits": 10,
+      "production_path_functional": [
+        {"loc": "src/llm/factory.py:524", "ctx": "get_analysis_llm_client(): generation_config={\"temperature\": temperature, \"max_output_tokens\": max_tokens}", "wired": false, "note": "analysis role 専用。ANALYSIS_LAYER_ENABLED=false で本番未起動 = production 実稼働なし"},
+        {"loc": "src/llm/factory.py:512", "ctx": "temperature = float(os.getenv(\"ANALYSIS_LLM_TEMPERATURE\", \"0.3\"))", "wired": false}
+      ],
+      "non_production_scripts": [
+        {"loc": "scripts/reclassify_annotations.py:332", "ctx": "generation_config={\"temperature\": 0.3, \"max_output_tokens\": 4096}"},
+        {"loc": "scripts/extract_particular_angle.py:253", "ctx": "generation_config={\"temperature\": 0.3, \"max_output_tokens\": 4096}"},
+        {"loc": "scripts/add_sontaku_signals.py:319", "ctx": "generation_config={\"temperature\": 0.3, \"max_output_tokens\": 4096}"}
+      ],
+      "comments_docstrings": ["src/llm/factory.py:144", "src/llm/factory.py:146", "src/llm/factory.py:502", "src/llm/factory.py:506", "scripts/extract_particular_angle.py:22"],
+      "invariant_target": "factory.py = 触ってよい (Gemini モデル ID default 範囲、不変原則 1-4 対象外)。scripts/ = 新規追加可。",
+      "finding": "temperature を実 API へ渡すのは analysis client のみ。本番は ANALYSIS_LAYER_ENABLED=false で未起動。生成系 (script/article/judge/merge_batch/generation) は generation_config=None で API デフォルト依存 = temperature 非指定。"
+    },
+    "top_p": {"total_hits": 0, "finding": "src/ configs/ tests/ scripts/ .env .env.example いずれにも参照なし。Gemini 生成パラメータとしての top_p 使用ゼロ。"},
+    "top_k": {"total_hits": 0, "finding": "Gemini 生成パラメータとしての top_k 使用ゼロ。grep ヒット (event_builder.py top_keywords / not_top_k_count, tests/test_observability.py) は全てドメインロジックのトークン/件数集計で API 無関係。"},
+    "thinking_budget": {"total_hits": 0, "finding": "参照なし。thinking_budget / thinkingBudget いずれもゼロ。"},
+    "thinking_level": {"total_hits": 0, "finding": "参照なし。thinking_level / thinkingLevel いずれもゼロ。"},
+    "thinking_thought_generic": {"total_hits": "many", "finding": "全ヒットが Hydrangea ドメインフィールド `director_thought` (script_writer.py / models.py / video_payload_writer.py / configs/prompts/ / tests/)。Gemini の Thinking/Thought 機能とは完全無関係。"}
+  },
+
+  "model_ids": {
+    "gemini-3.5-flash": {"total_hits": 0, "finding": "★ コードベース全体に 0 件。未採用。本バッチ後続 quality-tier-poc で QUALITY Tier1 候補に新規追加する対象。"},
+    "gemini-3-flash-preview": {
+      "production_functional": [
+        {"loc": ".env:13", "var": "GEMINI_MODEL_TIER1", "role": "QUALITY Tier1 primary (= Narrative primary / generation role 主軸)"},
+        {"loc": ".env:23", "var": "GEMINI_LIGHTWEIGHT_TIER4", "role": "LIGHTWEIGHT Tier4 最終 fallback"}
+      ],
+      "code_defaults": ["src/llm/factory.py:322 (GEMINI_MODEL_TIER1 default)", "src/llm/factory.py:317 (GEMINI_LIGHTWEIGHT_TIER4 default)", "src/shared/config.py:77 (GEMINI_MODEL_TIER2 default)"],
+      "finding": "現 QUALITY Tier1 primary = 生成系 (script/article) Narrative primary。run_summary 20260526 で generation resolved=gemini-3-flash-preview を確認。"
+    },
+    "gemini-3.1-flash-lite": {
+      "production_functional": [
+        {"loc": ".env:15", "var": "GEMINI_MODEL_TIER3", "role": "QUALITY Tier3 (GA, 5/25 shutdown 対応で -preview → GA 置換済)"},
+        {"loc": ".env:22", "var": "GEMINI_LIGHTWEIGHT_TIER3", "role": "LIGHTWEIGHT Tier3"}
+      ],
+      "code_defaults": ["src/llm/factory.py:316", "src/llm/factory.py:324", "src/shared/config.py:76 (GEMINI_MODEL_TIER1 default ★factory.py と不一致)"],
+      "finding": "F-gemini-model-migrate-emergency (2026-05-19) で gemini-3.1-flash-lite-preview → gemini-3.1-flash-lite (GA) 置換が .env に反映済を再確認。RPD 150K の高 RPD GA モデル。"
+    },
+    "gemini-3.1-pro": {"total_hits": 0, "finding": "★ コードベース全体に 0 件。Editorial Guardian 候補だが未配線。RPD 250 = 局所使用専用。"},
+    "gemini-2.5-flash": {
+      "production_functional": [
+        {"loc": ".env:14", "var": "GEMINI_MODEL_TIER2", "role": "QUALITY Tier2 + judge primary (JUDGE_MODEL 解決先)"},
+        {"loc": ".env:20", "var": "GEMINI_LIGHTWEIGHT_TIER1", "role": "LIGHTWEIGHT Tier1 primary (garbage_filter/merge_batch/viral_filter/editorial_mission_filter)"},
+        {"loc": "src/shared/config.py:219", "var": "JP_COVERAGE_GROUNDING_MODEL", "role": "F-13.B Grounding 専用 (Tier 階層非経由)"}
+      ],
+      "finding": "現 LIGHTWEIGHT Tier1 primary + judge primary + Grounding model。run_summary 20260526 で judge/merge_batch resolved=gemini-2.5-flash を確認。"
+    },
+    "gemini-2.5-flash-lite": {"role": "QUALITY Tier4 最終安全網 + LIGHTWEIGHT Tier2", "loc": [".env:16", ".env:21"]},
+    "gemini-2.0-x / gemini-1.5-x": {"finding": "src/llm/model_registry.py:29-34 の judge fallback 優先リスト + src/shared/config.py:104 GEMINI_JUDGE_FALLBACK_MODELS のみ。Tier 階層には不在 (judge 解決失敗時の最終 fallback 候補)。"}
+  },
+
+  "function_calling": {
+    "custom_function_declarations": {"total_hits": 0, "finding": "★ FunctionDeclaration / function_declarations / function_call / tool_call いずれも 0 件。カスタム function calling を Hydrangea は一切使用しない。"},
+    "tools_equals": [
+      {"loc": "src/triage/jp_coverage_verifier.py:594", "ctx": "tools=[types.Tool(google_search=types.GoogleSearch())]", "purpose": "F-13.B Grounding (built-in google_search tool)"},
+      {"loc": "src/triage/jp_coverage_verifier.py:1153", "ctx": "tools=[types.Tool(google_search=types.GoogleSearch())]", "purpose": "F-13.B two-stage Grounding"},
+      {"loc": "scripts/dump_grounding_chunks.py:89", "ctx": "tools=[types.Tool(google_search=types.GoogleSearch())]", "purpose": "Grounding デバッグスクリプト (非本番)"}
+    ],
+    "finding": "tools= の使用は Grounding 組込みツール (google_search) のみ。「Function calling 厳密マッチ必須化」(事前情報 3) はカスタム関数宣言が対象 = Hydrangea は非該当。google_search は gemini-3.5-flash で Supported。"
+  },
+
+  "structured_outputs": {
+    "response_schema_response_mime": {"total_hits": 0, "finding": "★ response_schema / responseSchema / response_mime_type / responseMimeType / response_json_schema いずれも 0 件。Hydrangea は構造化出力 API を使わず free-text レスポンスから JSON を自前パース。"},
+    "structured_keyword_hits": "全て discovery_audit.py / scoring.py / scheduler.py のドメインロジック (structured sources / structured reason) で API 無関係。",
+    "finding": "「Structured outputs」(公式仕様 Supported) を Hydrangea は API 機能として未使用 = 仕様変更の影響面ゼロ。"
+  },
+
+  "generate_content_config_construction": {
+    "factory.py": "TieredGeminiClient.generate() は self._generation_config が None なら config 引数を渡さない (gen_kwargs に config 不追加)。analysis client のみ {temperature, max_output_tokens} を設定。生成系 (script/article/judge/merge_batch) は config=None。",
+    "grounding": "jp_coverage_verifier は config=GenerateContentConfig(tools=[...]) を直接構築 (temperature 等は非指定)。",
+    "finding": "本番生成パスは API パラメータをほぼ非指定 (Tier ベースのモデル ID 解決のみ) = 破壊的パラメータ変更への露出が構造的に最小。"
+  }
+}
