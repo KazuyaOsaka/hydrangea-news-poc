@@ -1,0 +1,31 @@
+{
+  "task": "CP-2 本番試運転 (python -m src.main, カズヤ承認 '今すぐ run')",
+  "ran_at_local": "2026-05-27T23:11:58 (JST)",
+  "mode": "sample mode (data/input/sample_events.json, 5 events, top-1 生成)",
+  "job_id": "5ce761f7-4aab-4c5b-b636-faba021da48e",
+  "exit_code": 0,
+  "status": "completed",
+  "llm_calls": {"run_llm": 2, "note": "sample mode は article 1 + script 1 のみ。garbage/judge/merge_batch/analysis は sample 経路で未起動 (clustering/judging スキップ)"},
+  "generation_outcomes": {
+    "article": {"provider": "gemini", "chars": 2451, "retries": 0, "fallback": false},
+    "script": {"provider": "gemini", "sections": 4, "duration_sec": 80, "retries": 0, "fallback": false, "char_validation": "passed (hook=18, setup=79, twist=184, punchline=74)"}
+  },
+  "actual_models_used": {
+    "method": "retries=0 + [TieredGemini] fallback ログ皆無 = 各 client の tier1 (attempt1) で成功 = model_roles_resolution.json の tier1 が実使用モデル",
+    "script (generation)": "gemini-3.5-flash (QUALITY tier1)",
+    "article (article)": "gemini-2.5-flash (ARTICLE tier1)",
+    "note": "★ models.list OK で gemini-3.5-flash 到達性は CP-2 前段で確認済。本 live run は新主軸での generation 成功を end-to-end 実証"
+  },
+  "errors_observed": {"404": 0, "503": 0, "Traceback": 0, "ERROR": 0, "WARNING": 0, "TieredGemini_fallback": 0, "total_output_lines": 32},
+  "target_enemy_observation": {
+    "observed": "script director_thought で target_enemy='大手メディア' (pattern='Media Critique', loop='loop-3')",
+    "expected": true,
+    "reason": "起案プロンプト明記: 旧ルート write_script の仮想敵 framing は本バッチ (モデル切替のみ) では不変。X1 (新ルート本番配線) で退役する設計。X1 着手前のため継続"
+  },
+  "run_summary_model_roles_caveat": {
+    "finding": "★ sample mode は run_summary.json を新規生成しない (per-event ファイルのみ)。data/output/run_summary.json は前 run (job f4c30f10, batch 20260526_035220, 2026-05-26) の残置で本試運転のものではない",
+    "label_disconnect": "★ run_summary.model_roles は config role 定数 (GENERATION_MODEL / MERGE_BATCH_MODEL / JUDGE_MODEL) を label 化する機構で、Gemini の実 tier 解決 (_get_tier_models_for_role) とは部分的に乖離する (pre-existing)。本バッチ改修後の config 解決値: GENERATION_MODEL=gemini-3.5-flash / JUDGE_MODEL=gemini-3.5-flash / MERGE_BATCH_MODEL=gemini-2.5-flash。★ merge_batch label (gemini-2.5-flash) は実 lightweight tier1 (gemini-3.1-flash-lite) と不一致 = run_summary 監査忠実性の既知ギャップ。F-periodic-health-check (ChatGPT Round 2 指摘 5 = tier 解決 runtime snapshot) に統合候補",
+    "deterministic_verification": "実 tier 解決は model_roles_resolution.json で paid generation なしに決定的確認済 (lineup v2 一致)"
+  },
+  "cp2_verdict": "exit 0 / status=completed / retries=0 / fallback 0 / error 0。新主軸 gemini-3.5-flash (script) + gemini-2.5-flash (article) で generation が end-to-end 成功。品質劣化の顕著兆候なし (axis_5 採点はカズヤ手動)。ロールバック不要と判断"
+}

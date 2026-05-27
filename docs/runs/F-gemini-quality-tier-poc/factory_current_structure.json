@@ -1,0 +1,74 @@
+{
+  "task": "B-3 現状の factory.py 構造確認 (grep + コード精読)",
+  "summary": "★ 最重要発見: 最終布陣 v2 は 10 role を列挙するが、実コードは 4 つの実 role 文字列でしか dispatch していない。lineup の 6 role は独立制御不能 (または LLM 呼び出しが存在しない)。",
+  "generate_loop_structure": {
+    "file": "src/llm/factory.py",
+    "method": "TieredGeminiClient.generate()",
+    "loop": "for tier_idx, model in enumerate(self._tiers): for attempt in range(max_attempts)",
+    "max_attempts_scope": "role 単位 (self._max_attempts_per_tier は role 別 factory ヘルパで決定)。全 tier に同一 max_attempts が適用される = tier 別 max_attempts は現コード非対応",
+    "chatgpt_claim_verified": "ChatGPT 指摘『tier 別 retry は現コードでは不可、role 単位 max_attempts のみ』= CONFIRMED (grep + 精読)。max_attempts は generate() 冒頭で 1 回読まれ全 tier 共通"
+  },
+  "actual_role_dispatch": {
+    "note": "_get_tier_models_for_role(role) / _get_max_attempts_for_role(role) に実際に渡る role 文字列は以下 4 つのみ",
+    "merge_batch": {
+      "group": "LIGHTWEIGHT",
+      "accessors": ["get_garbage_filter_client", "get_cluster_llm_client", "get_llm_client('merge_batch')"],
+      "callers": ["main.py:2370 cluster_llm", "main.py:2373 garbage_filter", "event_builder / cross_lang_matcher (merge_batch)"]
+    },
+    "judge": {
+      "group": "QUALITY (model_registry resolved primary + QUALITY tiers)",
+      "accessors": ["get_judge_llm_client"],
+      "callers": ["main.py:625 judge", "main.py:2453 editorial_mission_filter (★ judge client 共用)", "main.py:2476 elite_judge", "judge.py:74", "gemini_judge.py role='judge'"]
+    },
+    "generation": {
+      "group": "QUALITY (uncategorized → else 分岐)",
+      "accessors": ["get_script_llm_client", "get_article_llm_client", "get_llm_client('generation')"],
+      "callers": ["script_writer.py:999/1475 (script)", "article_writer.py:482 (article ★ script と同一 role='generation')"]
+    },
+    "analysis": {
+      "group": "QUALITY",
+      "accessors": ["get_analysis_llm_client"],
+      "callers": ["multi_angle_analyzer", "insight_extractor", "perspective_extractor", "perspective_selector", "jp_coverage_verifier.py:1018 (★ angle query 生成 = two-stage 経路)"]
+    }
+  },
+  "lineup_v2_to_code_reality": {
+    "garbage_filter": {"lineup": "3.1-flash-lite/MAX1", "actual_role": "merge_batch (LIGHTWEIGHT)", "controllable": true},
+    "merge_batch": {"lineup": "3.1-flash-lite/MAX1", "actual_role": "merge_batch (LIGHTWEIGHT)", "controllable": true, "note": "garbage と同一 LIGHTWEIGHT 階層を共有。lineup の tier2/tier3 並び (merge=2.5-flash→2.5-flash-lite vs garbage=2.5-flash-lite→2.5-flash) の差は LIGHTWEIGHT 1 グループでは表現不能 (軽微、fallback 順のみ)"},
+    "viral_filter": {"lineup": "3.1-flash-lite/MAX1", "actual_role": "NONE", "controllable": false, "note": "★ viral_filter は LLM stage として存在しない。factory.py の doc/set にのみ登場。viral 判定は scoring.py の決定的タグのみ (LLM 呼び出しなし)"},
+    "editorial_mission_filter": {"lineup": "2.5-flash/MAX1", "actual_role": "judge (QUALITY)", "controllable": false, "note": "★ get_judge_llm_client() を共用 (main.py:2453)。QUALITY Tier1=3.5-flash にすると mission filter も 3.5-flash になり lineup の 2.5-flash と乖離。分離には main.py 改修 (本バッチ変更可リスト外) または専用 accessor が必要"},
+    "judge": {"lineup": "3.5-flash/MAX2", "actual_role": "judge (QUALITY)", "controllable": true},
+    "analysis": {"lineup": "3.5-flash/MAX2", "actual_role": "analysis (QUALITY)", "controllable": true},
+    "jp_coverage_judgement": {"lineup": "3.5-flash/MAX2", "actual_role": "analysis (QUALITY) ※ angle query。broad verify の Grounding は別経路 JP_COVERAGE_GROUNDING_MODEL=gemini-2.5-flash (Tier 非経由)", "controllable": "partial", "note": "judgement 抽出 LLM は analysis client。broad Grounding は固定 2.5-flash で Tier 階層非経由 = 本バッチでは触らない"},
+    "script": {"lineup": "3.5-flash/MAX2", "actual_role": "generation (QUALITY)", "controllable": true},
+    "article": {"lineup": "2.5-flash/MAX1", "actual_role": "generation (QUALITY) ★ script と同一 role", "controllable": false, "note": "★ get_article_llm_client() も role='generation'。script と同一階層。QUALITY Tier1=3.5-flash にすると article も 3.5-flash (output $9.00 = 2.5-flash の 3.6 倍コスト) になり lineup の 2.5-flash 意図と逆行。分離は factory.py 内 get_article_llm_client の role を 'article' に変える + ARTICLE 群追加で可能 (article_writer.py 不変のまま)"},
+    "title": {"lineup": "3.5-flash/MAX2", "actual_role": "NONE", "controllable": false, "note": "★ generate_title_layer は決定的合成のみ (LLM 呼び出しなし)。title_generator.py に client.generate() 経路なし。lineup の title モデル指定は live LLM role に対応しない"}
+  },
+  "env_vs_factory_default_divergence": {
+    "known_doc_drift": "config.py:76-79 (TIER1=gemini-3.1-flash-lite...) と factory.py:322-325 (QUALITY default TIER1=gemini-3-flash-preview) は inline default が不一致。runtime は .env (GEMINI_MODEL_TIER1=gemini-3-flash-preview) が両者を上書きするため実害なし (CURRENT_STATE §5 既知)",
+    "current_env_runtime": {
+      "GEMINI_MODEL_TIER1": "gemini-3-flash-preview",
+      "GEMINI_MODEL_TIER2": "gemini-2.5-flash",
+      "GEMINI_MODEL_TIER3": "gemini-3.1-flash-lite",
+      "GEMINI_MODEL_TIER4": "gemini-2.5-flash-lite",
+      "GEMINI_LIGHTWEIGHT_TIER1": "gemini-2.5-flash",
+      "GEMINI_LIGHTWEIGHT_TIER2": "gemini-2.5-flash-lite",
+      "GEMINI_LIGHTWEIGHT_TIER3": "gemini-3.1-flash-lite",
+      "GEMINI_LIGHTWEIGHT_TIER4": "gemini-3-flash-preview",
+      "GEMINI_QUALITY_MAX_ATTEMPTS": "2",
+      "GEMINI_LIGHTWEIGHT_MAX_ATTEMPTS": "2"
+    }
+  },
+  "judge_primary_resolution_mechanism": {
+    "discovered_in": "C-3 (model_registry.py 確認時)",
+    "finding": "★ judge primary は QUALITY Tier1 ではなく『models.list で解決した JUDGE_MODEL を prepend』した先頭。get_judge_llm_client() が tiers = dict.fromkeys([resolved_JUDGE_MODEL, *quality_tiers]) を構築する",
+    "judge_model_default": "JUDGE_MODEL 未指定時は GEMINI_MODEL_TIER2 (=gemini-2.5-flash) を既定に取る (config.py:120 → _LEGACY_GEMINI_JUDGE_MODEL_ENV → GEMINI_MODEL_TIER2)",
+    "evidence_from_trial_run": "CURRENT_STATE §3 の batch 20260526_035220 で model_roles: judge=gemini-2.5-flash と観測 = この prepend 機構の裏取り (QUALITY Tier1 の gemini-3-flash-preview ではなかった)",
+    "fix_applied": ".env / .env.example に JUDGE_MODEL=gemini-3.5-flash を明示追加 → judge tiers = [gemini-3.5-flash, gemini-2.5-flash, gemini-3.1-flash-lite, gemini-2.5-flash-lite] (lineup v2 judge に一致、dedup 後)",
+    "side_effect": "editorial_mission_filter / elite_judge も get_judge_llm_client 共用のため primary=3.5-flash になる (editorial_mission_filter は lineup の 2.5-flash と乖離 = 既知 deviation として許容)"
+  },
+  "existing_tests_constraint": {
+    "file": "tests/test_factory_role_tier_separation.py",
+    "asserts_inline_defaults_via_delenv": true,
+    "implication": ".env だけ更新すれば既存テストは緑のまま (delenv で inline default を検証している)。factory.py inline default を gemini-3.5-flash 等に変えると test_quality_role_uses_preview_primary / test_lightweight_and_quality_have_different_tier1 が赤化 → 既存テスト期待値修正 (構造変更なし) が必要"
+  }
+}

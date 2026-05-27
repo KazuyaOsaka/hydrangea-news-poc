@@ -1,11 +1,15 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-27 (★ F-docs-update-chatgpt-round2-and-error10 完了、docs-only。
-4-A 新規 1 件 =「2026-05-27: ChatGPT Round 2 レビュー結果統合 + 古い Project Knowledge
-由来の半数指摘訂正」(ステータス Resolved/タスク化)。4-B 既存再評価 1 件 =「2026-05-25:
-クラウド誤り 10」を CLAUDE.md 正本化に伴いステータス更新。★ ChatGPT 側でもクラウド誤り 10
-系統が発生 = 外部 AI レビューも grep 検証対象である根拠の追加実例。クラウド誤り 10 を
-CLAUDE.md に明文化。前回 2026-05-26: F-script-writer-target-enemy-fix-investigate 完了で
+最終更新: 2026-05-27 (★ F-gemini-quality-tier-poc 完了、実装バッチ。4-A 新規 1 件 =
+「2026-05-27: 最終布陣 v2 配線完了 + 外部 AI セカンドオピニオン運用方針確定」(ステータス
+Resolved/タスク化)。4-B 既存再評価 1 件 =「2026-05-25: クラウド誤り 10」に**「外部 AI
+セカンドオピニオンの権威化」派生パターンを追記** (Gemini 価格誤情報 + Claude Web 廃止短絡 +
+ChatGPT 訂正の経緯を観察記録、CLAUDE.md と両正本)。最終布陣 v2 (QUALITY=gemini-3.5-flash /
+ARTICLE=gemini-2.5-flash 分離 / LIGHTWEIGHT=gemini-3.1-flash-lite) 配線 + 公式 pricing/API を
+web_fetch で全裏取り (CP-0 スキップ)。baseline 1417→1432 passed。前回 2026-05-27:
+F-docs-update-chatgpt-round2-and-error10 完了 (docs-only。4-A 新規 1 件 = ChatGPT Round 2
+レビュー結果統合、4-B = クラウド誤り 10 を CLAUDE.md 正本化)。前々回 2026-05-26:
+F-script-writer-target-enemy-fix-investigate 完了で
 4-A 新規 1 件 + クラウド誤り 10 の 3 回目発生なし。前々回 2026-05-26:
 F-jp-coverage-cache-judgement-persist 完了で 4-A 新規 1 件 + 2 回目発生記録)
 
@@ -20,6 +24,43 @@ F-jp-coverage-cache-judgement-persist 完了で 4-A 新規 1 件 + 2 回目発�
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-27: 最終布陣 v2 配線完了 + 外部 AI セカンドオピニオン運用方針確定 (F-gemini-quality-tier-poc)
+
+**ステータス**: Resolved / タスク化済 (実装完了 + 運用方針正本化)。
+
+**内容**: ChatGPT/Gemini セカンドオピニオン 2 ラウンド + Claude Web 裁定 + 公式 pricing 確認後の
+「最終布陣 v2」を Hydrangea コードベースに配線。QUALITY (judge/script/analysis) = gemini-3.5-flash /
+ARTICLE (article 分離) = gemini-2.5-flash / LIGHTWEIGHT (garbage/merge) = gemini-3.1-flash-lite +
+JUDGE_MODEL 明示 + Gemini 3 系 temperature ガード。baseline 1417→1432 passed、CP-2 試運転 exit 0。
+
+**★ クラウド誤り 10 系統の作法が機能した実例**: 起案プロンプトの「最終布陣 v2 (10 role)」を仮説として
+grep 検証 → 実コードは 4 実 role でしか dispatch しないと判明 (viral_filter/title は LLM stage 不在、
+editorial_mission_filter は judge 共用、article は generation 共用)。公式 pricing/API 仕様は web_fetch
+(一次ソース) で全項目裏取り (CP-0 スキップ)。起案前提を 2 点訂正 (lineup 10 role → 実 4 role、
+judge primary は JUDGE_MODEL prepend 機構)。
+
+**★ 外部 AI セカンドオピニオン運用方針の確定 (Gemini 価格誤情報 + Claude Web 廃止短絡 + ChatGPT 訂正の経緯)**:
+- Gemini が Gemini 3.5 Flash 価格を $0.50/$3.00 と提示 → 公式 pricing で $1.50/$9.00 と確定
+  (Gemini は Gemini 3 Flash Preview 価格と取り違えた = 外部 AI の事実誤り)。
+- Claude (web 側) が「Gemini が誤情報を出したので Gemini 廃止 + Claude が web_fetch で確認」と判断
+  → ★★ これも別の権威化 = メタレベルのクラウド誤り 10 (「Claude が確認したから正」も短絡)。
+- ChatGPT が「Claude が web_fetch したから正ではなく、公式 source が正」と指摘 → カズヤ判断で
+  「Gemini = 仮説生成係として継続」「公式 docs / repo grep / 実測を正本」運用に修正。
+- **正本化した運用方針**: AI (ChatGPT/Gemini/Claude) のいずれの回答も公式 docs・repo grep・実測の
+  代替にしない。特に pricing / model availability / deprecation / rate limit / API parameters は
+  必ず一次ソース確認。「Claude/ChatGPT/Gemini が確認したから正」でなく「一次ソースに一致するから正」と表現する。
+- **★ カズヤの pricing 確認役運用方針 (一次ソース確認の人間ループ)**: AI 同士の権威化を防ぐため、
+  カズヤも一次ソース確認役を兼ねる (pricing/API 仕様を直接調べた場合は最優先の一次ソースとして扱う)。
+
+**deviation / 残課題 (タスク化済)**: editorial_mission_filter 独立分離 (★低、main.py 改修要) /
+run_summary model_roles 忠実化 (★低、F-periodic-health-check 統合候補) / Editorial Guardian
+(gemini-3.1-pro-preview) 配線は後続 (高リスク事実検証ワークフローバッチ)。
+
+**出典**: カズヤ共有の ChatGPT/Gemini セカンドオピニオン 2 ラウンド + Claude Web 裁定 + 公式 pricing
+確認 (2026-05-27)、`docs/runs/F-gemini-quality-tier-poc/REPORT.md` + pricing_verification.json +
+api_spec_verification.json + factory_current_structure.json + model_roles_resolution.json、
+CP-1/CP-2 カズヤ判断 (2026-05-27)、CLAUDE.md クラウド誤り 10「外部 AI セカンドオピニオンの権威化」派生。
 
 ### 2026-05-27: ChatGPT Round 2 レビュー結果統合 + 古い Project Knowledge 由来の半数指摘訂正 (F-docs-update-chatgpt-round2-and-error10)
 
@@ -998,12 +1039,26 @@ F-f1-locale-key-fix の起案時、Claude Web 側 (3 AI 三角測量のレビュ
 - クラウド誤り 3 (直近のチャットしか振り返らず過去経緯無視、2026-05-02): 別系統
 - 「整合の説明であって検証ではない」(独立検証バッチの価値、CURRENT_STATE §7): 同根
 
-**ステータス**: `Resolved (記録済み + 訂正反映 + CLAUDE.md 正本化)` —
+**★ 派生パターン: 外部 AI セカンドオピニオンの権威化 (2026-05-27 追記、F-gemini-quality-tier-poc で正本化)**:
+ChatGPT / Gemini / Claude のいずれの回答も、公式 docs・repo grep・実測の代替にしてはいけない。
+特に pricing / model availability / deprecation / rate limit / API parameters は、必ず一次ソースを確認する。
+外部 AI は仮説生成・観点比較には有用だが、事実の正本ではない。
+- **発生実例 (2026-05-27)**: Gemini が Gemini 3.5 Flash 価格を $0.50/$3.00 と提示 → 公式 pricing で
+  $1.50/$9.00 と確定 (Gemini 3 Flash Preview 価格と取り違え)。Claude (web 側) が「Gemini が誤情報を出した
+  ので Gemini 廃止 + Claude が web_fetch で確認」と判断 → ★★ これも別の権威化 = メタレベルのクラウド誤り 10。
+  ChatGPT が「Claude が web_fetch したから正でなく、公式 source が正」と指摘 → カズヤ判断で「Gemini =
+  仮説生成係として継続」「公式 docs / repo grep / 実測を正本」運用に修正。
+- **回避作法**: 「Claude/ChatGPT/Gemini が確認したから正」と短絡せず「一次ソース (公式 docs / repo grep /
+  実測) に一致するから正」と表現する。カズヤも一次ソース確認役を兼ねる (AI 同士の権威化を防ぐ人間ループ)。
+
+**ステータス**: `Resolved (記録済み + 訂正反映 + CLAUDE.md 正本化 + 派生パターン追加)` —
 F-f1-locale-key-fix の REPORT.md / DECISION_LOG / 4-A エントリで実害の正確な評価に
 訂正済。バグ自体は選択肢 1 で根本治療完了 (baseline 1417 維持)。★ 2026-05-27
 (F-docs-update-chatgpt-round2-and-error10) で本誤りを **CLAUDE.md「クラウド誤り 10」
 セクションに明文化** (発生実例 4 件 1-N/1-O/1-P 回避/1-P.5 回避 + ChatGPT Round 2 で
-外部 AI 側でも発生を観察した実例を追加)。本 DISCUSSION_NOTES エントリが引き続き正本。
+外部 AI 側でも発生を観察した実例を追加)。★★ 2026-05-27 (F-gemini-quality-tier-poc) で
+**「外部 AI セカンドオピニオンの権威化」派生パターンを CLAUDE.md + 本エントリに追記**。
+本 DISCUSSION_NOTES エントリが引き続き正本。
 
 **出典**:
 - F-f1-locale-key-fix CP-1 カズヤ判断 (2026-05-25、クラウド初期想定の訂正受容)
