@@ -337,6 +337,38 @@ F-gemini-3.5-flash-api-audit (4 回目回避、外部 AI レビュー側で発�
 F-docs-update-chatgpt-round2-and-error10 (ChatGPT Round 2 で外部 AI 側発生を観察 +
 本誤りを CLAUDE.md に明文化)。
 
+**派生パターン: 外部 AI セカンドオピニオンの権威化** (2026-05-27 観察、F-gemini-quality-tier-poc で正本化)
+
+ChatGPT / Gemini / Claude のいずれの回答も、公式 docs・repo grep・実測の
+代替にしてはいけない。特に pricing / model availability / deprecation /
+rate limit / API parameters は、必ず一次ソースを確認する。
+
+外部 AI は仮説生成・観点比較には有用だが、事実の正本ではない。
+
+**発生実例 (2026-05-27)**:
+- Gemini が Gemini 3.5 Flash 価格を $0.50/$3.00 と提示 → 公式 pricing で
+  $1.50/$9.00 と確定 (Gemini は Gemini 3 Flash Preview 価格と取り違えた)
+- Claude (web 側) が「Gemini が誤情報を出したので Gemini 廃止 + Claude が
+  web_fetch で確認」と判断 → ★★ これも別の権威化 = メタレベルでのクラウド誤り 10
+- ChatGPT が「Claude が web_fetch したから正ではなく、公式 source が正」と指摘
+  → カズヤ判断で「Gemini = 仮説生成係として継続」「公式 docs / repo grep / 実測
+  を正本」運用に修正
+
+**回避作法**:
+- 「Claude が確認したから正」「ChatGPT が確認したから正」「Gemini が確認したから正」
+  と短絡しない
+- 一次ソース (公式 docs / repo grep / 実測) に一致するから正、と表現する
+- カズヤも一次ソース確認役を兼ねる (AI 同士の権威化を防ぐ人間ループ)
+
+**カズヤ哲学との整合**: 「検証可能な事実で殴る」「権威の鵜呑みは Hydrangea が
+暴くべき構造」とメタレベルで一致。AI を「絶対的な検証者」ではなく「仮説生成 +
+反対意見係」として扱う。
+
+**本バッチでの実適用 (F-gemini-quality-tier-poc)**: 起案プロンプトの「最終布陣 v2
+(10 role)」も仮説として扱い、grep で実コードを検証 → 実 dispatch は 4 role のみと判明
+(viral_filter/title は LLM stage 不在、editorial_mission_filter/article は他 role 共用)。
+公式 pricing/API 仕様は web_fetch (一次ソース) で全項目を裏取り (CP-0 スキップ)。
+
 ---
 
 ## 重要な参照 (重複排除のための導線)

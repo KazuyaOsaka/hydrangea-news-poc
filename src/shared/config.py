@@ -72,10 +72,13 @@ EN_CANDIDATES_PER_JP_CLUSTER: int = int(os.getenv("EN_CANDIDATES_PER_JP_CLUSTER"
 # Gemini設定
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
-# 階層型フォールバック (TIER1 → TIER4 の順に試行、各 Tier は 3回指数バックオフ後に次へ)
-GEMINI_MODEL_TIER1: str = os.getenv("GEMINI_MODEL_TIER1", "gemini-3.1-flash-lite")
-GEMINI_MODEL_TIER2: str = os.getenv("GEMINI_MODEL_TIER2", "gemini-3-flash-preview")
-GEMINI_MODEL_TIER3: str = os.getenv("GEMINI_MODEL_TIER3", "gemini-2.5-flash")
+# 階層型フォールバック (TIER1 → TIER4 の順に試行、各 Tier は MAX_ATTEMPTS 回バックオフ後に次へ)。
+# inline default は F-gemini-quality-tier-poc 最終布陣 v2 (QUALITY 系統) に整合済。
+# ★ これらの定数は GEMINI_MODEL_TIERS / RPM・INTERVAL マップ / verify_tier_connectivity が
+#   参照する。role 別の Tier 解決は factory._get_tier_models_for_role() が os.getenv を直接引く。
+GEMINI_MODEL_TIER1: str = os.getenv("GEMINI_MODEL_TIER1", "gemini-3.5-flash")
+GEMINI_MODEL_TIER2: str = os.getenv("GEMINI_MODEL_TIER2", "gemini-2.5-flash")
+GEMINI_MODEL_TIER3: str = os.getenv("GEMINI_MODEL_TIER3", "gemini-3.1-flash-lite")
 GEMINI_MODEL_TIER4: str = os.getenv("GEMINI_MODEL_TIER4", "gemini-2.5-flash-lite")
 GEMINI_MODEL_TIERS: list[str] = [
     GEMINI_MODEL_TIER1,

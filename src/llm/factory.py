@@ -1,19 +1,34 @@
 """factory.py — Role-based LLM client factory with role-aware Tier hierarchy.
 
-Routing strategy (Phase 1.5 batch E-3' 以降):
-  Gemini 経由の LLM 呼び出しは、役割 (LIGHTWEIGHT vs QUALITY) ごとに
+Routing strategy (Phase 1.5 batch E-3' 以降、F-gemini-quality-tier-poc で最終布陣 v2 に更新):
+  Gemini 経由の LLM 呼び出しは、役割 (LIGHTWEIGHT / QUALITY / ARTICLE) ごとに
   異なる Tier 階層を選択する。`_get_tier_models_for_role(role)` が role 別の
   4 段モデルリストを返し、`_get_max_attempts_for_role(role)` が同 role 用の
   MAX_ATTEMPTS を返す。
 
-  - LIGHTWEIGHT_ROLES (garbage_filter / merge_batch / viral_filter /
-    editorial_mission_filter): GA 主軸 (gemini-2.5-flash → flash-lite →
-    preview-lite → flash-preview)。Preview モデルの 503 を回避し試運転速度を稼ぐ。
-  - QUALITY_ROLES (judge / script / article / title / analysis): Preview 主軸
-    (gemini-3-flash-preview → 2.5-flash → preview-lite → flash-lite)。公式の
-    性能順 (gemini-3-flash-preview > gemini-2.5-flash > gemini-3.1-flash-lite-
-    preview > gemini-2.5-flash-lite) に沿って性能を優先する。
-  - 未分類 role は QUALITY_ROLES と同じ階層 (後方互換)。
+  - LIGHTWEIGHT_ROLES (garbage_filter / merge_batch / viral_filter): 低コスト主軸
+    (gemini-3.1-flash-lite → 2.5-flash-lite → 2.5-flash → 2.5-flash-lite)。MAX=1。
+    高 RPD で大量バッチをさばく。★ 実際に dispatch される role 文字列は "merge_batch"
+    のみ (garbage_filter / cluster_merge が共用)。viral_filter は LLM stage 不在
+    (scoring.py の決定的タグのみ)。
+  - QUALITY_ROLES (judge / script / title / analysis / editorial_mission_filter /
+    jp_coverage_judgement): Narrative 主軸 (gemini-3.5-flash → 2.5-flash →
+    3.1-flash-lite → 2.5-flash-lite)。MAX=2。品質を優先する。★ 実際に dispatch
+    される role: "judge" (editorial_mission_filter / elite_judge が共用)、
+    "generation" (script。"generation" は本 set 非メンバだが else 分岐で QUALITY
+    階層)、"analysis" (jp_coverage_judgement の angle query が共用)。title は LLM
+    stage 不在 (generate_title_layer は決定的合成のみ)。
+  - ARTICLE_ROLES (article): output コスト最適化のため gemini-2.5-flash 主軸
+    (2.5-flash → 3.5-flash → 3.1-flash-lite → 2.5-flash-lite)。MAX=1。article は
+    output 5,000-10,000 token で output 単価が支配的 (3.5-flash output $9.00 vs
+    2.5-flash $2.50 = 3.6 倍) のため primary を 2.5-flash に分離する。
+  - 未分類 role は QUALITY_ROLES と同じ階層 (後方互換、role="generation" 経路)。
+
+  ★ editorial_mission_filter / article の lineup 上の意図 (2.5-flash 主軸 / MAX=1):
+    article は本モジュール内で role="article" に分離済 (article_writer.py 不変)。
+    editorial_mission_filter は get_judge_llm_client() 共用 (main.py:2453) のため
+    本バッチでは QUALITY (3.5-flash / MAX=2) のまま = 既知の deviation。完全分離は
+    main.py 改修を要し後続バッチ (FUTURE_WORK) で判断する。
 
   E-3' 以前は単一の TIER1→TIER4 統一階層を全 role が共有していた。E-3' で
   役割を分離し、軽量タスクの 503 待機による試運転時間悪化 (13 分) を抑える
@@ -68,25 +83,37 @@ _MAX_ATTEMPTS_PER_TIER = 3
 _INITIAL_DELAY_SEC = 15.0
 _MAX_DELAY_SEC = 120.0
 
-# ── E-3': 役割別 Tier 階層 ──────────────────────────────
-# 軽量タスク (大量バッチ、速度優先) → GA 主軸
-# Preview モデルは 503 が頻発するため、軽量タスクは GA 版で 503 回避を優先する。
+# ── E-3' / F-gemini-quality-tier-poc: 役割別 Tier 階層 ──────────────────────────────
+# 軽量タスク (大量バッチ、速度優先) → 低コスト主軸 (gemini-3.1-flash-lite)。
+# ★ 実際に _get_tier_models_for_role に渡る lightweight role 文字列は "merge_batch"
+#   のみ (garbage_filter / cluster_merge が get_garbage_filter_client /
+#   get_cluster_llm_client 経由で共用)。garbage_filter / viral_filter は意図を示す
+#   documentation メンバ。viral_filter は LLM stage 不在 (scoring.py の決定的タグのみ)。
 LIGHTWEIGHT_ROLES: set[str] = {
     "garbage_filter",
     "merge_batch",
     "viral_filter",
-    "editorial_mission_filter",
 }
 
-# 性能タスク (思考力重視、低頻度) → Preview 主軸
-# 公式の性能順 (gemini-3-flash-preview > gemini-2.5-flash > gemini-3.1-flash-lite > gemini-2.5-flash-lite)
-# に沿って Tier1 を最高性能に配置する。
+# output コスト最適化タスク → gemini-2.5-flash 主軸 (output 単価が支配的な role)。
+# ★ get_article_llm_client() が role="article" で dispatch (article_writer.py 不変)。
+ARTICLE_ROLES: set[str] = {
+    "article",
+}
+
+# 性能タスク (Narrative 品質重視) → gemini-3.5-flash 主軸。
+# ★ 実際に dispatch される quality role: "judge" (editorial_mission_filter /
+#   elite_judge が get_judge_llm_client 経由で共用)、"generation" (script。本 set
+#   非メンバだが _get_tier_models_for_role の else 分岐で QUALITY 階層を引く)、
+#   "analysis" (jp_coverage_judgement の angle query が共用)。title / script /
+#   editorial_mission_filter / jp_coverage_judgement は意図を示す documentation メンバ。
 QUALITY_ROLES: set[str] = {
     "judge",
     "script",
-    "article",
     "title",
     "analysis",
+    "editorial_mission_filter",
+    "jp_coverage_judgement",
 }
 
 # 429対策: 最大同時API呼び出し数を3に制限 (15 RPM制限を安全に回避)
@@ -299,27 +326,36 @@ class TieredGeminiClient(LLMClient):
 # ── Internal factory helpers ─────────────────────────────────────────────────
 
 def _get_tier_models_for_role(role: str) -> list[str]:
-    """役割別に Tier 階層のモデルリストを返す (E-3')。
+    """役割別に Tier 階層のモデルリストを返す (E-3' / F-gemini-quality-tier-poc 最終布陣 v2)。
 
-    LIGHTWEIGHT_ROLES → GA 主軸 (速度優先、精度確保)
-    QUALITY_ROLES → Preview 主軸 (性能優先、確実性確保)
-    その他 → QUALITY_ROLES と同じ階層 (後方互換)
+    ARTICLE_ROLES    → gemini-2.5-flash 主軸 (output コスト最適化)
+    LIGHTWEIGHT_ROLES → gemini-3.1-flash-lite 主軸 (低コスト、高 RPD)
+    QUALITY_ROLES / 未分類 → gemini-3.5-flash 主軸 (Narrative 品質)
 
-    env 変数で各 Tier モデルを上書き可能。デフォルトは公式の性能順に基づく:
-      Quality:  gemini-3-flash-preview > gemini-2.5-flash > gemini-3.1-flash-lite > gemini-2.5-flash-lite
-      Lightweight: gemini-2.5-flash > gemini-2.5-flash-lite > gemini-3.1-flash-lite > gemini-3-flash-preview
+    env 変数で各 Tier モデルを上書き可能。デフォルト (inline) は最終布陣 v2 に整合:
+      Quality:    gemini-3.5-flash > gemini-2.5-flash > gemini-3.1-flash-lite > gemini-2.5-flash-lite
+      Lightweight: gemini-3.1-flash-lite > gemini-2.5-flash-lite > gemini-2.5-flash > gemini-2.5-flash-lite
+      Article:    gemini-2.5-flash > gemini-3.5-flash > gemini-3.1-flash-lite > gemini-2.5-flash-lite
+    TIER4 は lineup v2 (Tier1-3) の最終安全網として gemini-2.5-flash-lite を据える。
     """
+    if role in ARTICLE_ROLES:
+        return [
+            os.getenv("GEMINI_ARTICLE_TIER1", "gemini-2.5-flash"),
+            os.getenv("GEMINI_ARTICLE_TIER2", "gemini-3.5-flash"),
+            os.getenv("GEMINI_ARTICLE_TIER3", "gemini-3.1-flash-lite"),
+            os.getenv("GEMINI_ARTICLE_TIER4", "gemini-2.5-flash-lite"),
+        ]
     if role in LIGHTWEIGHT_ROLES:
         return [
-            os.getenv("GEMINI_LIGHTWEIGHT_TIER1", "gemini-2.5-flash"),
+            os.getenv("GEMINI_LIGHTWEIGHT_TIER1", "gemini-3.1-flash-lite"),
             os.getenv("GEMINI_LIGHTWEIGHT_TIER2", "gemini-2.5-flash-lite"),
-            os.getenv("GEMINI_LIGHTWEIGHT_TIER3", "gemini-3.1-flash-lite"),
-            os.getenv("GEMINI_LIGHTWEIGHT_TIER4", "gemini-3-flash-preview"),
+            os.getenv("GEMINI_LIGHTWEIGHT_TIER3", "gemini-2.5-flash"),
+            os.getenv("GEMINI_LIGHTWEIGHT_TIER4", "gemini-2.5-flash-lite"),
         ]
     else:
-        # QUALITY_ROLES または未分類 (後方互換)
+        # QUALITY_ROLES または未分類 (後方互換、role="generation" 経路)
         return [
-            os.getenv("GEMINI_MODEL_TIER1", "gemini-3-flash-preview"),
+            os.getenv("GEMINI_MODEL_TIER1", "gemini-3.5-flash"),
             os.getenv("GEMINI_MODEL_TIER2", "gemini-2.5-flash"),
             os.getenv("GEMINI_MODEL_TIER3", "gemini-3.1-flash-lite"),
             os.getenv("GEMINI_MODEL_TIER4", "gemini-2.5-flash-lite"),
@@ -327,25 +363,43 @@ def _get_tier_models_for_role(role: str) -> list[str]:
 
 
 def _get_max_attempts_for_role(role: str) -> int:
-    """役割別の MAX_ATTEMPTS_PER_TIER を返す (E-3')。
+    """役割別の MAX_ATTEMPTS_PER_TIER を返す (E-3' / F-gemini-quality-tier-poc 最終布陣 v2)。
 
-    全 Tier で 2 retry 統一 (失敗率 0.002% 想定)。
+    QUALITY (judge / analysis / script) → 2 (Narrative 品質確保のため retry を厚く)
+    LIGHTWEIGHT (garbage / merge) / ARTICLE → 1 (大量・コスト最適 role は 1 発勝負)
     必要に応じて env で上書き可能。
     """
+    if role in ARTICLE_ROLES:
+        return int(os.getenv("GEMINI_ARTICLE_MAX_ATTEMPTS", "1"))
     if role in LIGHTWEIGHT_ROLES:
-        return int(os.getenv("GEMINI_LIGHTWEIGHT_MAX_ATTEMPTS", "2"))
+        return int(os.getenv("GEMINI_LIGHTWEIGHT_MAX_ATTEMPTS", "1"))
     else:
         return int(os.getenv("GEMINI_QUALITY_MAX_ATTEMPTS", "2"))
+
+
+def _is_gemini_3_series(model_id: str) -> bool:
+    """Gemini 3 系 (3.x-* / 3-*) かを判定する。
+
+    Gemini 3 系は temperature default 1.0 が公式推奨で、1.0 未満では looping /
+    degraded performance のリスクがあるため (公式 docs/gemini-3)、低 temperature を
+    渡さない判定に使う。
+      True : gemini-3.5-flash / gemini-3.1-flash-lite / gemini-3.1-pro / gemini-3-flash-preview
+      False: gemini-2.5-flash / gemini-2.5-flash-lite / gemini-2.0-* 等
+    """
+    return model_id.startswith("gemini-3.") or model_id.startswith("gemini-3-")
 
 
 def _make_tiered_gemini_client(role: str = "generation") -> Optional[LLMClient]:
     """役割別 Tier 階層クライアント: TIER1→TIER2→TIER3→TIER4 完全4段フォールバック。
 
-    E-3' 以降、role 別に異なる Tier 階層 / MAX_ATTEMPTS が選択される:
-      - LIGHTWEIGHT (garbage_filter / merge_batch / viral_filter / editorial_mission_filter)
-        → GA 主軸 (gemini-2.5-flash → flash-lite → preview-lite → flash-preview)
-      - QUALITY (judge / script / article / title / analysis) または未分類
-        → Preview 主軸 (gemini-3-flash-preview → 2.5-flash → preview-lite → flash-lite)
+    E-3' / F-gemini-quality-tier-poc 最終布陣 v2 で role 別に異なる Tier 階層 /
+    MAX_ATTEMPTS が選択される:
+      - LIGHTWEIGHT ("merge_batch" = garbage_filter / cluster_merge 共用)
+        → gemini-3.1-flash-lite 主軸 (低コスト、MAX=1)
+      - ARTICLE ("article")
+        → gemini-2.5-flash 主軸 (output コスト最適化、MAX=1)
+      - QUALITY ("judge" = editorial_mission_filter / elite_judge 共用、"analysis"、
+        または未分類 "generation" = script) → gemini-3.5-flash 主軸 (品質、MAX=2)
     """
     if not GEMINI_API_KEY:
         return None
@@ -457,7 +511,7 @@ def get_judge_llm_client() -> Optional[LLMClient]:
         )
         resolved = ""
 
-    # E-3': judge は QUALITY 系統 (Preview 主軸)。role="judge" で Tier 階層を解決する。
+    # E-3' / 最終布陣 v2: judge は QUALITY 系統 (gemini-3.5-flash 主軸)。role="judge" で Tier 階層を解決する。
     quality_tiers = _get_tier_models_for_role("judge")
     judge_max_attempts = _get_max_attempts_for_role("judge")
 
@@ -489,8 +543,16 @@ def get_script_llm_client() -> Optional[LLMClient]:
 
 
 def get_article_llm_client() -> Optional[LLMClient]:
-    """Article Writer 用クライアント — 統一 Tier 階層 (role=generation)。"""
-    return get_llm_client("generation")
+    """Article Writer 用クライアント — ARTICLE 系統 (role="article")。
+
+    F-gemini-quality-tier-poc 最終布陣 v2: article は output 5,000-10,000 token で
+    output 単価が支配的なため、script (role="generation" / QUALITY = gemini-3.5-flash)
+    から分離し gemini-2.5-flash 主軸 (MAX=1) に振り分ける (output $9.00 → $2.50)。
+    GENERATION_PROVIDER=gemini の場合のみ role="article" の Tier 階層を引く。
+    groq/ollama では role はモデル選択に影響しない (provider 固有 fallback に委譲)。
+    article_writer.py は本関数を呼ぶだけで不変 (不変原則 1 遵守)。
+    """
+    return _make_client(GENERATION_PROVIDER, GENERATION_MODEL, role="article")
 
 
 def get_analysis_llm_client() -> Optional[LLMClient]:
@@ -517,11 +579,24 @@ def get_analysis_llm_client() -> Optional[LLMClient]:
     except ValueError:
         max_tokens = 2000
 
-    # E-3': analysis は QUALITY 系統 (Preview 主軸)。role="analysis" で Tier 階層を解決する。
+    # E-3': analysis は QUALITY 系統。role="analysis" で Tier 階層を解決する。
+    tiers = _get_tier_models_for_role("analysis")
+
+    # F-gemini-quality-tier-poc: Gemini 3 系 (primary tier) は temperature default 1.0 が
+    # 公式推奨で、1.0 未満では looping / degraded performance のリスクがあるため
+    # (公式 docs/gemini-3)、temperature を generation_config に含めない。Gemini 2 系は従来通り。
+    # ★ generation_config は client 単位 (tier 別ではない) のため、判定は primary (Tier1) モデルで
+    #   行う。3 系 primary なら全 tier で temperature 非送出 (2 系 fallback も default 1.0 で動く)。
+    primary_model = tiers[0] if tiers else ""
+    if _is_gemini_3_series(primary_model):
+        generation_config: dict = {"max_output_tokens": max_tokens}
+    else:
+        generation_config = {"temperature": temperature, "max_output_tokens": max_tokens}
+
     return TieredGeminiClient(
         GEMINI_API_KEY,
-        _get_tier_models_for_role("analysis"),
-        generation_config={"temperature": temperature, "max_output_tokens": max_tokens},
+        tiers,
+        generation_config=generation_config,
         max_attempts_per_tier=_get_max_attempts_for_role("analysis"),
     )
 

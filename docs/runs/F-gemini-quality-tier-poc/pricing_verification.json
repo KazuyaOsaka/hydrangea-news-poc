@@ -1,0 +1,44 @@
+{
+  "task": "B-1 公式 pricing の web_fetch 確認",
+  "source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+  "fetched_at_utc": "2026-05-27T12:13Z",
+  "verification_method": "WebFetch (一次ソース直読). 一致基準 = 起案プロンプト記載値が公式 docs に一致するか",
+  "models": {
+    "gemini-3.5-flash": {
+      "prompt_claimed": {"input": 1.50, "output": 9.00},
+      "official_standard": {"input": 1.50, "output": 9.00},
+      "match": true
+    },
+    "gemini-3.1-flash-lite": {
+      "prompt_claimed": {"input": 0.25, "output": 1.50},
+      "official_standard": {"input": 0.25, "output": 1.50, "audio_input": 0.50},
+      "match": true
+    },
+    "gemini-3.1-pro-preview": {
+      "prompt_claimed": {"input": 2.00, "output": 12.00},
+      "official_standard": {"input_le_200k": 2.00, "output_le_200k": 12.00, "input_gt_200k": 4.00, "output_gt_200k": 18.00},
+      "match": true,
+      "note": "起案値は <=200k prompt の標準帯と一致。>200k は input 4.00 / output 18.00 に上昇"
+    },
+    "gemini-2.5-flash": {
+      "prompt_claimed": {"input": 0.30, "output": 2.50},
+      "official_standard": {"input": 0.30, "output": 2.50, "audio_input": 1.00},
+      "match": true
+    },
+    "gemini-2.5-flash-lite": {
+      "prompt_claimed": {"input": 0.10, "output": 0.40},
+      "official_standard": {"input": 0.10, "output": 0.40, "audio_input": 0.30},
+      "match": true
+    }
+  },
+  "batch_api_50_percent_off": {
+    "prompt_claimed": true,
+    "official": "ページに 'Batch API (50% cost reduction)' の記述あり",
+    "match": true
+  },
+  "cost_implication": {
+    "article_output_dominant": "article は output 5,000-10,000 token 想定。3.5-flash output $9.00 vs 2.5-flash output $2.50 = 3.6 倍差。article を 2.5-flash primary にする布陣根拠は公式 pricing で裏取り済",
+    "narrative_quality": "judge/analysis/script は 3.5-flash primary。input は 3.5-flash $1.50 で 2.5-flash $0.30 の 5 倍だが、品質主軸 role のため許容"
+  },
+  "cp0_decision": "乖離なし → CP-0 はスキップ。全 5 モデル + Batch 50% off が起案プロンプト値と一致"
+}

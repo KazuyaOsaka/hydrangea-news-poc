@@ -1,0 +1,25 @@
+{
+  "task": "B-2 Gemini 3 系 API 仕様の web_fetch 確認",
+  "source_url": "https://ai.google.dev/gemini-api/docs/gemini-3",
+  "fetched_at_utc": "2026-05-27T12:13Z",
+  "temperature": {
+    "prompt_claimed": "Gemini 3 系は default 1.0 推奨、0.3 だと looping / degraded performance の可能性",
+    "official_quote_recommend": "we strongly recommend keeping the temperature parameter at its default value of `1.0`.",
+    "official_quote_warning": "Changing the temperature (setting it below 1.0) may lead to unexpected behavior, such as looping or degraded performance",
+    "match": true,
+    "implication": "C-2 で Gemini 3 系には temperature を渡さない (default 1.0 維持) 設計が公式推奨と一致"
+  },
+  "thinking_level_vs_budget": {
+    "prompt_claimed": "thinking_level / thinking_budget 同時指定で 400 error",
+    "official_quote": "You cannot use both `thinking_level` and the legacy `thinking_budget` parameter in the same request. Doing so will return a 400 error.",
+    "match": true,
+    "implication": "本バッチでは布陣表から外す (改修なし、PoC 確認項目)。Hydrangea 本番パスは generation_config に thinking_* を渡していない (前バッチ F-gemini-3.5-flash-api-audit で 0 件確認済)"
+  },
+  "supported_features": {
+    "structured_outputs": "Supported (built-in tools と組合せ可)",
+    "function_calling": "Supported (custom tools + built-in tools)",
+    "search_grounding": "Supported (Grounding with Google Search)",
+    "official_quote": "Gemini 3 models allow you to combine [Structured Outputs] with built-in tools, including [Grounding with Google Search]",
+    "implication": "JP coverage の Grounding (gemini-2.5-flash 経由) を将来 3 系に上げても grounding は supported。本バッチでは grounding model は変更しない"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "task": "CP-2 前段: 改修後の role→model 解決を API generation なしで決定的に確認",
+  "captured_at_utc": "2026-05-27T12:30Z",
+  "method": "factory の純関数 + client 構築 (script/article/cluster/analysis = API 非呼出、judge は models.list の read-only 呼出のみ)。paid generation 呼び出しなし",
+  "lineup_v2_verification": {
+    "judge": {"resolved_tiers": ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"], "max_attempts": 2, "lineup_match": true, "note": "JUDGE_MODEL=gemini-3.5-flash を models.list で解決 → primary に prepend → QUALITY tiers と dedup"},
+    "editorial_mission_filter": {"shares": "judge client", "effective_primary": "gemini-3.5-flash", "max_attempts": 2, "lineup_match": false, "note": "lineup は 2.5-flash/MAX1 だが judge 共用のため 3.5-flash/MAX2 = 既知 deviation (許容)"},
+    "elite_judge": {"shares": "judge client", "effective_primary": "gemini-3.5-flash", "max_attempts": 2},
+    "script (generation)": {"resolved_tiers": ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"], "max_attempts": 2, "lineup_match": true},
+    "analysis / jp_coverage_judgement (analysis)": {"resolved_tiers": ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"], "max_attempts": 2, "lineup_match": true, "generation_config": {"max_output_tokens": 2000}, "temperature_omitted": true, "note": "primary が Gemini 3 系のため temperature 非送出 (C-2 ガード作動)"},
+    "article": {"resolved_tiers": ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"], "max_attempts": 1, "lineup_match": true, "note": "role='article' に分離成功。script (3.5-flash) と primary が異なる"},
+    "garbage_filter / merge_batch (merge_batch)": {"resolved_tiers": ["gemini-3.1-flash-lite", "gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite"], "max_attempts": 1, "lineup_match": true, "note": "garbage と cluster_merge が共用。lineup の merge tier2/3 並び差 (2.5-flash↔2.5-flash-lite) は 1 グループ共用のため未表現 = 軽微 (fallback 順のみ)"},
+    "viral_filter": {"status": "LLM stage 不在", "lineup_match": "n/a"},
+    "title": {"status": "LLM stage 不在 (generate_title_layer は決定的合成)", "lineup_match": "n/a"}
+  },
+  "gemini_3_5_flash_reachable": "models.list OK = judge が gemini-3.5-flash を resolved_model として採用 (fallback せず) = 新 primary モデルは API で到達可能",
+  "summary": "lineup v2 を 8/10 role で忠実配線。deviation = editorial_mission_filter (judge 共用で 3.5-flash) + viral_filter/title (LLM stage 不在)。temperature ガード作動確認。paid 試運転前にこの決定的確認で配線正当性を担保"
+}

@@ -1,0 +1,28 @@
+{
+  "batch": "F-gemini-quality-tier-poc",
+  "captured_at_utc": "2026-05-27T12:14:15Z",
+  "git": {
+    "main_head_expected": "112539d",
+    "head_commit": "112539db46cab6a28a15b50f5d92987d233bfde5",
+    "branch": "feature/F-gemini-quality-tier-poc",
+    "head_matches_expected": true
+  },
+  "python": "3.11.15",
+  "packages": {
+    "google-genai": "1.69.0",
+    "pydantic": "2.12.5",
+    "pytest": "9.0.2"
+  },
+  "baseline_tests": {
+    "command": "python -m pytest tests/ -x --tb=no -q",
+    "result": "1417 passed in 115.43s",
+    "passed": 1417,
+    "failed": 0
+  },
+  "prev_batch_decision_log_hashes": {
+    "batch": "F-docs-update-chatgpt-round2-and-error10",
+    "feat_commit": "41f09d6",
+    "merge_commit": "112539d",
+    "note": "Task F-1 で DECISION_LOG の '(push 後追記)' プレースホルダをこれらに更新する"
+  }
+}

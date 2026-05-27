@@ -1,0 +1,32 @@
+{
+  "task": "B-4 現状の temperature / max_tokens 設定確認",
+  "get_analysis_llm_client": {
+    "file": "src/llm/factory.py:496-526",
+    "temperature_env": "ANALYSIS_LLM_TEMPERATURE (default 0.3)",
+    "max_tokens_env": "ANALYSIS_LLM_MAX_TOKENS (default 2000)",
+    "generation_config_passed": {"temperature": 0.3, "max_output_tokens": 2000},
+    "is_only_client_with_generation_config": true,
+    "note": "他の role (judge / generation=script+article / merge_batch) は generation_config=None で呼ぶ = temperature 一切渡さない"
+  },
+  "other_roles_temperature": {
+    "judge": "generation_config なし (None)",
+    "generation (script/article)": "generation_config なし (None)",
+    "merge_batch (garbage/cluster)": "generation_config なし (None)",
+    "verdict": "temperature を渡すのは analysis client のみ"
+  },
+  "production_path_reality": {
+    "analysis_layer_enabled": "false (.env.example) = analysis client 本番未起動",
+    "jp_coverage_angle_query": "get_analysis_llm_client を使うが _build_angle_query (two-stage / angle 経路)。production は legacy broad verify() のみ (CURRENT_STATE §0) = two-stage 未配線",
+    "conclusion": "★ 現状 temperature 0.3 は live production path では Gemini 3 系に到達していない (analysis layer off + two-stage 未配線)。ただし現 QUALITY Tier1=gemini-3-flash-preview も Gemini 3 系 (startswith gemini-3-) のため、analysis/two-stage が起動された瞬間に temperature 0.3 が 3 系に渡る潜在問題が既に存在",
+    "c2_nature": "C-2 (Gemini 3 系 temperature 除外) は『現バグ修正』ではなく『X1/analysis 配線時の前方互換ガード』。起案プロンプトの『起動された場合に temperature 0.3 が渡されない動作を確認』と一致"
+  },
+  "is_gemini_3_series_classification": {
+    "gemini-3.5-flash": true,
+    "gemini-3.1-flash-lite": true,
+    "gemini-3.1-pro": true,
+    "gemini-3-flash-preview": true,
+    "gemini-2.5-flash": false,
+    "gemini-2.5-flash-lite": false,
+    "rule_proposed": "model_id.startswith('gemini-3.') or model_id.startswith('gemini-3-')"
+  }
+}

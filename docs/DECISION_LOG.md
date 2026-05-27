@@ -1,13 +1,14 @@
 # Hydrangea — 意思決定ログ (DECISION_LOG)
 
-最終更新: 2026-05-25 (F-f1-locale-key-fix 完了。3 AI 三角測量レビュー由来で
-`src/triage/editorial_mission_filter.py` の locale key bug (`get("jp"/"en")` →
-`"japan"` + 非 japan 合算) を根本治療、機能ロジック不変。CP-1 カズヤ判断 =
-選択肢 1 (非 japan 合算) + test data キー同時更新 + クラウド初期想定 (false
-positive) を grep で訂正 (実態 = 中間解像度喪失、クラウド誤り 10 記録)。
-不変原則 3 例外条件 5 点全充足。baseline 1417 維持、試運転 status=completed。
-前バッチ F-gemini-model-migrate-emergency のコミットハッシュ 7624f93/231decd
-追記。前回 2026-05-19: F-gemini-model-migrate-emergency 完了)
+最終更新: 2026-05-27 (F-gemini-quality-tier-poc 完了。最終布陣 v2 を配線
+(QUALITY=gemini-3.5-flash / ARTICLE=gemini-2.5-flash 分離 / LIGHTWEIGHT=gemini-3.1-flash-lite、
+MAX_ATTEMPTS QUALITY=2/LIGHTWEIGHT=1/ARTICLE=1) + JUDGE_MODEL 明示 + Gemini 3 系 temperature
+ガード。★ クラウド誤り 10 系統の作法で「最終布陣 v2 (10 role)」を grep 検証 → 実 dispatch は 4 role
+のみ判明 (viral_filter/title は LLM stage 不在、editorial_mission_filter/article は他 role 共用)。
+公式 pricing/API 仕様を web_fetch (一次ソース) で全項目裏取り (CP-0 スキップ)。クラウド誤り 10 派生
+「外部 AI セカンドオピニオンの権威化」を CLAUDE.md 明文化。baseline 1417→1432 passed、CP-2 試運転
+exit 0/status=completed。前バッチ F-docs-update-chatgpt-round2-and-error10 のコミットハッシュ
+41f09d6/112539d 追記。前回 2026-05-25: F-f1-locale-key-fix 完了)
 
 このドキュメントは Hydrangea プロジェクトにおける重要な意思決定の履歴を記録する。
 コードや設定の「結果」ではなく、「なぜそうなったか」の判断プロセスを残すことが目的。
@@ -5569,7 +5570,7 @@ ANALYSIS_LLM_MAX_TOKENS 定数は 0 件、default は factory.py:516 の os.gete
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `41f09d6` (docs: F-docs-update-chatgpt-round2-and-error10 ChatGPT Round 2 レビュー由来) / `112539d` (Merge branch 'feature/F-docs-update-chatgpt-round2-and-error10')。★ F-gemini-quality-tier-poc / 2026-05-27 で実ハッシュ追記。
 - grep 裏取り対象ファイル (読み取りのみ、0 行変更):
   - `src/triage/editorial_mission_filter.py` L163/166 (指摘 3 解消確認)
   - `src/storage/db.py` L14-20/110-153/189-200 (指摘 4 / 7 確認)
@@ -5596,3 +5597,72 @@ ANALYSIS_LLM_MAX_TOKENS 定数は 0 件、default は factory.py:516 の os.gete
   - F-script-writer-target-enemy-fix-investigate (1-P、2026-05-26、grep-first 好例)
   - F-gemini-3.5-flash-api-audit (1-P.5、2026-05-27、外部情報を grep 検証した好例)
   - F-gemini-quality-tier-poc (1-Q、★ 次バッチ最有力)
+
+---
+
+## 2026-05-27: F-gemini-quality-tier-poc — 最終布陣 v2 配線 + Gemini 3 系 temperature 修正 + 外部 AI 権威化警告 (実装バッチ)
+
+### 背景
+
+Phase A.5-3b 第一作起案前の必須前提として、ChatGPT/Gemini セカンドオピニオン 2 ラウンド +
+Claude Web 裁定 + 公式 pricing 確認後の「最終布陣 v2」を Hydrangea コードベースに配線する。
+前バッチ F-gemini-3.5-flash-api-audit で「API 破壊的変更なし = migration 不要」が確定済 (真因 b)。
+Narrative primary = gemini-3.5-flash (Stable)、Lightweight Tier1 切替判断 (migrate-emergency CP-1 保留分) =
+gemini-3.1-flash-lite を採用する PoC。
+
+### 議論
+
+- **CP-0 (公式 pricing)**: Claude Code が web_fetch で一次ソース直読 → 起案値と全 5 モデル + Batch 50% off が
+  一致 → CP-0 スキップ。
+- **CP-1 (最終布陣 v2 vs 実コード)**: ★ クラウド誤り 10 系統の作法で「最終布陣 v2 (10 role)」を仮説として
+  grep 検証 → **実コードは 4 実 role (merge_batch / judge / generation / analysis) でしか dispatch しない**と判明。
+  - viral_filter / title = LLM stage 不在 (前者は scoring.py 決定的タグ、後者は generate_title_layer 決定的合成)。
+  - editorial_mission_filter = `get_judge_llm_client()` 共用 (main.py:2453) → judge と同一 client。
+  - article = `get_article_llm_client()` が role="generation" で script と同一 client。
+  - judge primary = QUALITY Tier1 ではなく models.list 解決の `JUDGE_MODEL` prepend (未指定だと
+    GEMINI_MODEL_TIER2=2.5-flash に落ちる。旧試運転 judge=gemini-2.5-flash で裏取り済)。
+- **カズヤ判断 (案A + Q2 揃える)**: article を factory.py 内で role="article" に分離 (article_writer.py 不変)、
+  editorial_mission_filter は判定客体が judge 共用のため 3.5-flash/MAX2 のまま許容 (完全分離は main.py 改修要 =
+  本バッチ変更可リスト外 + 1 バッチで欲張らない)。inline default も新布陣に整合 (doc-drift 解消)。
+  CP-2 試運転はカズヤが「今すぐ run」を明示選択。
+
+### 決定
+
+最終布陣 v2 配線:
+- QUALITY (judge/script/analysis/jp_coverage/editorial_mission_filter) = gemini-3.5-flash primary、MAX=2。
+- ARTICLE (article、新設分離) = gemini-2.5-flash primary、MAX=1 (output $9.00→$2.50)。
+- LIGHTWEIGHT (garbage/merge_batch) = gemini-3.1-flash-lite primary、MAX=1。
+- `JUDGE_MODEL=gemini-3.5-flash` を `.env`/`.env.example` に明示追加 (judge primary を lineup v2 に合わせる)。
+- Gemini 3 系 temperature ガード: analysis primary が 3 系なら temperature 非送出 (公式 default 1.0 推奨)。
+- Editorial Guardian (gemini-3.1-pro-preview) は本バッチ未配線 (後続バッチ判断)。
+- editorial_mission_filter の 2.5-flash 完全分離 / run_summary model_roles 忠実化は FUTURE_WORK。
+
+### 結果
+
+- baseline 1417 → **1432 passed** (新規 15、破壊ゼロ)。
+- CP-2 試運転 (sample mode): exit 0 / status=completed / script=gemini-3.5-flash + article=gemini-2.5-flash で
+  retries=0 / fallback 0 / 404/Traceback/ERROR 0。target_enemy='大手メディア' は旧ルート framing で X1 まで継続。
+- 実 tier 解決は `model_roles_resolution.json` で paid generation なしに決定的確認 (lineup v2 一致)。
+- ★ クラウド誤り 10 派生「外部 AI セカンドオピニオンの権威化」を CLAUDE.md + DISCUSSION_NOTES に正本化
+  (Gemini 価格誤情報 + Claude Web 廃止短絡 + ChatGPT 訂正の経緯を観察記録)。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 変更 (不変原則対象外):
+  - `src/llm/factory.py` (ARTICLE_ROLES 新設 + 3 グループ tier 解決 + `_is_gemini_3_series` +
+    get_article_llm_client role 分離 + analysis temperature ガード)
+  - `src/shared/config.py` (inline default を最終布陣 v2 に整合)
+  - `.env` (gitignored、local-only) / `.env.example` (QUALITY/ARTICLE/LIGHTWEIGHT tier + JUDGE_MODEL)
+  - `src/llm/model_registry.py` = 変更なし (確認のみ)
+- 新規テスト: `tests/test_factory_role_model_resolution.py` (8) / `tests/test_factory_gemini3_temperature.py` (4)
+- 既存テスト期待値整合 (構造不変): `tests/test_factory_role_tier_separation.py` (+3 net)
+- 新規ファイル (`docs/runs/F-gemini-quality-tier-poc/`): `REPORT.md` / `environment_snapshot.json` /
+  `pricing_verification.json` / `api_spec_verification.json` / `factory_current_structure.json` /
+  `temperature_current_state.json` / `model_roles_resolution.json` / `trial_run_summary.json`
+- ドキュメント更新: `CLAUDE.md` (クラウド誤り 10 派生パターン追記、他セクション不変) /
+  `docs/CURRENT_STATE.md` (全置換、21 つ目 1-Q) / `docs/DECISION_LOG.md` (本エントリ +
+  前バッチ F-docs-update のハッシュ `41f09d6` / `112539d` 追記) / `docs/FUTURE_WORK.md` /
+  `docs/DISCUSSION_NOTES.md` (4-A 新規 + 4-B クラウド誤り 10 派生追記)
+- 関連バッチ: F-gemini-model-audit (1-L) / F-gemini-model-migrate-emergency (1-M) /
+  F-gemini-3.5-flash-api-audit (1-P.5、migration 不要確定) / X1 (1-R、target_enemy 退役の本命)

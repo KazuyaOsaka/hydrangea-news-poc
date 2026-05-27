@@ -1,6 +1,12 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-27 (★ F-docs-update-chatgpt-round2-and-error10 完了、docs-only。
+最終更新: 2026-05-27 (★ F-gemini-quality-tier-poc 完了、実装バッチ。最終布陣 v2 を配線
+(QUALITY=gemini-3.5-flash / ARTICLE=gemini-2.5-flash 分離 / LIGHTWEIGHT=gemini-3.1-flash-lite +
+JUDGE_MODEL 明示 + Gemini 3 系 temperature ガード)。★ CP-1 で lineup v2 (10 role) を grep 検証 →
+実 dispatch は 4 role のみ判明、新規 2 タスク起案 (**editorial_mission_filter 独立分離** ★低 /
+**run_summary model_roles 忠実化** ★低)、**config.py/factory.py default 不一致整合** ★低 を完了 (Q2=揃える)。
+baseline 1417→1432 passed、CP-2 試運転 exit 0。クラウド誤り 10 派生「外部 AI セカンドオピニオンの
+権威化」を CLAUDE.md 明文化。前回 2026-05-27: F-docs-update-chatgpt-round2-and-error10 完了、docs-only。
 ChatGPT Round 2 レビュー (2026-05-27) の 7 指摘を grep 裏取りで照合し、新規 3 タスク追加 +
 既存 1 タスクのスコープ拡張: ★★高 **F-title-guard-coverage-claim-policy** (緊急度 高、指摘 2 =
 title_generator.py の perspective_gap に対する silence_gap 絶対表現リスク) + ★中
@@ -145,7 +151,7 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 - ~~**F-script-writer-target-enemy-fix** ★★★高 (3 AI 三角測量レビュー / 2026-05-25 起案、Gemini 独自指摘) [★ 重複 2 エントリを統合]~~ → ★ **調査完了 (F-script-writer-target-enemy-fix-investigate / 2026-05-26)**。読み取り専用調査 (grep + コード精読 + 試運転観察) で実態確定。**真因 a 確定**: production 稼働中の旧ルート `write_script` が `target_enemy` (仮想敵) をハードコード候補リストから出力し viewer-facing な煽り framing を誘導するが、旧ルートは不変原則 2 で直接修正不可。新ルート `generate_script_with_analysis` は設計上既に target_enemy 排除済み (契約テストで固定) = **新ルート配線が唯一の sanctioned 解消経路**。CP-1 カズヤ判断 = **X1 (新ルート配線バッチに統合)** = 下記「particular_angle_metadata + sontaku_signals の本番配線判断」エントリに target_enemy 解消を吸収。★ 起案前 Project Knowledge 仮説 1-5 は grep で概ね CONFIRMED = クラウド誤り 10 の 3 回目発生なし (外部指摘を grep で検証してから起案する作法が機能)。詳細は `docs/runs/F-script-writer-target-enemy-fix-investigate/REPORT.md`。
 
-- **F-gemini-quality-tier-poc** ★★高 (F-gemini-model-audit / 2026-05-19 起案、★ **次バッチ最有力に格上げ** (F-gemini-model-migrate-emergency / 2026-05-19)、★ 候補リスト更新 (F-gemini-3.5-flash-api-audit / 2026-05-27)、Phase A.5-3b 第一作起案前)
+- ~~**F-gemini-quality-tier-poc** ★★高 (F-gemini-model-audit / 2026-05-19 起案、Phase A.5-3b 第一作起案前)~~ → ★ **完了 (F-gemini-quality-tier-poc / 2026-05-27)**。最終布陣 v2 を配線: QUALITY (judge/script/analysis) = `gemini-3.5-flash` primary/MAX2、ARTICLE (article、新設 role 分離) = `gemini-2.5-flash` primary/MAX1 (output $9.00→$2.50)、LIGHTWEIGHT (garbage/merge_batch) = `gemini-3.1-flash-lite` primary/MAX1 (★ migrate-emergency CP-1 保留分の切替採用)。`JUDGE_MODEL=gemini-3.5-flash` 明示追加 + Gemini 3 系 temperature ガード追加。★ CP-1 で lineup v2 (10 role) を grep 検証 → 実 dispatch は 4 role のみ判明 (viral_filter/title は LLM stage 不在、editorial_mission_filter は judge 共用で 3.5-flash/MAX2 のまま許容 = deviation、article は role 分離で 2.5-flash 実現)。公式 pricing/API 仕様を web_fetch で全裏取り (CP-0 スキップ)。baseline 1417→1432 passed、CP-2 試運転 exit 0/status=completed (script=3.5-flash + article=2.5-flash, retries=0, fallback 0)。axis_5 採点はカズヤ手動 (第一作着手前)。残課題 = editorial_mission_filter 独立分離 / run_summary model_roles 忠実化 (下記新規)。詳細は完了済みセクション + `docs/runs/F-gemini-quality-tier-poc/REPORT.md`。
   - 背景: 2026-05 Gemini モデル群更新で Narrative 主軸 (QUALITY Tier1) の最適モデルが未確定。★ **候補リスト更新 (F-gemini-3.5-flash-api-audit / 2026-05-27)**: 2026-05 GA リリースの `gemini-3.5-flash` (Stable、RPD 10K/RPM 1K/TPM 2M、Thinking/FunctionCalling/StructuredOutputs/Grounding すべて Supported) を**候補に追加**し、`gemini-3-flash-preview` を**削除** (3.5 Flash Stable が GA 後継で代替可能)。確定候補 = `gemini-3.5-flash` (Stable、新主軸本命) / `gemini-2.5-flash` (RPD 10K、安定 fallback ベースライン) / `gemini-3.1-pro` (RPD 250、Editorial Guardian 候補、別枠局所使用)。emergency 移行は Tier3 GA 化のみで primary 品質は別途 PoC で確定する必要がある (設計判断と実装の分離)。★ API 破壊的変更は audit で**真因 b (無いか軽微)** 確定済 = migration 不要、API 互換問題なしで投入可能 (本番生成系は generation_config=None で API パラメータ非指定、構造化出力/カスタム function calling 未使用)。
   - ★ 内包課題 (F-gemini-model-migrate-emergency CP-1 判断 B からの保留分): **Lightweight 主軸 (Tier1) を `gemini-2.5-flash` (RPD 10K) → `gemini-3.1-flash-lite` (GA, RPD 150K = 15 倍) に切替えるか**を axis_5 品質検証で判断。emergency では「動くものを壊さない」優先で据置 (Gemini 2→3 系統変更は MEDIUM リスク、1 batch 試運転だけでは検証不十分)。本 PoC で Lightweight 4 role (garbage_filter/merge_batch/viral_filter/editorial_mission_filter) の出力品質を検証後に投入判断。
   - 対応案: Narrative 系 QUALITY モデル + Lightweight Tier1 候補の品質 PoC + axis_5 採点で主軸確定。Pro は Editorial Guardian (高リスク事実検証専用、局所使用) に限定し Quality 主軸にしない方針を検証。`publish_gate_flags` 構造設計も併せて検討。
@@ -163,10 +169,23 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 関連ファイル: `src/generation/title_generator.py` (現状確認のみ = 不変原則対象外だが本体改修時は例外条件適用判断要)、`manual_poc/` 配下に新規 (Phase A.5-3b 隔離原則)、`docs/ADR/0003-content-moral-guidelines.md` (整合確認)、`docs/runs/F-docs-update-chatgpt-round2-and-error10/title_guard_analysis.json` (grep 裏取り)
   - 関連: ChatGPT Round 2 レビュー (2026-05-27 指摘 2)、ADR-0003、Phase A.5-3b 第一作起案、Hydrangea ミッション「検証可能な事実で殴る」
 
-- **config.py/factory.py default 不一致整合** ★低 (F-gemini-model-audit §9-3 / F-gemini-model-migrate-emergency 2026-05-19 残置)
-  - 背景: `src/shared/config.py:77-79` の GEMINI_MODEL_TIER2-4 default が `factory.py` default と不一致。runtime 影響なし (env が常に上書き) かつ 5/25 shutdown 非該当のため emergency 最小スコープから除外。
-  - 対応案: config.py の default を factory.py と整合させる (安全側 default 化)。
-  - 検討時期: 低優先、別 doc/refactor バッチ or F-gemini-quality-tier-poc 同時対応
+- ~~**config.py/factory.py default 不一致整合** ★低 (F-gemini-model-audit §9-3 / F-gemini-model-migrate-emergency 2026-05-19 残置)~~ → ★ **完了 (F-gemini-quality-tier-poc / 2026-05-27、Q2=揃える)**。config.py:76-79 の GEMINI_MODEL_TIER1-4 inline default を最終布陣 v2 (QUALITY 系統 = gemini-3.5-flash / 2.5-flash / 3.1-flash-lite / 2.5-flash-lite) に整合し、factory.py QUALITY default と一致させた。runtime 影響なしの既知 doc-drift を解消。
+
+- **editorial_mission_filter のモデル独立分離** ★低 (F-gemini-quality-tier-poc / 2026-05-27 起案、CP-1 deviation 由来)
+  - 背景: 最終布陣 v2 は editorial_mission_filter を 2.5-flash/MAX1 (LIGHTWEIGHT 寄り) と想定したが、実コードでは `get_judge_llm_client()` を共用 (main.py:2453) するため judge と同一 client = gemini-3.5-flash/MAX2 になる。F-gemini-quality-tier-poc では「1 バッチで欲張らない」+ main.py が本バッチ変更可リスト外のため 3.5-flash/MAX2 のまま許容 (deviation)。
+  - 対応案: factory.py に `get_mission_llm_client()` (role="editorial_mission_filter") を新設 + main.py:2453 を差替 + `_get_tier_models_for_role` に editorial_mission_filter 専用群 (2.5-flash 主軸) 追加。コスト面: mission scoring は top-20 prescore に bounded、input 偏重のため deviation のコスト影響は中程度。
+  - 検討時期: 低優先、X1 (main.py 改修バッチ) 同時対応 or 別 refactor
+  - 想定工数: 1-2h
+  - 関連ファイル: `src/llm/factory.py`、`src/main.py` L2453、`docs/runs/F-gemini-quality-tier-poc/factory_current_structure.json`
+  - 関連: F-gemini-quality-tier-poc (本起案元、CP-1 deviation)
+
+- **run_summary.model_roles の実 tier 解決忠実化** ★低 (F-gemini-quality-tier-poc / 2026-05-27 起案、CP-2 試運転で発見)
+  - 背景: run_summary.json の `model_roles` は config role 定数 (GENERATION_MODEL / MERGE_BATCH_MODEL / JUDGE_MODEL) を label 化する機構で、Gemini の実 tier 解決 (`_get_tier_models_for_role`) と部分乖離する。特に merge_batch label (= GEMINI_CLUSTER_MODEL = GEMINI_MODEL_TIER2 = gemini-2.5-flash) が実 LIGHTWEIGHT tier1 (gemini-3.1-flash-lite) と不一致 = 監査時に実使用モデルを誤認するリスク。
+  - 対応案: run_summary に各 role の実 tier1 (TieredGeminiClient._tiers[0]) を記録、または used_fallback と併せて実モデルを snapshot。F-periodic-health-check (ChatGPT Round 2 指摘 5 = tier fallback/retry runtime snapshot) に統合候補。
+  - 検討時期: F-periodic-health-check 着手時 (Phase A.5-3d 前提) に統合
+  - 想定工数: 1-2h (health-check 統合なら追加 0.5h)
+  - 関連ファイル: `src/main.py` (run_summary 構築箇所)、`src/llm/model_registry.py`、`docs/runs/F-gemini-quality-tier-poc/trial_run_summary.json`
+  - 関連: F-gemini-quality-tier-poc (本起案元)、F-periodic-health-check (統合候補)
   - 関連ファイル: `src/shared/config.py:77-79`, `src/llm/factory.py:322-325`
 
 - **scripts/verify_jp_coverage_measure.py の inline schema doc-drift** ★低 (F-jp-coverage-cache-judgement-persist / 2026-05-26 検出)
@@ -207,6 +226,7 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 背景: F-particular-angle-redesign-extension (2026-05-08) で `particular_angle_metadata` (3 要素 + confidence) + `sontaku_signals` (level + type + extraction_confidence) を別軸メタデータとして正典化、`docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 3.7 で台本表現方向性も正典化したが、**src/ 配下 grep で 0 件 = 本番未配線**。F-trial-run-post-tune Slot-1 (cls-6889e9e1c7ac、editorial_mission_score=86.0、Hydrangea ど真ん中) でも `analysis_result=null` で旧ルート + F-13 隠れ層 bypass で台本生成 = 新ルート `generate_script_with_analysis` 未起動。
   - ★ **target_enemy 解消の統合 (X1、F-script-writer-target-enemy-fix-investigate / 2026-05-26 CP-1 確定)**: 同調査で「production 稼働中の旧ルートが `target_enemy` (仮想敵) を出力し viewer-facing な煽り framing を誘導するが旧ルートは不変原則 2 で修正不可、新ルートは設計上既に target_enemy 排除済み」と判明 (真因 a)。→ 本配線バッチ完了 = 新ルート起動 = **target_enemy が production から自動退役**。本配線の成果検証項目に「video_payload.json で target_enemy が None になること (新ルート経由)」+「hook/punchline から仮想敵 framing・煽り表現が消えること」を追加する。詳細は `docs/runs/F-script-writer-target-enemy-fix-investigate/REPORT.md`。
   - 対応案: (a) `src/shared/models.py` に `ParticularAngleMetadata` + `SontakuSignals` Pydantic クラスを追加、`AnalysisResult` に optional フィールドとして組み込む (新規追加のみ、不変原則 4 例外条件適用要)、(b) `src/analysis/` 配下に LLM 抽出ロジック (`scripts/extract_particular_angle.py` のロジックを `src/analysis/particular_angle_extractor.py` に移植)、(c) `src/generation/script_writer.py` `generate_script_with_analysis` 新ルートの引数に追加、(d) `configs/prompts/analysis/geo_lens/script_with_analysis.md` に `particular_angle_metadata` + `sontaku_signals` を渡すプロンプト改修 (LLM の自律判断に委ねる設計、クラウド誤り 9 各論コントロール回避)
+  - ★ **Editorial Guardian (gemini-3.1-pro-preview) 配線は後続** (F-gemini-quality-tier-poc / 2026-05-27): 最終布陣 v2 では Editorial Guardian を配線せず QUALITY/ARTICLE/LIGHTWEIGHT の 3 群のみ配線した。高リスク事実検証専用の Editorial Guardian (gemini-3.1-pro-preview、RPD 250、局所使用) の配線判断は本 X1 では行わず、「第一作公開前の高リスク事実検証ワークフロー」バッチ (緊急度 中、ADR-0003 由来) で実施する。
   - 検討時期: verify_two_stage 本番配線と同時 OR Phase A.5-3b 第一作着手後の並走バッチ。F-stream-2-filter-design は本配線を前提に動作する設計が望ましい。
   - 想定工数: 8-16 時間 (model 追加 + analysis 配線 + script_writer 新ルート改修 + プロンプト改修 + テスト + 試運転)
   - 関連ファイル: `src/shared/models.py` (★ ★ AnalysisResult 拡張)、`src/analysis/particular_angle_extractor.py` (新規想定、`src/analysis/` 不変原則 4 例外要)、`src/generation/script_writer.py` (新ルート `generate_script_with_analysis` 拡張)、`configs/prompts/analysis/geo_lens/script_with_analysis.md` (プロンプト改修)、`docs/PARTICULAR_ANGLE_DEFINITION.md` (正典)
