@@ -1,0 +1,49 @@
+{
+  "batch": "F-docs-update-chatgpt-round2-and-error10",
+  "task": "Task B-5 — ChatGPT Round 2 指摘 7 (JobRecord AV path が DB に保存されない) の実態確認",
+  "method": "grep + コード精読 (読み取り専用、改修なし)",
+  "chatgpt_claim": "JobRecord の AV path (voiceover_path / review_mp4_path) が DB jobs テーブルに保存されない",
+  "urgency_claimed": "低",
+  "verdict": "REAL (現状 run_summary/manifest で代替追跡可、致命的でない) → 新規タスク化 = F-job-record-av-path ★低",
+
+  "jobrecord_fields": {
+    "file": "src/shared/models.py",
+    "class_line": 335,
+    "fields": [
+      {"line": 339, "field": "script_path: Optional[str] = None"},
+      {"line": 340, "field": "article_path: Optional[str] = None"},
+      {"line": 341, "field": "video_payload_path: Optional[str] = None"},
+      {"line": 342, "field": "voiceover_path: Optional[str] = None", "note": "★ DB 未対応"},
+      {"line": 343, "field": "review_mp4_path: Optional[str] = None", "note": "★ DB 未対応"}
+    ]
+  },
+
+  "jobs_table_ddl": {
+    "file": "src/storage/db.py",
+    "ddl_line": 14,
+    "persisted_path_columns": [
+      {"line": 18, "col": "script_path TEXT"},
+      {"line": 19, "col": "article_path TEXT"},
+      {"line": 20, "col": "video_payload_path TEXT"}
+    ],
+    "missing_columns": ["voiceover_path", "review_mp4_path"]
+  },
+
+  "save_job": {
+    "file": "src/storage/db.py",
+    "function_line": 189,
+    "insert_columns": "id, event_id, status, script_path, article_path, video_payload_path, created_at, error (L192-195)",
+    "upsert_columns": "script_path / article_path / video_payload_path のみ (L198-200)",
+    "finding": "voiceover_path / review_mp4_path は INSERT / UPSERT いずれにも含まれない = JobRecord に値があっても DB に永続化されない"
+  },
+
+  "current_alternative_tracking": "成果物パスは run_summary / manifest で追跡可能 (合成パートは Phase A.5-3b 第一作で手動運用)。現状 production は MP4 自動生成パスを DB に寄せていないため致命的でない。",
+
+  "phase_a5_3c_integration": {
+    "rationale": "Remotion 化後 (Phase A.5-3c, ElevenLabs + Remotion + 画像生成 本番統合) に成果物追跡を DB に寄せたい際『MP4 path が DB にない』未来負債が顕在化",
+    "scope": "Phase A.5-3c の DB schema 整理で jobs DDL + save_job() を JobRecord 全フィールド対応に拡張 + idempotent migration (F-jp-coverage-cache-judgement-persist の _migrate_jp_coverage_cache パターン踏襲)",
+    "related_future_work": "FUTURE_WORK.md Phase 1-C 『DB マイグレーション』(L490-) と並走整理可能 (channel_id 追加と同時)"
+  },
+
+  "conclusion": "ChatGPT 指摘 7 は実在 (JobRecord に AV path フィールドはあるが jobs DDL + save_job が未対応)。現状 run_summary/manifest で代替追跡可 = 緊急度 低。Phase A.5-3c の DB schema 整理に統合する F-job-record-av-path ★低 として起案。"
+}

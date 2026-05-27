@@ -1,0 +1,69 @@
+{
+  "batch": "F-docs-update-chatgpt-round2-and-error10",
+  "task": "Task B-1 / B-2 — ChatGPT Round 2 指摘 3 / 4 の解消確認 (起案者前提の grep 裏取り)",
+  "method": "grep + コード精読 (読み取り専用、改修なし)",
+  "note": "起案バッチプロンプトが「指摘 3/4 は既に解消済み」と断定しているが、クラウド誤り 10 系統の作法 (起案者の前提も検証対象) に従い grep で裏取り。",
+
+  "issue_3_f1_locale_key_bug": {
+    "chatgpt_claim": "F-1 EditorialMissionFilter の sources_by_locale キー参照ズレ (jp/en) が残存している懸念",
+    "urgency_claimed": "高",
+    "verdict": "RESOLVED (既に修正済み = 新規タスク化不要)",
+    "evidence": [
+      {
+        "file": "src/triage/editorial_mission_filter.py",
+        "line": 163,
+        "code": "jp_count = len(se.event.sources_by_locale.get(\"japan\", []))",
+        "interpretation": "F-f1-locale-key-fix (1-N / 2026-05-25) で正しいキー \"japan\" を参照 (旧 \"jp\" ではない)"
+      },
+      {
+        "file": "src/triage/editorial_mission_filter.py",
+        "line": "166-167",
+        "code": "for loc, refs in se.event.sources_by_locale.items()  (非 japan を合算)",
+        "interpretation": "非 japan locale を合算する overseas_count パターン = 旧 \"en\" 単独参照ではない"
+      },
+      {
+        "grep": "grep -n 'sources_by_locale.get(\"jp\"' / get(\"en\")",
+        "hits": 0,
+        "interpretation": "旧バグの \"jp\"/\"en\" キー参照は src/triage/editorial_mission_filter.py に残存ゼロ"
+      }
+    ],
+    "cross_ref": "docs/CURRENT_STATE.md L50-54, FUTURE_WORK.md L122 (F-f1-locale-key-fix 完了済み), DECISION_LOG.md 2026-05-25 エントリ",
+    "conclusion": "ChatGPT 指摘 3 は古い Project Knowledge 由来 (修正前のスナップショット)。実コードでは 2026-05-25 に根本治療済み。"
+  },
+
+  "issue_4_f13b_cache_judgement_persist": {
+    "chatgpt_claim": "F-13.B の llm_judgement が cache hit 時に消える (24h cache に永続化されていない懸念)",
+    "urgency_claimed": "中",
+    "verdict": "RESOLVED (既に修正済み = 新規タスク化不要)",
+    "evidence": [
+      {
+        "file": "src/storage/db.py",
+        "line": "120-121",
+        "code": "llm_judgement TEXT, llm_judgement_text TEXT  (jp_coverage_cache DDL)",
+        "interpretation": "F-jp-coverage-cache-judgement-persist (1-O / 2026-05-26) で 2 列追加"
+      },
+      {
+        "file": "src/storage/db.py",
+        "line": "134-153",
+        "code": "_migrate_jp_coverage_cache() — idempotent ADD COLUMN",
+        "interpretation": "既存 DB への後方互換 migration あり"
+      },
+      {
+        "file": "src/triage/jp_coverage_verifier.py",
+        "line": "673-721",
+        "code": "_get_cached() が llm_judgement / llm_judgement_text を SELECT (rows[7]/[8] 復元)",
+        "interpretation": "cache hit 時に 2 列を忠実復元"
+      },
+      {
+        "file": "src/triage/jp_coverage_verifier.py",
+        "line": "724-748",
+        "code": "_save_cache() が result.llm_judgement / llm_judgement_text を INSERT",
+        "interpretation": "cache 保存時に 2 列を永続化"
+      }
+    ],
+    "cross_ref": "docs/CURRENT_STATE.md L56-60, FUTURE_WORK.md L124 (F-jp-coverage-cache-judgement-persist 完了済み), DECISION_LOG.md 2026-05-26 エントリ",
+    "conclusion": "ChatGPT 指摘 4 は古い Project Knowledge 由来 (修正前のスナップショット)。実コードでは 2026-05-26 に案 A で根本治療済み。"
+  },
+
+  "meta_cloud_error_10": "指摘 3 / 4 はいずれも『修正前の古い Project Knowledge スナップショット』に基づく『新規発見』の誤認 = ChatGPT 側で発生したクラウド誤り 10 系統 (検証なしの仮説受容)。Claude Code 側は起案者の前提 (= 解消済み) も grep で裏取りし、CONFIRMED。"
+}

@@ -1,0 +1,45 @@
+{
+  "batch": "F-docs-update-chatgpt-round2-and-error10",
+  "batch_type": "docs-only (改修なし、grep + コード精読のみ)",
+  "captured_at": "2026-05-27T17:04:12+0900",
+  "branch": "feature/F-docs-update-chatgpt-round2-and-error10",
+  "branch_created_from": "main",
+  "main_head_at_branch_creation": "2f99ebdd7b3ffb5fb623a77ff500101ce1afaf7b",
+  "expected_main_head": "2f99ebd (F-gemini-3.5-flash-api-audit merge 後)",
+  "head_matches_expected": true,
+  "python_version": "Python 3.11.15",
+  "pytest_version": "pytest 9.0.2",
+  "baseline_tests": {
+    "command": "python -m pytest tests/ -x --tb=no -q",
+    "result": "1417 passed",
+    "duration_sec": 99.31,
+    "expected_baseline": 1417,
+    "matches_expected": true,
+    "note": "docs-only バッチのため src/ tests/ configs/ scripts/ .env .env.example は 0 行変更 = baseline 自動維持"
+  },
+  "recent_log_5": [
+    "2f99ebd Merge branch 'feature/F-gemini-3.5-flash-api-audit'",
+    "de06887 investigate: F-gemini-3.5-flash-api-audit Gemini 3.5 Flash API 影響範囲調査 (調査専用)",
+    "07dc175 Merge branch 'feature/F-script-writer-target-enemy-fix-investigate'",
+    "1409e0a investigate: F-script-writer-target-enemy-fix-investigate target_enemy 問題の実態調査 (調査専用)",
+    "4aa6f54 Merge branch 'feature/F-jp-coverage-cache-judgement-persist'"
+  ],
+  "prev_batch_commit_hashes_for_decision_log": {
+    "F-gemini-3.5-flash-api-audit": {
+      "feat_investigate": "de06887",
+      "merge": "2f99ebd",
+      "decision_log_placeholder_line": 5488,
+      "action": "Task F で `コミット: (push 後追記)` を de06887 / 2f99ebd に追記"
+    }
+  },
+  "invariants_scope": {
+    "changeable": [
+      "docs/runs/F-docs-update-chatgpt-round2-and-error10/ (新規)",
+      "docs/CURRENT_STATE.md / DECISION_LOG.md / FUTURE_WORK.md / DISCUSSION_NOTES.md",
+      "CLAUDE.md (クラウド誤り 10 追加のみ)"
+    ],
+    "untouchable_0_lines": [
+      "src/", "tests/", "configs/", "scripts/", ".env", ".env.example"
+    ]
+  }
+}

@@ -1,12 +1,13 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-26 (★ F-script-writer-target-enemy-fix-investigate 完了。
-4-A 新規 1 件 =「2026-05-26: target_enemy 問題の実態調査 — 真因 a 確定 + X1
-(新ルート配線統合)」(ステータス Resolved/タスク化)。4-B 既存再評価 1 件 =
-「2026-05-01: 新ルートで target_enemy を排除した設計判断」を Resolved 化。
-★ クラウド誤り 10 の 3 回目発生なし = grep-first で起案前仮説 1-5 が CONFIRMED。
-前回 2026-05-26: F-jp-coverage-cache-judgement-persist 完了で 4-A 新規 1 件 +
-クラウド誤り 10 の 2 回目発生記録)
+最終更新: 2026-05-27 (★ F-docs-update-chatgpt-round2-and-error10 完了、docs-only。
+4-A 新規 1 件 =「2026-05-27: ChatGPT Round 2 レビュー結果統合 + 古い Project Knowledge
+由来の半数指摘訂正」(ステータス Resolved/タスク化)。4-B 既存再評価 1 件 =「2026-05-25:
+クラウド誤り 10」を CLAUDE.md 正本化に伴いステータス更新。★ ChatGPT 側でもクラウド誤り 10
+系統が発生 = 外部 AI レビューも grep 検証対象である根拠の追加実例。クラウド誤り 10 を
+CLAUDE.md に明文化。前回 2026-05-26: F-script-writer-target-enemy-fix-investigate 完了で
+4-A 新規 1 件 + クラウド誤り 10 の 3 回目発生なし。前々回 2026-05-26:
+F-jp-coverage-cache-judgement-persist 完了で 4-A 新規 1 件 + 2 回目発生記録)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -19,6 +20,40 @@
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-27: ChatGPT Round 2 レビュー結果統合 + 古い Project Knowledge 由来の半数指摘訂正 (F-docs-update-chatgpt-round2-and-error10)
+
+**内容**: ChatGPT が Gemini モデル布陣セカンドオピニオン依頼を保留して Phase A.5-3b
+第一作前のコードレビュー Round 2 (7 指摘) を返却。docs 正本との grep 裏取り照合を実施:
+- **指摘 3 (F-1 locale key bug) / 指摘 4 (F-13.B llm_judgement cache 永続化)** = grep で
+  **RESOLVED 確認** (editorial_mission_filter.py:163 `get("japan")` / db.py:120-121 +
+  verifier 2 列対応)。**古い Project Knowledge 由来 = ChatGPT 側でもクラウド誤り 10 系統発生**
+  (修正前スナップショットを「新規発見」と誤認)。
+- **指摘 1** = 既に FUTURE_WORK 登録済 (F-evidence-jp-coverage-audit-trail)。
+- **指摘 2 (title_generator 誇大タイトル)** = REAL → 新規 F-title-guard-coverage-claim-policy
+  ★★高。`is_strong` ゲートが `perspective_gap_score >= 3` でも真になり、系統 2 の事象に
+  silence_gap 絶対表現 (「日本では報道されない」「日本で無報道」) が出力され得る。第一作
+  候補A (perspective_gap) で顕在化リスク。構造データ (coverage_claim_policy) で防止する
+  設計 = クラウド誤り 9 各論コントロール回避と整合。
+- **指摘 6 (analysis max_output_tokens 不足)** = REAL (env 可) → 新規 F-analysis-max-tokens-tune
+  ★中。起案前提を訂正: default 2000 は factory.py:516 の os.getenv フォールバックのみ
+  (config.py に定数 0 件) = default 化箇所は factory.py:516。
+- **指摘 7 (JobRecord AV path 未保存)** = REAL → 新規 F-job-record-av-path ★低。JobRecord に
+  voiceover_path/review_mp4_path はあるが jobs DDL + save_job 未対応。Phase A.5-3c DB schema 整理に統合。
+- **指摘 5 (model drift + retry 観測)** = F-periodic-health-check スコープ拡張。★ 起案の
+  「F-pipeline-health-check (1-Q.5)」呼称は該当エントリ不在 = health-check 正本
+  F-periodic-health-check にスコープ統合 (起案者前提を grep で訂正)。
+
+**メタ的含意**: ★★ 外部 AI レビュー (ChatGPT Round 2) でもクラウド誤り 10 系統が発生 =
+「外部 AI レビュー指摘も grep で検証してから起案する」作法の重要性が再証明された。本バッチで
+クラウド誤り 10 を CLAUDE.md に明文化 (誤り 9 直後)。
+
+**出典**: カズヤ共有の ChatGPT Round 2 レビュー (2026-05-27)、
+`docs/runs/F-docs-update-chatgpt-round2-and-error10/REPORT.md` + grep 裏取り JSON 4 件
+(grep_evidence_3_4 / title_guard_analysis / analysis_tokens_analysis / job_record_analysis)
+
+**ステータス**: `Resolved/タスク化` (新規 3 タスク + 既存 1 スコープ拡張で FUTURE_WORK 反映済、
+解消済 2 指摘は grep 確認、クラウド誤り 10 は CLAUDE.md に明文化済)
 
 ### 2026-05-27: Gemini 3.5 Flash API 影響範囲調査 — 破壊的変更の実態確定 (真因 b) (F-gemini-3.5-flash-api-audit)
 
@@ -963,9 +998,12 @@ F-f1-locale-key-fix の起案時、Claude Web 側 (3 AI 三角測量のレビュ
 - クラウド誤り 3 (直近のチャットしか振り返らず過去経緯無視、2026-05-02): 別系統
 - 「整合の説明であって検証ではない」(独立検証バッチの価値、CURRENT_STATE §7): 同根
 
-**ステータス**: `Resolved (記録済み + 訂正反映)` — F-f1-locale-key-fix の
-REPORT.md / DECISION_LOG / 本 4-A エントリで実害の正確な評価に訂正済。
-バグ自体は選択肢 1 で根本治療完了 (baseline 1417 維持)。
+**ステータス**: `Resolved (記録済み + 訂正反映 + CLAUDE.md 正本化)` —
+F-f1-locale-key-fix の REPORT.md / DECISION_LOG / 4-A エントリで実害の正確な評価に
+訂正済。バグ自体は選択肢 1 で根本治療完了 (baseline 1417 維持)。★ 2026-05-27
+(F-docs-update-chatgpt-round2-and-error10) で本誤りを **CLAUDE.md「クラウド誤り 10」
+セクションに明文化** (発生実例 4 件 1-N/1-O/1-P 回避/1-P.5 回避 + ChatGPT Round 2 で
+外部 AI 側でも発生を観察した実例を追加)。本 DISCUSSION_NOTES エントリが引き続き正本。
 
 **出典**:
 - F-f1-locale-key-fix CP-1 カズヤ判断 (2026-05-25、クラウド初期想定の訂正受容)

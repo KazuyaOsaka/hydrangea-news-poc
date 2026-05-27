@@ -1,6 +1,7 @@
 # CLAUDE.md — Claude Code 振る舞い指針
 
-最終更新: 2026-05-08 (F-particular-angle-redesign-extension — クラウド誤り 9 追加)
+最終更新: 2026-05-27 (F-docs-update-chatgpt-round2-and-error10 — クラウド誤り 10 明文化。
+旧: 2026-05-08 F-particular-angle-redesign-extension — クラウド誤り 9 追加)
 
 > このファイルは Claude Code がリポジトリで作業する際の **振る舞い指針** に
 > 集約されている。プロジェクト概要・現フェーズ・不変原則 5 つ・触ってよい /
@@ -249,8 +250,8 @@ Python コード内にプロンプト文字列を直書きしない。
 過去のクラウドインスタンスが繰り返してきた典型的な誤りを、再発防止のため
 本セクションに集約する。各誤りの詳細 (背景・経緯・防止策) は
 `docs/DISCUSSION_NOTES.md` の該当エントリを正本として参照すること
-(クラウド誤り 1-7 は 2026-05-02 〜 2026-05-03 に登録、本セクションに
-本日新規登録の誤り 9 を追加)。
+(クラウド誤り 1-7 は 2026-05-02 〜 2026-05-03 に登録、誤り 9 は 2026-05-08 に登録、
+誤り 10 は 2026-05-25 に DISCUSSION_NOTES に登録 → 2026-05-27 に本セクションへ明文化)。
 
 ### クラウド誤り 9: 各論コントロールへの誘惑 (2026-05-08 記録、F-particular-angle-redesign-extension)
 
@@ -282,6 +283,60 @@ Python コード内にプロンプト文字列を直書きしない。
 (各論コントロールへの誘惑)」エントリ、`docs/PARTICULAR_ANGLE_DEFINITION.md`
 セクション 3.7「系統別の台本表現の方向性」(LLM の知性に委ねる設計哲学)。
 
+### クラウド誤り 10: Project Knowledge / 外部レビュー / 自分の過去提案の鵜呑み — 検証なしの仮説受容 (2026-05-25 記録、F-f1-locale-key-fix。2026-05-27 に F-docs-update-chatgpt-round2-and-error10 で CLAUDE.md に明文化)
+
+**誤り**: 起案前に Project Knowledge / 外部 AI レビュー / 自分の過去提案を
+grep + 実コード検証せず、「整合の説明」を「検証」と取り違える。バグの方向・
+実害・解消状況を、当該コードの全分岐をトレースせず推定で断定する。
+
+**動機**: レビュー指摘や事前情報が「もっともらしい」ため、検証コストを省いて
+そのまま起案に転記したくなる (= 善意の効率化、放置すると誤った前提が
+DECISION_LOG / CURRENT_STATE に転記され将来の保守者を誤導する)。
+
+**発生実例** (= 外部 AI も同じ罠にハマる):
+- **1 回目** (F-f1-locale-key-fix / 2026-05-25): 外部レビュー集約役が F-1 locale key
+  bug の実害を「false positive (不当に高い誤爆)」と断定 → grep で実態は
+  「false negative 方向 (中間解像度 8〜12 点の永久喪失)」と判明、緊急度を訂正。
+- **2 回目** (F-jp-coverage-cache-judgement-persist / 2026-05-26): レビュー指摘
+  「Recall 劣化リスク / 監査不能化」を grep + 実測なしに受容 → CP-1 で実害訂正
+  (Recall 劣化なし、真の defect は cache round-trip のデータ忠実性欠落)。
+- **ChatGPT Round 2 レビュー** (2026-05-27、F-docs-update-chatgpt-round2-and-error10):
+  ★ **ChatGPT 側でも誤り 10 系統発生** — 古い Project Knowledge 由来で「既に
+  解消済み」の問題 (指摘 3 = F-1 locale key / 指摘 4 = F-13.B cache 永続化) を
+  「新規発見」として指摘。**外部 AI レビューも検証対象**である根拠の追加実例。
+
+**害**: バグの緊急度・方向を誤評価し、誤った実害記述が docs 正本に転記されると、
+将来の保守者が逆方向の本質を見失う。解消済みの問題を未解消と誤認し重複作業を
+生む (ChatGPT Round 2 で実際に発生)。
+
+**回避作法** (1-P / 1-P.5 で機能した好例 = grep-first が誤りを未然に防いだ):
+- **起案前 grep を必須化**: 外部レビュー指摘・自分の過去提案・docs 正本との
+  整合性を grep + 実コード精読で検証してから起案する。
+- **仮説と明示**: Project Knowledge / 過去ログ / 事前情報は **仮説** として扱い、
+  コードで検証する (バッチプロンプトに「起案前仮説」セクションを設けるのが望ましい)。
+- **調査専用バッチへの縮小**: 仮説と実態の乖離リスクが大きい場合、改修なしの
+  調査専用バッチに縮小 (F-script-writer-target-enemy-fix-investigate /
+  F-gemini-3.5-flash-api-audit が好例 = grep-first で誤り 10 の再発を回避)。
+- **CP-1 で起案者前提を訂正する権限**: Claude Code が Task B 調査で起案者前提を
+  grep + 実測で訂正できる運用 (本バッチでも「F-pipeline-health-check」呼称の
+  存在しないエントリを正本 F-periodic-health-check に訂正)。
+
+**メタ的含意**: クラウド誤り 10 は Hydrangea ミッション「検証可能な事実で殴る」を
+**メタレベルでクラウド自身が体現すべき作法**。外部レビュー (3 AI 三角測量 /
+ChatGPT Round N / Gemini Round N) も「整合の説明であって検証ではない」原則の
+適用対象であり、grep で裏取りしてから起案する。
+
+**カズヤ哲学** (CURRENT_STATE §7): 「整合の説明であって検証ではない」/
+Project Knowledge・事前情報を鵜呑みにしない。
+
+**出典**: `docs/DISCUSSION_NOTES.md` 「2026-05-25: クラウド誤り 10 —
+Project Knowledge 過信 + grep 不足」エントリ (正本)、F-f1-locale-key-fix (1 回目記録) /
+F-jp-coverage-cache-judgement-persist (2 回目記録) /
+F-script-writer-target-enemy-fix-investigate (3 回目回避、grep-first 好例) /
+F-gemini-3.5-flash-api-audit (4 回目回避、外部 AI レビュー側で発生したパターンを観察) /
+F-docs-update-chatgpt-round2-and-error10 (ChatGPT Round 2 で外部 AI 側発生を観察 +
+本誤りを CLAUDE.md に明文化)。
+
 ---
 
 ## 重要な参照 (重複排除のための導線)
@@ -297,7 +352,7 @@ Python コード内にプロンプト文字列を直書きしない。
 | 過去の意思決定の経緯 | `docs/DECISION_LOG.md` |
 | 残課題リスト | `docs/FUTURE_WORK.md` |
 | 議論中の未確定メモ | `docs/DISCUSSION_NOTES.md` |
-| クラウド誤り 1-7 / 9 の詳細 | `docs/DISCUSSION_NOTES.md` (本ファイルにも誤り 9 記載) |
+| クラウド誤り 1-7 / 9 / 10 の詳細 | `docs/DISCUSSION_NOTES.md` (本ファイルにも誤り 9 / 10 記載) |
 | アーキテクチャ全体像 | `docs/ARCHITECTURE.md` |
 | 技術的負債リスト | `docs/TECH_DEBT.md` |
 | リファクタ計画 (歴史的記録) | `docs/REFACTORING_PLAN.md` |

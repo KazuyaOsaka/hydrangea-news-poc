@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-27 (★ F-gemini-3.5-flash-api-audit 完了、Phase A.5-3a-verify ゲート完了後の **19 つ目のバッチ (1-P.5)**。2026-05 GA リリースの Gemini 3.5 Flash (Stable) を Narrative primary (QUALITY Tier1) 候補に追加する前提として、API 破壊的変更の影響範囲を **grep + コード精読 + 公式仕様対比で調査専用 (改修なし)**。起案前事前情報 (2026-05-19 Google I/O 由来) は temperature/top_p/top_k 非推奨化・thinking_budget→thinking_level rename・Function calling 厳密マッチ必須化・Thought preservation 自動 ON の 4 破壊的変更候補を挙げたが、★ クラウド誤り 10 (事前情報の過信 + grep 不足) の再発回避のため仮説として grep で検証。**真因 b 確定 (API 破壊的変更は無いか軽微)**: top_p/top_k/thinking_budget/thinking_level/カスタム function calling/response_schema すべて **0 件**。temperature は analysis client (本番未起動) + 手動スクリプトのみ、本番生成系は `generation_config=None` で API パラメータ非指定。`tools=` は Grounding 組込み `google_search` 限定。構造的理由 = (a) Tier ベースのモデル ID 解決で本番生成系は API パラメータ非指定、(b) 構造化出力 API でなく free-text JSON パース、(c) カスタム function calling 不使用で `tools=` は Grounding 限定 = 破壊的変更への露出が構造的に最小。RPD シミュレーション = 3.5 Flash を Narrative primary 投入で 20-40 calls/日 << RPD 10K (250-500x 余裕)。★ **CP-1 カズヤ判断 = Y1 (F-gemini-quality-tier-poc に直進)** [クラウド推奨]: migration 不要、候補リスト = 3.5 Flash 追加 + 3 Flash Preview 削除。Y2 (部分 migration) / Y3 (全面 migration) は解消対象が本番パスに実在せず不採用。★★ **クラウド誤り 10 系統の検証**: 起案前事前情報を仮説として grep で検証 → Hydrangea には当てはまらないと確定 = grep-first 作法が機能 (F-script-writer-target-enemy に続く好例)。本バッチは調査専用のため `src/` `tests/` `configs/` `scripts/` `CLAUDE.md` `.env` `.env.example` **0 行変更**、baseline **1417 passed 維持** (自動維持)、`docs/runs/` 配下に調査出力 6 件を新規作成。不変原則 1-5 完全遵守 (例外条件適用なし)。次バッチ最有力 = F-gemini-quality-tier-poc (1-Q、Narrative primary 確定) → X1 (新ルート本番配線、target_enemy 解消統合))
+最終更新: 2026-05-27 (★ F-docs-update-chatgpt-round2-and-error10 完了、Phase A.5-3a-verify ゲート完了後の **20 つ目のバッチ (1-P.6)**、**docs-only (改修なし)**。ChatGPT が Gemini モデル布陣セカンドオピニオン依頼を保留して **Phase A.5-3b 第一作前のコードレビュー Round 2 (7 指摘) を返却**。docs 正本との **grep 裏取り照合** (★ クラウド誤り 10 系統の作法 = 起案者前提も検証対象) を実施し、新規 3 タスク起案 + 既存 1 タスクのスコープ拡張 + クラウド誤り 10 の CLAUDE.md 明文化を行う。**照合結果**: 指摘 3 (F-1 locale key) / 指摘 4 (F-13.B cache 永続化) = **grep で解消済確認** (editorial_mission_filter.py:163 `get("japan")` + db.py:120-121 + verifier 2 列対応) = ★ **古い Project Knowledge 由来で ChatGPT 側でもクラウド誤り 10 系統発生** (修正前スナップショットを「新規発見」と誤認); 指摘 1 = 既に FUTURE_WORK 登録済 (F-evidence-jp-coverage-audit-trail); 指摘 2 (title_generator 誇大タイトル) / 指摘 6 (analysis max_output_tokens) / 指摘 7 (JobRecord AV path) = **REAL → 新規 3 タスク** = **F-title-guard-coverage-claim-policy ★★高** (perspective_gap に silence_gap 絶対表現が出力され得る、第一作着手前必須) + **F-analysis-max-tokens-tune ★中** (factory.py:516 default 2000 → 4096 推奨、env 可) + **F-job-record-av-path ★低** (JobRecord AV path が jobs DDL 未保存); 指摘 5 (model drift + retry 観測) = **F-periodic-health-check スコープ拡張** (★ 起案の「F-pipeline-health-check」呼称は該当エントリ不在 = 正本 F-periodic-health-check に統合)。★★ **クラウド誤り 10 系統を CLAUDE.md に明文化** (誤り 9 直後、発生実例 4 件 1-N/1-O/1-P 回避/1-P.5 回避 + ChatGPT Round 2 で外部 AI 側でも発生を観察した実例)。起案前提を 2 点訂正 (指摘 6 default 箇所 = factory.py:516 / 指摘 5 受け皿エントリ名)。本バッチは docs-only のため `src/` `tests/` `configs/` `scripts/` `.env` `.env.example` **0 行変更** (CLAUDE.md は明文化対象 = 不変原則対象外)、baseline **1417 passed 維持** (自動維持、Task A で確認済 99.31s)、`docs/runs/` 配下に出力 6 件を新規作成。不変原則 1-5 完全遵守 (例外条件適用なし)。次バッチ最有力 = F-gemini-quality-tier-poc (1-Q、Narrative primary 確定) → X1 (新ルート本番配線、target_enemy 解消統合) → F-title-guard-coverage-claim-policy (第一作着手前必須))
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -75,6 +75,14 @@ response_schema = 全て 0 件)。構造的理由 = Tier ベース解決 + free-
 に直進)。起案前事前情報を grep で検証する作法が機能 (クラウド誤り 10 系統の検証)。
 改修なし、baseline 1417 維持。
 
+★ 2026-05-27 (F-docs-update-chatgpt-round2-and-error10、docs-only) で **ChatGPT
+Round 2 レビュー (7 指摘) を docs 正本と grep 裏取り照合**。指摘 3/4 = 解消済確認
+(古い Project Knowledge 由来 = ★ ChatGPT 側でもクラウド誤り 10 系統発生)、指摘 2/6/7
+= 新規 3 タスク化 (F-title-guard-coverage-claim-policy 高 / F-analysis-max-tokens-tune
+中 / F-job-record-av-path 低)、指摘 5 = F-periodic-health-check スコープ拡張。★★
+**クラウド誤り 10 を CLAUDE.md に明文化** (外部 AI レビューも grep 検証対象である根拠)。
+改修なし、baseline 1417 維持。
+
 ### 系統 1 (silence_gap): 完全な情報空白 — 広範事件も特定角度も日本主要メディアで未報道
 
 完全な情報空白で、Hydrangea コアミッションど真ん中。台本表現は「日本では報じられ
@@ -143,32 +151,34 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
 
 ## 1. リポジトリ状態
 
-- **main HEAD コミット**: `07dc175` (Merge branch 'feature/F-script-writer-target-enemy-fix-investigate')。F-gemini-3.5-flash-api-audit は feature ブランチ `feature/F-gemini-3.5-flash-api-audit` で Task A-F 完了、本完了レポート提示後にカズヤ承認 → commit/merge 実行 (Task G)。★ 本バッチは調査専用 (改修なし) のため src/ への影響なし
+- **main HEAD コミット**: `2f99ebd` (Merge branch 'feature/F-gemini-3.5-flash-api-audit')。F-docs-update-chatgpt-round2-and-error10 は feature ブランチ `feature/F-docs-update-chatgpt-round2-and-error10` で Task A-G 完了、本完了レポート提示後にカズヤ承認 → commit/merge 実行 (Task G)。★ 本バッチは docs-only (改修なし) のため src/ への影響なし
 - **直近 5 件のログ (main、Task G merge 前)**:
   ```
+  2f99ebd Merge branch 'feature/F-gemini-3.5-flash-api-audit'
+  de06887 investigate: F-gemini-3.5-flash-api-audit Gemini 3.5 Flash API 影響範囲調査 (調査専用)
   07dc175 Merge branch 'feature/F-script-writer-target-enemy-fix-investigate'
   1409e0a investigate: F-script-writer-target-enemy-fix-investigate target_enemy 問題の実態調査 (調査専用)
   4aa6f54 Merge branch 'feature/F-jp-coverage-cache-judgement-persist'
-  817ba66 feat: F-jp-coverage-cache-judgement-persist F-13.B llm_judgement の 24h cache 永続化
-  d6ed916 Merge branch 'feature/F-f1-locale-key-fix'
   ```
-- **baseline テスト数**: **1417 passed** (★ F-gemini-3.5-flash-api-audit は調査専用 = `src/` `tests/` `configs/` `scripts/` `CLAUDE.md` `.env` `.env.example` 0 行変更のため自動維持。Task A で `python -m pytest tests/ -x --tb=no -q` = 1417 passed を確認済 = 115.23s)
-- **DB schema 変更**: なし (本バッチ改修なし。前々バッチ F-jp-coverage-cache-judgement-persist で `jp_coverage_cache` に `llm_judgement` / `llm_judgement_text` 追加 + idempotent migration 適用済)
+- **baseline テスト数**: **1417 passed** (★ F-docs-update-chatgpt-round2-and-error10 は docs-only = `src/` `tests/` `configs/` `scripts/` `.env` `.env.example` 0 行変更のため自動維持。CLAUDE.md はクラウド誤り 10 明文化のため変更。Task A で `python -m pytest tests/ -x --tb=no -q` = 1417 passed を確認済 = 99.31s)
+- **DB schema 変更**: なし (本バッチ改修なし。3 つ前のバッチ F-jp-coverage-cache-judgement-persist で `jp_coverage_cache` に `llm_judgement` / `llm_judgement_text` 追加 + idempotent migration 適用済)
 
 ## 2. 現在のフェーズ
 
-- **Phase**: Phase A.5-3a-verify **完了** (2026-05-07、ゲート完了後 19 バッチ目が本バッチ)
-- **進行中バッチ**: なし (F-gemini-3.5-flash-api-audit 完了直後、Task F 完了レポート提示 → カズヤ承認待ち → commit/merge Task G)
-- **次バッチ候補と推奨** (★ F-gemini-3.5-flash-api-audit / 2026-05-27 更新):
+- **Phase**: Phase A.5-3a-verify **完了** (2026-05-07、ゲート完了後 20 バッチ目が本バッチ)
+- **進行中バッチ**: なし (F-docs-update-chatgpt-round2-and-error10 完了直後、Task G 完了レポート提示 → カズヤ承認待ち → commit/merge Task G)
+- **次バッチ候補と推奨** (★ F-docs-update-chatgpt-round2-and-error10 / 2026-05-27 更新):
   - **1st: F-gemini-quality-tier-poc (1-Q)** ★★高 最有力 (★ 本バッチ CP-1 = Y1 で直進確定)。Narrative primary = QUALITY Tier1 のモデル選定 PoC。★ 候補リスト更新済 = `gemini-3.5-flash` (Stable、新主軸本命) 追加 + `gemini-3-flash-preview` 削除 + `gemini-2.5-flash` (安定 fallback ベースライン) + `gemini-3.1-pro` (Editorial Guardian 別枠局所)。Lightweight Tier1 切替判断 (migrate-emergency CP-1 保留分、本命 = gemini-3.1-flash-lite RPD 150K) + axis_5 採点 + publish_gate_flags 構造設計。API 破壊的変更なし確定 = migration 不要で投入可能。3-5h
   - **2nd: X1 = particular_angle_metadata + sontaku_signals の本番配線判断** ★★★高 (★ F-script-writer-target-enemy CP-1 で target_enemy 解消を統合)。新ルート `generate_script_with_analysis` を本番起動し、`ParticularAngleMetadata` / `SontakuSignals` を AnalysisResult に組込んで script_writer 新ルートに渡す。**新ルート起動で target_enemy 含む旧ルートの仮想敵/煽り framing が production から自動退役**。verify_two_stage 本番配線判断 + F-stream-2-filter-design と密接に関連。工数 8-16h
+  - **2.5th (★ 第一作着手前必須): F-title-guard-coverage-claim-policy** ★★高 (ChatGPT Round 2 / 2026-05-27 起案)。title_generator.py の `is_strong` ゲートが `perspective_gap_score >= 3` でも真になり、系統 2 (perspective_gap = 候補A) の事象に silence_gap 絶対表現「日本では報道されない」「日本で無報道」(L136/149/203/380/394) が出力され得る。`manual_poc/` 配下の coverage_claim_policy 構造データ (allowed_claim_level / forbidden_title_claims) + 生成後 title_layer_guard で虚偽防止 (各論プロンプト制御でなく構造データ = クラウド誤り 9 回避)。3-5h
   - **3rd: Phase A.5-3b 第一作起案** ★ (緊急度 高、確定モデルで実装。候補A cls-6889e9e1c7ac 手動 event 固定 + 実台本生成 + perspective_gap framing + axis_5 採点)
   - **4th: F-evidence-jp-coverage-audit-trail** ★中 (F-jp-coverage-cache-judgement-persist で分離、案 B 単独)。score_breakdown["jp_coverage_verification"] に has_jp_coverage/matched_domains/matched_tier/llm_judgement を積み evidence.json 証跡化 (evidence_writer 不変)。cache lossless 化が前提として整済。新機能のため緊急度 中
   - **5th: F-grounding-determinism-audit** ★ (緊急度 中、broad Grounding API の WL ドメイン返却率 run 間分散の集約戦略検討)
   - **6th: 第一作公開前の高リスク事実検証ワークフロー** ★ (緊急度 中、ADR-0003 由来、Phase A.5-3b と並走。★ Editorial Guardian = gemini-3.1-pro RPD 250 の配線判断はここで実施)
-  - **7th: F-periodic-health-check** ★ (緊急度 中、Phase A.5-3d 着手時、cron 完全自動投稿の前提)
+  - **7th: F-periodic-health-check** ★ (緊急度 中、Phase A.5-3d 着手時、cron 完全自動投稿の前提。★ ChatGPT Round 2 指摘 5 で **tier fallback / retry 観測強化スコープを統合** = どの Tier が何回落ちたかの runtime snapshot)
+  - **7.5th: F-analysis-max-tokens-tune** ★中 (ChatGPT Round 2 / 2026-05-27 起案)。factory.py:516 default 2000 → 4096 推奨。Phase A.5-3b 実行時 env 指定 (改修なし) → X1 配線時 default 化判断
   - **8th: 本番配線判断バッチ群 (X1 に内包しない残分、並走可)**: verify_two_stage 本番配線 / F-stream-2-filter-design 責務範囲再評価
-  - **9th: config.py/factory.py default 不一致整合** ★低 / locale key 定数一元化 (選択肢 3) ★低 / scripts/verify_jp_coverage_measure.py inline schema doc-drift 解消 ★低 (runtime 影響なし、別 doc/refactor or quality-tier-poc 同時対応)
+  - **9th: config.py/factory.py default 不一致整合** ★低 / locale key 定数一元化 (選択肢 3) ★低 / scripts/verify_jp_coverage_measure.py inline schema doc-drift 解消 ★低 / **F-job-record-av-path** ★低 (ChatGPT Round 2 指摘 7、JobRecord AV path が jobs DDL 未保存、Phase A.5-3c DB schema 整理に統合) (いずれも runtime 影響なし、別 doc/refactor or quality-tier-poc / Phase A.5-3c 同時対応)
 - **推奨フロー**:
   - commit/merge (本完了レポート提示 → カズヤ承認後)
     → **F-gemini-quality-tier-poc (1-Q、Narrative primary 確定 = gemini-3.5-flash 本命、最優先)**
@@ -179,13 +189,15 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
   1. ~~F-trial-run-candidate-a-reverify~~ ✅ **完了 (2026-05-19、前提最終確定、候補A perspective_gap 維持)**
   2. ~~F-image-prompt-spec スコープ再定義~~ ✅ **完了 (2026-05-18、ADR 3 件 + schema 設計)**
   3. ~~F-gemini-model-migrate-emergency~~ ✅ **完了 (2026-05-19)** + ~~F-gemini-3.5-flash-api-audit~~ ✅ **完了 (2026-05-27、API 破壊的変更なし確定 = 真因 b)** + ★ **F-gemini-quality-tier-poc** (Narrative primary 確定 = gemini-3.5-flash 本命 + Lightweight Tier1 切替判断、第一作起案前必須、1st 最有力、3-5h)
-  4. ElevenLabs 声選定 (着手前 30 分作業、既存登録済み、カズヤ手作業)
-  5. Remotion セットアップ (第一作で Claude Code に書かせる、Node 環境カズヤ手動準備、ADR-0002 D-minimal)
+  4. ★ **F-title-guard-coverage-claim-policy** (ChatGPT Round 2 / 2026-05-27 起案、★★高、第一作着手前必須)。perspective_gap (候補A) に silence_gap 絶対表現が出力されるリスクを coverage_claim_policy 構造データ + 生成後 guard で防止。3-5h
+  5. ★ **F-analysis-max-tokens-tune** (ChatGPT Round 2 / 2026-05-27 起案、★中)。第一作実行時に env `ANALYSIS_LLM_MAX_TOKENS=4096` 指定 (改修なし、JSON 途中切断回避)
+  6. ElevenLabs 声選定 (着手前 30 分作業、既存登録済み、カズヤ手作業)
+  7. Remotion セットアップ (第一作で Claude Code に書かせる、Node 環境カズヤ手動準備、ADR-0002 D-minimal)
 
 ### Phase A.5-3a-verify ロードマップ (★ F-gemini-3.5-flash-api-audit / 2026-05-27 更新版)
 
 **ゲート完了**: 1-A〜1-D''' 全段階完了で Phase A.5-3a-verify ゲート完了 (2026-05-07)。
-本バッチはゲート完了後の **19 つ目のバッチ**。
+本バッチはゲート完了後の **20 つ目のバッチ**。
 
 | 段階 | バッチ | 状態 | 概要 |
 |---|---|---|---|
@@ -196,7 +208,9 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
 | 1-O | F-jp-coverage-cache-judgement-persist | ✅ 完了 (2026-05-26) | 3 AI 三角測量由来で F-13.B の llm_judgement cache 永続化欠落を案 A で根本治療、判定ロジック不変。CP-1 = 実害訂正 + クラウド誤り 10 の 2 回目発生記録。baseline 1417 維持 |
 | 1-P | F-script-writer-target-enemy-fix-investigate | ✅ 完了 (2026-05-26、調査専用) | Gemini Round 1 独自指摘の target_enemy 不整合問題を調査専用 (改修なし) で実態確認。真因 a 確定 (旧ルート稼働 + 不変原則 2 で修正不可、新ルートは設計上排除済み)。CP-1 = X1 (新ルート配線統合)。クラウド誤り 10 の 3 回目発生なし。baseline 1417 維持、src/ 0 行変更 |
 | **1-P.5** | **F-gemini-3.5-flash-api-audit** | ✅ **完了 (2026-05-27、調査専用)** | **ゲート完了後 19 つ目**。Gemini 3.5 Flash (Stable) の API 破壊的変更の影響範囲を調査専用 (改修なし) で実態確認。**真因 b 確定 (破壊的変更は無いか軽微)** = top_p/top_k/thinking/カスタム function calling/response_schema 全て 0 件、本番生成系は generation_config=None。CP-1 = Y1 (quality-tier-poc に直進、migration 不要)。候補リスト = 3.5 Flash 追加 + 3 Flash Preview 削除。★ 起案前事前情報を grep で検証する作法が機能 (クラウド誤り 10 系統の検証)。baseline 1417 維持、src/ 0 行変更 |
+| **1-P.6** | **F-docs-update-chatgpt-round2-and-error10** | ✅ **完了 (2026-05-27、docs-only)** | **ゲート完了後 20 つ目**。ChatGPT Round 2 レビュー (7 指摘) を docs 正本と grep 裏取り照合。指摘 3/4 = 解消済確認 (古い Project Knowledge = ★ ChatGPT 側でもクラウド誤り 10 系統発生)、指摘 2/6/7 = 新規 3 タスク (F-title-guard-coverage-claim-policy 高 / F-analysis-max-tokens-tune 中 / F-job-record-av-path 低)、指摘 5 = F-periodic-health-check スコープ拡張、指摘 1 = 既登録。★★ クラウド誤り 10 を CLAUDE.md に明文化 (外部 AI レビューも grep 検証対象)。baseline 1417 維持、src/ tests/ configs/ scripts/ .env 0 行変更 |
 | 1-Q | F-gemini-quality-tier-poc | ★★高 (次バッチ最有力) | Narrative primary モデル選定 PoC (gemini-3.5-flash 本命) + Lightweight Tier1 切替判断 + axis_5 + publish_gate_flags 設計 |
+| 1-Q.5 | F-title-guard-coverage-claim-policy | ★★高 (第一作着手前必須) | perspective_gap に silence_gap 絶対表現が出力されるリスクを coverage_claim_policy 構造データ + 生成後 guard で防止 (ChatGPT Round 2 指摘 2) |
 | 1-R | X1 = particular_angle_metadata + sontaku_signals 本番配線 (target_enemy 解消統合) | ★★★高 | 新ルート本番起動 → 旧ルートの target_enemy/煽り framing 退役 |
 | 1-S | Phase A.5-3b 第一作起案 | ★ 緊急度 高 (確定モデルで実装) | 候補A 手動固定 + perspective_gap framing + axis_5 採点 |
 | 1-T | F-evidence-jp-coverage-audit-trail / F-grounding-determinism-audit / 高リスク事実検証 (Editorial Guardian 配線) / 本番配線残分 | ★ 並走候補 | evidence 監査トレース新設 / broad Grounding 分散集約 / gemini-3.1-pro 配線 / verify_two_stage 配線 |
@@ -297,9 +311,12 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 
 - **「外部レビュー / 起案前事前情報も grep + コード精読で検証してから起案する」** (★ クラウド誤り 10、
   F-f1-locale-key-fix / F-jp-coverage-cache で 2 回発生 → ★★ F-script-writer-target-enemy
-  (2026-05-26) + **F-gemini-3.5-flash-api-audit (2026-05-27)** で本作法が機能した好例: 調査専用
+  (2026-05-26) + F-gemini-3.5-flash-api-audit (2026-05-27) で本作法が機能した好例: 調査専用
   バッチで grep-first を徹底し、起案前事前情報 (Gemini Round 1 / 2026-05-19 Google I/O) を実コードで
-  検証 = クラウド誤り 10 の再発なし)
+  検証 = クラウド誤り 10 の再発なし)。★★ **2026-05-27 (F-docs-update-chatgpt-round2-and-error10) で
+  クラウド誤り 10 を CLAUDE.md に明文化** + **ChatGPT Round 2 レビューでも誤り 10 系統が発生**
+  (古い Project Knowledge 由来で解消済 2 件を「新規発見」と誤認) = 外部 AI レビューも grep 検証対象
+  である根拠の追加実例)
 - **「設計判断と実装の分離」+「1 バッチで欲張らない」** (★ F-gemini-model-audit / F-gemini-3.5-flash-api-audit)
   — モデル戦略は audit (調査) → migrate-emergency (緊急実装) → quality-tier-poc (品質確定) に分割。
   3.5 Flash の API 影響調査と PoC を分離し、改修なしの調査専用バッチに縮小
@@ -330,6 +347,7 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 - 編集ミッションフィルタ設計 (F-13 隠れ層含む) → `docs/EDITORIAL_MISSION_FILTER_DESIGN.md`
 - ★ 「特定角度」概念正典 → `docs/PARTICULAR_ANGLE_DEFINITION.md`
 - Claude Code 振る舞い指針 → `CLAUDE.md`
+- ★ **F-docs-update-chatgpt-round2-and-error10 REPORT + grep 裏取り出力** → `docs/runs/F-docs-update-chatgpt-round2-and-error10/REPORT.md` + grep_evidence_3_4.json + title_guard_analysis.json + analysis_tokens_analysis.json + job_record_analysis.json + environment_snapshot.json
 - ★ **F-gemini-3.5-flash-api-audit REPORT + 調査出力** → `docs/runs/F-gemini-3.5-flash-api-audit/REPORT.md` + grep_inventory.json + current_usage.json + adoption_simulation.json + breaking_change_analysis.json + environment_snapshot.json
 - F-script-writer-target-enemy-fix-investigate REPORT → `docs/runs/F-script-writer-target-enemy-fix-investigate/REPORT.md`
 - F-gemini-model-audit REPORT (モデル戦略調査の先行) → `docs/runs/F-gemini-model-audit/REPORT.md`
@@ -340,16 +358,17 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 
 *このドキュメントは F-state-protocol (2026-05-01) で導入。Claude Code が
 バッチ完了時に全置換更新する運用 (BATCH_PROTOCOL.md Task 5)。
-F-gemini-3.5-flash-api-audit (2026-05-27) は **ゲート完了後の 19 つ目のバッチ (1-P.5)**。
-2026-05 GA リリースの Gemini 3.5 Flash (Stable) を Narrative primary 候補に追加する前提として、
-API 破壊的変更の影響範囲を ★ クラウド誤り 10 の再発回避のため **調査専用バッチ (改修なし)** で
-grep + コード精読 + 公式仕様対比により実態確認。**真因 b 確定 (API 破壊的変更は無いか軽微)** =
-事前情報の 4 破壊的変更候補 + structured outputs はいずれも Hydrangea 本番パスに該当箇所ほぼゼロ
-(top_p/top_k/thinking/カスタム function calling/response_schema 全て 0 件)。構造的理由 = Tier ベース
-解決 + free-text JSON パース + Grounding 限定 tools。CP-1 カズヤ判断 = Y1 (F-gemini-quality-tier-poc
-に直進、migration 不要)、候補リスト = 3.5 Flash 追加 + 3 Flash Preview 削除。★★ クラウド誤り 10 系統の
-検証 = 起案前事前情報を仮説として grep で検証 → Hydrangea には当てはまらないと確定 = grep-first 作法が
-機能した好例。本バッチは調査専用のため `src/` `tests/` `configs/` `scripts/` `CLAUDE.md` `.env`
-`.env.example` 0 行変更、baseline 1417 passed 維持 (自動維持)、`docs/runs/` 配下に調査出力 6 件を
-新規作成。不変原則 1-5 完全遵守 (例外条件適用なし)。
+F-docs-update-chatgpt-round2-and-error10 (2026-05-27) は **ゲート完了後の 20 つ目のバッチ (1-P.6)**、
+**docs-only (改修なし)**。ChatGPT が Gemini モデル布陣セカンドオピニオン依頼を保留して Phase A.5-3b
+第一作前のコードレビュー Round 2 (7 指摘) を返却。docs 正本との grep 裏取り照合 (★ クラウド誤り 10
+系統の作法 = 起案者前提も検証対象) を実施。指摘 3/4 (F-1 locale key / F-13.B cache 永続化) = 解消済確認
+(古い Project Knowledge 由来 = ★ ChatGPT 側でもクラウド誤り 10 系統発生)、指摘 1 = 既登録
+(F-evidence-jp-coverage-audit-trail)、指摘 2/6/7 = 新規 3 タスク (F-title-guard-coverage-claim-policy
+★★高 / F-analysis-max-tokens-tune ★中 / F-job-record-av-path ★低)、指摘 5 = F-periodic-health-check
+スコープ拡張 (★ 起案の「F-pipeline-health-check」呼称を正本 F-periodic-health-check に統合)。★★
+クラウド誤り 10 系統を CLAUDE.md に明文化 (誤り 9 直後、発生実例 4 件 + ChatGPT Round 2 で外部 AI 側
+発生を観察)。起案前提を 2 点訂正 (指摘 6 default 箇所 = factory.py:516 / 指摘 5 受け皿エントリ名)。
+本バッチは docs-only のため `src/` `tests/` `configs/` `scripts/` `.env` `.env.example` 0 行変更
+(CLAUDE.md は明文化対象 = 不変原則対象外)、baseline 1417 passed 維持 (自動維持)、`docs/runs/` 配下に
+出力 6 件を新規作成。不変原則 1-5 完全遵守 (例外条件適用なし)。
 過去の経緯は DECISION_LOG.md / FUTURE_WORK.md / DISCUSSION_NOTES.md を参照。*
