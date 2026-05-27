@@ -20,6 +20,40 @@
 
 ## 未分類 (Active)
 
+### 2026-05-27: Gemini 3.5 Flash API 影響範囲調査 — 破壊的変更の実態確定 (真因 b) (F-gemini-3.5-flash-api-audit)
+
+**内容**: 2026-05 GA リリースの Gemini 3.5 Flash (Stable) を Narrative primary (QUALITY
+Tier1) 候補に追加する前提として、起案前事前情報 (2026-05-19 Google I/O 由来) の 4 破壊的変更
+候補 (temperature/top_p/top_k 非推奨化 / thinking_budget→thinking_level rename / Function
+calling 厳密マッチ必須化 / Thought preservation 自動 ON) を **調査専用バッチ** (改修なし) で
+grep + コード精読 + 公式仕様対比により検証:
+- **真因 b 確定 (API 破壊的変更は無いか軽微)**: top_p/top_k/thinking_budget/thinking_level/
+  カスタム function calling/response_schema すべて **0 件**。temperature は analysis client
+  (ANALYSIS_LAYER_ENABLED=false で本番未起動) + 手動スクリプトのみ。本番生成系は
+  `generation_config=None` で API パラメータ非指定。`tools=` は Grounding 組込み
+  `google_search` 限定 (カスタム function calling 非該当)。
+- **構造的理由**: (a) Tier ベースのモデル ID 解決で本番生成系は API パラメータ非指定、
+  (b) 構造化出力 API でなく free-text JSON パース、(c) カスタム function calling 不使用で
+  `tools=` は Grounding 限定 = 破壊的変更への露出が構造的に最小。
+- **RPD シミュレーション**: 3.5 Flash を Narrative primary 投入で 20-40 calls/日 << RPD 10K
+  (250-500x 余裕)。LIGHTWEIGHT Tier1 は gemini-3.1-flash-lite (RPD 150K) が本命。
+- **★ クラウド誤り 10 系統の検証**: 起案前事前情報を仮説として grep で検証 → Hydrangea には
+  当てはまらないと確定。F-script-writer-target-enemy に続き grep-first 作法が機能した好例
+  (事前情報そのものが誤りとは限らないが、Hydrangea への影響軽微が grep で確定)。
+
+**CP-1 カズヤ判断**: **Y1 (F-gemini-quality-tier-poc に直進)** [クラウド推奨]。migration 不要、
+候補リスト = 3.5 Flash 追加 + 3 Flash Preview 削除。★ UI で選択捕捉が得られず、クラウド推奨を
+既定として Task E/F を進行 (docs のみ・完全可逆、Task G commit/merge がカズヤ承認ゲート)。
+
+**出典**: カズヤ共有の公式仕様 (ai.google.dev/gemini-api/docs/models/gemini-3.5-flash) +
+レート制限実測 (2026-05-26)、`docs/runs/F-gemini-3.5-flash-api-audit/REPORT.md` +
+breaking_change_analysis.json、CP-1 (2026-05-27)
+
+**ステータス**: `Resolved/タスク化` (真因 b 確定 → F-gemini-quality-tier-poc 候補リスト更新に
+反映済み、migration バッチ不要)
+
+---
+
 ### 2026-05-26: target_enemy 問題の実態調査 (Gemini Round 1 由来) — 真因 a 確定 + X1 (新ルート配線統合) (F-script-writer-target-enemy-fix-investigate)
 
 **内容**: Gemini Round 1 (2026-05-25) が「`target_enemy` のプロンプト/モデル定義に不整合が

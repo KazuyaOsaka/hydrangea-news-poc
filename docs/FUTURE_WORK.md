@@ -133,14 +133,15 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 - ~~**F-script-writer-target-enemy-fix** ★★★高 (3 AI 三角測量レビュー / 2026-05-25 起案、Gemini 独自指摘) [★ 重複 2 エントリを統合]~~ → ★ **調査完了 (F-script-writer-target-enemy-fix-investigate / 2026-05-26)**。読み取り専用調査 (grep + コード精読 + 試運転観察) で実態確定。**真因 a 確定**: production 稼働中の旧ルート `write_script` が `target_enemy` (仮想敵) をハードコード候補リストから出力し viewer-facing な煽り framing を誘導するが、旧ルートは不変原則 2 で直接修正不可。新ルート `generate_script_with_analysis` は設計上既に target_enemy 排除済み (契約テストで固定) = **新ルート配線が唯一の sanctioned 解消経路**。CP-1 カズヤ判断 = **X1 (新ルート配線バッチに統合)** = 下記「particular_angle_metadata + sontaku_signals の本番配線判断」エントリに target_enemy 解消を吸収。★ 起案前 Project Knowledge 仮説 1-5 は grep で概ね CONFIRMED = クラウド誤り 10 の 3 回目発生なし (外部指摘を grep で検証してから起案する作法が機能)。詳細は `docs/runs/F-script-writer-target-enemy-fix-investigate/REPORT.md`。
 
-- **F-gemini-quality-tier-poc** ★★高 (F-gemini-model-audit / 2026-05-19 起案、★ **次バッチ最有力に格上げ** (F-gemini-model-migrate-emergency / 2026-05-19)、Phase A.5-3b 第一作起案前)
-  - 背景: 2026-05 Gemini モデル群更新で Narrative 主軸 (QUALITY Tier1) の最適モデルが未確定。候補 = `gemini-3-flash-preview` (RPD 10K) / `gemini-3.1-pro-preview` (RPD 250、Editorial Guardian 候補) / `gemini-2.5-flash` (RPD 10K、安定 fallback)。emergency 移行は Tier3 GA 化のみで primary 品質は別途 PoC で確定する必要がある (設計判断と実装の分離)。
+- **F-gemini-quality-tier-poc** ★★高 (F-gemini-model-audit / 2026-05-19 起案、★ **次バッチ最有力に格上げ** (F-gemini-model-migrate-emergency / 2026-05-19)、★ 候補リスト更新 (F-gemini-3.5-flash-api-audit / 2026-05-27)、Phase A.5-3b 第一作起案前)
+  - 背景: 2026-05 Gemini モデル群更新で Narrative 主軸 (QUALITY Tier1) の最適モデルが未確定。★ **候補リスト更新 (F-gemini-3.5-flash-api-audit / 2026-05-27)**: 2026-05 GA リリースの `gemini-3.5-flash` (Stable、RPD 10K/RPM 1K/TPM 2M、Thinking/FunctionCalling/StructuredOutputs/Grounding すべて Supported) を**候補に追加**し、`gemini-3-flash-preview` を**削除** (3.5 Flash Stable が GA 後継で代替可能)。確定候補 = `gemini-3.5-flash` (Stable、新主軸本命) / `gemini-2.5-flash` (RPD 10K、安定 fallback ベースライン) / `gemini-3.1-pro` (RPD 250、Editorial Guardian 候補、別枠局所使用)。emergency 移行は Tier3 GA 化のみで primary 品質は別途 PoC で確定する必要がある (設計判断と実装の分離)。★ API 破壊的変更は audit で**真因 b (無いか軽微)** 確定済 = migration 不要、API 互換問題なしで投入可能 (本番生成系は generation_config=None で API パラメータ非指定、構造化出力/カスタム function calling 未使用)。
   - ★ 内包課題 (F-gemini-model-migrate-emergency CP-1 判断 B からの保留分): **Lightweight 主軸 (Tier1) を `gemini-2.5-flash` (RPD 10K) → `gemini-3.1-flash-lite` (GA, RPD 150K = 15 倍) に切替えるか**を axis_5 品質検証で判断。emergency では「動くものを壊さない」優先で据置 (Gemini 2→3 系統変更は MEDIUM リスク、1 batch 試運転だけでは検証不十分)。本 PoC で Lightweight 4 role (garbage_filter/merge_batch/viral_filter/editorial_mission_filter) の出力品質を検証後に投入判断。
   - 対応案: Narrative 系 QUALITY モデル + Lightweight Tier1 候補の品質 PoC + axis_5 採点で主軸確定。Pro は Editorial Guardian (高リスク事実検証専用、局所使用) に限定し Quality 主軸にしない方針を検証。`publish_gate_flags` 構造設計も併せて検討。
   - 検討時期: Phase A.5-3b 第一作起案前 (起案で使う確定モデルが必要)、次バッチ最有力
   - 想定工数: 3-5h + axis_5 採点
-  - 関連ファイル: `src/llm/factory.py`, `.env`, `docs/runs/F-gemini-model-audit/REPORT.md` §8-3, `docs/runs/F-gemini-model-migrate-emergency/REPORT.md` §4
-  - 関連: F-gemini-model-audit (本起案元)、F-gemini-model-migrate-emergency (emergency 移行完了、Lightweight Tier1 切替を本 PoC に保留)、Phase A.5-3b 第一作起案
+  - 関連ファイル: `src/llm/factory.py`, `.env`, `docs/runs/F-gemini-model-audit/REPORT.md` §8-3, `docs/runs/F-gemini-model-migrate-emergency/REPORT.md` §4, `docs/runs/F-gemini-3.5-flash-api-audit/REPORT.md` §5 (候補リスト更新提案) + `adoption_simulation.json` (RPD/RPM 試算)
+  - ★ 追加留意点 (F-gemini-3.5-flash-api-audit / 2026-05-27): 3.5 Flash 投入時に Thought preservation 自動 ON による output_token/レイテンシ増加を PoC 試運転で実測観察 (機能破壊なし、改修不要のコスト面留意点)。LIGHTWEIGHT Tier1 切替は `gemini-3.1-flash-lite` (RPD 150K) が本命 (高頻度・低難度に spike 耐性、3.5 Flash は RPD 10K を Narrative primary と共有しないため使わない)。
+  - 関連: F-gemini-model-audit (本起案元)、F-gemini-model-migrate-emergency (emergency 移行完了、Lightweight Tier1 切替を本 PoC に保留)、F-gemini-3.5-flash-api-audit (★ 候補リスト更新 + API 破壊的変更なし確定)、Phase A.5-3b 第一作起案
 
 - **config.py/factory.py default 不一致整合** ★低 (F-gemini-model-audit §9-3 / F-gemini-model-migrate-emergency 2026-05-19 残置)
   - 背景: `src/shared/config.py:77-79` の GEMINI_MODEL_TIER2-4 default が `factory.py` default と不一致。runtime 影響なし (env が常に上書き) かつ 5/25 shutdown 非該当のため emergency 最小スコープから除外。
@@ -629,6 +630,37 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **F-gemini-3.5-flash-api-audit (Gemini 3.5 Flash API 影響範囲調査)**
+  (F-gemini-3.5-flash-api-audit / 2026-05-27 完了、調査専用・改修なし)
+  - 発生バッチ: 2026-05 GA リリースの Gemini 3.5 Flash (Stable) を Narrative
+    primary (QUALITY Tier1) 候補に追加する前提として、API 破壊的変更の影響範囲を
+    grep + コード精読 + 公式仕様対比で確認する調査専用バッチ。F-gemini-quality-tier-poc
+    (1-Q) の前提情報整備。
+  - 対応: main `07dc175` から branch 作成、baseline 1417 passed 確認。grep 棚卸し =
+    top_p/top_k/thinking_budget/thinking_level/カスタム function calling/response_schema
+    すべて **0 件**。temperature は analysis client (本番未起動) + 手動スクリプトのみ。
+    `tools=` は Grounding 組込み `google_search` 限定。`gemini-3.5-flash`/`gemini-3.1-pro`
+    はコードベースに **0 件** (未採用/未配線)。
+  - 判定: **真因 b (API 破壊的変更は無いか軽微) 確定** = migration 不要。構造的理由 =
+    (a) Tier ベースのモデル ID 解決で本番生成系は API パラメータ非指定 (generation_config=None)、
+    (b) 構造化出力 API でなく free-text JSON パース、(c) カスタム function calling 不使用で
+    `tools=` は Grounding 限定。RPD シミュレーション = 3.5 Flash を Narrative primary 投入で
+    20-40 calls/日 << RPD 10K (250-500x 余裕)。
+  - CP-1 カズヤ判断: **Y1 (F-gemini-quality-tier-poc に直進)** [クラウド推奨]。候補リスト =
+    3.5 Flash 追加 + 3 Flash Preview 削除。★ UI で選択捕捉が得られず、クラウド推奨を既定として
+    Task E/F を進行 (docs のみ・完全可逆、Task G commit/merge がカズヤ承認ゲート)。
+  - ★ クラウド誤り 10 系統の検証: 起案前事前情報 (2026-05-19 Google I/O 由来、4 破壊的変更
+    候補) を仮説として grep で検証 → Hydrangea には当てはまらないと確定 = grep-first 作法が機能。
+  - 結果: `src/` `tests/` `configs/` `scripts/` `CLAUDE.md` `.env` `.env.example` 0 行変更、
+    baseline **1417 passed 維持** (自動)、不変原則 1-5 完全遵守 (例外条件適用なし)。
+  - 新規/保留残課題: F-gemini-quality-tier-poc 候補リスト更新 (3.5 Flash 追加 + 3 Flash
+    Preview 削除) / 3.5 Flash 投入時の output_token・レイテンシ実測 (Thought preservation
+    自動 ON のコスト面、PoC 試運転で観察) / LIGHTWEIGHT Tier1 切替本命 = gemini-3.1-flash-lite
+    (RPD 150K)。
+  - 関連: `docs/runs/F-gemini-3.5-flash-api-audit/REPORT.md` + grep_inventory.json +
+    current_usage.json + adoption_simulation.json + breaking_change_analysis.json +
+    environment_snapshot.json
 
 - **F-gemini-model-migrate-emergency (5/25 shutdown 緊急対応 Tier3 GA 一括置換)**
   (F-gemini-model-migrate-emergency / 2026-05-19 完了)

@@ -1,0 +1,66 @@
+{
+  "batch": "F-gemini-3.5-flash-api-audit",
+  "task": "B-2 現状の Gemini モデル使用状況確定",
+  "date": "2026-05-27",
+  "resolution_path": ".env → src/shared/config.py → src/llm/factory.py (factory は os.getenv 直読で .env を最優先)",
+
+  "tier_hierarchy_resolved_from_env": {
+    "QUALITY_ROLES": {
+      "members": ["judge", "script", "article", "title", "analysis", "generation(未分類→QUALITY既定)"],
+      "Tier1": "gemini-3-flash-preview  [PREVIEW]  primary (= Narrative primary)",
+      "Tier2": "gemini-2.5-flash        [GA]",
+      "Tier3": "gemini-3.1-flash-lite   [GA]  (5/25 shutdown 対応で -preview→GA 置換済)",
+      "Tier4": "gemini-2.5-flash-lite   [GA]  最終安全網"
+    },
+    "LIGHTWEIGHT_ROLES": {
+      "members": ["garbage_filter", "merge_batch", "viral_filter", "editorial_mission_filter"],
+      "Tier1": "gemini-2.5-flash        [GA]  primary",
+      "Tier2": "gemini-2.5-flash-lite   [GA]",
+      "Tier3": "gemini-3.1-flash-lite   [GA]",
+      "Tier4": "gemini-3-flash-preview  [PREVIEW]  最終 fallback"
+    },
+    "max_attempts_per_tier": 2,
+    "retry_policy": "429/RESOURCE_EXHAUSTED → 即次 Tier | 503/UNAVAILABLE → 2 回指数バックオフ後次 Tier | 404/NOT_FOUND → 非リトライ即 raise (retry.py)"
+  },
+
+  "role_to_primary_model_actual": {
+    "generation (script + article)": {"requested": "gemini-3-flash-preview", "resolved": "gemini-3-flash-preview", "source": "run_summary 20260526_035220 model_roles.generation (role_config_direct)", "note": "QUALITY Tier1 = Narrative primary。本番で script/article 生成に実使用。used_fallback=False。"},
+    "judge": {"requested": "gemini-2.5-flash", "resolved": "gemini-2.5-flash", "source": "run_summary model_roles.judge (requested_model_available)", "note": "JUDGE_MODEL = GEMINI_MODEL_TIER2(env=gemini-2.5-flash)。get_judge_llm_client が resolved を primary に置き quality_tiers を後続連結。"},
+    "merge_batch (garbage_filter / cluster)": {"requested": "gemini-2.5-flash", "resolved": "gemini-2.5-flash", "source": "run_summary model_roles.merge_batch (role_config_direct)", "note": "LIGHTWEIGHT Tier1。MERGE_BATCH_MODEL = GEMINI_CLUSTER_MODEL = GEMINI_MODEL_TIER2(env=gemini-2.5-flash)。"},
+    "analysis": {"resolved": "gemini-3-flash-preview (QUALITY Tier1)", "wired": false, "note": "ANALYSIS_LAYER_ENABLED=false で本番未起動。temperature=0.3 / max_output_tokens=2000 を GenerateContentConfig で設定する唯一の生成パス。"},
+    "F-13.B Grounding (JpCoverageVerifier)": {"model": "gemini-2.5-flash", "source": "JP_COVERAGE_GROUNDING_MODEL", "note": "Tier 階層非経由の独立解決。tools=[Tool(google_search=GoogleSearch())] で Grounding 実行。"}
+  },
+
+  "generation_config_usage": {
+    "script/article/judge/merge_batch/title (生成系)": "generation_config=None → factory が config 引数を渡さない → temperature/top_p/top_k 一切非指定 = Gemini API デフォルト依存",
+    "analysis": "generation_config={temperature, max_output_tokens} (本番未起動)",
+    "grounding": "config=GenerateContentConfig(tools=[...]) のみ (temperature 等非指定)",
+    "implication": "本番生成パスは API パラメータをほぼ設定しない = モデル切替時の API 互換リスクが構造的に最小。"
+  },
+
+  "migrate_emergency_recheck": {
+    "batch": "F-gemini-model-migrate-emergency (2026-05-19)",
+    "claim": "両系統 Tier3 + config default + .env を gemini-3.1-flash-lite (GA) に一括置換",
+    "recheck_result": "CONFIRMED — .env:15 (GEMINI_MODEL_TIER3) / .env:22 (GEMINI_LIGHTWEIGHT_TIER3) ともに gemini-3.1-flash-lite (GA、-preview なし)。shutdown 対象 gemini-3.1-flash-lite-preview は src/ configs/ .env いずれにも残存 0 件。404 即 raise リスク = shutdown モデルを Tier 階層から構造除去で根絶済。"
+  },
+
+  "recent_trial_run": {
+    "batch": "20260526_035220 (F-jp-coverage-cache-judgement-persist 試運転)",
+    "status": "completed (exit 0)",
+    "run_llm_calls": 41,
+    "day_llm_calls": 41,
+    "run_budget": 150,
+    "day_budget": 1000,
+    "exploration_budget_used": 27,
+    "publish_reserve_budget": 15,
+    "generation_used_fallback": false,
+    "judge_model_used": "gemini-2.5-flash",
+    "note": "1 batch (1 run) で全 role 合計 41 LLM 呼び出し。うち QUALITY Tier1 (generation = script+article+title) は少数 (大半は LIGHTWEIGHT garbage_filter/merge + judge)。RPD 試算の基礎値。"
+  },
+
+  "config_factory_default_mismatch": {
+    "config.py:76-79 (QUALITY default)": "[gemini-3.1-flash-lite, gemini-3-flash-preview, gemini-2.5-flash, gemini-2.5-flash-lite]",
+    "factory.py:322-325 (QUALITY default)": "[gemini-3-flash-preview, gemini-2.5-flash, gemini-3.1-flash-lite, gemini-2.5-flash-lite]",
+    "runtime_impact": "なし (.env が両者を上書き、factory は os.getenv 直読で config.py 非経由)。F-gemini-model-audit から継続の既知 doc-drift。CURRENT_STATE 次バッチ候補 10th に整合タスク登録済。"
+  }
+}

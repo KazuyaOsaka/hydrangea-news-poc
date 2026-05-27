@@ -1,0 +1,42 @@
+{
+  "batch": "F-gemini-3.5-flash-api-audit",
+  "type": "investigation_only_no_code_change",
+  "date": "2026-05-27",
+  "git": {
+    "branch": "feature/F-gemini-3.5-flash-api-audit",
+    "head_full": "07dc175777c50250dc467f2cd8c8d85b6fb373cc",
+    "head_short": "07dc175",
+    "expected_head": "07dc175",
+    "head_match": true,
+    "base_branch": "main",
+    "working_tree_clean_before_docs": true
+  },
+  "baseline_tests": {
+    "command": "python -m pytest tests/ -x --tb=no -q",
+    "result": "1417 passed",
+    "duration_sec": 115.23,
+    "expected_baseline": 1417,
+    "match": true,
+    "note": "調査専用バッチのため src/ tests/ configs/ scripts/ は 0 行変更 = baseline 維持は自動"
+  },
+  "runtime": {
+    "python": "3.11.15",
+    "google_genai": "1.69.0",
+    "platform": "darwin 25.2.0"
+  },
+  "prev_batch_decision_log_hashes": {
+    "batch": "F-script-writer-target-enemy-fix-investigate",
+    "feat": "1409e0a",
+    "merge": "07dc175",
+    "note": "Task F で DECISION_LOG の '(push 後追記)' を上記ハッシュで更新する"
+  },
+  "invariants_check": {
+    "src_changed_lines": 0,
+    "tests_changed_lines": 0,
+    "configs_changed_lines": 0,
+    "scripts_changed_lines": 0,
+    "claude_md_changed_lines": 0,
+    "env_changed_lines": 0,
+    "env_example_changed_lines": 0
+  }
+}

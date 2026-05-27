@@ -5391,7 +5391,7 @@ functional 参照されていること、および「shutdown 後 404 は retry 
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `1409e0a` (investigate: F-script-writer-target-enemy-fix-investigate target_enemy 問題の実態調査) / `07dc175` (Merge branch 'feature/F-script-writer-target-enemy-fix-investigate')。★ F-gemini-3.5-flash-api-audit / 2026-05-27 で実ハッシュ追記。
 - 調査対象ファイル (読み取りのみ、0 行変更):
   - `src/shared/models.py` (L221 target_enemy フィールド)
   - `src/generation/script_writer.py` (旧ルート L113-118/317/445-446/715/782、新ルート L1097/1306)
@@ -5414,3 +5414,99 @@ functional 参照されていること、および「shutdown 後 404 は retry 
   - F-jp-coverage-cache-judgement-persist (★ 前バッチ、同 3 AI 三角測量由来)
   - particular_angle_metadata + sontaku_signals 本番配線判断 = X1 統合先 (FUTURE_WORK)
   - verify_two_stage 本番配線判断 / F-stream-2-filter-design (X1 と密接に関連)
+
+---
+
+## 2026-05-27: F-gemini-3.5-flash-api-audit — Gemini 3.5 Flash API 影響範囲調査 (調査専用、改修なし)
+
+### 背景
+
+2026-05 に Gemini 3.5 Flash (Stable) が GA リリースされた (公式 "Latest update: May 2026")。
+後続 `F-gemini-quality-tier-poc` (1-Q) で Narrative primary (QUALITY Tier1) 候補に追加する
+前提として、API 破壊的変更が Hydrangea コードベースに存在するかを **grep + コード精読 +
+公式仕様対比** で確認する必要があった。起案前事前情報 (2026-05-19 Google I/O 由来) は
+「temperature/top_p/top_k 非推奨化 / thinking_budget→thinking_level rename / Function
+calling 厳密マッチ必須化 / Thought preservation 自動 ON」の 4 破壊的変更候補を挙げたが、
+★ クラウド誤り 10 (Project Knowledge / 事前情報の過信 + grep 不足) の再発回避のため、
+F-script-writer-target-enemy-fix-investigate と同型の **調査専用バッチ (改修なし)** に
+スコープ縮小し、事前情報を**仮説**として grep で検証してから CP-1 判断を仰ぐ構成とした。
+
+### 議論 (Task B 調査 + CP-1)
+
+- **真因 b 確定 (API 破壊的変更は無いか軽微)**: 事前情報の 4 候補 + structured outputs は
+  いずれも Hydrangea 本番パスに該当箇所がほぼゼロ。
+  - top_p / top_k = **0 件**。thinking_budget / thinking_level = **0 件**。
+  - temperature は analysis client (ANALYSIS_LAYER_ENABLED=false で**本番未起動**) + 手動
+    スクリプト 3 件のみ。本番生成系 (script/article/judge/merge_batch) は
+    `generation_config=None` で API パラメータ非指定 = デフォルト依存。
+  - カスタム function calling = **0 件**。`tools=` は Grounding 組込み `google_search`
+    (`jp_coverage_verifier.py:594,1153`) のみ = 厳密マッチ必須化は非該当、google_search は
+    3.5 Flash で Supported。
+  - structured outputs (`response_schema` / `response_mime_type`) = **0 件**。Hydrangea は
+    free-text レスポンスから自前 JSON パース = 仕様変更の影響面ゼロ。
+  - Thought preservation 自動 ON は thinking 未使用 + response.text のみ消費で機能破壊なし。
+    output_token / cost の軽微な留意点のみ (改修不要、PoC 試運転で観察)。
+- **構造的理由**: (a) Tier ベースのモデル ID 解決で本番生成系は API パラメータ非指定、
+  (b) 構造化出力 API でなく free-text JSON パース、(c) カスタム function calling 不使用で
+  `tools=` は Grounding 限定。この 3 特性が破壊的変更への露出を構造的に最小化している。
+- **採用シミュレーション**: gemini-3.5-flash を Narrative primary (QUALITY Tier1) 投入時、
+  直近 run 41 calls のうち QUALITY Tier1 は 5-10 → cron 4 runs/日で 20-40 calls/日 =
+  RPD 10K に対し 250-500x の余裕。RPM 1K / TPM 2M も余裕大。LIGHTWEIGHT Tier1 は高頻度・
+  低難度のため gemini-3.1-flash-lite (RPD 150K) 推奨で 3.5 Flash は使わない。Editorial
+  Guardian (gemini-3.1-pro RPD 250) は高リスク事実検証専用の局所使用で別枠。
+- **真因 a/c 棄却**: a (migration 必要) / c (部分 migration) はともに本番パスに該当箇所
+  不在のため REJECTED。
+- **★ クラウド誤り 10 系統の検証**: 起案前事前情報を仮説として扱い grep で検証した結果、
+  「破壊的変更の可能性」は Hydrangea には当てはまらないと確定 = 外部/事前情報を grep-first
+  で検証してから断定する作法が機能 (F-script-writer-target-enemy に続く好例)。事前情報
+  そのものが誤りとは限らない (他コードベースには該当しうる) が、Hydrangea への影響が軽微で
+  あることが grep で確定した。
+
+### 決定 (CP-1 カズヤ判断 — クラウド推奨を既定として進行)
+
+- **後続バッチ方針 = Y1 (F-gemini-quality-tier-poc にそのまま進める)**: 真因 b 確定により
+  部分/全面 migration 不要。`gemini-3.5-flash` を Narrative primary 候補に追加して 1-Q に
+  直進。「対症療法じゃなく根本治療」「1 バッチで欲張らない」と整合。Y2 (部分 migration) /
+  Y3 (全面 migration) は解消対象が本番パスに実在しないため不採用。
+- **候補リスト更新 = 3.5 Flash 追加 + 3 Flash Preview 削除**: 3.5 Flash Stable が GA 後継で
+  gemini-3-flash-preview を代替可能。PoC 候補 = gemini-3.5-flash / gemini-2.5-flash
+  (+ Guardian 別枠 gemini-3.1-pro)。
+- ★ CP-1 の選択捕捉が UI 上で得られなかったため、クラウド推奨 (Y1 + 上記候補リスト) を
+  既定として Task E/F を進めた。本作業は docs のみ・完全可逆で Task G (commit/merge) が
+  カズヤ承認ゲートとして機能するため、方針変更が必要なら merge 前に修正可能。
+- **本バッチは調査専用、改修なし、不変原則 1-5 完全遵守** (例外条件適用なし)。
+
+### 結果
+
+- `src/` `tests/` `configs/` `scripts/` `CLAUDE.md` `.env` `.env.example` = **0 行変更**。
+  baseline **1417 passed 維持** (改修なしのため自動維持、Task A で確認済 = 115.23s)。
+- `docs/runs/F-gemini-3.5-flash-api-audit/` に調査出力 6 件を新規作成。
+- 不変原則違反なし。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 調査対象ファイル (読み取りのみ、0 行変更):
+  - `src/llm/factory.py` (Tier 階層 / GenerateContentConfig 構成 / generation_config=None 既定)
+  - `src/shared/config.py` (Gemini モデル ID default / JP_COVERAGE_GROUNDING_MODEL)
+  - `src/llm/retry.py` (404 即 raise / 429・503 リトライマーカー)
+  - `src/triage/jp_coverage_verifier.py` (L594/1153 Grounding `tools=[google_search]`)
+  - `src/llm/model_registry.py` (judge fallback 優先リスト)
+  - `.env` / `.env.example` (Tier 別モデル ID)、直近 run_summary (`data/output/run_summary.json`)
+- 新規ファイル (`docs/runs/F-gemini-3.5-flash-api-audit/`):
+  - `REPORT.md` / `environment_snapshot.json` / `grep_inventory.json` /
+    `current_usage.json` / `adoption_simulation.json` / `breaking_change_analysis.json`
+- ドキュメント更新:
+  - `docs/CURRENT_STATE.md` (全置換更新、19 つ目バッチ 1-P.5)
+  - `docs/DECISION_LOG.md` (本エントリ + F-script-writer-target-enemy-fix-investigate の
+    コミットハッシュ `1409e0a` / `07dc175` 追記)
+  - `docs/FUTURE_WORK.md` (本バッチ完了済み移動 + F-gemini-quality-tier-poc 候補リストを
+    「3.5 Flash 追加 + 3 Flash Preview 削除」で更新)
+  - `docs/DISCUSSION_NOTES.md` (4-A 新規 1 件 + 4-B 既存再評価)
+- 起案出典: カズヤ共有の公式仕様 (ai.google.dev/gemini-api/docs/models/gemini-3.5-flash) +
+  レート制限実測 (2026-05-26) + 事前情報 (2026-05-19 Google I/O 由来、仮説)
+- 関連バッチ:
+  - F-gemini-model-audit (1-L、2026-05-19、Gemini モデル戦略影響調査の先行)
+  - F-gemini-model-migrate-emergency (1-M、2026-05-19、5/25 shutdown 緊急対応)
+  - F-script-writer-target-enemy-fix-investigate (★ 前バッチ、同型の調査専用バッチ)
+  - F-gemini-quality-tier-poc (1-Q、★ 後続、本調査が前提情報を整備)
