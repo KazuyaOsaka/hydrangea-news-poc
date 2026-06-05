@@ -1,0 +1,25 @@
+{
+  "task": "B-4: main.py の dispatch 切替点確認",
+  "file": "src/main.py",
+  "analysis_layer_block": {
+    "line": "2954-3061",
+    "gate": "L2961 `if os.getenv('ANALYSIS_LAYER_ENABLED', 'false').lower() == 'true':`",
+    "flow": "Recency Guard → slot-1 再決定 → Top-N (default 3) 全 Slot で run_analysis_layer → _target.analysis_result = _analysis_result + save_analysis_json",
+    "extractor_injection_point": "★ L3034-3036 で `if _analysis_result is not None:` の直後、_target.analysis_result 代入 + save_analysis_json の前後で particular_angle_extractor を呼び、_analysis_result に metadata を付与するのが clean な配線点。",
+    "constraint": "run_analysis_layer は src/analysis/analysis_engine.py (不変原則 4 保護) のため改修不可。→ extractor 呼出は main.py 側で行い、_analysis_result.model_copy(update={...}) で metadata 付与する。"
+  },
+  "deprecation_gate": {
+    "line": "1936-1955",
+    "behavior": "ANALYSIS_LAYER_ENABLED=true かつ analysis_result is None → status='skipped' (旧ルートに落とさず扇動的台本再発を防止)。"
+  },
+  "dispatch_switch": {
+    "line": "1995-2025",
+    "behavior": "top.analysis_result is not None → generate_script_with_analysis (新ルート)、else → write_script (旧ルート)。★ 既に配線済。",
+    "channel_config_load": "L2002-2009 で ChannelConfig.load(top.channel_id or 'geo_lens')"
+  },
+  "recency_guard_record": {
+    "line": "3293-3298",
+    "behavior": "ANALYSIS_LAYER_ENABLED=true 時のみ投稿記録"
+  },
+  "key_finding": "dispatch 自体は ANALYSIS_LAYER_ENABLED で既に分岐済。本バッチの main.py 改修は『analysis layer block で extractor を呼び particular_angle_metadata を analysis_result に付与』が中核。dispatch 条件分岐の新規追加は不要。"
+}

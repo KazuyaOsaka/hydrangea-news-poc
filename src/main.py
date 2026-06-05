@@ -2964,6 +2964,9 @@ def run_from_normalized(
                     run_analysis_layer,
                     save_analysis_json,
                 )
+                from src.analysis.particular_angle_extractor import (
+                    extract_for_scored_event,
+                )
                 from src.analysis.recency_guard import apply_recency_guard
                 from src.shared.models import ChannelConfig as _ChannelConfig
 
@@ -3032,13 +3035,50 @@ def run_from_normalized(
                                 _target, _channel_config, db_path
                             )
                             if _analysis_result is not None:
+                                # X1 (F-particular-angle-metadata-production-wire):
+                                # run_analysis_layer 完了直後に particular_angle_extractor
+                                # を呼び、AnalysisResult に particular_angle_metadata
+                                # (sontaku_signals nested) を付与する。失敗時は
+                                # None のままで既存挙動 (script_writer 新ルートが
+                                # metadata 不在で進む) を維持する。
+                                # ★ analysis_engine.py 不変 (不変原則 4)、model_copy で
+                                # 非破壊的に付与。
+                                try:
+                                    _pa_metadata = extract_for_scored_event(
+                                        _target, channel_id=_analysis_channel_id
+                                    )
+                                except Exception as _pa_exc:
+                                    logger.warning(
+                                        f"[ParticularAngleExtractor] Slot-{_idx+1} "
+                                        f"extraction failed (non-fatal): "
+                                        f"{type(_pa_exc).__name__}: {_pa_exc}"
+                                    )
+                                    _pa_metadata = None
+                                if _pa_metadata is not None:
+                                    _analysis_result = _analysis_result.model_copy(
+                                        update={
+                                            "particular_angle_metadata": _pa_metadata
+                                        }
+                                    )
                                 _target.analysis_result = _analysis_result
                                 save_analysis_json(_analysis_result, output_dir)
+                                _pa_stream = (
+                                    _pa_metadata.stream_classification
+                                    if _pa_metadata is not None else "(none)"
+                                )
+                                _pa_sontaku = (
+                                    _pa_metadata.sontaku_signals.level
+                                    if (_pa_metadata is not None
+                                        and _pa_metadata.sontaku_signals is not None)
+                                    else "(none)"
+                                )
                                 logger.info(
                                     f"[AnalysisLayer] Slot-{_idx+1} completed for "
                                     f"event={_analysis_result.event_id} "
                                     f"(perspective={_analysis_result.selected_perspective.axis}, "
-                                    f"insights={len(_analysis_result.insights)})"
+                                    f"insights={len(_analysis_result.insights)}, "
+                                    f"particular_angle_stream={_pa_stream}, "
+                                    f"sontaku_level={_pa_sontaku})"
                                 )
                             else:
                                 logger.warning(

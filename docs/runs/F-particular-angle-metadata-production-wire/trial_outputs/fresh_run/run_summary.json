@@ -1,0 +1,989 @@
+{
+  "job_id": "71de7c0b-baeb-4531-a916-dbf02f59513f",
+  "generated_at": "2026-05-31T10:49:31.938904+00:00",
+  "status": "completed",
+  "event_id": "cls-c8876d474612",
+  "batch": {
+    "batch_id": "20260531_102637",
+    "batch_raw_count": 47,
+    "batch_normalized_count": 47,
+    "total_articles_loaded": 448,
+    "schedule_action": "elite_judge_direct",
+    "archived_file_count": 94,
+    "rolling_window": {
+      "comparison_window_hours": 36,
+      "max_window_hours": 48,
+      "current_batch_candidates": 247,
+      "carried_over_recent_candidates": 0,
+      "expired_candidate_count": 642,
+      "duplicate_suppressed_count": 0,
+      "upgraded_from_recent_pool_count": 0
+    }
+  },
+  "source_inventory": {
+    "ABCNewsAU": {
+      "language": "en",
+      "region": "global",
+      "country": "AU",
+      "source_type": "public_broadcaster",
+      "bridge_source": false,
+      "normalized_count": 25,
+      "adopted_count": 7,
+      "cross_lang_candidate_count": 1,
+      "triage_event_count": 0
+    },
+    "AlJazeera": {
+      "language": "en",
+      "region": "middle_east",
+      "country": "QA",
+      "source_type": "broadcast_news",
+      "bridge_source": true,
+      "normalized_count": 25,
+      "adopted_count": 19,
+      "cross_lang_candidate_count": 3,
+      "triage_event_count": 1
+    },
+    "Asahi": {
+      "language": "ja",
+      "region": "japan",
+      "country": "JP",
+      "source_type": "newspaper",
+      "bridge_source": false,
+      "normalized_count": 39,
+      "adopted_count": 9,
+      "cross_lang_candidate_count": 5,
+      "triage_event_count": 0
+    },
+    "BBC": {
+      "language": "en",
+      "region": "global",
+      "country": "Global",
+      "source_type": "public_broadcaster",
+      "bridge_source": false,
+      "normalized_count": 32,
+      "adopted_count": 8,
+      "cross_lang_candidate_count": 2,
+      "triage_event_count": 0
+    },
+    "Bloomberg": {
+      "language": "en",
+      "region": "global",
+      "country": "Global",
+      "source_type": "newspaper",
+      "bridge_source": false,
+      "normalized_count": 50,
+      "adopted_count": 35,
+      "cross_lang_candidate_count": 16,
+      "triage_event_count": 0
+    },
+    "Bloomberg_JP": {
+      "language": "ja",
+      "region": "japan",
+      "country": "JP",
+      "source_type": "newspaper",
+      "bridge_source": false,
+      "normalized_count": 7,
+      "adopted_count": 0,
+      "cross_lang_candidate_count": 0,
+      "triage_event_count": 0
+    },
+    "BuenosAiresTimes": {
+      "language": "en",
+      "region": "global_south",
+      "country": "AR",
+      "source_type": "newspaper",
+      "bridge_source": true,
+      "normalized_count": 31,
+      "adopted_count": 1,
+      "cross_lang_candidate_count": 0,
+      "triage_event_count": 0
+    },
+    "Caixin_Global": {
+      "language": "en",
+      "region": "east_asia",
+      "country": "CN",
+      "source_type": "standard",
+      "bridge_source": true,
+      "normalized_count": 9,
+      "adopted_count": 0,
+      "cross_lang_candidate_count": 0,
+      "triage_event_count": 0
+    },
+    "DerSpiegel": {
+      "language": "en",
+      "region": "europe",
+      "country": "DE",
+      "source_type": "newspaper",
+      "bridge_source": true,
+      "normalized_count": 2,
+      "adopted_count": 0,
+      "cross_lang_candidate_count": 0,
+      "triage_event_count": 0
+    },
+    "ElPais": {
+      "language": "en",
+      "region": "europe",
+      "country": "ES",
+      "source_type": "newspaper",
+      "bridge_source": true,
+      "normalized_count": 42,
+      "adopted_count": 9,
+      "cross_lang_candidate_count": 1,
+      "triage_event_count": 0
+    },
+    "FinancialTimes": {
+      "language": "en",
+      "region": "global",
+      "country": "Global",
+      "source_type": "newspaper",
+      "bridge_source": false,
+      "normalized_count": 9,
+      "adopted_count": 6,
+      "cross_lang_candidate_count": 3,
+      "triage_event_count": 1
+    },
+    "FolhaDeSPaulo": {
+      "language": "en",
+      "region": "global_south",
+      "country": "BR",
+      "source_type": "newspaper",
+      "bridge_source": true,
+      "normalized_count": 9,
+      "adopted_count": 0,
+      "cross_lang_candidate_count": 0,
+      "triage_event_count": 0
+    },
+    "France24": {
+      "language": "en",
+      "region": "europe",
+      "country": "FR",
+      "source_type": "broadcast_news",
+      "bridge_source": true,
+      "normalized_count": 22,
+      "adopted_count": 8,
+      "cross_lang_candidate_count": 3,
+      "triage_event_count": 0
+    },
+    "Guardian_Australia": {
+      "language": "en",
+      "region": "oceania",
+      "country": "AU",
+      "source_type": "standard",
+      "bridge_source": false,
+      "normalized_count": 10,
+      "adopted_count": 1,
+      "cross_lang_candidate_count": 0,
+      "triage_event_count": 0
+    },
+    "Il_Sole_24_Ore": {
+      "language": "it",
+      "region": "europe",
+      "country": "IT",
+      "source_type": "standard",
+      "bridge_source": false,
+      "normalized_count": 12,
+      "adopted_count": 9,
+      "cross_lang_candidate_count": 2,
+      "triage_event_count": 0
+    },
+    "JIJI": {
+      "language": "ja",
+      "region": "japan",
+      "country": "JP",
+      "source_type": "wire_service",
+      "bridge_source": false,
+      "normalized_count": 46,
+      "adopted_count": 15,
+      "cross_lang_candidate_count": 15,
+      "triage_event_count": 0
+    },
+    "Kyodo": {
+      "language": "ja",
+      "region": "japan",
+      "country": "JP",
+      "source_type": "wire_service",
+      "bridge_source": false,
+      "normalized_count": 50,
+      "adopted_count": 16,
+      "cross_lang_candidate_count": 7,
+      "triage_event_count": 0
+    },
+    "LeMonde": {
+      "language": "en",
+      "region": "europe",
+      "country": "FR",
+      "source_type": "newspaper",
+      "bridge_source": true,
+      "normalized_count": 18,
+      "adopted_count": 9,
+      "cross_lang_candidate_count": 3,
+      "triage_event_count": 0
+    },
+    "Mada_Masr": {
+      "language": "en",
+      "region": "middle_east",
+      "country": "EG",
+      "source_type": "independent",
+      "bridge_source": false,
+      "normalized_count": 4,
+      "adopted_count": 0,
+      "cross_lang_candidate_count": 0,
+      "triage_event_count": 0
+    },
+    "Mainichi": {
+      "language": "ja",
+      "region": "japan",
+      "country": "JP",
+      "source_type": "newspaper",
+      "bridge_source": false,
+      "normalized_count": 50,
+      "adopted_count": 8,
+      "cross_lang_candidate_count": 5,
+      "triage_event_count": 0
+    },
+    "Meduza": {
+      "language": "en",
+      "region": "russia_cis",
+      "country": "LV",
+      "source_type": "standard",
+      "bridge_source": true,
+      "normalized_count": 30,
+      "adopted_count": 4,
+      "cross_lang_candidate_count": 1,
+      "triage_event_count": 1
+    },
+    "Middle_East_Eye": {
+      "language": "en",
+      "region": "middle_east",
+      "country": "GB",
+      "source_type": "standard",
+      "bridge_source": true,
+      "normalized_count": 20,
+      "adopted_count": 15,
+      "cross_lang_candidate_count": 4,
+      "triage_event_count": 3
+    },
+    "NHK": {
+      "language": "ja",
+      "region": "japan",
+      "country": "JP",
+      "source_type": "public_broadcaster",
+      "bridge_source": false,
+      "normalized_count": 7,
+      "adopted_count": 2,
+      "cross_lang_candidate_count": 2,
+      "triage_event_count": 0
+    },
+    "NHK_Economy": {
+      "language": "ja",
+      "region": "japan",
+      "country": "JP",
+      "source_type": "public_broadcaster",
+      "bridge_source": false,
+      "normalized_count": 41,
+      "adopted_count": 18,
+      "cross_lang_candidate_count": 15,
+      "triage_event_count": 0
+    },
+    "NHK_Politics": {
+      "language": "ja",
+      "region": "japan",
+      "country": "JP",
+      "source_type": "public_broadcaster",
+      "bridge_source": false,
+      "normalized_count": 50,
+      "adopted_count": 6,
+      "cross_lang_candidate_count": 0,
+      "triage_event_count": 0
+    },
+    "NYTWorld": {
+      "language": "en",
+      "region": "global",
+      "country": "US",
+      "source_type": "newspaper",
+      "bridge_source": false,
+      "normalized_count": 49,
+      "adopted_count": 29,
+      "cross_lang_candidate_count": 3,
+      "triage_event_count": 1
+    },
+    "News24": {
+      "language": "en",
+      "region": "global_south",
+      "country": "ZA",
+      "source_type": "newspaper",
+      "bridge_source": true,
+      "normalized_count": 6,
+      "adopted_count": 0,
+      "cross_lang_candidate_count": 0,
+      "triage_event_count": 0
+    },
+    "Nikkei": {
+      "language": "ja",
+      "region": "japan",
+      "country": "JP",
+      "source_type": "newspaper",
+      "bridge_source": false,
+      "normalized_count": 30,
+      "adopted_count": 9,
+      "cross_lang_candidate_count": 5,
+      "triage_event_count": 0
+    },
+    "Politico": {
+      "language": "en",
+      "region": "north_america",
+      "country": "US",
+      "source_type": "standard",
+      "bridge_source": false,
+      "normalized_count": 23,
+      "adopted_count": 1,
+      "cross_lang_candidate_count": 0,
+      "triage_event_count": 0
+    },
+    "Reuters": {
+      "language": "en",
+      "region": "global",
+      "country": "Global",
+      "source_type": "wire_service",
+      "bridge_source": false,
+      "normalized_count": 17,
+      "adopted_count": 11,
+      "cross_lang_candidate_count": 3,
+      "triage_event_count": 0
+    },
+    "Reuters_JP": {
+      "language": "ja",
+      "region": "japan",
+      "country": "JP",
+      "source_type": "wire_service",
+      "bridge_source": false,
+      "normalized_count": 45,
+      "adopted_count": 5,
+      "cross_lang_candidate_count": 2,
+      "triage_event_count": 0
+    },
+    "Sankei": {
+      "language": "ja",
+      "region": "japan",
+      "country": "JP",
+      "source_type": "standard",
+      "bridge_source": false,
+      "normalized_count": 50,
+      "adopted_count": 18,
+      "cross_lang_candidate_count": 18,
+      "triage_event_count": 0
+    },
+    "StraitsTimes": {
+      "language": "en",
+      "region": "east_asia",
+      "country": "SG",
+      "source_type": "newspaper",
+      "bridge_source": true,
+      "normalized_count": 50,
+      "adopted_count": 41,
+      "cross_lang_candidate_count": 17,
+      "triage_event_count": 0
+    },
+    "Sydney_Morning_Herald": {
+      "language": "en",
+      "region": "oceania",
+      "country": "AU",
+      "source_type": "standard",
+      "bridge_source": false,
+      "normalized_count": 20,
+      "adopted_count": 4,
+      "cross_lang_candidate_count": 0,
+      "triage_event_count": 0
+    },
+    "TeleSUR": {
+      "language": "en",
+      "region": "latin_america",
+      "country": "VE",
+      "source_type": "state_aligned",
+      "bridge_source": false,
+      "normalized_count": 30,
+      "adopted_count": 25,
+      "cross_lang_candidate_count": 7,
+      "triage_event_count": 0
+    },
+    "TheGuardian": {
+      "language": "en",
+      "region": "europe",
+      "country": "GB",
+      "source_type": "newspaper",
+      "bridge_source": true,
+      "normalized_count": 44,
+      "adopted_count": 18,
+      "cross_lang_candidate_count": 4,
+      "triage_event_count": 4
+    },
+    "The_Atlantic": {
+      "language": "en",
+      "region": "north_america",
+      "country": "US",
+      "source_type": "standard",
+      "bridge_source": false,
+      "normalized_count": 25,
+      "adopted_count": 4,
+      "cross_lang_candidate_count": 0,
+      "triage_event_count": 0
+    },
+    "The_Hindustan_Times": {
+      "language": "en",
+      "region": "south_asia",
+      "country": "IN",
+      "source_type": "standard",
+      "bridge_source": false,
+      "normalized_count": 50,
+      "adopted_count": 16,
+      "cross_lang_candidate_count": 6,
+      "triage_event_count": 0
+    },
+    "The_Initium": {
+      "language": "zh",
+      "region": "east_asia",
+      "country": "HK",
+      "source_type": "standard",
+      "bridge_source": false,
+      "normalized_count": 15,
+      "adopted_count": 2,
+      "cross_lang_candidate_count": 0,
+      "triage_event_count": 0
+    },
+    "TimesOfIndia": {
+      "language": "en",
+      "region": "global_south",
+      "country": "IN",
+      "source_type": "newspaper",
+      "bridge_source": true,
+      "normalized_count": 45,
+      "adopted_count": 12,
+      "cross_lang_candidate_count": 1,
+      "triage_event_count": 1
+    },
+    "Tokyo_Shimbun": {
+      "language": "ja",
+      "region": "japan",
+      "country": "JP",
+      "source_type": "standard",
+      "bridge_source": false,
+      "normalized_count": 47,
+      "adopted_count": 7,
+      "cross_lang_candidate_count": 7,
+      "triage_event_count": 0
+    },
+    "WION": {
+      "language": "en",
+      "region": "south_asia",
+      "country": "IN",
+      "source_type": "standard",
+      "bridge_source": true,
+      "normalized_count": 42,
+      "adopted_count": 12,
+      "cross_lang_candidate_count": 4,
+      "triage_event_count": 0
+    },
+    "Yomiuri": {
+      "language": "ja",
+      "region": "japan",
+      "country": "JP",
+      "source_type": "standard",
+      "bridge_source": false,
+      "normalized_count": 48,
+      "adopted_count": 10,
+      "cross_lang_candidate_count": 5,
+      "triage_event_count": 0
+    },
+    "Yonhap": {
+      "language": "en",
+      "region": "east_asia",
+      "country": "KR",
+      "source_type": "wire_service",
+      "bridge_source": true,
+      "normalized_count": 50,
+      "adopted_count": 19,
+      "cross_lang_candidate_count": 2,
+      "triage_event_count": 0
+    }
+  },
+  "ingestion": {
+    "source_normalized_counts": {
+      "NHK": 7,
+      "NHK_Politics": 50,
+      "NHK_Economy": 41,
+      "Nikkei": 30,
+      "Asahi": 39,
+      "Reuters": 17,
+      "BBC": 32,
+      "Bloomberg": 50,
+      "FinancialTimes": 9,
+      "AlJazeera": 25,
+      "France24": 22,
+      "TheGuardian": 44,
+      "LeMonde": 18,
+      "DerSpiegel": 2,
+      "ElPais": 42,
+      "Yonhap": 50,
+      "StraitsTimes": 50,
+      "TimesOfIndia": 45,
+      "ABCNewsAU": 25,
+      "News24": 6,
+      "NYTWorld": 49,
+      "FolhaDeSPaulo": 9,
+      "BuenosAiresTimes": 31,
+      "Sydney_Morning_Herald": 20,
+      "Guardian_Australia": 10,
+      "The_Hindustan_Times": 50,
+      "Middle_East_Eye": 20,
+      "The_Initium": 15,
+      "Meduza": 30,
+      "Il_Sole_24_Ore": 12,
+      "The_Atlantic": 25,
+      "Politico": 23,
+      "TeleSUR": 30,
+      "Mada_Masr": 4,
+      "Yomiuri": 48,
+      "Sankei": 50,
+      "Tokyo_Shimbun": 47,
+      "WION": 42,
+      "Caixin_Global": 9,
+      "Mainichi": 50,
+      "Kyodo": 50,
+      "JIJI": 46,
+      "Bloomberg_JP": 7,
+      "Reuters_JP": 45
+    },
+    "source_adopted_counts": {
+      "NHK": 2,
+      "Middle_East_Eye": 15,
+      "AlJazeera": 19,
+      "Mainichi": 8,
+      "JIJI": 15,
+      "StraitsTimes": 41,
+      "Asahi": 9,
+      "NHK_Economy": 18,
+      "Sankei": 18,
+      "Yomiuri": 10,
+      "Nikkei": 9,
+      "Kyodo": 16,
+      "Reuters_JP": 5,
+      "TheGuardian": 18,
+      "The_Hindustan_Times": 16,
+      "Yonhap": 19,
+      "TeleSUR": 25,
+      "France24": 8,
+      "Bloomberg": 35,
+      "Reuters": 11,
+      "Il_Sole_24_Ore": 9,
+      "ABCNewsAU": 7,
+      "WION": 12,
+      "Tokyo_Shimbun": 7,
+      "FinancialTimes": 6,
+      "LeMonde": 9,
+      "ElPais": 9,
+      "NYTWorld": 29,
+      "TimesOfIndia": 12,
+      "Guardian_Australia": 1,
+      "NHK_Politics": 6,
+      "BBC": 8,
+      "Meduza": 4,
+      "The_Atlantic": 4,
+      "Sydney_Morning_Herald": 4,
+      "BuenosAiresTimes": 1,
+      "The_Initium": 2,
+      "Politico": 1
+    },
+    "jp_article_count": 123,
+    "en_article_count": 325,
+    "total_article_count": 448,
+    "region_article_counts": {
+      "japan": 123,
+      "global": 96,
+      "middle_east": 34,
+      "europe": 53,
+      "east_asia": 62,
+      "global_south": 13,
+      "oceania": 5,
+      "south_asia": 28,
+      "russia_cis": 4,
+      "north_america": 5,
+      "latin_america": 25
+    },
+    "garbage_filter": {
+      "enabled": true,
+      "before": 1326,
+      "after": 448,
+      "removed": 878
+    }
+  },
+  "clustering": {
+    "clusters_before_llm": 250,
+    "clusters_after_llm": 247,
+    "cross_lang_bfs_edges": 232,
+    "cross_lang_cluster_count": 8,
+    "cross_lang_source_counts": {
+      "NHK": 2,
+      "Middle_East_Eye": 4,
+      "AlJazeera": 3,
+      "Mainichi": 5,
+      "JIJI": 15,
+      "StraitsTimes": 17,
+      "Asahi": 5,
+      "NHK_Economy": 15,
+      "Sankei": 18,
+      "Yomiuri": 5,
+      "Nikkei": 5,
+      "Kyodo": 7,
+      "Reuters_JP": 2,
+      "TheGuardian": 4,
+      "The_Hindustan_Times": 6,
+      "Yonhap": 2,
+      "TeleSUR": 7,
+      "France24": 3,
+      "Bloomberg": 16,
+      "Reuters": 3,
+      "Il_Sole_24_Ore": 2,
+      "ABCNewsAU": 1,
+      "WION": 4,
+      "Tokyo_Shimbun": 7,
+      "FinancialTimes": 3,
+      "LeMonde": 3,
+      "ElPais": 1,
+      "NYTWorld": 3,
+      "TimesOfIndia": 1,
+      "BBC": 2,
+      "Meduza": 1
+    },
+    "cluster_size_distribution": {
+      "1": 221,
+      "2": 17,
+      "3": 4,
+      "4": 2,
+      "5": 2,
+      "7": 2,
+      "8": 1,
+      "141": 1
+    },
+    "cluster_size_distribution_bfs": {},
+    "max_cluster_size_bfs": 431,
+    "max_cluster_size_after_split": 141,
+    "giant_clusters_detected": 1,
+    "giant_clusters_split": 3,
+    "giant_cluster_warnings": [
+      "Giant cluster (141 articles) could not be fully split (levels=(3, 5, 8)): '米大統領が覚書の修正要求か イスラエルはヒズボラへの攻撃も'"
+    ],
+    "llm_pairs_total": 6784,
+    "llm_pairs_filtered": 36,
+    "llm_pairs_sent_to_llm": 36,
+    "llm_pairs_merged": 3,
+    "events_built": 247
+  },
+  "merge_summary": {
+    "pairs_considered": 36,
+    "pairs_rejected_by_predicate_guard": 0,
+    "pairs_sent_to_batch_llm": 36,
+    "same_event_count": 3,
+    "related_but_distinct_count": 2,
+    "different_event_count": 31,
+    "parse_error_count": 0,
+    "budget_cut_count": 0,
+    "same_event_examples": [
+      {
+        "jp_title": "イラン戦闘終結の覚書合意は不透明 米は経済制裁",
+        "en_title": "US Says Deals With Iran for Safe Hormuz Transit Are Prohibited - Bloomberg.com",
+        "verdict": "same_event",
+        "reason": "Both headlines concern the US restricting or prohibiting agreements with Iran regarding transit or conflict resolution."
+      },
+      {
+        "jp_title": "イラン戦闘終結の覚書合意は不透明 米は経済制裁",
+        "en_title": "Usa inviano a Teheran proposta accordo più dura. Iran: non abbiamo fiducia nelle promesse del nemico",
+        "verdict": "same_event",
+        "reason": "Both headlines refer to stalled or difficult negotiations between the US and Iran concerning an agreement."
+      },
+      {
+        "jp_title": "【速報】米長官、中国の覇権主義的行動をけん制 - 47NEWS",
+        "en_title": "Hegseth at Shangri-La Dialogue warns China's military build-up causing 'alarm' across Asia, says US seeking 'stable equilibrium' - WION",
+        "verdict": "same_event",
+        "reason": "Both headlines refer to the US Secretary's comments at the Shangri-La Dialogue regarding China's military behavior."
+      }
+    ],
+    "related_but_distinct_examples": [
+      {
+        "jp_title": "【速報】「日本の防衛力強化を議論」と米長官 - 47NEWS",
+        "en_title": "(LEAD) S. Korea, Japan to resume joint maritime search drills early next month: Seoul defense chief",
+        "verdict": "related_but_distinct",
+        "reason": "While both involve defense discussions, joint maritime search drills are a specific operational event distinct from general defense talks."
+      },
+      {
+        "jp_title": "【速報】「日本の防衛力強化を議論」と米長官 - 47NEWS",
+        "en_title": "Defense chiefs of S. Korea, U.S., Japan reaffirm security cooperation in brief encounter",
+        "verdict": "related_but_distinct",
+        "reason": "A brief encounter between defense chiefs is distinct from a formal, specific discussion on Japan's defense strength."
+      }
+    ],
+    "different_event_examples": [
+      {
+        "jp_title": "ヘグセス米国防長官、集団防衛の役割果たさない国との「関係見直し」警告…同盟国に国防費引き上げ要求 - 読売新聞",
+        "en_title": "China Factory Activity Worsens in Warning Sign for Economy - Bloomberg.com",
+        "verdict": "different_event",
+        "reason": "Hegseth's warning to allies about defense spending is unrelated to China's factory activity."
+      },
+      {
+        "jp_title": "ヘグセス米国防長官、集団防衛の役割果たさない国との「関係見直し」警告…同盟国に国防費引き上げ要求 - 読売新聞",
+        "en_title": "Japan rejects 'new militarism', accuses China of rapidly arming - Reuters",
+        "verdict": "different_event",
+        "reason": "Hegseth's defense policy warning is a distinct event from Japan's diplomatic accusations against China regarding militarism."
+      },
+      {
+        "jp_title": "イラン代表、入国ビザもまだ…サッカーW杯に戦禍が落とす影 - 毎日新聞",
+        "en_title": "US military says it turned away blockade runner trying to reach Iranian port - Reuters",
+        "verdict": "different_event",
+        "reason": "The Iranian national soccer team's visa issues are unrelated to the US military intercepting a blockade runner."
+      },
+      {
+        "jp_title": "イラン代表、入国ビザもまだ…サッカーW杯に戦禍が落とす影 - 毎日新聞",
+        "en_title": "Iran reasserts control over Hormuz Strait as deal with US remains elusive",
+        "verdict": "different_event",
+        "reason": "Soccer team travel issues are distinct from Iran's strategic control of the Hormuz Strait."
+      },
+      {
+        "jp_title": "【速報】イラン交渉で「良い合意」実現すると米長官 - 47NEWS",
+        "en_title": "Iran war raises airfares for haj pilgrimage to Saudi Arabia",
+        "verdict": "different_event",
+        "reason": "Diplomatic negotiations are unrelated to commercial airfare impacts from regional conflict."
+      },
+      {
+        "jp_title": "【速報】イラン交渉で「良い合意」実現すると米長官 - 47NEWS",
+        "en_title": "A broken economy and an emboldened regime: Iranians abandoned to endure fallout from war",
+        "verdict": "different_event",
+        "reason": "The US Secretary's statement on Iran negotiations is a distinct political event from general reporting on Iran's internal economic hardship."
+      },
+      {
+        "jp_title": "小泉防衛相“高い透明性で防衛力強化” 中国の批判念頭に反論",
+        "en_title": "Israel claims control of strategic Beaufort Castle in southern Lebanon",
+        "verdict": "different_event",
+        "reason": "Japan's defense minister discussing transparency is unrelated to Israeli military operations in Lebanon."
+      },
+      {
+        "jp_title": "小泉防衛相“高い透明性で防衛力強化” 中国の批判念頭に反論",
+        "en_title": "Video: Israeli strike hits crowded market in Gaza City",
+        "verdict": "different_event",
+        "reason": "Japan's defense policy discussion is unrelated to an Israeli airstrike in Gaza."
+      },
+      {
+        "jp_title": "日米防衛相 同盟の抑止力と対処力強化で協力一致",
+        "en_title": "US Says Deals With Iran for Safe Hormuz Transit Are Prohibited - Bloomberg.com",
+        "verdict": "different_event",
+        "reason": "Japan-US defense cooperation is unrelated to US policy on Iranian transit deals."
+      },
+      {
+        "jp_title": "日米防衛相 同盟の抑止力と対処力強化で協力一致",
+        "en_title": "Mosca, drone ucraino colpisce unità della centrale di Zaporizhzhia. Nessuna anomalia",
+        "verdict": "different_event",
+        "reason": "Japan-US defense talks are unrelated to a drone incident at the Zaporizhzhia nuclear plant."
+      }
+    ]
+  },
+  "budget": {
+    "run_llm_calls": 39,
+    "run_budget": 150,
+    "day_llm_calls": 39,
+    "day_budget": 1000,
+    "reserved_for_script": 1,
+    "reserved_for_article": 1,
+    "remaining_before_script": 113,
+    "remaining_before_article": 111,
+    "retry_counts": {
+      "judge": 0
+    },
+    "run_mode": "publish_mode",
+    "daily_budget_total": 1000,
+    "exploration_budget_used": 26,
+    "publish_reserve_budget": 15,
+    "publish_reserve_preserved": true,
+    "stopped_exploration_due_to_publish_reserve": false,
+    "slot1_budget_guaranteed": true
+  },
+  "model_roles": {
+    "merge_batch": {
+      "provider": "gemini",
+      "requested": "gemini-2.5-flash",
+      "resolved": "gemini-2.5-flash",
+      "resolution_reason": "role_config_direct"
+    },
+    "judge": {
+      "provider": "gemini",
+      "requested": "gemini-3.5-flash",
+      "resolved": "gemini-3.5-flash",
+      "resolution_reason": "requested_model_available"
+    },
+    "generation": {
+      "provider": "gemini",
+      "requested": "gemini-3.5-flash",
+      "resolved": "gemini-3.5-flash",
+      "resolution_reason": "role_config_direct"
+    }
+  },
+  "generation_outcomes": {
+    "script": {
+      "used_fallback": false,
+      "fallback_reason": null,
+      "retry_count": 0
+    },
+    "article": {
+      "used_fallback": false,
+      "fallback_reason": null,
+      "retry_count": 0
+    }
+  },
+  "daily_schedule": {
+    "date": "2026-05-31",
+    "selected_slots": 3,
+    "open_slots": 0,
+    "held_back_count": 0,
+    "published_count": 2,
+    "coverage_summary": {
+      "elite_judge": 1
+    },
+    "diversity_rules": [
+      "elite_judge_direct"
+    ]
+  },
+  "generation_tracking": {
+    "scheduled_event_id": "cls-c8876d474612",
+    "generated_event_id": "cls-c8876d474612",
+    "schedule_snapshot_used": false,
+    "schedule_mismatch_resolved": false,
+    "ids_match": true,
+    "no_publishable_candidates": false,
+    "all_selected_published": false,
+    "fallback_blocked_by_quality_floor": false,
+    "scheduled_slot1_id": "cls-c8876d474612",
+    "reranked_top_id": "cls-c8876d474612",
+    "final_selected_slot1_id": "cls-82101968fa87",
+    "slot1_selection_source": "judged_flagship_f5:insufficient_evidence:score=78.0:divergence=0.0",
+    "slot1_is_judged": false,
+    "slot1_publishability_class": "not_judged",
+    "slot1_jp_source_count": 0,
+    "slot1_en_source_count": 2,
+    "slot1_block_reason": null,
+    "slot1_source_titles_present_jp": 0,
+    "slot1_source_titles_present_en": 2,
+    "slot1_coherence_input_quality": null,
+    "slot1_overlap_signals": null,
+    "slot1_semantic_coherence_score": null,
+    "slot1_coherence_gate_passed": null,
+    "published_event_id": "cls-c8876d474612",
+    "publish_mark_target": "cls-c8876d474612",
+    "selection_override_applied": true
+  },
+  "rolling_window": {
+    "comparison_window_hours": 36,
+    "max_window_hours": 48,
+    "current_batch_candidates": 247,
+    "carried_over_recent_candidates": 0,
+    "expired_candidate_count": 642,
+    "duplicate_suppressed_count": 0,
+    "upgraded_from_recent_pool_count": 0
+  },
+  "judge_summary": {
+    "judge_enabled": true,
+    "judge_model_requested": "gemini-3.5-flash",
+    "judge_model_resolved": "gemini-3.5-flash",
+    "judge_model_resolution_reason": "requested_model_available",
+    "judge_model_used": "gemini-3.5-flash",
+    "judged_count": 3,
+    "publishability_class_counts": {
+      "insufficient_evidence": 3
+    },
+    "judge_error_type_counts": {},
+    "judge_quota_exhausted_count": 0,
+    "judge_temporary_unavailable_count": 0,
+    "judge_model_not_found_count": 0,
+    "top_blind_spot_global": [],
+    "top_divergence_candidates": [],
+    "slot1": {
+      "event_id": "cls-c8876d474612",
+      "publishability_class": "not_judged",
+      "authority_pair_used": [
+        "カタール拠点のアルジャジーラ",
+        "中東独立メディアのミドル・イースト・アイ (親パレスチナ)"
+      ],
+      "grounded_by_evidence_only": true,
+      "semantic_coherence_score": null,
+      "coherence_gate_passed": null,
+      "coherence_block_reason": null,
+      "candidate_blacklist_flags": []
+    },
+    "coherence_blocked_candidates": [],
+    "final_selection_fallback_used": false,
+    "final_selection_fallback_reason": null,
+    "quota_fallback_candidate_id": null,
+    "quota_fallback_candidate_title": null
+  },
+  "editorial_mission_filter": {
+    "editorial_mission_filter_applied": true,
+    "threshold": 45.0,
+    "prescore_top_n": 20,
+    "llm_enabled": true,
+    "llm_ran": true,
+    "llm_scored_count": 20,
+    "llm_failed_count": 0,
+    "total_candidates": 247,
+    "passed_threshold": 19,
+    "rejected_before_generation": 228,
+    "prescore_stats": {
+      "min": 0.0,
+      "max": 51.3,
+      "mean": 24.26
+    }
+  },
+  "av_render": {
+    "audio_render_enabled": false,
+    "video_render_enabled": false,
+    "audio_generated": false,
+    "video_generated": false,
+    "voiceover_path": null,
+    "review_mp4_path": null,
+    "render_manifest_path": null,
+    "placeholder_count": 0,
+    "total_duration_sec": null,
+    "timing_mismatches": [],
+    "error": null,
+    "slot": 1,
+    "event_id": "cls-c8876d474612",
+    "per_slot": [
+      {
+        "audio_render_enabled": false,
+        "video_render_enabled": false,
+        "audio_generated": false,
+        "video_generated": false,
+        "voiceover_path": null,
+        "review_mp4_path": null,
+        "render_manifest_path": null,
+        "placeholder_count": 0,
+        "total_duration_sec": null,
+        "timing_mismatches": [],
+        "error": null,
+        "slot": 1,
+        "event_id": "cls-c8876d474612"
+      },
+      {
+        "audio_render_enabled": false,
+        "video_render_enabled": false,
+        "audio_generated": false,
+        "video_generated": false,
+        "voiceover_path": null,
+        "review_mp4_path": null,
+        "render_manifest_path": null,
+        "placeholder_count": 0,
+        "total_duration_sec": null,
+        "timing_mismatches": [],
+        "error": null,
+        "skipped_reason": "article_only_slot",
+        "slot": 2,
+        "event_id": "cls-3e9544fee58f"
+      }
+    ]
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "task": "Task E pre-run: ingestion (RSS fetch + normalize) read-only 調査 (カズヤ条件)",
+  "investigation_date": "2026-05-31",
+  "command": "python -m src.ingestion.run_ingestion",
+  "required_args": "none (defaults: --sources configs/sources.yaml --raw-dir data/raw --normalized-dir data/normalized)",
+  "sources_inventory": {
+    "config_path": "configs/sources.yaml",
+    "total_count": 52,
+    "examples": ["NHK", "NHK_Politics", "NHK_Economy", "BBC", "Reuters", "Al Jazeera", "MEE", "Bloomberg", "Asahi", "Nikkei", "..."],
+    "scoping_possible": "yaml 内 enabled フラグや個別 remove で可能だが、本番 sources.yaml 変更は副作用 (将来 runs にも影響)。1 回限りで全 52 走らせる方が無難"
+  },
+  "rss_fetch_behavior": {
+    "module": "src/ingestion/rss_fetcher.py",
+    "parallelism": "serial (for source in sources: fetch_source(source))、並列なし",
+    "per_source_logic": "feedparser.parse(url) で HTTP GET、最大 50 entries 取得、try/except でソース個別失敗を吸収",
+    "estimated_time_per_source": "1-3 秒 (network bound)",
+    "estimated_total_time": "52 sources × 1-3s = 50-150 秒 (~1-3 分)"
+  },
+  "normalization_behavior": {
+    "module": "src/ingestion/normalizer.py",
+    "is_llm_based": false,
+    "evidence": "grep で LLMClient / get_*_client / llm.generate / openai / anthropic / gemini いずれも 0 件",
+    "cost": "$0 LLM (純粋ルールベース)"
+  },
+  "db_side_effects": {
+    "tables_touched": [
+      "ingestion_batches (INSERT new row, status=pending)",
+      "seen_article_urls (INSERT OR IGNORE 新 URL のみ、idempotent)"
+    ],
+    "tables_NOT_touched": ["events", "jobs", "daily_stats", "recency_records", "jp_coverage_cache", "recent_event_pool"],
+    "existing_data_modification": "なし (既存 batches / jobs / archive はすべて不変)",
+    "destructive": false
+  },
+  "filesystem_side_effects": {
+    "data/raw": "新規 raw JSON 52 ファイル追加 (source 別、新 timestamp)",
+    "data/normalized": "新規 normalized JSON 52 ファイル追加 (source 別、新 batch_id)",
+    "destructive": false,
+    "note": "既存ファイル (2026-04-27 ファイル等) は不変、ディスク容量増のみ"
+  },
+  "cost_summary": {
+    "ingestion_itself": "$0 LLM + HTTP traffic (50-150 秒)",
+    "subsequent_trial_per_batch": "~44 LLM calls (analysis + extractor + article + script)",
+    "1_fresh_ingest_+_1_trial": "~44 calls, ~3-6 分",
+    "3_fresh_batches_question": "★ ingestion は同一 RSS state では duplicate URL ばかりで新規 article 取れず、3 fresh batches を分離するには時間間隔 (数時間〜数日) 必要。実質 1-2 batch が現実的"
+  },
+  "garbage_filter_pass_expectation": {
+    "filter": "_MAX_AGE_HOURS=48 (src/triage/garbage_filter.py:34)",
+    "expected_pass_rate": "今日 fetch した RSS は最新エントリ多数 = pass 想定。data/normalized/<新batch_id>_*.json は今日の publish 日付で書かれる",
+    "risk": "RSS によっては 48h 超の古いエントリも返す → 部分的に弾かれる (構造的に問題なし)"
+  },
+  "side_effect_risk_assessment": "non-destructive (新規追加のみ)。既存 DB レコード / archive / output 一切不変。daily_stats は試運転 run のみ +N (通常挙動)。",
+  "realistic_trial_paths": {
+    "path_A_one_fresh_batch": {
+      "description": "ingestion 1 回 → 1 fresh batch 作成 → trial run 1 回",
+      "cost": "~44 calls",
+      "time": "~5 分",
+      "validates": "新ルート起動 + extractor + target_enemy 退役 + Tier fallback + JSON 切断 (1 batch 分)",
+      "limitations": "run 間分散観察は不可 (1 batch のみ)"
+    },
+    "path_B_one_fresh_batch_plus_stuck_revisit": {
+      "description": "ingestion 1 回 + 残る 2 stuck batches も pending 維持 (date filter で 0 events のまま no-op)",
+      "cost": "~44 calls + 2 no-op runs (cost 0)",
+      "time": "~6-7 分",
+      "validates": "新ルート 1 batch + no-op パス 2 batch (確認用)"
+    },
+    "path_C_multiple_fresh_with_time_gap": {
+      "description": "ingestion を時間間隔を空けて 3 回 → 3 fresh batches",
+      "cost": "~132 calls",
+      "time": "数時間〜数日 (実用的でない)",
+      "validates": "完全な 3 batch 試運転 (X1 プロンプト本来狙い)"
+    }
+  },
+  "recommended_path": "path_A (1 fresh batch trial)。X1 試運転目的 (新ルート機械的安定性) は 1 batch で十分検証可能、コスト/時間ともに最小、最新題材で品質傾向の粗い観察も可能。run 間分散観察は CP-3 で明示的限界として記録。",
+  "next_action_requires_kazuya_judgment": true
+}

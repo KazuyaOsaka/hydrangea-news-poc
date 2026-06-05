@@ -1,14 +1,22 @@
 # Hydrangea — 意思決定ログ (DECISION_LOG)
 
-最終更新: 2026-05-27 (F-gemini-quality-tier-poc 完了。最終布陣 v2 を配線
-(QUALITY=gemini-3.5-flash / ARTICLE=gemini-2.5-flash 分離 / LIGHTWEIGHT=gemini-3.1-flash-lite、
-MAX_ATTEMPTS QUALITY=2/LIGHTWEIGHT=1/ARTICLE=1) + JUDGE_MODEL 明示 + Gemini 3 系 temperature
-ガード。★ クラウド誤り 10 系統の作法で「最終布陣 v2 (10 role)」を grep 検証 → 実 dispatch は 4 role
-のみ判明 (viral_filter/title は LLM stage 不在、editorial_mission_filter/article は他 role 共用)。
-公式 pricing/API 仕様を web_fetch (一次ソース) で全項目裏取り (CP-0 スキップ)。クラウド誤り 10 派生
-「外部 AI セカンドオピニオンの権威化」を CLAUDE.md 明文化。baseline 1417→1432 passed、CP-2 試運転
-exit 0/status=completed。前バッチ F-docs-update-chatgpt-round2-and-error10 のコミットハッシュ
-41f09d6/112539d 追記。前回 2026-05-25: F-f1-locale-key-fix 完了)
+最終更新: 2026-05-31 (★ F-particular-angle-metadata-production-wire (X1) 完了、実装バッチ 1-R。
+`particular_angle_metadata` (3 要素 + nested SontakuSignals) + 新ルート `generate_script_with_analysis`
+を production に配線、新ルートが production default 起動 (`ANALYSIS_LAYER_ENABLED=true`)。
+**target_enemy framing が production から自動退役** (Slot-1 試運転で target_enemy=None 確認)。
+不変原則 4 例外条件 5 点充足で `src/analysis/particular_angle_extractor.py` 新規作成 (単一パス α、
+get_analysis_llm_client 経由)。CP-1 で起案前提と実コードの 3 つの乖離発見 (移植元は旧 3 分類版 +
+sontaku 不在、3 要素名称ズレ、dispatch 既配線) — クラウド誤り 10 系統の grep 作法が機能。
+CP-2 で sample mode 分析未起動 + スタール枯渇 + GarbageFilter 48h で計画変更 → Path A pure
+(1 fresh batch + 1 run、本番状態維持) でカズヤ判断。試運転: ingestion `20260531_102637` (47 sources、
+1326 articles、$0 LLM) + normalized mode exit 0 / run_llm=39 / Slot-1 で全 X1 必須目的達成
+(stream_2_perspective_gap + sontaku.level=high/diplomatic + target_enemy=None + Cultural Divide +
+char validation passed + used_fallback=false)。axis_5 カズヤ採点で「城→海運→電気代」着地評価、
+CP-3 = W1 完全成功。F-analysis-max-tokens-tune 統合 (ANALYSIS_LLM_MAX_TOKENS=4096)。baseline
+1432 → 1466 passed (新規 +34、破壊ゼロ)。6 後続バッチ向け引継ぎ事項 (高リスク事実検証 / punchline
+尻切れ / title guard / 視覚プロンプト旧語彙 / run 間分散 / 試運転データ確保) を FUTURE_WORK +
+DISCUSSION_NOTES に記録。前バッチ F-gemini-quality-tier-poc のコミットハッシュ `880ebfb` / `f21f373`
+追記。前回 2026-05-27: F-gemini-quality-tier-poc 完了)
 
 このドキュメントは Hydrangea プロジェクトにおける重要な意思決定の履歴を記録する。
 コードや設定の「結果」ではなく、「なぜそうなったか」の判断プロセスを残すことが目的。
@@ -5648,7 +5656,7 @@ gemini-3.1-flash-lite を採用する PoC。
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `880ebfb` (feat) / `f21f373` (merge) ★ X1 (F-particular-angle-metadata-production-wire / 2026-05-31) で追記
 - 変更 (不変原則対象外):
   - `src/llm/factory.py` (ARTICLE_ROLES 新設 + 3 グループ tier 解決 + `_is_gemini_3_series` +
     get_article_llm_client role 分離 + analysis temperature ガード)
@@ -5666,3 +5674,121 @@ gemini-3.1-flash-lite を採用する PoC。
   `docs/DISCUSSION_NOTES.md` (4-A 新規 + 4-B クラウド誤り 10 派生追記)
 - 関連バッチ: F-gemini-model-audit (1-L) / F-gemini-model-migrate-emergency (1-M) /
   F-gemini-3.5-flash-api-audit (1-P.5、migration 不要確定) / X1 (1-R、target_enemy 退役の本命)
+
+---
+
+## 2026-05-31: F-particular-angle-metadata-production-wire (X1) — particular_angle_metadata + sontaku_signals 本番配線 + target_enemy 解消統合 + F-analysis-max-tokens-tune 統合 (実装バッチ、1-R)
+
+### 背景
+
+Phase A.5-3a-verify ゲート完了後 **22 つ目のバッチ (1-R)**。F-particular-angle-redesign-extension
+(2026-05-08) で `docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 3.6-3.7 に正典化された
+`ParticularAngleMetadata` (3 要素 + confidence + nested `SontakuSignals`) と新ルート
+`generate_script_with_analysis` は src/ 配下で未配線 (grep 0 件)。production は旧ルート
+`write_script` 稼働で、F-script-writer-target-enemy-fix-investigate (2026-05-26) CP-1 で
+「新ルート配線が target_enemy 解消の唯一の sanctioned 経路」と確定済。
+
+### 議論
+
+- **不変原則 4 例外条件適用判断**: 新規 `src/analysis/particular_angle_extractor.py` 作成は
+  原則 4 (src/analysis/ 全般変更不可) の保護領域への新規追加。F-script-writer-target-enemy
+  CP-1 で sanctioned 済 + X1 起案で事前承認済。5 点 (a/b/c/d/e) を grep で裏取り、CP-1 で
+  カズヤ最終承認。
+- **CP-1 起案前提と実コードの 3 つの乖離発見** (クラウド誤り 10 系統の作法):
+  (1) 移植元 `scripts/extract_particular_angle.py` は旧 3 分類版 (perspective_gap 不在、
+  sontaku_signals 一切なし)。4 分類 + sontaku は別 2 スクリプト
+  (`reclassify_annotations.py` + `add_sontaku_signals.py`) にある。
+  (2) particular_angle 3 要素の名称: 起案 "broad_event / particular_angle / framing" だが
+  正典・実スクリプトとも `core_question / differentiation_from_mainstream / hydrangea_axis_alignment`。
+  (3) main.py dispatch は既に配線済 (`if top.analysis_result is not None:`)、起案 C-5「dispatch
+  切替改修」の大半は既存。実作業は extractor 呼出 + metadata 付与 + 新ルートへの metadata 渡し。
+- **CP-2 計画変更**: sample mode は分析レイヤーブロックを通らない (run_from_normalized のみ) と
+  判明 → normalized mode 必須。スタール normalized データ (2026-04-27) は GarbageFilter
+  `_MAX_AGE_HOURS=48` で全弾かれる構造のため、当初の 5 batch 連続実行案を **Path A pure
+  (1 fresh batch + 1 run、本番状態維持)** に変更 (カズヤ判断、3 回処理 scaffolding は本番と
+  違う人工状態を作るため不採用)。
+- **抽出方式の選択**: 単一パス α (1 LLM call/slot で 3 要素 + 4 分類 + sontaku を一括抽出) を採用。
+  β 3 パス忠実移植は cost 3 倍で却下。正典 3.7.2 の単一メタデータ構造と整合。
+- **`.env` / `.env.example` 設定**: `ANALYSIS_LAYER_ENABLED=true` (production default 化宣言)、
+  `ANALYSIS_LLM_MAX_TOKENS=2000→4096` (F-analysis-max-tokens-tune 統合、ChatGPT Round 2 指摘 6)。
+
+### 決定
+
+- **不変原則 4 例外条件 5 点充足**で `src/analysis/particular_angle_extractor.py` 新規作成
+  (単一パス α、`get_analysis_llm_client()` 経由で Gemini 3 系 temperature ガード + ANALYSIS_LLM_MAX_TOKENS
+  env 自動適用)。
+- `src/shared/models.py` に `SontakuSignals` + `ParticularAngleMetadata` (sontaku は nested、
+  正典 3.7.2) + `AnalysisResult.particular_angle_metadata: Optional[...] = None` 追加 (後方互換)。
+- `configs/prompts/analysis/geo_lens/particular_angle_extract.md` 新規 (統合プロンプト、外部 .md 化、
+  CLAUDE.md 方針)。`script_with_analysis.md` に metadata 入力ブロックを追加 (各論ルール足さず
+  LLM の知性に委ねる文言、クラウド誤り 9 回避)。
+- `src/main.py` 分析ブロックで extractor 呼出 + `model_copy(update={...})` で metadata 付与
+  (run_analysis_layer 不変、不変原則 4 厳守)。
+- `src/generation/script_writer.py` の `_build_script_with_analysis_prompt` に新プレースホルダ渡し
+  (`generate_script_with_analysis` signature 不変、既存ルート `write_script` 完全不変、不変原則 2 厳守)。
+- `.env` / `.env.example` を `ANALYSIS_LAYER_ENABLED=true` + `ANALYSIS_LLM_MAX_TOKENS=4096` に更新。
+- `tests/conftest.py` 新規 (autouse fixture: 各テスト開始時に ANALYSIS_LAYER_ENABLED=false 強制、
+  .env true 化のテスト波及を抑止)。
+- 新規テスト 31 + 既存ファイル追加 3 = 計 +34 tests (`test_models_particular_angle.py` 10 +
+  `test_particular_angle_extractor.py` 21 + `test_script_writer_with_analysis.py` 追加 3)。
+
+### 結果
+
+- baseline 1432 → **1466 passed** (新規 +34、破壊ゼロ、113s)。
+- 試運転 Path A pure: ingestion `batch_id=20260531_102637` (47 sources、1326 articles、$0 LLM)
+  → normalized mode run exit 0 / status=completed / run_llm=39 / day_publishes=2。
+- ★ **Slot-1 cls-c8876d474612 で X1 必須目的全達成**: 新ルート稼働 (log
+  `[ScriptWithAnalysis] Generated via gemini`) / particular_angle_metadata 起動
+  (stream_2_perspective_gap、extraction_confidence=high) / sontaku_signals.level=high・
+  type=diplomatic (米国・イスラエル忖度の構造説明) / **target_enemy=None (退役確認)** /
+  selected_pattern=Cultural Divide / used_fallback=false / retries=0 / char validation passed
+  (hook=22, setup=75, twist=177, punchline=81) / max_tokens 4096 で JSON 切断ゼロ。
+- カズヤ手動 axis_5 採点: 「城→海運→電気代」具体着地 + target_enemy 退役が質に表れた、
+  punchline で「冷徹なツケの現場」(シニカル × 生活実感) で Hydrangea ブランドポジション整合。
+  CP-3 = **W1 完全成功**。
+- ★ 6 つの後続バッチ向け引継ぎ事項を確定 (X1 範囲外):
+  (1) 高リスク事実検証必要性 production 実証 (article 内に死者数 3,371人 / 兵士 25 人 /
+  スモトリッチ財務相過激発言引用、未検証) → 1-T (Editorial Guardian 配線) 必須化、FUTURE_WORK 高
+  (2) punchline 尻切れ「そこから繋がるのが、」未完結 → FUTURE_WORK
+  (3) title guard + broad/particular 切り分け曖昧さ (platform_title silence_gap 表現 + article
+  Facts も silence_gap 寄り) → 1-Q.5 + 第一作 framing 指針で扱う、DISCUSSION_NOTES 記録
+  (4) video_payload_writer.py:72 視覚プロンプト「仮想敵」語彙残存 → FUTURE_WORK 低
+  (5) run 間分散未検証 (1 batch・1 run のため) → F-periodic-health-check 統合候補
+  (6) 試運転データ確保の構造的困難 (blocker 4 連鎖: sample 不発 / スタール / 48h / RSS 重複) →
+  DISCUSSION_NOTES + FUTURE_WORK 別バッチ
+- 不変原則違反: なし (article_writer.py 不変 / script_writer.py 既存ルート不変 / triage 不変 /
+  analysis 既存ファイル不変 + 新規 1 ファイル例外条件適用 / 既存テスト不変)。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 改修 (不変原則対象外):
+  - `src/shared/models.py` (SontakuSignals + ParticularAngleMetadata + AnalysisResult optional field)
+  - `src/main.py` (分析ブロックで extractor 呼出 + model_copy で metadata 付与、run_analysis_layer 不変)
+  - `src/generation/script_writer.py` の **新ルート**
+    (`_build_script_with_analysis_prompt` に新プレースホルダ渡し、既存ルート write_script 完全不変)
+  - `configs/prompts/analysis/geo_lens/script_with_analysis.md` (metadata 入力ブロック追加)
+  - `.env` (gitignored、local-only) / `.env.example`
+    (ANALYSIS_LAYER_ENABLED=true + ANALYSIS_LLM_MAX_TOKENS=4096)
+- 新規 (不変原則 4 例外条件 5 点充足適用): `src/analysis/particular_angle_extractor.py` (単一パス α、
+  get_analysis_llm_client 経由、coerce/parse/retry/None hand-off 込み)
+- 新規プロンプト: `configs/prompts/analysis/geo_lens/particular_angle_extract.md` (統合判定プロンプト)
+- 新規テスト: `tests/conftest.py` (autouse fixture) / `tests/test_models_particular_angle.py` (10) /
+  `tests/test_particular_angle_extractor.py` (21)
+- 既存テスト追加 (新規関数のみ、既存期待値不変): `tests/test_script_writer_with_analysis.py` (+3)
+- 新規ファイル (`docs/runs/F-particular-angle-metadata-production-wire/`): `REPORT.md` /
+  `environment_snapshot.json` / `analysis_result_current.json` / `extractor_migration_design.json` /
+  `script_writer_new_route.json` / `main_dispatch_point.json` / `jp_coverage_analysis_impact.json` /
+  `side_effects_investigation.json` / `ingestion_investigation.json` / `trial_run_aggregated.json` /
+  `trial_outputs/fresh_run/*` (Slot-1 script/article/analysis snapshot)
+- ドキュメント更新: `docs/CURRENT_STATE.md` (全置換、22 つ目 1-R) / `docs/DECISION_LOG.md` (本エントリ +
+  前バッチ F-gemini-quality-tier-poc のハッシュ `880ebfb` / `f21f373` 追記) / `docs/FUTURE_WORK.md`
+  (X1 + F-analysis-max-tokens-tune 完了移動 + 新規 6 タスク) / `docs/DISCUSSION_NOTES.md`
+  (4-A 新規 1 件 = X1 完了 + 引継ぎ 6 + 4-B 再評価で旧ルート稼働エントリ Resolved 化)
+- 関連バッチ: F-particular-angle-redesign-extension (2026-05-08、メタデータ正典化) /
+  F-script-writer-target-enemy-fix-investigate (1-P、新ルート配線が sanctioned 経路と確定) /
+  F-gemini-quality-tier-poc (1-Q、モデル布陣 v2 で analysis = gemini-3.5-flash 配線) /
+  F-title-guard-coverage-claim-policy (1-Q.5、第一作着手前必須、本 trial で実証) /
+  F-periodic-health-check (1-T、run 間分散 + tier fallback 観測の統合先) /
+  Phase A.5-3b 第一作起案 (1-S、確定モデル + 候補A perspective_gap で実装)
+

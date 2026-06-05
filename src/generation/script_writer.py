@@ -1191,6 +1191,35 @@ def _build_script_with_analysis_prompt(
         channel_config.channel_id if channel_config else "geo_lens",
         "script_with_analysis",
     )
+
+    # X1 (F-particular-angle-metadata-production-wire): particular_angle_metadata +
+    # sontaku_signals (nested) を平坦化してプロンプトに渡す。None の場合は
+    # "(none)" を渡し、後方互換 (X1 配線前の挙動) を維持する (各論ルールは
+    # 足さない = クラウド誤り 9 回避、LLM の知性に委ねる)。
+    pam = getattr(analysis_result, "particular_angle_metadata", None)
+    if pam is not None:
+        pam_stream = pam.stream_classification or "(none)"
+        pam_core = (pam.core_question or "(none)").replace("\n", " ")
+        pam_diff = (pam.differentiation_from_mainstream or "(none)").replace("\n", " ")
+        pam_axis = (pam.hydrangea_axis_alignment or "(none)").replace("\n", " ")
+        ss = pam.sontaku_signals
+        if ss is not None:
+            ss_level = ss.level or "(none)"
+            ss_type = ss.type if ss.type is not None else "(none)"
+            ss_reasoning = (ss.reasoning or "(none)").replace("\n", " ")
+        else:
+            ss_level = "(none)"
+            ss_type = "(none)"
+            ss_reasoning = "(none)"
+    else:
+        pam_stream = "(none)"
+        pam_core = "(none)"
+        pam_diff = "(none)"
+        pam_axis = "(none)"
+        ss_level = "(none)"
+        ss_type = "(none)"
+        ss_reasoning = "(none)"
+
     prompt = template.format(
         event_id=scored_event.event.id,
         event_title=scored_event.event.title or "",
@@ -1204,6 +1233,13 @@ def _build_script_with_analysis_prompt(
         multi_angle_cultural_context=(multi.cultural_context or "").replace("\n", " "),
         multi_angle_media_divergence=(multi.media_divergence or "").replace("\n", " "),
         insights_block=_format_insights_for_prompt(analysis_result.insights),
+        particular_angle_stream_classification=pam_stream,
+        particular_angle_core_question=pam_core,
+        particular_angle_differentiation=pam_diff,
+        particular_angle_hydrangea_axis=pam_axis,
+        sontaku_level=ss_level,
+        sontaku_type=ss_type,
+        sontaku_reasoning=ss_reasoning,
         duration_profile=profile_id,
         target_total_chars=target_total_chars,
         selected_pattern_hint=pattern_hint,

@@ -423,6 +423,45 @@ class Insight(BaseModel):
     evidence_refs: list[str] = Field(default_factory=list)
 
 
+class SontakuSignals(BaseModel):
+    """忖度シグナル — 系統判定とは独立な別軸メタデータ。
+
+    正典: docs/PARTICULAR_ANGLE_DEFINITION.md セクション 3.6。
+    「忖度・報道規制・黙殺の構造」を系統判定 (報道状態軸) に混ぜず別軸で扱う。
+    script_writer 新ルートに渡され、LLM が忖度の背景を自律的に台本へ織り込む
+    判断材料になる (各論ルールで言い回しを強制しない = クラウド誤り 9 回避)。
+
+    全フィールドはデフォルト値を持ち、後方互換 (省略可能) を維持する。
+    """
+
+    level: str = "none"          # "high" | "medium" | "low" | "none"
+    type: Optional[str] = None   # "diplomatic" | "domestic" | "media_industry" | None
+    reasoning: str = ""          # 忖度の構造的説明 (1-2 文)
+    extraction_confidence: str = "medium"  # "high" | "medium" | "low"
+
+
+class ParticularAngleMetadata(BaseModel):
+    """特定角度メタデータ — 系統判定 + 3 要素 + 忖度シグナル (nested)。
+
+    正典: docs/PARTICULAR_ANGLE_DEFINITION.md セクション 3.7.2。
+    script_writer 新ルート (generate_script_with_analysis) に渡され、LLM が
+    系統別 (silence_gap / perspective_gap / framing_inversion) の言い回しを
+    自律選択する判断材料になる。具体的な言い回しは強制ルールで指定せず、
+    メタデータ構造を渡して LLM の知性に委ねる (クラウド誤り 9 回避)。
+
+    全フィールドはデフォルト値を持ち、後方互換 (省略可能) を維持する。
+    """
+
+    stream_classification: str = "out_of_scope"
+    # "stream_1_silence_gap" | "stream_2_perspective_gap"
+    # | "stream_3_framing_inversion" | "out_of_scope"
+    core_question: str = ""                     # 特定角度の核心 (1-2 文)
+    differentiation_from_mainstream: str = ""   # 既存報道との差 (1-2 文)
+    hydrangea_axis_alignment: str = ""          # 4 軸該当性 (1 軸特定)
+    extraction_confidence: str = "medium"       # particular_angle 抽出の自信度
+    sontaku_signals: Optional[SontakuSignals] = None
+
+
 class AnalysisResult(BaseModel):
     """分析レイヤーの最終出力。{event_id}_analysis.json として保存される。"""
 
@@ -440,6 +479,10 @@ class AnalysisResult(BaseModel):
     analysis_version: str = "v1.0"
     generated_at: str
     llm_calls_used: int = 0
+    # ── 特定角度メタデータ (X1: F-particular-angle-metadata-production-wire) ──
+    # ANALYSIS_LAYER_ENABLED=true 時に main.py が particular_angle_extractor で
+    # 抽出して付与する。default None で既存挙動を壊さない (後方互換)。
+    particular_angle_metadata: Optional[ParticularAngleMetadata] = None
 
 
 class RecencyRecord(BaseModel):

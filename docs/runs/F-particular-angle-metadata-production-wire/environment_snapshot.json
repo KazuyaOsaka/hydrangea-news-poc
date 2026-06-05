@@ -1,0 +1,15 @@
+{
+  "task": "A: 環境スナップショット",
+  "batch": "F-particular-angle-metadata-production-wire",
+  "branch": "feature/F-particular-angle-metadata-production-wire",
+  "main_HEAD_at_branch": "f21f3734f22baf44b16b856e217ad161253b17c1",
+  "main_HEAD_short": "f21f373",
+  "expected_HEAD": "f21f373 (F-gemini-quality-tier-poc merge)",
+  "HEAD_matches_expected": true,
+  "baseline_test": "1432 passed in 76.67s (exit 0)",
+  "python_env": {"python": "3.11.15", "platform": "macOS-26.2-arm64-arm-64bit"},
+  "prev_batch_decision_log_hashes": {
+    "F-gemini-quality-tier-poc_feat": "880ebfb",
+    "F-gemini-quality-tier-poc_merge": "f21f373"
+  }
+}

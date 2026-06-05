@@ -53,6 +53,23 @@ multi_angle:
 insights（importance 降順、各行: importance | text | evidence_refs）:
 {insights_block}
 
+particular_angle_metadata (★ X1 配線、台本表現を LLM が自律選択するための判断材料):
+  stream_classification: {particular_angle_stream_classification}
+  core_question: {particular_angle_core_question}
+  differentiation_from_mainstream: {particular_angle_differentiation}
+  hydrangea_axis_alignment: {particular_angle_hydrangea_axis}
+
+sontaku_signals (★ X1 配線、忖度シグナル別軸メタデータ):
+  level: {sontaku_level}
+  type: {sontaku_type}
+  reasoning: {sontaku_reasoning}
+
+★ particular_angle_metadata + sontaku_signals は **台本表現の判断材料** であり、
+具体的な言い回しを強制するものではありません。あなたの知性で系統と忖度シグナルに
+整合した自然な日本語を選んでください (silence_gap=完全空白 / perspective_gap=
+事件は報道済だが角度未報道 / framing_inversion=報道済+解釈差)。メタデータが
+"(none)" の場合は従来通り insights ベースで進めて構いません。
+
 duration_profile: {duration_profile}
 target_total_chars: {target_total_chars}（目安、4 ブロック合計）
 

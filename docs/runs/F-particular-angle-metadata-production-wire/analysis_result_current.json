@@ -1,0 +1,29 @@
+{
+  "task": "B-1: AnalysisResult 現状確認",
+  "file": "src/shared/models.py",
+  "AnalysisResult_class_line": 426,
+  "current_fields": [
+    "event_id: str",
+    "channel_id: str",
+    "selected_perspective: PerspectiveCandidate",
+    "rejected_perspectives: list[PerspectiveCandidate]",
+    "perspective_verified: bool",
+    "verification_notes: str = ''",
+    "multi_angle: MultiAngleAnalysis",
+    "insights: list[Insight]",
+    "selected_duration_profile: str",
+    "expanded_sources: list[str]",
+    "visual_mood_tags: list[str]",
+    "analysis_version: str = 'v1.0'",
+    "generated_at: str",
+    "llm_calls_used: int = 0"
+  ],
+  "particular_angle_metadata_present": false,
+  "sontaku_signals_present": false,
+  "ParticularAngleMetadata_class_present": false,
+  "SontakuSignals_class_present": false,
+  "grep_src_particular_angle_metadata": "0 件 (起案前提どおり未配線、再確認 CONFIRMED)",
+  "grep_src_sontaku_signals": "0 件 (起案前提どおり未配線、再確認 CONFIRMED)",
+  "optional_field_addition_safety": "AnalysisResult は Pydantic BaseModel。Optional[...] = None フィールド追加は既存生成箇所 (analysis_engine.run_analysis_layer) を壊さない (default None で省略可能)。ScoredEvent.analysis_result は forward ref (models.py:170, 459 で model_rebuild 済)。",
+  "key_finding": "既存 AnalysisResult は perspective_extractor / multi_angle_analyzer / insight_extractor ベース (Batch 5 / 2026-04 実装)。particular_angle_metadata + sontaku_signals (docs 2026-05 概念) とは別系統。本バッチは前者に後者を optional field として追加配線する。"
+}

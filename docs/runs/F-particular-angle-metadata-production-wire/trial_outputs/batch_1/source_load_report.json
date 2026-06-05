@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-05-31T09:30:16.597040+00:00",
+  "summary": {
+    "total_normalized": 0,
+    "total_loaded": 0,
+    "total_dropped": 0,
+    "sources_with_drops": 0,
+    "bug_suspected_sources": [],
+    "full_dedup_sources": []
+  },
+  "by_source": {}
+}

@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-05-31T09:30:16.597691+00:00",
+  "summary": {
+    "cross_lang_bfs_edges": 0,
+    "llm_pairs_merged": 0,
+    "total_cross_lang_clusters": 0
+  },
+  "bfs_phase": {
+    "jp_clusters_count": 0,
+    "en_clusters_count": 0,
+    "cross_lang_edges_formed": 0,
+    "reject_reason_histogram": {},
+    "notes": "insufficient_anchor_hits: strong anchor present but count < 1 (unlikely). weak_only_insufficient: no strong anchor AND total anchors < 3."
+  },
+  "llm_post_merge_phase": {
+    "jp_clusters_count": 0,
+    "en_clusters_count": 0,
+    "cross_lang_pairs_total": 0,
+    "after_cheap_score_filter": 0,
+    "pairs_considered": 0,
+    "pairs_rejected_by_predicate_guard": 0,
+    "llm_pairs_submitted": 0,
+    "llm_pairs_merged": 0,
+    "skip_reason_histogram": {}
+  },
+  "batch_merge_verdicts": {
+    "same_event_count": 0,
+    "related_but_distinct_count": 0,
+    "different_event_count": 0,
+    "parse_error_count": 0,
+    "budget_cut_count": 0
+  },
+  "batch_merge_examples": {
+    "same_event": [],
+    "related_but_distinct": [],
+    "different_event": []
+  },
+  "per_jp_cluster": []
+}

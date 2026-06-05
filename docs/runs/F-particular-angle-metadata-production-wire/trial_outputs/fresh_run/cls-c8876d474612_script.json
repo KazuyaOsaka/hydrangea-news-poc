@@ -1,0 +1,79 @@
+{
+  "event_id": "cls-c8876d474612",
+  "title": "Israel seizes strategic castle as it expands invasion of south Lebanon",
+  "intro": "",
+  "sections": [
+    {
+      "heading": "hook",
+      "body": "築900年の城。それが、今も現役の戦場です。",
+      "duration_sec": 4
+    },
+    {
+      "heading": "setup",
+      "body": "レバノン南部で、イスラエル軍が停戦境界を越え、歴史遺産ボーフォール城を占領しました。公式には安全保障ですが、これはかつて占領していた要衝の再奪取です。",
+      "duration_sec": 20
+    },
+    {
+      "heading": "twist",
+      "body": "実はここに決定的な認識のズレがあります。日本人は文化財を保護対象と見ますが、現地では標高700メートルの要衝は築900年の今も現役の軍事拠点です。停戦合意という紙のルールよりも、実質支配を優先する冷徹な実利主義。この対立の長期化は日本郵船や商船三井などの大手海運にスエズ運河を避けた喜望峰迂回を長期化させ、国内製造業の調達遅延とコスト増に直結しています。",
+      "duration_sec": 52
+    },
+    {
+      "heading": "punchline",
+      "body": "これは遠い国の出来事ではありません。毎月届く電気代の請求書こそが、ルールが機能しない世界で私たちが支払うことになる、冷徹なツケの現場なのです。そこから繋がるのが、",
+      "duration_sec": 24
+    }
+  ],
+  "outro": "",
+  "total_duration_sec": 100,
+  "target_duration_sec": 80,
+  "estimated_duration_sec": 79,
+  "platform_profile": "shared",
+  "title_layer": {
+    "canonical_title": "Israel seizes strategic castle as it expands invasion of south Lebanon",
+    "platform_title": "日本では報道されないIsraelの視点",
+    "hook_line": "海外の見方、日本とは違う。",
+    "thumbnail_text": "日本 vs 海外",
+    "title_strength": "strong",
+    "title_style": "Cultural Divide"
+  },
+  "director_thought": "日本と中東における『歴史遺産』や『合意』への認識のズレを主軸に、文化断層型（Cultural Divide）で構造化。遠い地の要衝占領が、日本の海運迂回とコスト増（電気代や物価）に直結する因果関係を浮き彫りにしました。",
+  "target_enemy": null,
+  "selected_pattern": "Cultural Divide",
+  "loop_mechanism": "loop-2",
+  "seo_keywords": {
+    "primary": "ボーフォール城",
+    "secondary": [
+      "イスラエル侵攻",
+      "地政学リスク",
+      "喜望峰迂回"
+    ]
+  },
+  "thumbnail_text_variants": {
+    "main": "現役の要衝",
+    "sub": "築900年の城を占領した冷徹な意図"
+  },
+  "hook_variants": [
+    {
+      "type": "A",
+      "label": "数字ショック",
+      "text": "築900年の城。それが、今も現役の戦場です。"
+    },
+    {
+      "type": "D",
+      "label": "逆説宣言",
+      "text": "保護すべき歴史遺産が、今も奪い合う要衝の現実。"
+    },
+    {
+      "type": "E",
+      "label": "名指し暴露",
+      "text": "レバノン南部で、イスラエル軍が奪った砦。"
+    }
+  ],
+  "peaks": {
+    "3s": "境界越えの真意",
+    "7s": "ボーフォール城の占領",
+    "15s": "歴史遺産に対する認識のズレ",
+    "30s": "日本の大手海運と電気代への影響"
+  }
+}

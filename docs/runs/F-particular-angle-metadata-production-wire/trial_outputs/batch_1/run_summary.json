@@ -1,0 +1,154 @@
+{
+  "job_id": "c02ad8c1-8c31-4d96-bcdf-bcbbf73be70f",
+  "generated_at": "2026-05-31T09:30:16.628153+00:00",
+  "status": "skipped",
+  "event_id": "none",
+  "batch": {
+    "batch_id": "20260424_023911",
+    "batch_raw_count": 25,
+    "batch_normalized_count": 25,
+    "total_articles_loaded": 0,
+    "schedule_action": "noop_no_events",
+    "archived_file_count": 0
+  },
+  "source_inventory": {},
+  "ingestion": {
+    "source_normalized_counts": {},
+    "source_adopted_counts": {},
+    "jp_article_count": 0,
+    "en_article_count": 0,
+    "total_article_count": 0,
+    "region_article_counts": {},
+    "garbage_filter": {
+      "enabled": true,
+      "before": 505,
+      "after": 0,
+      "removed": 505
+    }
+  },
+  "clustering": {
+    "clusters_before_llm": 0,
+    "clusters_after_llm": 0,
+    "cross_lang_bfs_edges": 0,
+    "cross_lang_cluster_count": 0,
+    "cross_lang_source_counts": {},
+    "cluster_size_distribution": {},
+    "cluster_size_distribution_bfs": {},
+    "max_cluster_size_bfs": 0,
+    "max_cluster_size_after_split": 0,
+    "giant_clusters_detected": 0,
+    "giant_clusters_split": 0,
+    "giant_cluster_warnings": [],
+    "llm_pairs_total": 0,
+    "llm_pairs_filtered": 0,
+    "llm_pairs_sent_to_llm": 0,
+    "llm_pairs_merged": 0,
+    "events_built": 0
+  },
+  "merge_summary": {
+    "pairs_considered": 0,
+    "pairs_rejected_by_predicate_guard": 0,
+    "pairs_sent_to_batch_llm": 0,
+    "same_event_count": 0,
+    "related_but_distinct_count": 0,
+    "different_event_count": 0,
+    "parse_error_count": 0,
+    "budget_cut_count": 0,
+    "same_event_examples": [],
+    "related_but_distinct_examples": [],
+    "different_event_examples": []
+  },
+  "budget": {
+    "run_llm_calls": 0,
+    "run_budget": 150,
+    "day_llm_calls": 0,
+    "day_budget": 1000,
+    "reserved_for_script": 1,
+    "reserved_for_article": 1,
+    "remaining_before_script": null,
+    "remaining_before_article": null,
+    "retry_counts": {},
+    "run_mode": "publish_mode",
+    "daily_budget_total": 1000,
+    "exploration_budget_used": 0,
+    "publish_reserve_budget": 15,
+    "publish_reserve_preserved": true,
+    "stopped_exploration_due_to_publish_reserve": false,
+    "slot1_budget_guaranteed": true
+  },
+  "model_roles": {
+    "merge_batch": {
+      "provider": "gemini",
+      "requested": "gemini-2.5-flash",
+      "resolved": "gemini-2.5-flash",
+      "resolution_reason": "role_config_direct"
+    },
+    "judge": {
+      "provider": "gemini",
+      "requested": "gemini-3.5-flash",
+      "resolved": "gemini-3.5-flash",
+      "resolution_reason": "not_resolved"
+    },
+    "generation": {
+      "provider": "gemini",
+      "requested": "gemini-3.5-flash",
+      "resolved": "gemini-3.5-flash",
+      "resolution_reason": "role_config_direct"
+    }
+  },
+  "generation_outcomes": {
+    "script": {},
+    "article": {}
+  },
+  "daily_schedule": null,
+  "generation_tracking": {
+    "scheduled_event_id": null,
+    "generated_event_id": "none",
+    "schedule_snapshot_used": false,
+    "schedule_mismatch_resolved": false,
+    "ids_match": true,
+    "no_publishable_candidates": false,
+    "all_selected_published": false,
+    "fallback_blocked_by_quality_floor": false,
+    "scheduled_slot1_id": null,
+    "reranked_top_id": null,
+    "final_selected_slot1_id": null,
+    "slot1_selection_source": "unknown",
+    "slot1_is_judged": false,
+    "slot1_publishability_class": null,
+    "slot1_jp_source_count": null,
+    "slot1_en_source_count": null,
+    "slot1_block_reason": null,
+    "slot1_source_titles_present_jp": null,
+    "slot1_source_titles_present_en": null,
+    "slot1_coherence_input_quality": null,
+    "slot1_overlap_signals": null,
+    "slot1_semantic_coherence_score": null,
+    "slot1_coherence_gate_passed": null,
+    "published_event_id": null,
+    "publish_mark_target": null,
+    "selection_override_applied": false
+  },
+  "rolling_window": {
+    "comparison_window_hours": 36,
+    "max_window_hours": 48,
+    "current_batch_candidates": 0,
+    "carried_over_recent_candidates": 0,
+    "expired_candidate_count": 0,
+    "duplicate_suppressed_count": 0,
+    "upgraded_from_recent_pool_count": 0
+  },
+  "judge_summary": {
+    "judge_enabled": false,
+    "judged_count": 0
+  },
+  "editorial_mission_filter": {
+    "editorial_mission_filter_applied": false
+  },
+  "av_render": {
+    "audio_render_enabled": false,
+    "video_render_enabled": false,
+    "audio_generated": false,
+    "video_generated": false
+  }
+}

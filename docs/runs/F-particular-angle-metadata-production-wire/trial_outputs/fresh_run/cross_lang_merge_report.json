@@ -1,0 +1,362 @@
+{
+  "generated_at": "2026-05-31T10:49:31.907584+00:00",
+  "summary": {
+    "cross_lang_bfs_edges": 232,
+    "llm_pairs_merged": 3,
+    "total_cross_lang_clusters": 8
+  },
+  "bfs_phase": {
+    "jp_clusters_count": 30,
+    "en_clusters_count": 209,
+    "cross_lang_edges_formed": 232,
+    "reject_reason_histogram": {
+      "weak_only_insufficient": 1932
+    },
+    "notes": "insufficient_anchor_hits: strong anchor present but count < 1 (unlikely). weak_only_insufficient: no strong anchor AND total anchors < 3."
+  },
+  "llm_post_merge_phase": {
+    "jp_clusters_count": 32,
+    "en_clusters_count": 212,
+    "cross_lang_pairs_total": 6784,
+    "after_cheap_score_filter": 36,
+    "pairs_considered": 36,
+    "pairs_rejected_by_predicate_guard": 0,
+    "llm_pairs_submitted": 36,
+    "llm_pairs_merged": 3,
+    "skip_reason_histogram": {
+      "not_top_k": 6720,
+      "low_similarity": 28
+    }
+  },
+  "batch_merge_verdicts": {
+    "same_event_count": 3,
+    "related_but_distinct_count": 2,
+    "different_event_count": 31,
+    "parse_error_count": 0,
+    "budget_cut_count": 0
+  },
+  "batch_merge_examples": {
+    "same_event": [
+      {
+        "jp_title": "イラン戦闘終結の覚書合意は不透明 米は経済制裁",
+        "en_title": "US Says Deals With Iran for Safe Hormuz Transit Are Prohibited - Bloomberg.com",
+        "verdict": "same_event",
+        "reason": "Both headlines concern the US restricting or prohibiting agreements with Iran regarding transit or conflict resolution."
+      },
+      {
+        "jp_title": "イラン戦闘終結の覚書合意は不透明 米は経済制裁",
+        "en_title": "Usa inviano a Teheran proposta accordo più dura. Iran: non abbiamo fiducia nelle promesse del nemico",
+        "verdict": "same_event",
+        "reason": "Both headlines refer to stalled or difficult negotiations between the US and Iran concerning an agreement."
+      },
+      {
+        "jp_title": "【速報】米長官、中国の覇権主義的行動をけん制 - 47NEWS",
+        "en_title": "Hegseth at Shangri-La Dialogue warns China's military build-up causing 'alarm' across Asia, says US seeking 'stable equilibrium' - WION",
+        "verdict": "same_event",
+        "reason": "Both headlines refer to the US Secretary's comments at the Shangri-La Dialogue regarding China's military behavior."
+      }
+    ],
+    "related_but_distinct": [
+      {
+        "jp_title": "【速報】「日本の防衛力強化を議論」と米長官 - 47NEWS",
+        "en_title": "(LEAD) S. Korea, Japan to resume joint maritime search drills early next month: Seoul defense chief",
+        "verdict": "related_but_distinct",
+        "reason": "While both involve defense discussions, joint maritime search drills are a specific operational event distinct from general defense talks."
+      },
+      {
+        "jp_title": "【速報】「日本の防衛力強化を議論」と米長官 - 47NEWS",
+        "en_title": "Defense chiefs of S. Korea, U.S., Japan reaffirm security cooperation in brief encounter",
+        "verdict": "related_but_distinct",
+        "reason": "A brief encounter between defense chiefs is distinct from a formal, specific discussion on Japan's defense strength."
+      }
+    ],
+    "different_event": [
+      {
+        "jp_title": "ヘグセス米国防長官、集団防衛の役割果たさない国との「関係見直し」警告…同盟国に国防費引き上げ要求 - 読売新聞",
+        "en_title": "China Factory Activity Worsens in Warning Sign for Economy - Bloomberg.com",
+        "verdict": "different_event",
+        "reason": "Hegseth's warning to allies about defense spending is unrelated to China's factory activity."
+      },
+      {
+        "jp_title": "ヘグセス米国防長官、集団防衛の役割果たさない国との「関係見直し」警告…同盟国に国防費引き上げ要求 - 読売新聞",
+        "en_title": "Japan rejects 'new militarism', accuses China of rapidly arming - Reuters",
+        "verdict": "different_event",
+        "reason": "Hegseth's defense policy warning is a distinct event from Japan's diplomatic accusations against China regarding militarism."
+      },
+      {
+        "jp_title": "イラン代表、入国ビザもまだ…サッカーW杯に戦禍が落とす影 - 毎日新聞",
+        "en_title": "US military says it turned away blockade runner trying to reach Iranian port - Reuters",
+        "verdict": "different_event",
+        "reason": "The Iranian national soccer team's visa issues are unrelated to the US military intercepting a blockade runner."
+      },
+      {
+        "jp_title": "イラン代表、入国ビザもまだ…サッカーW杯に戦禍が落とす影 - 毎日新聞",
+        "en_title": "Iran reasserts control over Hormuz Strait as deal with US remains elusive",
+        "verdict": "different_event",
+        "reason": "Soccer team travel issues are distinct from Iran's strategic control of the Hormuz Strait."
+      },
+      {
+        "jp_title": "【速報】イラン交渉で「良い合意」実現すると米長官 - 47NEWS",
+        "en_title": "Iran war raises airfares for haj pilgrimage to Saudi Arabia",
+        "verdict": "different_event",
+        "reason": "Diplomatic negotiations are unrelated to commercial airfare impacts from regional conflict."
+      },
+      {
+        "jp_title": "【速報】イラン交渉で「良い合意」実現すると米長官 - 47NEWS",
+        "en_title": "A broken economy and an emboldened regime: Iranians abandoned to endure fallout from war",
+        "verdict": "different_event",
+        "reason": "The US Secretary's statement on Iran negotiations is a distinct political event from general reporting on Iran's internal economic hardship."
+      },
+      {
+        "jp_title": "小泉防衛相“高い透明性で防衛力強化” 中国の批判念頭に反論",
+        "en_title": "Israel claims control of strategic Beaufort Castle in southern Lebanon",
+        "verdict": "different_event",
+        "reason": "Japan's defense minister discussing transparency is unrelated to Israeli military operations in Lebanon."
+      },
+      {
+        "jp_title": "小泉防衛相“高い透明性で防衛力強化” 中国の批判念頭に反論",
+        "en_title": "Video: Israeli strike hits crowded market in Gaza City",
+        "verdict": "different_event",
+        "reason": "Japan's defense policy discussion is unrelated to an Israeli airstrike in Gaza."
+      },
+      {
+        "jp_title": "日米防衛相 同盟の抑止力と対処力強化で協力一致",
+        "en_title": "US Says Deals With Iran for Safe Hormuz Transit Are Prohibited - Bloomberg.com",
+        "verdict": "different_event",
+        "reason": "Japan-US defense cooperation is unrelated to US policy on Iranian transit deals."
+      },
+      {
+        "jp_title": "日米防衛相 同盟の抑止力と対処力強化で協力一致",
+        "en_title": "Mosca, drone ucraino colpisce unità della centrale di Zaporizhzhia. Nessuna anomalia",
+        "verdict": "different_event",
+        "reason": "Japan-US defense talks are unrelated to a drone incident at the Zaporizhzhia nuclear plant."
+      }
+    ]
+  },
+  "per_jp_cluster": [
+    {
+      "jp_title": "ヘグセス米国防長官、集団防衛の役割果たさない国との「関係見直し」警告…同盟国に国防費引き上げ要求 - 読売新聞",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "イラン戦闘終結の覚書合意は不透明 米は経済制裁",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "イラン代表、入国ビザもまだ…サッカーW杯に戦禍が落とす影 - 毎日新聞",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "【速報】イラン交渉で「良い合意」実現すると米長官 - 47NEWS",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "小泉防衛相“高い透明性で防衛力強化” 中国の批判念頭に反論",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "日米防衛相 同盟の抑止力と対処力強化で協力一致",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "ドローン攻撃におびえるロシア占領地　クリミアではガソリン求め行列",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    },
+    {
+      "jp_title": "【速報】同盟国が負担拒否なら対応変えると米長官 - 47NEWS",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    },
+    {
+      "jp_title": "【速報】「日本の防衛力強化を議論」と米長官 - 47NEWS",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "ガソリン補助「月４０００億円」、与野党から引き下げ検討求める声…高市首相「価格はＧ７で最安水準」 - 読売新聞",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    },
+    {
+      "jp_title": "万博で注目集めた「ｉＰＳ心臓」、来春ＪＲ大阪駅周辺で展示へ - 読売新聞",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    },
+    {
+      "jp_title": "６月の食品値上げ１０７８品目、今月の１３倍に…中東情勢悪化によるコスト高背景「さらに増える可能性」 - 読売新聞",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    },
+    {
+      "jp_title": "８人死亡の医療事故教訓に…群馬大病院、患者が検査画像や薬処方記録などをスマホ閲覧できるサービス提供 - 読売新聞",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    },
+    {
+      "jp_title": "米英豪のAUKUS、第2の柱は水中ドローン装備　国防相会談で合意",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "「ないもの」とされた心の傷 現在にも続く過酷な現実を明らかに - 毎日新聞",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    },
+    {
+      "jp_title": "統合先も決まらぬまま 廃校急いだ市、裏で動いた「黒塗り」の関係者 - 毎日新聞",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    },
+    {
+      "jp_title": "米、イラン合意不成立なら攻撃再開の用意 国防長官表明 - Reuters",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "【速報】オマーン領海で機雷とみられる浮遊物 - 47NEWS",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    },
+    {
+      "jp_title": "【速報】米長官「同盟にただ乗り許さず」と負担要求 - 47NEWS",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    },
+    {
+      "jp_title": "防衛相“ニュージーランドが護衛艦選定なら相互運用性向上”",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "西村氏、税率1％案に言及 消費減税「早くできる」 - 47NEWS",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    },
+    {
+      "jp_title": "「変な客こそ本命」　ドラッカー理論を追求、異色の京都町工場集団",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "【速報】米長官、中国の覇権主義的行動をけん制 - 47NEWS",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "海自のあぶくま型護衛艦、退役後速やかにフィリピンへ ＴＣ－９０は27年度 - Reuters",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "日韓防衛相 6月に海自と韓国海軍の捜索救難訓練実施を確認",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "子どものSNS禁止は「図書館の閉鎖」と同じ？　人権の専門家が警鐘",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    },
+    {
+      "jp_title": "【速報】あらゆる選択肢排除せず拉致問題解決と首相 - 47NEWS",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    },
+    {
+      "jp_title": "女性皇族 結婚後も皇室残るかを選択可能に 衆参議長らが検討",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "米ブルーオリジンの新型ロケット 燃焼試験中に爆発",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "トキ放鳥、能登の空舞う　56年ぶり本州で野生に「復興のシンボル」",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "ESGは絶滅種か　熱狂からアンチ、そして「当たり前」の20年",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 0,
+      "passed_to_llm": 2
+    },
+    {
+      "jp_title": "NISA格差、年収や地域でばらつき　「いつの間にか富裕層」も",
+      "en_candidates_total": 212,
+      "not_top_k": 210,
+      "low_similarity": 2,
+      "passed_to_llm": 0
+    }
+  ]
+}

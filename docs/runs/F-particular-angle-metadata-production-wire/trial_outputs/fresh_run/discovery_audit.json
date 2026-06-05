@@ -1,0 +1,1113 @@
+{
+  "generated_at": "2026-05-31T10:49:31.911913+00:00",
+  "total_candidates": 247,
+  "summary": {
+    "linked_jp_global_count": 8,
+    "global_big_japan_missing_count": 10,
+    "jp_missing_global_link_count": 10,
+    "dominant_failure_mode": "none"
+  },
+  "lanes": {
+    "A_linked_jp_global_top10": [
+      {
+        "event_id": "cls-352d8d308324",
+        "title": "米大統領が覚書の修正要求か イスラエルはヒズボラへの攻撃も",
+        "bucket": "politics_economy",
+        "score": 100.0,
+        "source_counts_by_region": {
+          "japan": 77,
+          "middle_east": 6,
+          "east_asia": 14,
+          "europe": 9,
+          "south_asia": 9,
+          "latin_america": 6,
+          "global": 19,
+          "global_south": 1
+        },
+        "japan_source_count": 77,
+        "en_source_count": 64,
+        "non_west_source_count": 20,
+        "source_regions": [
+          "east_asia",
+          "europe",
+          "global",
+          "global_south",
+          "japan",
+          "latin_america",
+          "middle_east",
+          "south_asia"
+        ],
+        "cross_lang_cluster": true,
+        "merge_confidence": "low",
+        "japan_relevance_score": 7.0,
+        "global_attention_score": 8.0,
+        "perspective_gap_score": 5.0,
+        "coverage_gap_score": 3.0,
+        "background_inference_potential": 5.0,
+        "indirect_japan_impact_score": 10.0,
+        "blind_spot_score": 8.44,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "JP and global press cover this from opposing angles — strong perspective gap.",
+        "why_not_publishable_yet": "Impact on Japan not established — quality floor requires this field."
+      },
+      {
+        "event_id": "cls-77432745c375",
+        "title": "WHO事務局長 エボラ出血熱流行確認のコンゴ民主共和国を訪問",
+        "bucket": "politics_economy",
+        "score": 98.95,
+        "source_counts_by_region": {
+          "global": 2,
+          "east_asia": 3,
+          "europe": 1,
+          "japan": 1,
+          "latin_america": 1
+        },
+        "japan_source_count": 1,
+        "en_source_count": 7,
+        "non_west_source_count": 3,
+        "source_regions": [
+          "east_asia",
+          "europe",
+          "global",
+          "japan",
+          "latin_america"
+        ],
+        "cross_lang_cluster": true,
+        "merge_confidence": "low",
+        "japan_relevance_score": 7.0,
+        "global_attention_score": 8.0,
+        "perspective_gap_score": 5.0,
+        "coverage_gap_score": 3.0,
+        "background_inference_potential": 5.0,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 5.44,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "JP and global press cover this from opposing angles — strong perspective gap.",
+        "why_not_publishable_yet": "Impact on Japan not established — quality floor requires this field."
+      },
+      {
+        "event_id": "cls-a26fa8290255",
+        "title": "イラン戦闘終結の覚書合意は不透明 米は経済制裁",
+        "bucket": "politics_economy",
+        "score": 98.6,
+        "source_counts_by_region": {
+          "japan": 1,
+          "global": 1,
+          "east_asia": 1,
+          "europe": 1
+        },
+        "japan_source_count": 1,
+        "en_source_count": 3,
+        "non_west_source_count": 1,
+        "source_regions": [
+          "east_asia",
+          "europe",
+          "global",
+          "japan"
+        ],
+        "cross_lang_cluster": true,
+        "merge_confidence": "low",
+        "japan_relevance_score": 7.0,
+        "global_attention_score": 6.0,
+        "perspective_gap_score": 5.0,
+        "coverage_gap_score": 3.0,
+        "background_inference_potential": 5.0,
+        "indirect_japan_impact_score": 7.0,
+        "blind_spot_score": 6.79,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "JP and global press cover this from opposing angles — strong perspective gap.",
+        "why_not_publishable_yet": "Impact on Japan not established — quality floor requires this field."
+      },
+      {
+        "event_id": "cls-c9ebac986fad",
+        "title": "ルーマニアがロシア総領事館閉鎖、住宅への無人機衝突で大統領「どのように侵入したかは知っている」 - 読売新聞",
+        "bucket": "politics_economy",
+        "score": 98.3,
+        "source_counts_by_region": {
+          "japan": 3,
+          "middle_east": 1,
+          "global": 1,
+          "europe": 2
+        },
+        "japan_source_count": 3,
+        "en_source_count": 4,
+        "non_west_source_count": 1,
+        "source_regions": [
+          "europe",
+          "global",
+          "japan",
+          "middle_east"
+        ],
+        "cross_lang_cluster": true,
+        "merge_confidence": "low",
+        "japan_relevance_score": 7.0,
+        "global_attention_score": 6.0,
+        "perspective_gap_score": 5.0,
+        "coverage_gap_score": 0.0,
+        "background_inference_potential": 4.5,
+        "indirect_japan_impact_score": 3.5,
+        "blind_spot_score": 4.8,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "JP and global press cover this from opposing angles — strong perspective gap.",
+        "why_not_publishable_yet": "Impact on Japan not established — quality floor requires this field."
+      },
+      {
+        "event_id": "cls-656f9cc47deb",
+        "title": "大熊に世界初「人工ダイヤ半導体」量産工場 - 47NEWS",
+        "bucket": "general",
+        "score": 58.25,
+        "source_counts_by_region": {
+          "east_asia": 1,
+          "japan": 1,
+          "global": 1
+        },
+        "japan_source_count": 1,
+        "en_source_count": 2,
+        "non_west_source_count": 1,
+        "source_regions": [
+          "east_asia",
+          "global",
+          "japan"
+        ],
+        "cross_lang_cluster": true,
+        "merge_confidence": "low",
+        "japan_relevance_score": 5.0,
+        "global_attention_score": 6.0,
+        "perspective_gap_score": 5.0,
+        "coverage_gap_score": 3.0,
+        "background_inference_potential": 6.5,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 4.69,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "JP and global press cover this from opposing angles — strong perspective gap.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied."
+      },
+      {
+        "event_id": "cls-1cb622f6ce44",
+        "title": "中国の主張とは裏腹の台湾 「独立宣言」が議論されない背景とは - 毎日新聞",
+        "bucket": "politics_economy",
+        "score": 96.95,
+        "source_counts_by_region": {
+          "japan": 1,
+          "global": 4
+        },
+        "japan_source_count": 1,
+        "en_source_count": 4,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "global",
+          "japan"
+        ],
+        "cross_lang_cluster": true,
+        "merge_confidence": "low",
+        "japan_relevance_score": 7.0,
+        "global_attention_score": 6.0,
+        "perspective_gap_score": 5.0,
+        "coverage_gap_score": 3.0,
+        "background_inference_potential": 5.0,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 3.69,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "JP and global press cover this from opposing angles — strong perspective gap.",
+        "why_not_publishable_yet": "Impact on Japan not established — quality floor requires this field."
+      },
+      {
+        "event_id": "cls-0f3c9c699c78",
+        "title": "ゼレンスキー大統領“ロシアが新たな大規模攻撃計画との情報”",
+        "bucket": "politics_economy",
+        "score": 88.35,
+        "source_counts_by_region": {
+          "japan": 1,
+          "russia_cis": 1
+        },
+        "japan_source_count": 1,
+        "en_source_count": 1,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "japan",
+          "russia_cis"
+        ],
+        "cross_lang_cluster": true,
+        "merge_confidence": "low",
+        "japan_relevance_score": 7.0,
+        "global_attention_score": 4.0,
+        "perspective_gap_score": 5.0,
+        "coverage_gap_score": 0.0,
+        "background_inference_potential": 4.5,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 2.0,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "JP and global press cover this from opposing angles — strong perspective gap.",
+        "why_not_publishable_yet": "Impact on Japan not established — quality floor requires this field."
+      },
+      {
+        "event_id": "cls-6ed8dce9e7fb",
+        "title": "【速報】米長官、中国の覇権主義的行動をけん制 - 47NEWS",
+        "bucket": "general",
+        "score": 55.2,
+        "source_counts_by_region": {
+          "south_asia": 1,
+          "japan": 1
+        },
+        "japan_source_count": 1,
+        "en_source_count": 1,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "japan",
+          "south_asia"
+        ],
+        "cross_lang_cluster": true,
+        "merge_confidence": "low",
+        "japan_relevance_score": 5.0,
+        "global_attention_score": 4.0,
+        "perspective_gap_score": 5.0,
+        "coverage_gap_score": 3.0,
+        "background_inference_potential": 6.5,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 2.94,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "JP and global press cover this from opposing angles — strong perspective gap.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied."
+      }
+    ],
+    "B_global_big_japan_missing_top10": [
+      {
+        "event_id": "cls-82101968fa87",
+        "title": "NYT: Trump sent revised proposal with toughened terms back to Iran",
+        "bucket": "tech_geopolitics",
+        "score": 78.0,
+        "source_counts_by_region": {
+          "middle_east": 1
+        },
+        "japan_source_count": 0,
+        "en_source_count": 1,
+        "non_west_source_count": 1,
+        "source_regions": [
+          "middle_east"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 0.0,
+        "global_attention_score": 8.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 6.0,
+        "background_inference_potential": 3.0,
+        "indirect_japan_impact_score": 2.5,
+        "blind_spot_score": 6.62,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Major global story with near-zero Japanese press coverage — textbook blind spot.",
+        "why_not_publishable_yet": "Impact on Japan not established — quality floor requires this field."
+      },
+      {
+        "event_id": "cls-5bcf77445b2b",
+        "title": "Middle East crisis live: Israeli army captures strategic castle in Lebanon in deepest incursion into country in 26 years",
+        "bucket": "sports",
+        "score": 45.95,
+        "source_counts_by_region": {
+          "europe": 1,
+          "global_south": 1
+        },
+        "japan_source_count": 0,
+        "en_source_count": 2,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "europe",
+          "global_south"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 0.0,
+        "global_attention_score": 8.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 6.0,
+        "background_inference_potential": 3.0,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 5.38,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Major global story with near-zero Japanese press coverage — textbook blind spot.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied."
+      },
+      {
+        "event_id": "cls-462f48bfe6e7",
+        "title": "Iran reasserts control over Hormuz Strait as deal with US remains elusive",
+        "bucket": "coverage_gap",
+        "score": 38.5,
+        "source_counts_by_region": {
+          "middle_east": 1
+        },
+        "japan_source_count": 0,
+        "en_source_count": 1,
+        "non_west_source_count": 1,
+        "source_regions": [
+          "middle_east"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 0.0,
+        "global_attention_score": 4.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 6.0,
+        "background_inference_potential": 3.0,
+        "indirect_japan_impact_score": 9.5,
+        "blind_spot_score": 7.22,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Major global story with near-zero Japanese press coverage — textbook blind spot.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied."
+      },
+      {
+        "event_id": "cls-198b3808d922",
+        "title": "The strait may reopen, but global confidence may not return",
+        "bucket": "coverage_gap",
+        "score": 37.9,
+        "source_counts_by_region": {
+          "middle_east": 1
+        },
+        "japan_source_count": 0,
+        "en_source_count": 1,
+        "non_west_source_count": 1,
+        "source_regions": [
+          "middle_east"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 0.0,
+        "global_attention_score": 4.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 6.0,
+        "background_inference_potential": 3.0,
+        "indirect_japan_impact_score": 9.5,
+        "blind_spot_score": 7.22,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Major global story with near-zero Japanese press coverage — textbook blind spot.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied."
+      },
+      {
+        "event_id": "cls-c97daaa76f4d",
+        "title": "Qatar says temporary toll at Strait of Hormuz is negotiable, could help restore passage",
+        "bucket": "coverage_gap",
+        "score": 37.0,
+        "source_counts_by_region": {
+          "east_asia": 1
+        },
+        "japan_source_count": 0,
+        "en_source_count": 1,
+        "non_west_source_count": 1,
+        "source_regions": [
+          "east_asia"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 0.0,
+        "global_attention_score": 4.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 6.0,
+        "background_inference_potential": 3.0,
+        "indirect_japan_impact_score": 9.5,
+        "blind_spot_score": 7.22,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Major global story with near-zero Japanese press coverage — textbook blind spot.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied."
+      },
+      {
+        "event_id": "cls-701c2f63df2a",
+        "title": "Strait of Hormuz ship transits are rising thanks to US help",
+        "bucket": "coverage_gap",
+        "score": 36.4,
+        "source_counts_by_region": {
+          "east_asia": 1
+        },
+        "japan_source_count": 0,
+        "en_source_count": 1,
+        "non_west_source_count": 1,
+        "source_regions": [
+          "east_asia"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 0.0,
+        "global_attention_score": 4.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 6.0,
+        "background_inference_potential": 3.0,
+        "indirect_japan_impact_score": 9.5,
+        "blind_spot_score": 7.22,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Major global story with near-zero Japanese press coverage — textbook blind spot.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied."
+      },
+      {
+        "event_id": "cls-19ed57eb8f4f",
+        "title": "China Factory Activity Worsens in Warning Sign for Economy - Bloomberg.com",
+        "bucket": "coverage_gap",
+        "score": 61.1,
+        "source_counts_by_region": {
+          "global": 2
+        },
+        "japan_source_count": 0,
+        "en_source_count": 2,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "global"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 0.0,
+        "global_attention_score": 8.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 6.0,
+        "background_inference_potential": 1.5,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 4.88,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Major global story with near-zero Japanese press coverage — textbook blind spot.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied."
+      },
+      {
+        "event_id": "cls-e555ec516d8e",
+        "title": "New Aukus drone tech to protect critical undersea cables as Marles warns: ‘seabed is a battlefield’",
+        "bucket": "coverage_gap",
+        "score": 44.25,
+        "source_counts_by_region": {
+          "europe": 1
+        },
+        "japan_source_count": 0,
+        "en_source_count": 1,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "europe"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 0.0,
+        "global_attention_score": 6.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 6.0,
+        "background_inference_potential": 3.0,
+        "indirect_japan_impact_score": 3.0,
+        "blind_spot_score": 5.03,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Major global story with near-zero Japanese press coverage — textbook blind spot.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied."
+      },
+      {
+        "event_id": "cls-eb11c907c28d",
+        "title": "Thousands March in Lima and Other Peruvian Cities Against Presidential Candidate Keiko Fujimori",
+        "bucket": "coverage_gap",
+        "score": 74.3,
+        "source_counts_by_region": {
+          "latin_america": 3,
+          "middle_east": 1,
+          "europe": 2,
+          "global": 1
+        },
+        "japan_source_count": 0,
+        "en_source_count": 7,
+        "non_west_source_count": 1,
+        "source_regions": [
+          "europe",
+          "global",
+          "latin_america",
+          "middle_east"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 0.0,
+        "global_attention_score": 6.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 6.0,
+        "background_inference_potential": 3.0,
+        "indirect_japan_impact_score": 2.5,
+        "blind_spot_score": 5.88,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Major global story with near-zero Japanese press coverage — textbook blind spot.",
+        "why_not_publishable_yet": "Impact on Japan not established — quality floor requires this field."
+      },
+      {
+        "event_id": "cls-9072275c0056",
+        "title": "Inflation fight again putting central bank independence under strain, policymakers say - Reuters",
+        "bucket": "sports",
+        "score": 35.6,
+        "source_counts_by_region": {
+          "global": 1
+        },
+        "japan_source_count": 0,
+        "en_source_count": 1,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "global"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 0.0,
+        "global_attention_score": 6.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 6.0,
+        "background_inference_potential": 3.0,
+        "indirect_japan_impact_score": 2.5,
+        "blind_spot_score": 4.88,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Major global story with near-zero Japanese press coverage — textbook blind spot.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied."
+      }
+    ],
+    "C_jp_story_missing_global_link_top10": [
+      {
+        "event_id": "cls-6c58f477a32f",
+        "title": "小泉防衛相“高い透明性で防衛力強化” 中国の批判念頭に反論",
+        "bucket": "politics_economy",
+        "score": 68.8,
+        "source_counts_by_region": {
+          "japan": 1
+        },
+        "japan_source_count": 1,
+        "en_source_count": 0,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "japan"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 10.0,
+        "global_attention_score": 0.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 0.0,
+        "background_inference_potential": 1.5,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 0.5,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Strong JP story that likely has EN coverage but cross-language merge didn't connect them.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied.",
+        "merge_failure_reason": "no_en_cluster_matched: no English article cluster found with enough anchor overlap",
+        "nearest_en_candidates": [
+          {
+            "event_id": "cls-82101968fa87",
+            "title": "NYT: Trump sent revised proposal with toughened terms back to Iran",
+            "bucket": "tech_geopolitics",
+            "score": 78.0,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=tech_geopolitics"
+          },
+          {
+            "event_id": "cls-101f08924f2b",
+            "title": "Kremlin-funded propaganda film shows Ukrainian children ‘learning to love’ life ",
+            "bucket": "entertainment",
+            "score": 75.25,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=entertainment"
+          },
+          {
+            "event_id": "cls-eb11c907c28d",
+            "title": "Thousands March in Lima and Other Peruvian Cities Against Presidential Candidate",
+            "bucket": "coverage_gap",
+            "score": 74.3,
+            "en_source_count": 7,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=coverage_gap"
+          }
+        ]
+      },
+      {
+        "event_id": "cls-2996aca2c208",
+        "title": "日米防衛相 同盟の抑止力と対処力強化で協力一致",
+        "bucket": "politics_economy",
+        "score": 73.8,
+        "source_counts_by_region": {
+          "japan": 1
+        },
+        "japan_source_count": 1,
+        "en_source_count": 0,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "japan"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 7.0,
+        "global_attention_score": 0.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 0.0,
+        "background_inference_potential": 1.5,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 0.5,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Strong JP story that likely has EN coverage but cross-language merge didn't connect them.",
+        "why_not_publishable_yet": "No English sources — cross-language comparison unavailable.",
+        "merge_failure_reason": "no_en_cluster_matched: no English article cluster found with enough anchor overlap",
+        "nearest_en_candidates": [
+          {
+            "event_id": "cls-06a1e64d37fa",
+            "title": "Japan rejects 'new militarism', accuses China of rapidly arming - Reuters",
+            "bucket": "coverage_gap",
+            "score": 76.1,
+            "en_source_count": 5,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=coverage_gap"
+          },
+          {
+            "event_id": "cls-cf52e291a156",
+            "title": "Mosca, drone ucraino colpisce unità della centrale di Zaporizhzhia. Nessuna anom",
+            "bucket": "coverage_gap",
+            "score": 72.1,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=coverage_gap"
+          },
+          {
+            "event_id": "cls-7a2ef22d7ef2",
+            "title": "Jamming-resistant radio maker seeks $3bn-plus sale",
+            "bucket": "coverage_gap",
+            "score": 71.8,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=coverage_gap"
+          }
+        ]
+      },
+      {
+        "event_id": "cls-b04d486dcc91",
+        "title": "６月の食品値上げ１０７８品目、今月の１３倍に…中東情勢悪化によるコスト高背景「さらに増える可能性」 - 読売新聞",
+        "bucket": "general",
+        "score": 32.6,
+        "source_counts_by_region": {
+          "japan": 1
+        },
+        "japan_source_count": 1,
+        "en_source_count": 0,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "japan"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 7.0,
+        "global_attention_score": 0.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 0.0,
+        "background_inference_potential": 0.0,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 0.5,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Strong JP story that likely has EN coverage but cross-language merge didn't connect them.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied.",
+        "merge_failure_reason": "no_en_cluster_matched: no English article cluster found with enough anchor overlap",
+        "nearest_en_candidates": [
+          {
+            "event_id": "cls-4d6c0f1db66a",
+            "title": "How Curry Shops Got Caught in Japan’s Immigration Crackdown",
+            "bucket": "coverage_gap",
+            "score": 49.6,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=coverage_gap"
+          },
+          {
+            "event_id": "cls-5bcf77445b2b",
+            "title": "Middle East crisis live: Israeli army captures strategic castle in Lebanon in de",
+            "bucket": "sports",
+            "score": 45.95,
+            "en_source_count": 2,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=sports"
+          },
+          {
+            "event_id": "cls-c7d507fc74e8",
+            "title": "Israeli troops capture strategic Beaufort Castle as they push deeper into Lebano",
+            "bucket": "coverage_gap",
+            "score": 44.25,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=coverage_gap"
+          }
+        ]
+      },
+      {
+        "event_id": "cls-61662cb17001",
+        "title": "米英豪のAUKUS、第2の柱は水中ドローン装備　国防相会談で合意",
+        "bucket": "politics_economy",
+        "score": 68.5,
+        "source_counts_by_region": {
+          "japan": 4
+        },
+        "japan_source_count": 4,
+        "en_source_count": 0,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "japan"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 7.0,
+        "global_attention_score": 0.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 0.0,
+        "background_inference_potential": 0.0,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 0.5,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Strong JP story that likely has EN coverage but cross-language merge didn't connect them.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied.",
+        "merge_failure_reason": "no_en_cluster_matched: no English article cluster found with enough anchor overlap",
+        "nearest_en_candidates": [
+          {
+            "event_id": "cls-06a1e64d37fa",
+            "title": "Japan rejects 'new militarism', accuses China of rapidly arming - Reuters",
+            "bucket": "coverage_gap",
+            "score": 76.1,
+            "en_source_count": 5,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=coverage_gap"
+          },
+          {
+            "event_id": "cls-cf52e291a156",
+            "title": "Mosca, drone ucraino colpisce unità della centrale di Zaporizhzhia. Nessuna anom",
+            "bucket": "coverage_gap",
+            "score": 72.1,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=coverage_gap"
+          },
+          {
+            "event_id": "cls-7a2ef22d7ef2",
+            "title": "Jamming-resistant radio maker seeks $3bn-plus sale",
+            "bucket": "coverage_gap",
+            "score": 71.8,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=coverage_gap"
+          }
+        ]
+      },
+      {
+        "event_id": "cls-9a482db7cdc4",
+        "title": "ガソリン補助「月４０００億円」、与野党から引き下げ検討求める声…高市首相「価格はＧ７で最安水準」 - 読売新聞",
+        "bucket": "general",
+        "score": 32.0,
+        "source_counts_by_region": {
+          "japan": 1
+        },
+        "japan_source_count": 1,
+        "en_source_count": 0,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "japan"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 7.0,
+        "global_attention_score": 0.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 0.0,
+        "background_inference_potential": 0.0,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 0.5,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Strong JP story that likely has EN coverage but cross-language merge didn't connect them.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied.",
+        "merge_failure_reason": "no_en_cluster_matched: no English article cluster found with enough anchor overlap",
+        "nearest_en_candidates": [
+          {
+            "event_id": "cls-4d6c0f1db66a",
+            "title": "How Curry Shops Got Caught in Japan’s Immigration Crackdown",
+            "bucket": "coverage_gap",
+            "score": 49.6,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=coverage_gap"
+          },
+          {
+            "event_id": "cls-5bcf77445b2b",
+            "title": "Middle East crisis live: Israeli army captures strategic castle in Lebanon in de",
+            "bucket": "sports",
+            "score": 45.95,
+            "en_source_count": 2,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=sports"
+          },
+          {
+            "event_id": "cls-c7d507fc74e8",
+            "title": "Israeli troops capture strategic Beaufort Castle as they push deeper into Lebano",
+            "bucket": "coverage_gap",
+            "score": 44.25,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=coverage_gap"
+          }
+        ]
+      },
+      {
+        "event_id": "cls-06a0d1759e70",
+        "title": "ヘグセス米国防長官、集団防衛の役割果たさない国との「関係見直し」警告…同盟国に国防費引き上げ要求 - 読売新聞",
+        "bucket": "general",
+        "score": 32.0,
+        "source_counts_by_region": {
+          "japan": 3
+        },
+        "japan_source_count": 3,
+        "en_source_count": 0,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "japan"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 7.0,
+        "global_attention_score": 2.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 0.0,
+        "background_inference_potential": 0.0,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 1.25,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Strong JP story that likely has EN coverage but cross-language merge didn't connect them.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied.",
+        "merge_failure_reason": "no_en_cluster_matched: no English article cluster found with enough anchor overlap",
+        "nearest_en_candidates": [
+          {
+            "event_id": "cls-4d6c0f1db66a",
+            "title": "How Curry Shops Got Caught in Japan’s Immigration Crackdown",
+            "bucket": "coverage_gap",
+            "score": 49.6,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=coverage_gap"
+          },
+          {
+            "event_id": "cls-5bcf77445b2b",
+            "title": "Middle East crisis live: Israeli army captures strategic castle in Lebanon in de",
+            "bucket": "sports",
+            "score": 45.95,
+            "en_source_count": 2,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=sports"
+          },
+          {
+            "event_id": "cls-c7d507fc74e8",
+            "title": "Israeli troops capture strategic Beaufort Castle as they push deeper into Lebano",
+            "bucket": "coverage_gap",
+            "score": 44.25,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=coverage_gap"
+          }
+        ]
+      },
+      {
+        "event_id": "cls-f2cd8f154a6a",
+        "title": "トキ放鳥、能登の空舞う　56年ぶり本州で野生に「復興のシンボル」",
+        "bucket": "politics_economy",
+        "score": 67.0,
+        "source_counts_by_region": {
+          "japan": 2
+        },
+        "japan_source_count": 2,
+        "en_source_count": 0,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "japan"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 7.0,
+        "global_attention_score": 0.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 0.0,
+        "background_inference_potential": 0.0,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 0.5,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Strong JP story that likely has EN coverage but cross-language merge didn't connect them.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied.",
+        "merge_failure_reason": "no_en_cluster_matched: no English article cluster found with enough anchor overlap",
+        "nearest_en_candidates": [
+          {
+            "event_id": "cls-06a1e64d37fa",
+            "title": "Japan rejects 'new militarism', accuses China of rapidly arming - Reuters",
+            "bucket": "coverage_gap",
+            "score": 76.1,
+            "en_source_count": 5,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=coverage_gap"
+          },
+          {
+            "event_id": "cls-cf52e291a156",
+            "title": "Mosca, drone ucraino colpisce unità della centrale di Zaporizhzhia. Nessuna anom",
+            "bucket": "coverage_gap",
+            "score": 72.1,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=coverage_gap"
+          },
+          {
+            "event_id": "cls-7a2ef22d7ef2",
+            "title": "Jamming-resistant radio maker seeks $3bn-plus sale",
+            "bucket": "coverage_gap",
+            "score": 71.8,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=coverage_gap"
+          }
+        ]
+      },
+      {
+        "event_id": "cls-bb7e9b7d7192",
+        "title": "海自のあぶくま型護衛艦、退役後速やかにフィリピンへ ＴＣ－９０は27年度 - Reuters",
+        "bucket": "politics_economy",
+        "score": 62.0,
+        "source_counts_by_region": {
+          "japan": 2
+        },
+        "japan_source_count": 2,
+        "en_source_count": 0,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "japan"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 7.0,
+        "global_attention_score": 2.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 0.0,
+        "background_inference_potential": 0.0,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 1.25,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Strong JP story that likely has EN coverage but cross-language merge didn't connect them.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied.",
+        "merge_failure_reason": "no_en_cluster_matched: no English article cluster found with enough anchor overlap",
+        "nearest_en_candidates": [
+          {
+            "event_id": "cls-82101968fa87",
+            "title": "NYT: Trump sent revised proposal with toughened terms back to Iran",
+            "bucket": "tech_geopolitics",
+            "score": 78.0,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=tech_geopolitics"
+          },
+          {
+            "event_id": "cls-101f08924f2b",
+            "title": "Kremlin-funded propaganda film shows Ukrainian children ‘learning to love’ life ",
+            "bucket": "entertainment",
+            "score": 75.25,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=entertainment"
+          },
+          {
+            "event_id": "cls-eb11c907c28d",
+            "title": "Thousands March in Lima and Other Peruvian Cities Against Presidential Candidate",
+            "bucket": "coverage_gap",
+            "score": 74.3,
+            "en_source_count": 7,
+            "merge_failure_reason": "topic_mismatch: JP bucket=politics_economy vs EN bucket=coverage_gap"
+          }
+        ]
+      },
+      {
+        "event_id": "cls-cae2c3658eaf",
+        "title": "西村氏、税率1％案に言及 消費減税「早くできる」 - 47NEWS",
+        "bucket": "general",
+        "score": 40.0,
+        "source_counts_by_region": {
+          "japan": 1
+        },
+        "japan_source_count": 1,
+        "en_source_count": 0,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "japan"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 5.0,
+        "global_attention_score": 0.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 0.0,
+        "background_inference_potential": 0.0,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 0.5,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Strong JP story that likely has EN coverage but cross-language merge didn't connect them.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied.",
+        "merge_failure_reason": "no_en_cluster_matched: no English article cluster found with enough anchor overlap",
+        "nearest_en_candidates": [
+          {
+            "event_id": "cls-4d6c0f1db66a",
+            "title": "How Curry Shops Got Caught in Japan’s Immigration Crackdown",
+            "bucket": "coverage_gap",
+            "score": 49.6,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=coverage_gap"
+          },
+          {
+            "event_id": "cls-5bcf77445b2b",
+            "title": "Middle East crisis live: Israeli army captures strategic castle in Lebanon in de",
+            "bucket": "sports",
+            "score": 45.95,
+            "en_source_count": 2,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=sports"
+          },
+          {
+            "event_id": "cls-c7d507fc74e8",
+            "title": "Israeli troops capture strategic Beaufort Castle as they push deeper into Lebano",
+            "bucket": "coverage_gap",
+            "score": 44.25,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=coverage_gap"
+          }
+        ]
+      },
+      {
+        "event_id": "cls-04a54bd0ac8c",
+        "title": "【速報】「日本の防衛力強化を議論」と米長官 - 47NEWS",
+        "bucket": "general",
+        "score": 33.25,
+        "source_counts_by_region": {
+          "japan": 1
+        },
+        "japan_source_count": 1,
+        "en_source_count": 0,
+        "non_west_source_count": 0,
+        "source_regions": [
+          "japan"
+        ],
+        "cross_lang_cluster": false,
+        "merge_confidence": "none",
+        "japan_relevance_score": 8.0,
+        "global_attention_score": 0.0,
+        "perspective_gap_score": 0.0,
+        "coverage_gap_score": 0.0,
+        "background_inference_potential": 0.0,
+        "indirect_japan_impact_score": 0.0,
+        "blind_spot_score": 0.5,
+        "hold_back_reason": null,
+        "why_this_is_interesting": "Strong JP story that likely has EN coverage but cross-language merge didn't connect them.",
+        "why_not_publishable_yet": "Ranked outside top 15 — not appraised; quality floor not yet applied.",
+        "merge_failure_reason": "no_en_cluster_matched: no English article cluster found with enough anchor overlap",
+        "nearest_en_candidates": [
+          {
+            "event_id": "cls-4d6c0f1db66a",
+            "title": "How Curry Shops Got Caught in Japan’s Immigration Crackdown",
+            "bucket": "coverage_gap",
+            "score": 49.6,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=coverage_gap"
+          },
+          {
+            "event_id": "cls-5bcf77445b2b",
+            "title": "Middle East crisis live: Israeli army captures strategic castle in Lebanon in de",
+            "bucket": "sports",
+            "score": 45.95,
+            "en_source_count": 2,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=sports"
+          },
+          {
+            "event_id": "cls-c7d507fc74e8",
+            "title": "Israeli troops capture strategic Beaufort Castle as they push deeper into Lebano",
+            "bucket": "coverage_gap",
+            "score": 44.25,
+            "en_source_count": 1,
+            "merge_failure_reason": "topic_mismatch: JP bucket=general vs EN bucket=coverage_gap"
+          }
+        ]
+      }
+    ]
+  },
+  "diagnosis": {
+    "dominant_failure_mode": "none",
+    "issues": [
+      "No obvious failure mode detected — pipeline appears healthy."
+    ],
+    "details": {
+      "jp_articles_loaded": 123,
+      "en_articles_loaded": 325,
+      "cross_lang_bfs_edges": 232,
+      "llm_merged": 3,
+      "cross_lang_clusters": 8,
+      "held_back_count": 0,
+      "held_back_reason_counts": {},
+      "selected_count": 3,
+      "bug_suspected_sources": []
+    }
+  }
+}

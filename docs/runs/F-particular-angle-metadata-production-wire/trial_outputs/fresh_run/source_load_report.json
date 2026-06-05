@@ -1,0 +1,449 @@
+{
+  "generated_at": "2026-05-31T10:49:31.907047+00:00",
+  "summary": {
+    "total_normalized": 1524,
+    "total_loaded": 1326,
+    "total_dropped": 198,
+    "sources_with_drops": 20,
+    "bug_suspected_sources": [],
+    "full_dedup_sources": []
+  },
+  "by_source": {
+    "ABCNewsAU": {
+      "normalized_count": 25,
+      "loaded_count": 25,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "AlJazeera": {
+      "normalized_count": 25,
+      "loaded_count": 25,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "Asahi": {
+      "normalized_count": 40,
+      "loaded_count": 39,
+      "dropped_count": 1,
+      "drop_ratio": 0.025,
+      "drop_reasons": {
+        "duplicate_url": 1
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "BBC": {
+      "normalized_count": 33,
+      "loaded_count": 32,
+      "dropped_count": 1,
+      "drop_ratio": 0.03,
+      "drop_reasons": {
+        "duplicate_url": 1
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "Bloomberg": {
+      "normalized_count": 50,
+      "loaded_count": 50,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "Bloomberg_JP": {
+      "normalized_count": 50,
+      "loaded_count": 7,
+      "dropped_count": 43,
+      "drop_ratio": 0.86,
+      "drop_reasons": {
+        "duplicate_url": 43
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "BuenosAiresTimes": {
+      "normalized_count": 50,
+      "loaded_count": 31,
+      "dropped_count": 19,
+      "drop_ratio": 0.38,
+      "drop_reasons": {
+        "duplicate_url": 19
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "Caixin_Global": {
+      "normalized_count": 50,
+      "loaded_count": 9,
+      "dropped_count": 41,
+      "drop_ratio": 0.82,
+      "drop_reasons": {
+        "duplicate_url": 41
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "DerSpiegel": {
+      "normalized_count": 20,
+      "loaded_count": 2,
+      "dropped_count": 18,
+      "drop_ratio": 0.9,
+      "drop_reasons": {
+        "duplicate_url": 18
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "ElPais": {
+      "normalized_count": 50,
+      "loaded_count": 42,
+      "dropped_count": 8,
+      "drop_ratio": 0.16,
+      "drop_reasons": {
+        "duplicate_url": 8
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "FinancialTimes": {
+      "normalized_count": 9,
+      "loaded_count": 9,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "FolhaDeSPaulo": {
+      "normalized_count": 15,
+      "loaded_count": 9,
+      "dropped_count": 6,
+      "drop_ratio": 0.4,
+      "drop_reasons": {
+        "duplicate_url": 6
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "France24": {
+      "normalized_count": 23,
+      "loaded_count": 22,
+      "dropped_count": 1,
+      "drop_ratio": 0.043,
+      "drop_reasons": {
+        "duplicate_url": 1
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "Guardian_Australia": {
+      "normalized_count": 24,
+      "loaded_count": 10,
+      "dropped_count": 14,
+      "drop_ratio": 0.583,
+      "drop_reasons": {
+        "duplicate_url": 14
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "Il_Sole_24_Ore": {
+      "normalized_count": 12,
+      "loaded_count": 12,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "JIJI": {
+      "normalized_count": 50,
+      "loaded_count": 46,
+      "dropped_count": 4,
+      "drop_ratio": 0.08,
+      "drop_reasons": {
+        "duplicate_url": 4
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "Kyodo": {
+      "normalized_count": 50,
+      "loaded_count": 50,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "LeMonde": {
+      "normalized_count": 18,
+      "loaded_count": 18,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "Mada_Masr": {
+      "normalized_count": 10,
+      "loaded_count": 4,
+      "dropped_count": 6,
+      "drop_ratio": 0.6,
+      "drop_reasons": {
+        "duplicate_url": 6
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "Mainichi": {
+      "normalized_count": 50,
+      "loaded_count": 50,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "Meduza": {
+      "normalized_count": 30,
+      "loaded_count": 30,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "Middle_East_Eye": {
+      "normalized_count": 20,
+      "loaded_count": 20,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "NHK": {
+      "normalized_count": 7,
+      "loaded_count": 7,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "NHK_Economy": {
+      "normalized_count": 50,
+      "loaded_count": 41,
+      "dropped_count": 9,
+      "drop_ratio": 0.18,
+      "drop_reasons": {
+        "duplicate_url": 9
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "NHK_Politics": {
+      "normalized_count": 50,
+      "loaded_count": 50,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "NYTWorld": {
+      "normalized_count": 50,
+      "loaded_count": 49,
+      "dropped_count": 1,
+      "drop_ratio": 0.02,
+      "drop_reasons": {
+        "duplicate_url": 1
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "News24": {
+      "normalized_count": 6,
+      "loaded_count": 6,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "Nikkei": {
+      "normalized_count": 30,
+      "loaded_count": 30,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "Politico": {
+      "normalized_count": 30,
+      "loaded_count": 23,
+      "dropped_count": 7,
+      "drop_ratio": 0.233,
+      "drop_reasons": {
+        "duplicate_url": 7
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "Reuters": {
+      "normalized_count": 17,
+      "loaded_count": 17,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "Reuters_JP": {
+      "normalized_count": 50,
+      "loaded_count": 45,
+      "dropped_count": 5,
+      "drop_ratio": 0.1,
+      "drop_reasons": {
+        "duplicate_url": 5
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "Sankei": {
+      "normalized_count": 50,
+      "loaded_count": 50,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "StraitsTimes": {
+      "normalized_count": 50,
+      "loaded_count": 50,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "Sydney_Morning_Herald": {
+      "normalized_count": 20,
+      "loaded_count": 20,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "TeleSUR": {
+      "normalized_count": 30,
+      "loaded_count": 30,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "TheGuardian": {
+      "normalized_count": 45,
+      "loaded_count": 44,
+      "dropped_count": 1,
+      "drop_ratio": 0.022,
+      "drop_reasons": {
+        "duplicate_url": 1
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "The_Atlantic": {
+      "normalized_count": 25,
+      "loaded_count": 25,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "The_Hindustan_Times": {
+      "normalized_count": 50,
+      "loaded_count": 50,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "The_Initium": {
+      "normalized_count": 15,
+      "loaded_count": 15,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "TimesOfIndia": {
+      "normalized_count": 45,
+      "loaded_count": 45,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    },
+    "Tokyo_Shimbun": {
+      "normalized_count": 50,
+      "loaded_count": 47,
+      "dropped_count": 3,
+      "drop_ratio": 0.06,
+      "drop_reasons": {
+        "duplicate_url": 3
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "WION": {
+      "normalized_count": 50,
+      "loaded_count": 42,
+      "dropped_count": 8,
+      "drop_ratio": 0.16,
+      "drop_reasons": {
+        "duplicate_url": 8
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "Yomiuri": {
+      "normalized_count": 50,
+      "loaded_count": 48,
+      "dropped_count": 2,
+      "drop_ratio": 0.04,
+      "drop_reasons": {
+        "duplicate_url": 2
+      },
+      "diagnosis": "expected_dedup",
+      "explanation": "一部記事が duplicate_url で drop されたが、新規記事あり。通常運用。"
+    },
+    "Yonhap": {
+      "normalized_count": 50,
+      "loaded_count": 50,
+      "dropped_count": 0,
+      "drop_ratio": 0.0,
+      "drop_reasons": {},
+      "diagnosis": "ok",
+      "explanation": "全記事がロード済み。問題なし。"
+    }
+  }
+}
