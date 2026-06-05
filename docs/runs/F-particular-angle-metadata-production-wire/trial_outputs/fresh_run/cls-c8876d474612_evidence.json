@@ -1,0 +1,219 @@
+{
+  "schema_version": "1",
+  "id": "cls-c8876d474612",
+  "title": "Israel seizes strategic castle as it expands invasion of south Lebanon",
+  "generated_at": "2026-05-31T10:48:57.064579+00:00",
+  "event_type": "cluster",
+  "cluster_info": {
+    "event_id": "cls-c8876d474612",
+    "cluster_id": "cls-c8876d474612",
+    "article_count": 2,
+    "note": "クラスタリングにより生成（normalized モード）"
+  },
+  "sources": {
+    "jp": [],
+    "en": [
+      {
+        "name": "Middle_East_Eye",
+        "url": "https://www.middleeasteye.net/news/israel-seizes-strategic-castle-it-expands-invasion-south-lebanon",
+        "title": "Israel seizes strategic castle as it expands invasion of south Lebanon",
+        "language": "en",
+        "country": "GB",
+        "region": "middle_east"
+      },
+      {
+        "name": "AlJazeera",
+        "url": "https://www.aljazeera.com/news/2026/5/31/israel-issues-more-displacement-orders-in-lebanon-seizes-strategic-castle?traffic_source=rss",
+        "title": "Israel issues more displacement orders in Lebanon, seizes strategic castle",
+        "language": "en",
+        "country": "QA",
+        "region": "middle_east"
+      }
+    ]
+  },
+  "triage": {
+    "score": 71.7,
+    "breakdown": {
+      "category_base": 80.0,
+      "tag_bonus": 1.5,
+      "japan_impact_absent_penalty": -8.0,
+      "context_depth_absent_penalty": -5.0,
+      "total": 71.7,
+      "editorial:perspective_gap_score": 0.0,
+      "editorial:coverage_gap_score": 6.0,
+      "editorial:tech_geopolitics_score": 5.0,
+      "editorial:big_event_score": 1.5,
+      "editorial:geopolitics_depth_score": 2.0,
+      "editorial:mass_appeal_score": 0.0,
+      "editorial:japan_relevance_score": 0.0,
+      "editorial:global_attention_score": 6.0,
+      "editorial:crime_local_indicator": 0.0,
+      "editorial:background_inference_potential": 3.0,
+      "editorial:breaking_shock_score": 5.0,
+      "editorial:japan_abroad_score": 0.0,
+      "editorial:japanese_person_abroad_score": 0.0,
+      "editorial:indirect_japan_impact_score": 0,
+      "editorial:has_jp_view": 0.0,
+      "editorial:has_en_view": 1.0,
+      "editorial:_has_sports": 0.0,
+      "editorial:_has_ent": 0.0,
+      "editorial:multi_region_score": 0.0,
+      "editorial:regional_contrast_score": 0.0,
+      "editorial:jp_plus_nonwestern_score": 0.0,
+      "editorial:bridge_source_bonus": 4.0,
+      "editorial:_has_japan_region": 0.0,
+      "editorial:_has_pilot_region": 1.0,
+      "editorial:_has_non_western": 1.0,
+      "editorial_adjustment": 3.1999999999999993,
+      "primary_bucket": "coverage_gap",
+      "source_regions": [
+        "middle_east"
+      ],
+      "source_languages": [
+        "en"
+      ],
+      "triage_explanation": [
+        "[Tier] Tier 2",
+        "[選定理由] market_shock=5(ショックシグナル), tech_geopolitics=5(技術関連), coverage_gap=6(EN-only未報道)",
+        "[方針適合] ○ 一部の戦略的シグナル",
+        "[懸念] EN-only + 日本関連性低"
+      ],
+      "mission_prescore": 45.1,
+      "mission_prescore_breakdown": {
+        "step": "prescore",
+        "perspective_gap": 6.0,
+        "geopolitical_significance": 9.0,
+        "blindspot_severity": 15.0,
+        "political_intent": 4.5,
+        "hidden_power_dynamics": 6.6,
+        "economic_interests": 1.5,
+        "discussion_potential": 2.5,
+        "raw_total": 45.1
+      },
+      "editorial_mission_score_llm": 69.0,
+      "editorial_mission_breakdown_llm": {
+        "step": "llm",
+        "perspective_gap": 15.0,
+        "geopolitical_significance": 17.0,
+        "blindspot_severity": 11.0,
+        "political_intent": 8.0,
+        "hidden_power_dynamics": 7.0,
+        "economic_interests": 6.0,
+        "discussion_potential": 5.0,
+        "llm_reason": "単なる戦闘報道に対し、歴史的城砦の占領とザハラニ川までの侵攻拡大が持つ水資源や境界画定の地政学的意図を解説できる。"
+      },
+      "editorial_mission_score": 69.0,
+      "editorial_mission_breakdown": {
+        "step": "llm",
+        "perspective_gap": 15.0,
+        "geopolitical_significance": 17.0,
+        "blindspot_severity": 11.0,
+        "political_intent": 8.0,
+        "hidden_power_dynamics": 7.0,
+        "economic_interests": 6.0,
+        "discussion_potential": 5.0,
+        "raw_total": 45.1,
+        "llm_reason": "単なる戦闘報道に対し、歴史的城砦の占領とザハラニ川までの侵攻拡大が持つ水資源や境界画定の地政学的意図を解説できる。"
+      }
+    },
+    "selected_reason": "score=71.7（全イベント中の最高スコア）で選択。category=politics、tags=['News']",
+    "exclusion_factors": [
+      "japan_impact欠落 (-8.0): impact_on_japan が未設定。日本への意義を示す記述がない。",
+      "context_depth欠落 (-5.0): background が未設定。報道の背景・文脈が記述されていない。"
+    ]
+  },
+  "quality_assessment": {
+    "coverage_gap": {
+      "rating": "partial",
+      "evidence": "japan_view または global_view の片方のみ存在",
+      "detail": null
+    },
+    "perspective_conflict": {
+      "rating": "absent",
+      "evidence": "認識差の根拠なし",
+      "detail": null
+    },
+    "japan_impact": {
+      "rating": "absent",
+      "evidence": "impact_on_japan 未設定",
+      "detail": null
+    },
+    "context_depth": {
+      "rating": "absent",
+      "evidence": "background 未設定",
+      "detail": null
+    },
+    "background_inference_potential": {
+      "rating": "absent",
+      "evidence": "報道差の素材なし（単一言語・単一視点）",
+      "score": 0
+    }
+  },
+  "generation": {
+    "script": {
+      "referenced_sources": [
+        {
+          "name": "Middle_East_Eye",
+          "url": "https://www.middleeasteye.net/news/israel-seizes-strategic-castle-it-expands-invasion-south-lebanon",
+          "title": "Israel seizes strategic castle as it expands invasion of south Lebanon",
+          "language": "en",
+          "country": "GB",
+          "region": "middle_east"
+        },
+        {
+          "name": "AlJazeera",
+          "url": "https://www.aljazeera.com/news/2026/5/31/israel-issues-more-displacement-orders-in-lebanon-seizes-strategic-castle?traffic_source=rss",
+          "title": "Israel issues more displacement orders in Lebanon, seizes strategic castle",
+          "language": "en",
+          "country": "QA",
+          "region": "middle_east"
+        }
+      ],
+      "section_count": 4,
+      "total_duration_sec": 100,
+      "sections": [
+        {
+          "name": "hook",
+          "duration_sec": 4,
+          "chars": 22
+        },
+        {
+          "name": "setup",
+          "duration_sec": 20,
+          "chars": 75
+        },
+        {
+          "name": "twist",
+          "duration_sec": 52,
+          "chars": 177
+        },
+        {
+          "name": "punchline",
+          "duration_sec": 24,
+          "chars": 81
+        }
+      ]
+    },
+    "article": {
+      "referenced_sources": [
+        {
+          "name": "Middle_East_Eye",
+          "url": "https://www.middleeasteye.net/news/israel-seizes-strategic-castle-it-expands-invasion-south-lebanon",
+          "title": "Israel seizes strategic castle as it expands invasion of south Lebanon",
+          "language": "en",
+          "country": "GB",
+          "region": "middle_east"
+        },
+        {
+          "name": "AlJazeera",
+          "url": "https://www.aljazeera.com/news/2026/5/31/israel-issues-more-displacement-orders-in-lebanon-seizes-strategic-castle?traffic_source=rss",
+          "title": "Israel issues more displacement orders in Lebanon, seizes strategic castle",
+          "language": "en",
+          "country": "QA",
+          "region": "middle_east"
+        }
+      ],
+      "word_count": 2772
+    }
+  }
+}

@@ -355,3 +355,87 @@ def test_script_with_analysis_draft_required_fields():
     assert len(draft.hook_variants) == 3
     # target_enemy フィールドはそもそもスキーマに存在しない
     assert not hasattr(draft, "target_enemy")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# X1 (F-particular-angle-metadata-production-wire): particular_angle_metadata
+# + sontaku_signals がプロンプトに正しく埋め込まれることを検証する追加テスト。
+# 既存テストへの新規関数追加のみ。既存期待値修正なし (不変原則 5 完全遵守)。
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_x1_prompt_uses_none_placeholders_when_particular_angle_metadata_absent():
+    """particular_angle_metadata=None (default) で prompt が "(none)" を埋め込む。
+
+    X1 後方互換: 旧 AnalysisResult (X1 配線前 schema) でもプロンプト生成が
+    KeyError にならず "(none)" で安全にレンダリングされる。
+    """
+    from src.generation.script_writer import _build_script_with_analysis_prompt
+
+    se = _scored_event()
+    ar = _analysis_result()  # particular_angle_metadata は default None
+    cc = _channel_config()
+
+    prompt, _profile, _config = _build_script_with_analysis_prompt(se, ar, cc)
+    assert "particular_angle_metadata" in prompt  # 新セクションが含まれる
+    assert "sontaku_signals" in prompt
+    # メタデータ不在時は "(none)" が埋まる
+    assert "stream_classification: (none)" in prompt
+    assert "level: (none)" in prompt
+
+
+def test_x1_prompt_embeds_particular_angle_metadata_when_set():
+    """particular_angle_metadata 付き AnalysisResult でプロンプトに stream/sontaku が
+    具体値で埋め込まれる。LLM が系統別の言い回しを自律選択する判断材料。
+    """
+    from src.generation.script_writer import _build_script_with_analysis_prompt
+    from src.shared.models import ParticularAngleMetadata, SontakuSignals
+
+    se = _scored_event()
+    pam = ParticularAngleMetadata(
+        stream_classification="stream_2_perspective_gap",
+        core_question="外交情報の金融商品化を市場参加者が問題視",
+        differentiation_from_mainstream="日本主要紙は合意本体のみ、MEE はインサイダー疑惑",
+        hydrangea_axis_alignment="第 2 軸 (外交・経済・利害関係面)",
+        extraction_confidence="high",
+        sontaku_signals=SontakuSignals(
+            level="high",
+            type="diplomatic",
+            reasoning="米国政府中枢への外交的忖度",
+            extraction_confidence="high",
+        ),
+    )
+    ar = _analysis_result()
+    ar = ar.model_copy(update={"particular_angle_metadata": pam})
+    cc = _channel_config()
+
+    prompt, _profile, _config = _build_script_with_analysis_prompt(se, ar, cc)
+    assert "stream_2_perspective_gap" in prompt
+    assert "外交情報の金融商品化" in prompt
+    assert "第 2 軸" in prompt
+    # sontaku
+    assert "level: high" in prompt
+    assert "type: diplomatic" in prompt
+    assert "米国政府中枢" in prompt
+
+
+def test_x1_target_enemy_still_none_with_particular_angle_metadata_set(monkeypatch):
+    """particular_angle_metadata 設定後も新ルートの target_enemy 排除契約 (L1306)
+    は維持される。X1 の本質的副次効果 (target_enemy 退役) の固定。
+    """
+    from src.generation import script_writer
+    from src.shared.models import ParticularAngleMetadata, SontakuSignals
+
+    monkeypatch.setattr(
+        script_writer, "get_script_llm_client", lambda: _StubLLMClient(_good_llm_response())
+    )
+    se = _scored_event()
+    pam = ParticularAngleMetadata(
+        stream_classification="stream_3_framing_inversion",
+        sontaku_signals=SontakuSignals(level="medium", type="domestic"),
+    )
+    ar = _analysis_result().model_copy(update={"particular_angle_metadata": pam})
+    cc = _channel_config()
+
+    script = generate_script_with_analysis(se, ar, cc)
+    assert script.target_enemy is None  # 新ルートでは常に None

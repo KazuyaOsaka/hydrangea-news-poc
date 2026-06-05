@@ -1,0 +1,54 @@
+{
+  "task": "Task E pre-run: processing → pending リセットの副作用 read-only 調査 (カズヤ条件)",
+  "investigation_date": "2026-05-31",
+  "stuck_batches": [
+    "20260424_023911",
+    "20260427_054109",
+    "20260427_071826"
+  ],
+  "side_effect_analysis": {
+    "mark_batch_status": {
+      "code_location": "src/storage/db.py:340",
+      "behavior": "UPDATE ingestion_batches SET status = ? WHERE batch_id = ?",
+      "tables_touched": ["ingestion_batches"],
+      "destructive": false
+    },
+    "archive_state_of_stuck_batches": {
+      "method": "find data/archive -name <batch_id> -type d",
+      "result": "all 3 batches NOT archived → genuine mid-processing interruption",
+      "destructive": false,
+      "implication": "Resetting to pending is the natural recovery path"
+    },
+    "events_table_impact": {
+      "rows_before_reset": 0,
+      "note": "events は normalized JSON ファイルで永続化、events table は別用途 (空)",
+      "destructive": false
+    },
+    "jobs_table_impact": {
+      "save_job_code": "src/storage/db.py:189 — INSERT ... ON CONFLICT(id) DO UPDATE",
+      "behavior": "id = UUID per-run = 新規行 append。ON CONFLICT trigger は同一 UUID のみ",
+      "destructive": false,
+      "side_effect": "新 job records 追加 (履歴保存)"
+    },
+    "seen_article_urls": {
+      "code": "INSERT OR IGNORE INTO seen_article_urls (url, ...)",
+      "behavior": "idempotent (重複 URL 無視)",
+      "destructive": false
+    },
+    "output_files_overwrite": {
+      "files": "{event.id}_article.md / _script.json / _video_payload.json / _analysis.json",
+      "method": "path.write_text(...) (truncate-overwrite)",
+      "scope": "3 stuck batches の events のみ。他 events の出力は無影響",
+      "destructive_assessment": "軽微 (元々中断時の中間成果物で archive されていない = 価値低)"
+    },
+    "daily_stats_impact": {
+      "code": "increment_daily_run_count + increment_daily_publish_count",
+      "behavior": "今日の run_count + N (= 3), publish_count + 成功 job 数",
+      "destructive": false,
+      "side_effect": "通常パイプライン挙動と同じ"
+    },
+    "llm_api_cost": "~3 × 44 = ~132 calls (analysis = gemini-3.5-flash QUALITY, article = gemini-2.5-flash)"
+  },
+  "verdict": "non-destructive (中断状態の正常な復旧)。カズヤ条件 (read-only 調査で破壊性なし → 実行可) を充足。3 batch 実行に進む。",
+  "next_action": "UPDATE ingestion_batches SET status='pending' WHERE batch_id IN (3 batches) → python -m src.main --mode normalized × 3"
+}

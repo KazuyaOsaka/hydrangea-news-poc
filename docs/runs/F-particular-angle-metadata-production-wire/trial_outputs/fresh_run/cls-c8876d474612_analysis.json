@@ -1,0 +1,78 @@
+{
+  "event_id": "cls-c8876d474612",
+  "channel_id": "geo_lens",
+  "selected_perspective": {
+    "axis": "cultural_blindspot",
+    "score": 3.5,
+    "reasoning": "cultural_uniqueness(仮)=1.50, non_western_bonus=2.0 → score=3.50 (LLM 判定で違和感度の加点が乗る可能性あり)",
+    "evidence_refs": [
+      "https://www.middleeasteye.net/news/israel-seizes-strategic-castle-it-expands-invasion-south-lebanon",
+      "https://www.aljazeera.com/news/2026/5/31/israel-issues-more-displacement-orders-in-lebanon-seizes-strategic-castle?traffic_source=rss"
+    ],
+    "why_now": "「Israel seizes strategic castle as it expands invasion of south Lebanon」は西側の常識からはずれた文脈で起きており、日本の主流メディアが採用する西側フレームでは捉えきれない論点。"
+  },
+  "rejected_perspectives": [],
+  "perspective_verified": true,
+  "verification_notes": "axis=cultural_blindspot score=3.50 | cultural_uniqueness(仮)=1.50, non_western_bonus=2.0 → score=3.50 (LLM 判定で違和感度の加点が乗る可能性あり)",
+  "multi_angle": {
+    "geopolitical": "イスラエルによるレバノン南部ボーフォール城の占領は、2026年4月に合意された仮の境界「イエローライン」を超えた軍事侵攻の拡大を意味します。標高約700メートルに位置するこの900年前の城塞は、南レバノンの主要都市ナバティエやイスラエル北部を一望できる要衝であり、1982年から2000年までの第一次占領期と同様にイスラエル軍の恒久的な監視拠点となります。リタニ川を越えるこの進軍は、国境から約40キロメートルに及ぶ広大な緩衝地帯を実質的に確立し、ヒズボラの攻撃拠点を北方に押し下げる地政学的防衛線の再構築を狙っています。",
+    "political_intent": "イスラエルのネタニヤフ連立政権内の右派勢力（カッツ防衛相やスモトリッチ財務相ら）にとって、本軍事作戦の拡大は「停戦合意」下でもテロ組織への妥協を拒む姿勢を示すための国内政治的パフォーマンスです。スモトリッチが「ドローン1機につき100棟破壊」と主張するように、過激な報復論を煽ることで世論の連帯を維持し、国内の政権批判を抑え込む構造が存在します。一方、レバノンのサラム首相はワシントンでの米仲介交渉を「唯一の低コストな道」とし、脆弱な国内インフラや国家解体の危機を防ぐための外交手段に縋らざるを得ない政治的劣位にあります。",
+    "economic_impact": "本衝突の長期化と中東の軍指的緊張の高まりは、WTI原油先物などのエネルギー価格のボラティリティを維持し、資源の大部分を中東に依存する日本経済に恒常的なインフレ圧力を加えます。日本郵船や商船三井などの海運大手は、スエズ運河周辺の治安悪化懸念から喜望峰ルートの迂回を長期化せざるを得ず、輸送コスト上昇とサプライチェーンの遅延が製造業のコストを圧迫しています。また、東地中海のガス田権益や中東市場での事業展開を進めるINPEXなどの国内企業にとって、地政学的リスクに伴う事業評価の引き下げと投資計画の見直しを迫る因果関係が生じています。",
+    "cultural_context": "日本では、歴史遺産であるボーフォール城のような重要文化財は「保護・保存の対象」として非武装化されるべきと捉えられますが、現地では中世の十字軍時代から1980年代のイスラエル占領期に至るまで、地理的優位性ゆえに「軍事利用され続ける動的な防衛拠点」として扱われます。また、成文化された合意や停戦ラインを「厳格に遵守すべきルール」と見なす日本的な法治主義に対し、現地では「力の均衡」の変化に応じてラインを更新・侵犯する地政学的実利主義が優先されます。この「文化遺産の道具化」と「事実上の支配（デファクト・コントロール）の優先」という思考様式は、日本の平和的規範からは認識しにくい文化的盲点（ブラインドスポット）となっています。",
+    "media_divergence": "日本メディアは、死傷者数（レバノン側3,371人死亡等）や住民への退去命令といった人道被害に焦点を当て、事実関係を中立的に淡々と伝える傾向があります。西側メディアは、イスラエルの防衛権やワシントンでの安全保障交渉の進捗に軸足を置き、ヒズボラのドローン攻撃がイスラエル軍に与える戦術的影響（兵士25人死亡等）をミリタリーバランスの観点から分析します。一方、Middle East EyeやAl Jazeeraなどのアラブ系・グローバルサウス系メディアは、イエローライン越えを「主権侵害および一方的な侵略」と強く批判し、スモトリッチ財務相による無差別破壊宣言を非難することで、欧米の黙認姿勢を告発しています。"
+  },
+  "insights": [
+    {
+      "text": "日本人が保護すべき歴史遺産と見なす南レバノンのボーフォール城（築900年）は、現地では十字軍時代から現代まで地理的優位性ゆえに「現役の軍事要衝」として使われ続けるという、文化遺産に対する決定的な認識のズレが存在します。",
+      "importance": 0.9,
+      "evidence_refs": [
+        "https://www.middleeasteye.net/news/israel-seizes-strategic-castle-it-expands-invasion-south-lebanon",
+        "https://www.aljazeera.com/news/2026/5/31/israel-issues-more-displacement-orders-in-lebanon-seizes-strategic-castle?traffic_source=rss"
+      ]
+    },
+    {
+      "text": "イスラエル軍が2026年4月に合意された「イエローライン」を越えて標高700メートルの要衝を占領した事実は、法的な停戦合意の遵守よりも「力の均衡」の変化に伴う実質的支配（デファクト・コントロール）を優先する中東の実利主義を象徴しています。",
+      "importance": 0.85,
+      "evidence_refs": [
+        "https://www.middleeasteye.net/news/israel-seizes-strategic-castle-it-expands-invasion-south-lebanon",
+        "https://www.aljazeera.com/news/2026/5/31/israel-issues-more-displacement-orders-in-lebanon-seizes-strategic-castle?traffic_source=rss"
+      ]
+    },
+    {
+      "text": "イスラエルのスモトリッチ財務相が主張する「ドローン1機につき100棟破壊」という過激な報復論は、軍事的な必要性以上に、停戦局面において国内の政権批判を抑え込み右派連立政権の結束を維持するための政治的パフォーマンスです。",
+      "importance": 0.82,
+      "evidence_refs": [
+        "https://www.aljazeera.com/news/2026/5/31/israel-issues-more-displacement-orders-in-lebanon-seizes-strategic-castle?traffic_source=rss"
+      ]
+    },
+    {
+      "text": "この中東の衝突長期化は遠い国の出来事ではなく、日本郵船や商船三井などの海運大手にスエズ運河を避けた喜望峰迂回ルートの長期化を強いており、国内製造業の調達遅延と恒常的なコスト押し上げに直結しています。",
+      "importance": 0.8,
+      "evidence_refs": [
+        "https://www.middleeasteye.net/news/israel-seizes-strategic-castle-it-expands-invasion-south-lebanon"
+      ]
+    }
+  ],
+  "selected_duration_profile": "paradigm_shift_100s",
+  "expanded_sources": [],
+  "visual_mood_tags": [
+    "cultural_icon_contrast",
+    "civilizational_divide"
+  ],
+  "analysis_version": "v1.0",
+  "generated_at": "2026-05-31T10:46:10.349088+00:00",
+  "llm_calls_used": 3,
+  "particular_angle_metadata": {
+    "stream_classification": "stream_2_perspective_gap",
+    "core_question": "イスラエルが名目上の停戦合意を破り、境界線（イエローライン）を越えて歴史的要衝ボーフォール城を再占領し、なし崩し的にレバノン南部での恒久的な「安全地帯」構築と占領地拡大を既成事実化させようとしていること。",
+    "differentiation_from_mainstream": "日本や西側の主流メディアは「停戦合意の崩壊」や「戦闘の泥沼化」として客観的な戦闘推移を報じるが、本記事はイスラエルによる一方的な合意破棄と、かつての占領地（2000年撤退）の再奪取による領土拡張的・地政学的な支配構造の再現を強調している。",
+    "hydrangea_axis_alignment": "4. 関心領域・地政学的死角 (レバノン南部における『停戦境界の突破と占領要衝の再制圧』という、中東地政学の歴史的文脈に根ざした深層構造を追っているため)",
+    "extraction_confidence": "high",
+    "sontaku_signals": {
+      "level": "high",
+      "type": "diplomatic",
+      "reasoning": "同盟国である米国の庇護を受けるイスラエルの国際法違反的な占領拡大や停戦無視の構図を、日本政府の対米配慮と連動して主要メディアが批判的に深掘りすることを避け、「双方の衝突」という中立的なトーンに終始する構造が存在するため。",
+      "extraction_confidence": "high"
+    }
+  }
+}

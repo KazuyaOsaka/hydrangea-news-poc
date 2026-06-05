@@ -1,0 +1,25 @@
+{
+  "task": "B-5: jp_coverage_judgement の analysis client 共用状況 + cost/温度ガード影響",
+  "file": "src/triage/jp_coverage_verifier.py",
+  "analysis_client_usage": {
+    "method": "_build_angle_query (L985-)",
+    "client": "get_analysis_llm_client() を遅延生成 (L1016-1018)",
+    "shared_with_extractor": true,
+    "note": "新規 particular_angle_extractor も get_analysis_llm_client() を使う想定 → 同一 Tier 階層 (analysis = QUALITY = gemini-3.5-flash primary / MAX 2)。"
+  },
+  "gemini3_temperature_guard": {
+    "location": "factory.py:585-594 (get_analysis_llm_client 内)",
+    "behavior": "primary tier (gemini-3.5-flash) が Gemini 3 系 → generation_config から temperature 除外 (max_output_tokens のみ)。新ルート extractor が get_analysis_llm_client 経由なら自動適用。",
+    "CONFIRMED": "新ルートでも温度ガード有効 (F-gemini-quality-tier-poc 配線済)。"
+  },
+  "ANALYSIS_LLM_MAX_TOKENS_side_effect": {
+    "current_default": 2000,
+    "batch_target": 4096,
+    "scope": "★ env ANALYSIS_LLM_MAX_TOKENS は get_analysis_llm_client() 全利用箇所に波及: (1) jp_coverage _build_angle_query, (2) perspective_extractor/selector, (3) multi_angle_analyzer, (4) insight_extractor, (5) 新規 particular_angle_extractor。extractor 専用ではない。",
+    "impact": "max_output_tokens 2000→4096 は cost 上限の引き上げ (実消費は出力長依存)。jp_coverage angle query は短いので実質影響小。analysis 系の JSON 途中切断回避が主目的 (F-analysis-max-tokens-tune)。"
+  },
+  "cost_estimate": {
+    "new_extractor_calls": "alpha (single pass): +1 analysis call/slot × 3 slots = +3 calls/batch。beta (3 pass): +9 calls/batch。",
+    "note": "analysis = gemini-3.5-flash (QUALITY)。3 slots 想定で alpha が cost 効率良い。"
+  }
+}

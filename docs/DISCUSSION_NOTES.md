@@ -1,17 +1,21 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-27 (★ F-gemini-quality-tier-poc 完了、実装バッチ。4-A 新規 1 件 =
-「2026-05-27: 最終布陣 v2 配線完了 + 外部 AI セカンドオピニオン運用方針確定」(ステータス
-Resolved/タスク化)。4-B 既存再評価 1 件 =「2026-05-25: クラウド誤り 10」に**「外部 AI
-セカンドオピニオンの権威化」派生パターンを追記** (Gemini 価格誤情報 + Claude Web 廃止短絡 +
-ChatGPT 訂正の経緯を観察記録、CLAUDE.md と両正本)。最終布陣 v2 (QUALITY=gemini-3.5-flash /
-ARTICLE=gemini-2.5-flash 分離 / LIGHTWEIGHT=gemini-3.1-flash-lite) 配線 + 公式 pricing/API を
-web_fetch で全裏取り (CP-0 スキップ)。baseline 1417→1432 passed。前回 2026-05-27:
-F-docs-update-chatgpt-round2-and-error10 完了 (docs-only。4-A 新規 1 件 = ChatGPT Round 2
-レビュー結果統合、4-B = クラウド誤り 10 を CLAUDE.md 正本化)。前々回 2026-05-26:
-F-script-writer-target-enemy-fix-investigate 完了で
-4-A 新規 1 件 + クラウド誤り 10 の 3 回目発生なし。前々回 2026-05-26:
-F-jp-coverage-cache-judgement-persist 完了で 4-A 新規 1 件 + 2 回目発生記録)
+最終更新: 2026-05-31 (★ F-particular-angle-metadata-production-wire (X1) 完了、実装バッチ 1-R。
+4-A 新規 1 件 =「2026-05-31: X1 新ルート本番配線完了 + 試運転 6 引継ぎ事項確定 + 試運転データ確保の
+構造的困難」(ステータス Resolved/タスク化)。4-B 既存再評価 2 件: **「2026-05-11: production-pipeline と
+docs 概念整理の乖離」を Resolved 化** (X1 で particular_angle_metadata + sontaku_signals + 新ルート
+起動が production 配線完了) + **「2026-05-26: target_enemy 問題」を Resolved 化** (X1 試運転で Slot-1
+target_enemy=None を production 経路で確認)。試運転は Path A pure (1 fresh batch + 1 run、本番状態
+維持、カズヤ判断)、ingestion batch_id=20260531_102637 + normalized mode exit 0/run_llm=39/Slot-1 で
+全 X1 必須目的達成 (stream_2_perspective_gap + sontaku.level=high/diplomatic + target_enemy=None +
+Cultural Divide + used_fallback=false / retries=0 + JSON 切断ゼロ)。axis_5 カズヤ採点で「城→海運→電気代」
+着地評価、CP-3 = W1 完全成功。F-analysis-max-tokens-tune 統合完了 (.env で 2000→4096)。baseline
+1432→1466 passed (新規 +34、破壊ゼロ)。CP-1 でクラウド誤り 10 系統の grep 作法により起案前提と
+実コードの 3 つの乖離発見 (移植元は旧 3 分類版 + sontaku 不在、3 要素名称ズレ、dispatch 既配線)
+を訂正。前回 2026-05-27: F-gemini-quality-tier-poc 完了、実装バッチ。最終布陣 v2
+(QUALITY=gemini-3.5-flash / ARTICLE=gemini-2.5-flash 分離 / LIGHTWEIGHT=gemini-3.1-flash-lite) 配線 +
+公式 pricing/API を web_fetch で全裏取り (CP-0 スキップ)。baseline 1417→1432 passed。クラウド誤り 10
+派生「外部 AI セカンドオピニオンの権威化」を CLAUDE.md 正本化)
 
 > このドキュメントは「議論中だがまだ確定していないメモ」を蓄積する場所。
 > 各バッチ完了時に Claude Code が再評価し、以下のいずれかに振り分ける:
@@ -24,6 +28,83 @@ F-jp-coverage-cache-judgement-persist 完了で 4-A 新規 1 件 + 2 回目発�
 ---
 
 ## 未分類 (Active)
+
+### 2026-05-31: X1 新ルート本番配線完了 + 試運転 6 引継ぎ事項確定 + 試運転データ確保の構造的困難 (F-particular-angle-metadata-production-wire)
+
+**ステータス**: Resolved / タスク化済 (X1 実装完了 + 6 引継ぎ事項を FUTURE_WORK / DISCUSSION_NOTES に昇格)。
+
+**経緯**: Phase A.5-3a-verify ゲート完了後 22 つ目のバッチ (1-R)。`docs/PARTICULAR_ANGLE_DEFINITION.md`
+セクション 3.6-3.7 で正典化された `ParticularAngleMetadata` + nested `SontakuSignals` を Hydrangea
+production に配線し、新ルート `generate_script_with_analysis` を production default 起動
+(ANALYSIS_LAYER_ENABLED=true)。F-script-writer-target-enemy-fix-investigate (1-P / 2026-05-26)
+CP-1 で確定の target_enemy 解消も統合 (新ルート起動で target_enemy framing が production から
+自動退役)。不変原則 4 例外条件 5 点充足適用で `src/analysis/particular_angle_extractor.py` 新規 +
+`src/shared/models.py` に SontakuSignals + ParticularAngleMetadata (nested) + AnalysisResult
+optional field 追加 + 新規プロンプト + script_writer 新ルート metadata 渡し + main.py 分析ブロックで
+extractor 呼出 (run_analysis_layer 不変) + `.env`/`.env.example` で ANALYSIS_LAYER_ENABLED=true /
+ANALYSIS_LLM_MAX_TOKENS=2000→4096 (F-analysis-max-tokens-tune 統合)。tests/conftest.py autouse fixture で
+.env true 化のテスト波及を抑止。baseline 1432 → 1466 passed (新規 +34、破壊ゼロ)。
+
+**CP-1 で起案前提と実コードの 3 つの乖離を発見・訂正** (クラウド誤り 10 系統の grep 作法が機能):
+1. 移植元 `scripts/extract_particular_angle.py` は旧 3 分類版 (perspective_gap 不在、sontaku 一切なし)。
+   4 分類 + sontaku は別 2 スクリプト (reclassify_annotations.py + add_sontaku_signals.py) にある。
+2. particular_angle 3 要素の名称: 起案 "broad_event / particular_angle / framing" だが、正典・実スクリプト
+   とも `core_question / differentiation_from_mainstream / hydrangea_axis_alignment`。
+3. main.py dispatch は既に配線済 (`if top.analysis_result is not None:`)、起案 C-5「dispatch 切替改修」
+   の大半は既存。実作業は extractor 呼出 + metadata 付与 + 新ルートへの metadata 渡し。
+
+**CP-2 計画変更**: sample mode は分析レイヤーブロックを通らない (`run_from_normalized` のみ) と判明 →
+normalized mode 必須。スタール normalized データ (2026-04-27、5 週間前) は GarbageFilter
+`_MAX_AGE_HOURS=48` (ハードコード) で全弾かれる構造のため、当初 5 batch 案を **Path A pure (1 fresh
+batch + 1 run、本番状態維持)** に変更 (カズヤ判断、3 回処理 scaffolding は recency_guard 無効化等で
+本番と違う人工状態を作るため不採用)。ingestion + run normalized mode の副作用は read-only 調査で
+non-destructive (新規追加のみ、$0 LLM、既存 DB / archive / output 一切不変) を確認。
+
+**試運転結果 (CP-3 = W1 完全成功)**:
+- ingestion `batch_id=20260531_102637` (47 sources、1326 articles、$0 LLM、~32 秒)
+- normalized mode run: exit 0、status=completed、run_llm=39、day_publishes=2
+- ★ Slot-1 cls-c8876d474612: 新ルート稼働 / particular_angle_metadata 起動
+  (`stream_2_perspective_gap` + extraction_confidence=high) / sontaku.level=high・type=diplomatic
+  (米国・イスラエル忖度の構造説明) / **target_enemy=None (退役確認)** / selected_pattern=Cultural Divide /
+  used_fallback=false / retries=0 / char validation passed (hook=22, setup=75, twist=177, punchline=81) /
+  max_tokens 4096 で JSON 切断ゼロ
+- axis_5 カズヤ採点: 「築900年の城→日本郵船→電気代」具体着地 + target_enemy 退役が質に表れた、
+  punchline「冷徹なツケの現場」(シニカル × 生活実感) で Hydrangea ブランドポジション整合
+
+**6 後続バッチ向け引継ぎ事項** (X1 範囲外、FUTURE_WORK 昇格):
+1. **高リスク事実検証必要性 production 実証** (★高に昇格): article 内に死者数 (レバノン側 3,371 人 /
+   負傷 10,129 人) / イスラエル軍兵士死亡 25 人 / スモトリッチ財務相過激発言引用 ("ドローン 1 機につき
+   レバノン国内の建物 100 棟を破壊すべき") などの高リスク数字・引用が含まれた。これらが元ソース
+   (Middle East Eye / AlJazeera) に実在するかは production 経路で未検証 = **本ワークフロー (1-T、
+   Editorial Guardian=gemini-3.1-pro-preview 配線) が第一作公開前に必須**であることを X1 trial が実証。
+2. **punchline 尻切れ未完結** (F-script-punchline-tail-cut-investigate ★中): 「そこから繋がるのが、」
+   で文未完結。`char validation passed` (punchline=81 字) のため文字数検証では検知されない。loop-2 仕様か
+   生成バグかの切り分け要。
+3. **★ title guard + broad/particular 切り分け曖昧さ**: `platform_title="日本では報道されないIsraelの視点"`
+   が `stream_2_perspective_gap` (一部報道済) に対して silence_gap 絶対表現を出力し、ChatGPT Round 2 指摘 2
+   (F-title-guard-coverage-claim-policy ★★高) の懸念を本番再現。さらに **article Facts セクション** も
+   「現在のところ、日本の主要メディアからのこの特定の出来事に関する詳細な報道は確認できません」と
+   silence_gap 寄りに書かれており、broad_event (中東紛争一般、日本報道済) と particular_angle
+   (ボーフォール城再占領、日本未深掘り) の切り分け精度に曖昧さ。F-title-guard-coverage-claim-policy +
+   第一作 framing 指針 (Phase A.5-3b) で扱う。
+4. **視覚プロンプトの旧語彙残存** (F-video-payload-visual-prompt-target-enemy ★低):
+   `src/generation/video_payload_writer.py:72` の twist visual_goal テンプレートに "仮想敵" 文字列が
+   ハードコードされ video_payload.json の scene metadata に残存。narration には実害なし。
+5. **run 間分散未検証** (F-periodic-health-check 統合): 1 batch・1 run のため未検証。実運用で時間差
+   fresh batches が貯まる Phase A.5-3d 着手時に統合する。3 回処理 scaffolding は本番状態を歪めるため
+   X1 では採用せず (カズヤ判断)。
+6. **★ 試運転データ確保の構造的困難** (F-trial-data-procurement-protocol ★中): 本バッチで blocker 4 連鎖
+   = (a) sample mode は run_from_normalized でなく run() 経由 → 分析レイヤー未起動、(b) スタール
+   normalized データ (5 週間前) で GarbageFilter `_MAX_AGE_HOURS=48` 全弾、(c) RSS 重複排除で同一時刻の
+   複数 fresh batch 不可、(d) 試運転用 fresh データ確保手段が PoC 未整備。後続バッチ (Phase A.5-3b
+   第一作 / 1-Q.5 title guard / 1-T 高リスク事実検証) で同様の試運転需要が再発する確率高。試運転実行
+   手順のドキュメント化 + 最小スクリプト整備 + GarbageFilter env tunable 化検討 (不変原則 3 例外条件
+   判断要) を別バッチで対応。
+
+**出典**: `docs/runs/F-particular-angle-metadata-production-wire/REPORT.md` (本バッチ正本)、
+`docs/runs/F-particular-angle-metadata-production-wire/trial_run_aggregated.json` (試運転集計)、
+`docs/runs/F-particular-angle-metadata-production-wire/trial_outputs/fresh_run/` (Slot-1 script /
+article / analysis snapshot)。
 
 ### 2026-05-27: 最終布陣 v2 配線完了 + 外部 AI セカンドオピニオン運用方針確定 (F-gemini-quality-tier-poc)
 
@@ -131,6 +212,15 @@ breaking_change_analysis.json、CP-1 (2026-05-27)
 ---
 
 ### 2026-05-26: target_enemy 問題の実態調査 (Gemini Round 1 由来) — 真因 a 確定 + X1 (新ルート配線統合) (F-script-writer-target-enemy-fix-investigate)
+
+★ **2026-05-31 再評価で Resolved 化 (F-particular-angle-metadata-production-wire / X1 / 1-R 完了)**:
+新ルート `generate_script_with_analysis` の production default 起動により target_enemy が
+production から自動退役 (X1 試運転 Slot-1 cls-c8876d474612 で `script.target_enemy=None` /
+`video_payload director_meta` に不在を確認)。残存課題は (1) legacy fallback 経路 (budget 枯渇 /
+no_client / llm_error 時) で target_enemy 復活する構造、(2) `video_payload_writer.py:72` の
+visual_goal テンプレートに "仮想敵" 文字列ハードコード残存 (X1 trial で観察、
+F-video-payload-visual-prompt-target-enemy ★低 として FUTURE_WORK 登録) のみ。詳細は
+`docs/runs/F-particular-angle-metadata-production-wire/REPORT.md` セクション 5.3 + 6.4。
 
 **内容**: Gemini Round 1 (2026-05-25) が「`target_enemy` のプロンプト/モデル定義に不整合が
 ある可能性 (models.py / script_writer.py / video_payload_writer.py / script_with_analysis.md
@@ -718,6 +808,16 @@ Grounding API 仕様上残るが、誤陽性は B-3' の no_match 判定で構�
 ---
 
 ### 2026-05-11: production-pipeline と docs 概念整理の乖離 — verify_two_stage / particular_angle_metadata / sontaku_signals 全て本番未配線 (F-trial-run-post-tune で観察)
+
+★ **2026-05-31 再評価で部分 Resolved (F-particular-angle-metadata-production-wire / X1 / 1-R 完了)**:
+本エントリの 3 つの未配線項目のうち **`particular_angle_metadata` + `sontaku_signals` は X1 で
+本番配線完了** (`src/shared/models.py` に `ParticularAngleMetadata` + nested `SontakuSignals` +
+`AnalysisResult.particular_angle_metadata` optional field 追加 + `src/analysis/particular_angle_extractor.py`
+新規 + main.py で extractor 呼出 + model_copy で metadata 付与 + 新ルートへの metadata 渡し +
+プロンプト改修)。試運転で Slot-1 が production 経路で全 X1 必須目的達成。残存は **`verify_two_stage`
+本番配線判断** のみ (FUTURE_WORK 緊急度 高、verify_two_stage は二段階クエリ生成で系統 1 vs 系統 2 を
+機械的に判別する設計、X1 で扱わず別バッチ)。詳細は
+`docs/runs/F-particular-angle-metadata-production-wire/REPORT.md`。
 
 **背景**:
 Phase A.5-3a-verify ゲート完了後の連続バッチ (F-particular-angle-design /

@@ -1,0 +1,41 @@
+{
+  "task": "B-3: 新ルート script_writer の現状確認",
+  "file": "src/generation/script_writer.py",
+  "generate_script_with_analysis_signature": {
+    "line": 1427,
+    "args": [
+      "scored_event: ScoredEvent",
+      "analysis_result: AnalysisResult",
+      "channel_config: Optional[ChannelConfig] = None",
+      "* (kw-only):",
+      "budget: BudgetTracker | None = None",
+      "authority_pair: list[str] | None = None",
+      "article_text: Optional[str] = None"
+    ],
+    "particular_angle_metadata_arg_present": false,
+    "sontaku_signals_arg_present": false,
+    "note": "現状は analysis_result から perspective/multi_angle/insights を読むのみ。particular_angle_metadata は引数にも prompt 渡し (_build_script_with_analysis_prompt) にも未登場。"
+  },
+  "target_enemy_exclusion": {
+    "line": 1306,
+    "code": "target_enemy=None,  # 仕様: 仮想敵濫用を抑止するため新ルートでは付与しない",
+    "draft_schema": "ScriptWithAnalysisDraft (L1094) に target_enemy フィールドなし (排除済)",
+    "CONFIRMED": "新ルート成功時は target_enemy=None で固定。"
+  },
+  "CRITICAL_legacy_fallback_caveat": {
+    "lines": "1500-1511",
+    "finding": "★ generate_script_with_analysis は budget_exhausted / no_client / llm_error 時に generate_script_legacy (= write_script) にフォールバックする。legacy ルートは target_enemy を出力する。",
+    "implication": "target_enemy 退役は『新ルートが fallback せず成功した場合のみ』成立。試運転で used_fallback=false かつ target_enemy=None を両方確認する必要がある (CP-3 観察項目)。"
+  },
+  "contract_tests": {
+    "file": "tests/test_script_writer_with_analysis.py",
+    "target_enemy_None_assertion": "L255 (test_generate_script_with_analysis_happy_path) assert script.target_enemy is None",
+    "draft_no_target_enemy_field": "L350-357 assert not hasattr(draft, 'target_enemy')",
+    "other_route_tests": "L236-347 happy/durations/unknown profile/forbidden pattern/no client fallback/llm failure fallback",
+    "MUST_KEEP_PASSING": true
+  },
+  "dispatch_switch": {
+    "location": "main.py:2000-2025",
+    "finding": "★ dispatch は既に配線済: `if top.analysis_result is not None:` → generate_script_with_analysis、else → write_script。バッチ C-5『dispatch 切替改修』の大半は既存。実作業は (1) extractor 呼出 + metadata 付与、(2) 新ルートへ metadata 引数追加、(3) prompt 改修。"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-05-31T09:30:16.598742+00:00",
+  "pool_stats": {
+    "comparison_window_hours": 36,
+    "current_batch_candidates": 0,
+    "carried_over_recent_candidates": 0,
+    "expired_candidate_count": 0,
+    "duplicate_suppressed_count": 0,
+    "upgraded_from_recent_pool_count": 0
+  },
+  "diagnosis": {
+    "upgraded_count": 0,
+    "upgrade_zero_reason": "no_pool_events_in_window",
+    "notes": "no_pool_events_in_window: pool is empty or all events older than window. all_suppressed_already_published: story fingerprint matched published content. no_upgrade_condition_met: pool has events but none met upgrade criteria (new region / +10 score / null→appraisal / breaking_shock)."
+  }
+}

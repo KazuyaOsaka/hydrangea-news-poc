@@ -1,0 +1,109 @@
+{
+  "task": "Task E: 試運転集計 (Path A pure、1 fresh batch + 1 run、本番状態維持)",
+  "trial_date": "2026-05-31",
+  "approach": "Path A pure (CP-2 後カズヤ判断): ingestion 1 回で fresh batch + normalized mode で 1 run、scaffolding なし本番状態維持",
+  "ingestion": {
+    "batch_id": "20260531_102637",
+    "sources_fetched": 47,
+    "new_articles": 1326,
+    "duplicates_skipped": 198,
+    "command": "python -m src.ingestion.run_ingestion",
+    "duration_seconds": "~32 (19:26:36 → 19:27:08)",
+    "cost_llm": 0,
+    "destructive": false
+  },
+  "trial_run": {
+    "command": "python -m src.main --mode normalized",
+    "exit_code": 0,
+    "status": "completed",
+    "job_id": "71de7c0b-baeb-4531-a916-dbf02f59513f",
+    "duration_minutes": "~22 (19:27:?? → 19:49:31)",
+    "llm_calls_total": 39,
+    "day_publishes": 2,
+    "slots_processed": 3,
+    "archive": "data/archive/20260531/20260531_102637/ (94 files moved)"
+  },
+  "slot_1_video": {
+    "event_id": "cls-c8876d474612",
+    "status": "completed",
+    "route": "generate_script_with_analysis (★ 新ルート稼働)",
+    "analysis_result_present": true,
+    "selected_perspective_axis": "cultural_blindspot",
+    "selected_duration_profile": "paradigm_shift_100s",
+    "insights_count": 4,
+    "particular_angle_metadata": {
+      "stream_classification": "stream_2_perspective_gap",
+      "core_question": "イスラエルが名目上の停戦合意を破り、境界線（イエローライン）を越えて歴史的要衝ボーフォール城を再占領し、なし崩し的にレバノン南部での恒久的な「安全地帯」構築と占領地拡大を既成事実化させようとしていること。",
+      "differentiation_from_mainstream": "日本や西側の主流メディアは「停戦合意の崩壊」や「戦闘の泥沼化」として客観的な戦闘推移を報じるが、本記事はイスラエルによる一方的な合意破棄と、かつての占領地（2000年撤退）の再奪取による領土拡張的・地政学的な支配構造の再現を強調している。",
+      "hydrangea_axis_alignment": "4. 関心領域・地政学的死角 (レバノン南部における『停戦境界の突破と占領要衝の再制圧』という、中東地政学の歴史的文脈に根ざした深層構造を追っているため)",
+      "extraction_confidence": "high",
+      "sontaku_signals": {
+        "level": "high",
+        "type": "diplomatic",
+        "reasoning": "同盟国である米国の庇護を受けるイスラエルの国際法違反的な占領拡大や停戦無視の構図を、日本政府の対米配慮と連動して主要メディアが批判的に深掘りすることを避け、「双方の衝突」という中立的なトーンに終始する構造が存在するため。",
+        "extraction_confidence": "high"
+      }
+    },
+    "script": {
+      "selected_pattern": "Cultural Divide (情報密度型 4 内)",
+      "loop_mechanism": "loop-2",
+      "target_enemy": null,
+      "★_target_enemy_退役_確認": true,
+      "total_duration_sec": 100,
+      "estimated_duration_sec": 79,
+      "char_validation": "passed (hook=22, setup=75, twist=177, punchline=81)",
+      "retries": 0,
+      "fallback": false
+    },
+    "video_payload": {
+      "scenes": 4,
+      "total_sec": 100,
+      "evidence": "partial",
+      "safety": "elevated",
+      "target_enemy_in_director_meta": "(absent)"
+    }
+  },
+  "slot_2_article_only": {
+    "event_id": "cls-3e9544fee58f",
+    "status": "completed (article-only mode、TOP_N_VIDEOS_PER_RUN=1)",
+    "analysis_result_present": true,
+    "particular_angle_metadata": {
+      "stream_classification": "stream_2_perspective_gap",
+      "extraction_confidence": "high",
+      "sontaku_level": "medium"
+    },
+    "article_generated": true,
+    "article_chars": 2488,
+    "article_fallback": false,
+    "article_retries": 0
+  },
+  "slot_3_skipped": {
+    "event_id": "cls-c7d507fc74e8",
+    "status": "skipped",
+    "reason": "analysis_result is None → main.py:1942 deprecation gate (旧ルート扇動的台本再発防止)",
+    "implication": "analysis layer の失敗パスが健在 (slot-2 で article-only モードに入る前段ロジックは run_analysis_layer から戻る前)。本来は Slot-3 article-only モードでも analysis 不要だが、現実装は analysis_result 必須に振っている。X1 範囲外の挙動 (FUTURE_WORK 候補)"
+  },
+  "X1_verification_results": {
+    "新ルート起動": "✅ Slot-1 で generate_script_with_analysis 実行確認 (log: [ScriptWithAnalysis] Generated via gemini)",
+    "particular_angle_metadata 配線": "✅ Slot-1/Slot-2 とも populated、extraction_confidence=high",
+    "sontaku_signals 配線": "✅ Slot-1=high/diplomatic、Slot-2=medium",
+    "★ target_enemy 退役": "✅ Slot-1 script.target_enemy=None、video_payload director_meta に不在",
+    "stream_classification 抽出": "✅ stream_2_perspective_gap 識別 (候補A 系統と整合)",
+    "Tier fallback 発生": "✅ なし (script/article とも used_fallback=false、retries=0)",
+    "JSON 途中切断": "✅ 観察なし (char validation passed)",
+    "legacy fallback": "✅ 発生なし (新ルート成功で target_enemy 復活なし)",
+    "extractor 失敗ハンドリング": "✅ Slot-1/Slot-2 とも成功、failure 経路は本 trial では未到達 (unit test test_extract_returns_none_when_* で被覆済)"
+  },
+  "X1_unverified_in_this_trial": {
+    "run_間_分散": "未検証。1 batch・1 run のため。本番状態を歪めず観察するには実運用で時間差 fresh batch が貯まる必要があるため、FUTURE_WORK 登録 (カズヤ判断、F-periodic-health-check 統合候補)",
+    "Slot-3 analysis_failure": "本 trial で 1 件発生したが deprecation gate で正しく skip (扇動的台本再発防止)。Slot-2 article-only モードと同じく『analysis 不要で article 生成』に振る余地がある (X1 範囲外)",
+    "extractor LLM 失敗時の None ハンドリング": "trial 中は extractor 全成功。unit test で被覆済 (test_extract_returns_none_when_all_attempts_fail / no_client / empty / prompt_missing)"
+  },
+  "model_observation": {
+    "script_via_gemini_3_5_flash": "✅ generation Tier1 (QUALITY = gemini-3.5-flash) 経由で成功",
+    "article_via_gemini_2_5_flash": "✅ article Tier1 (ARTICLE = gemini-2.5-flash) 経由で成功",
+    "temperature_guard": "✅ analysis primary=gemini-3.5-flash (Gemini 3 系) で temperature 非送出 (factory.py:591)、looping/degraded 兆候なし",
+    "max_tokens_4096": "✅ ANALYSIS_LLM_MAX_TOKENS=4096 で JSON 切断 0 件 (F-analysis-max-tokens-tune 統合効果)"
+  },
+  "verdict": "★ CP-3 W1 完全成功 (X1 必須目的すべて達成、本番状態維持で 1 run 検証)。Task F (REPORT + BATCH_PROTOCOL Task 1-5) に進む。"
+}
