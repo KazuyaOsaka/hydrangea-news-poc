@@ -5792,3 +5792,104 @@ Phase A.5-3a-verify ゲート完了後 **22 つ目のバッチ (1-R)**。F-parti
   F-periodic-health-check (1-T、run 間分散 + tier fallback 観測の統合先) /
   Phase A.5-3b 第一作起案 (1-S、確定モデル + 候補A perspective_gap で実装)
 
+
+## 2026-06-08: F-article-model-upgrade — article 生成モデルを gemini-3.5-flash に品質昇格 (選択肢C 第一歩)
+
+### 背景
+
+- 記事 (article) は「最上級の知能で考えてほしい」副次出力だが、1-Q (F-gemini-quality-tier-poc) の
+  最終布陣 v2 では output コスト最適化のため article のみ唯一 Gemini-2 系 (gemini-2.5-flash) に残された
+  (judge/script/analysis = gemini-3.5-flash、lightweight = gemini-3.1-flash-lite)。
+- Gemini 知能序列で 2.5-flash は旧世代 = 格下。**選択肢C** = 「まず 3.5-flash で品質を見て、物足りなければ
+  将来 3.1 Pro にエスカレ」の第一歩として、article を gemini-2.5-flash → gemini-3.5-flash に昇格する。
+  3.1 Pro は本バッチでは扱わない (FUTURE_WORK `F-article-3.1-pro-escalation` ★低、条件付きに登録)。
+- モデル ID (公式確認済、2026-06-08 ai.google.dev): `gemini-3.5-flash` (GA、preview サフィックスなし、
+  内部版 3.5-flash-05-2026)。出力上限 65,536 トークン。価格 $1.50/$9.00 per 1M (2.5-flash $0.30/$2.50 より
+  高いが article は低頻度副次出力で許容)。
+- スコープ方式 (カズヤ確定): **B案 = config 変更 + 保存済み候補A event での article A/B 再生成評価**。
+  新規 ingestion バッチも full pipeline run も行わない。
+- 副次目的: 新生 Claude Code (Opus 4.8 + xhigh + auto mode) の慣らし運転 + auto mode の push 挙動観察。
+
+### 議論
+
+- 不変原則 1 厳守: `src/generation/article_writer.py` は聖域。一切変更せず、公開 API `write_article()` を
+  呼び出すのみ。変えるのは article role が引くモデル ID の設定値のみ。
+- 起案前仮説 5 点を **grep + 実コード精読で検証** (クラウド誤り 10 作法。CP-1):
+  - **仮説 1 (訂正)**: article role のモデル ID は `factory._get_tier_models_for_role("article")` が
+    `GEMINI_ARTICLE_TIER1` を引く。★ ただし「物理的に変える 1 値」は **3 箇所に協調配置**: `.env` L20
+    (runtime 正、gitignored)、`.env.example` L19 (committed template)、`factory.py` L343 inline default。
+    実 runtime を変えるには gitignored な `.env` が必須。`GEMINI_ARTICLE_MODEL` (config.py L92) は
+    business logic 未使用の dead legacy 定数 (grep で確認)。
+  - **仮説 2 (確認、最重要)**: article role は他 role と **完全分離**。article は `GEMINI_ARTICLE_TIER1〜4`
+    (専用 env 名) を引き、judge/script/analysis は `GEMINI_MODEL_TIER1〜4` (QUALITY)、lightweight は
+    `GEMINI_LIGHTWEIGHT_TIER1〜4` を引く。env 名が完全に異なるため、`GEMINI_ARTICLE_TIER1` 変更は
+    他 role に **巻き込まない** (alias 共有でなく独立解決)。runtime 実測で確認 (article=3.5-flash 化後も
+    judge/analysis/generation/merge_batch は不変)。
+  - **仮説 3 (訂正)**: 「article max_tokens (MAX1)」の前提は **用語混同**。「MAX1」は MAX_ATTEMPTS=1
+    (リトライ回数) であって max_output_tokens ではない。article client は `generation_config=None`
+    (factory `_make_tiered_gemini_client`) = **max_output_tokens を一切設定せず**、モデル既定の出力上限を
+    フルに使う。3.5-flash 出力上限 65,536 でも Hydrangea 側 truncate 設定は存在しない = token tier 変更不要。
+  - **仮説 4 (確認、世代境界)**: (a) article は `get_article_llm_client()` → 共通 `LLMClient.generate(prompt)`
+    経由 (article_writer L482/L313)、独自 google.generativeai import なし。(b) **src/ 全体で
+    thinking_level/thinking_budget/thinking 系は一切不在** (grep 0 件)。article は generation_config=None
+    なので temperature も送らず 3.5-flash default temp 1.0 で動く (誤り 10 派生の温度ガードも不要)。
+    judge/script/analysis は 1-Q で既に 3.5-flash 本番稼働済 = 同一 TieredGeminiClient クラス経路で実証済。
+    (c) F-gemini-3.5-flash-api-audit REPORT は article 分離 (1-Q) 以前に書かれたが、article は共通 client の
+    API 面を使うため article 固有の API リスクなし。(d) A/B 再生成で 3.5-flash article 生成を実測 = retries=0、
+    API エラーなし。
+  - **仮説 5 (確認)**: 候補A `cls-6889e9e1c7ac` の ScoredEvent が `recent_event_pool.event_snapshot`
+    (4693 bytes) に残存 + `data/output/cls-6889e9e1c7ac_script.json` も残存 → A/B 単体再生成可能。
+    A案 (config-only) フォールバック不要。
+- TIER1==TIER2 の扱い: 「1 値のみ変更」(カズヤ起案) を厳守し TIER1 のみ 3.5-flash に変更。結果 TIER1==TIER2
+  (両 3.5-flash) となるが **意図的** = 503 時に 3.5-flash を 2 回試してから lite へ落ちる挙動で、article は
+  premium 品質を狙う role のため許容。旧主軸 2.5-flash は chain から除外。TIER2 も 2.5-flash に降格する案
+  (4 distinct chain 復元) は「2 値変更」になるため不採用、本ログに観点記録のみ。
+
+### 決定
+
+- **config 1 論理値変更**: `GEMINI_ARTICLE_TIER1` を gemini-2.5-flash → **gemini-3.5-flash** に変更
+  (3 協調箇所: `.env` runtime / `.env.example` template / `factory.py` inline default + 各所の now-false な
+  コメント/docstring を正確化)。article の MAX_ATTEMPTS=1 / generation_config=None は不変。
+- **A/B 再生成**: `scripts/ab_article_model_upgrade.py` (新規) で候補A の ScoredEvent + VideoScript を
+  ロードし、`write_article()` を 2.5-flash / 3.5-flash の両モデルで実行 (モデルは role="article" の Tier を
+  os.environ で pin = モデル混入防止)。両出力を `docs/runs/F-article-model-upgrade/` に
+  `article_2.5flash.md` / `article_3.5flash.md` + `ab_eval_metadata.json` で並置。
+- **評価はカズヤ (axis_5 主観)**。Claude Code は並置・提示まで。優劣判定・3.1 Pro エスカレ要否の結論は出さない。
+
+### 結果
+
+- baseline **1466 passed** 維持。★ ただし起案前提 (invariant 5「mock 前提なので落ちない」) は **訂正**:
+  4 件のテストが article=2.5-flash の旧設計 (primary 値 + quality と distinct であること) を直接 assert して
+  いたため model ID 変更で fail。これらは旧設計を符号化したテストで、本バッチの仕様変更に伴う **期待値修正
+  (構造変更なし、テスト追加/削除なし)** で対応 (CURRENT_STATE 触ってよい領域の許容範囲)。
+  test_factory_role_model_resolution.py (`_LINEUP_V2_TIERS["article"]` + `test_quality_and_article_*` を
+  「primary 共有、MAX_ATTEMPTS で分離」に更新) / test_factory_role_tier_separation.py
+  (`test_article_role_uses_quality_primary` + `test_lightweight_quality_article_tier1_lineup` に rename + 更新)。
+  env-override mechanism テスト (TestArticleScriptClientSeparation) は default 非依存のため不変。
+- A/B 再生成成功 (両モデルとも LLM 生成、template fallback なし): 2.5-flash=1887 chars (tier1 で transient
+  503 → tier2 も 2.5-flash で成功 = モデル pin が機能、混入なし) / **3.5-flash=2066 chars、retries=0、API
+  エラーなし** (仮説 4d 実証)。両出力は Facts→Hypothesis→Implications 構造の実記事。
+- 不変原則違反: なし (article_writer.py 不変 / script_writer.py 既存ルート不変 / triage 不変 / analysis 不変)。
+- auto mode 観察: 本バッチは「ブランチで完結 + main へのマージはカズヤ」原則を維持したため、main 直 push /
+  force push は **試行していない** (= classifier がブロックすべき対象が発生せず)。feature ブランチの commit は
+  ローカルで実施、merge コマンドを完了レポートで提示。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 変更 (config + コメント/docstring 正確化): `.env` (gitignored、runtime) / `.env.example` (template) /
+  `src/llm/factory.py` (GEMINI_ARTICLE_TIER1 inline default + module/関数 docstring)
+- 変更 (テスト期待値修正、構造変更なし): `tests/test_factory_role_model_resolution.py` /
+  `tests/test_factory_role_tier_separation.py`
+- 新規: `scripts/ab_article_model_upgrade.py` (A/B 再生成スクリプト、article_writer.py 呼び出しのみ)
+- 新規 (A/B 証跡): `docs/runs/F-article-model-upgrade/article_2.5flash.md` /
+  `article_3.5flash.md` / `ab_eval_metadata.json` / `REPORT.md`
+- ドキュメント更新: `docs/CURRENT_STATE.md` (全置換、布陣 ARTICLE 行 3.5-flash 化 + ロードマップ順序更新) /
+  `docs/DECISION_LOG.md` (本エントリ) / `docs/FUTURE_WORK.md` (新規 2 タスク F-article-3.1-pro-escalation /
+  F-article-max-tokens-policy + top summary) / `docs/DISCUSSION_NOTES.md` (4-A 新規 1 件 = article→3.1 Pro
+  布陣整理観点)
+- 不変原則 1 遵守: `src/generation/article_writer.py` 0 行変更 (呼び出しのみ)
+- 関連バッチ: F-gemini-quality-tier-poc (1-Q、最終布陣 v2 で article を ARTICLE_ROLES に分離) /
+  F-gemini-3.5-flash-api-audit (1-P.5、3.5-flash API 破壊的変更なし確定) /
+  F-article-3.1-pro-escalation (選択肢C 次段、条件付き未確定) / 1-T (Editorial Guardian = 3.1-pro、布陣整理観点)
+

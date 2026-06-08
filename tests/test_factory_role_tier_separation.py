@@ -32,7 +32,8 @@ class TestRoleClassification:
         assert "editorial_mission_filter" not in LIGHTWEIGHT_ROLES
 
     def test_article_roles_contains_article(self):
-        """F-gemini-quality-tier-poc: article は ARTICLE_ROLES に分離された (output コスト最適化)。"""
+        """F-gemini-quality-tier-poc: article は ARTICLE_ROLES に分離された
+        (F-article-model-upgrade 2026-06-08 で primary=3.5-flash に品質昇格、MAX_ATTEMPTS=1 で分離維持)。"""
         assert "article" in ARTICLE_ROLES
 
     def test_quality_roles_contains_expected(self):
@@ -85,15 +86,16 @@ class TestTierModelsForRole:
         assert models[2] == "gemini-3.1-flash-lite"
         assert models[3] == "gemini-2.5-flash-lite"
 
-    def test_article_role_uses_cost_optimized_primary(self, monkeypatch):
-        """ARTICLE_ROLES は TIER1 が output コスト最安級 (gemini-2.5-flash デフォルト、最終布陣 v2)。"""
+    def test_article_role_uses_quality_primary(self, monkeypatch):
+        """ARTICLE_ROLES は TIER1=gemini-3.5-flash (F-article-model-upgrade 2026-06-08 で品質昇格)。
+        TIER1==TIER2 は意図的 (1 値のみ変更 = 3.5-flash 追加リトライ; 旧主軸 2.5-flash は chain から除外)。"""
         for key in ["GEMINI_ARTICLE_TIER1", "GEMINI_ARTICLE_TIER2",
                     "GEMINI_ARTICLE_TIER3", "GEMINI_ARTICLE_TIER4"]:
             monkeypatch.delenv(key, raising=False)
 
         models = _get_tier_models_for_role("article")
         assert len(models) == 4
-        assert models[0] == "gemini-2.5-flash"
+        assert models[0] == "gemini-3.5-flash"
         assert models[1] == "gemini-3.5-flash"
         assert models[2] == "gemini-3.1-flash-lite"
         assert models[3] == "gemini-2.5-flash-lite"
@@ -152,8 +154,11 @@ class TestMaxAttemptsForRole:
 class TestRoleSeparationIntegration:
     """E-3': 役割分離が実際の挙動に反映されることを統合的に検証。"""
 
-    def test_lightweight_quality_article_have_distinct_tier1(self, monkeypatch):
-        """LIGHTWEIGHT / QUALITY / ARTICLE の TIER1 が最終布陣 v2 通り (デフォルト値)。"""
+    def test_lightweight_quality_article_tier1_lineup(self, monkeypatch):
+        """LIGHTWEIGHT / QUALITY / ARTICLE の TIER1 が現布陣通り (デフォルト値)。
+        ★ F-article-model-upgrade (2026-06-08) で ARTICLE TIER1 が 2.5→3.5-flash に昇格し、
+        QUALITY と primary を共有するようになった (分離軸は MAX_ATTEMPTS / fallback chain へ移行)。
+        LIGHTWEIGHT は引き続き別モデル (gemini-3.1-flash-lite)。"""
         for key in ["GEMINI_LIGHTWEIGHT_TIER1", "GEMINI_MODEL_TIER1", "GEMINI_ARTICLE_TIER1"]:
             monkeypatch.delenv(key, raising=False)
 
@@ -163,7 +168,7 @@ class TestRoleSeparationIntegration:
 
         assert lightweight_tier1 == "gemini-3.1-flash-lite"
         assert quality_tier1 == "gemini-3.5-flash"
-        assert article_tier1 == "gemini-2.5-flash"
-        # QUALITY (3.5-flash) と ARTICLE (2.5-flash) は明確に別モデル
-        assert quality_tier1 != article_tier1
+        assert article_tier1 == "gemini-3.5-flash"
+        # QUALITY と ARTICLE は primary を共有 (昇格後)、LIGHTWEIGHT は依然として別モデル
+        assert quality_tier1 == article_tier1
         assert lightweight_tier1 != quality_tier1

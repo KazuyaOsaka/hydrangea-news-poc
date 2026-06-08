@@ -29,6 +29,19 @@ Cultural Divide + used_fallback=false / retries=0 + JSON 切断ゼロ)。axis_5 
 
 ## 未分類 (Active)
 
+### 2026-06-08: article が将来 3.1 Pro に上がる場合の Editorial Guardian (1-T) との布陣整理 (F-article-model-upgrade、観点のみ)
+- **内容**: F-article-model-upgrade で article を gemini-2.5-flash → gemini-3.5-flash に品質昇格した
+  (選択肢C 第一歩)。選択肢C の次段として「3.5-flash で物足りなければ article を gemini-3.1-pro-preview に
+  エスカレ」する構想がある (FUTURE_WORK `F-article-3.1-pro-escalation` ★低、条件付き)。一方、1-T
+  (第一作公開前の高リスク事実検証ワークフロー = Editorial Guardian) も **gemini-3.1-pro-preview を配線予定**。
+  両者が実現すると **3.1 Pro が「記事生成」と「高リスク事実検証」の二役** を担うことになり、布陣 (role 分離 /
+  RPD 配分 / temperature・thinking 設定 / コスト) の整理が必要になる。**今は実装しない** — 3.1 Pro 配線は
+  article 側も Guardian 側も未着手で、実装先が 0〜1 の段階で抽象化・前倒しすると「過剰拡張性の罠」(クラウド誤り 6)。
+  あくまで「article が 3.1 Pro に上がる判断をする時点で Guardian との布陣を一緒に考える」という **観点としてのみ** 記録する。
+- **出典**: F-article-model-upgrade バッチプロンプト Task 4 / DECISION_LOG「2026-06-08: F-article-model-upgrade」/
+  FUTURE_WORK `F-article-3.1-pro-escalation` (★低) / 1-T (Editorial Guardian = gemini-3.1-pro-preview 配線予定)
+- **ステータス**: `Active` (観点のみ。article→3.1 Pro エスカレ判断 or 1-T 着手のいずれか早い時点で再評価)
+
 ### 2026-05-31: X1 新ルート本番配線完了 + 試運転 6 引継ぎ事項確定 + 試運転データ確保の構造的困難 (F-particular-angle-metadata-production-wire)
 
 **ステータス**: Resolved / タスク化済 (X1 実装完了 + 6 引継ぎ事項を FUTURE_WORK / DISCUSSION_NOTES に昇格)。

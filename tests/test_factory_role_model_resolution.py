@@ -26,8 +26,8 @@ _LINEUP_V2_TIERS = {
     "analysis": ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"],
     # judge = editorial_mission_filter / elite_judge 共用 (QUALITY 階層。primary は別途 JUDGE_MODEL prepend)
     "judge": ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"],
-    # article = output コスト最適化 (ARTICLE)
-    "article": ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"],
+    # article = 記事品質昇格 (ARTICLE、F-article-model-upgrade で 2.5→3.5; TIER1==TIER2 は意図的 1 値変更)
+    "article": ["gemini-3.5-flash", "gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"],
 }
 
 _LINEUP_V2_MAX_ATTEMPTS = {
@@ -65,11 +65,17 @@ class TestLineupV2InlineDefaults:
         for role, expected in _LINEUP_V2_MAX_ATTEMPTS.items():
             assert _get_max_attempts_for_role(role) == expected, f"role={role}"
 
-    def test_quality_and_article_primary_differ(self, monkeypatch):
-        """QUALITY (script/judge/analysis) = 3.5-flash、ARTICLE = 2.5-flash で primary が分かれる。"""
+    def test_quality_and_article_share_primary_after_upgrade(self, monkeypatch):
+        """F-article-model-upgrade (2026-06-08): QUALITY (script/judge/analysis) と ARTICLE は
+        いずれも primary=gemini-3.5-flash で共有する (旧: article=2.5-flash で分離)。
+        分離軸は primary モデルではなく MAX_ATTEMPTS (quality=2 / article=1) と fallback chain
+        (article は TIER2 も 3.5-flash、quality は TIER2=2.5-flash) に移った。"""
         self._reset_env(monkeypatch)
         assert _get_tier_models_for_role("generation")[0] == "gemini-3.5-flash"
-        assert _get_tier_models_for_role("article")[0] == "gemini-2.5-flash"
+        assert _get_tier_models_for_role("article")[0] == "gemini-3.5-flash"
+        # primary は共有するが MAX_ATTEMPTS で依然として分離している
+        assert _get_max_attempts_for_role("generation") == 2
+        assert _get_max_attempts_for_role("article") == 1
         assert _get_tier_models_for_role("merge_batch")[0] == "gemini-3.1-flash-lite"
 
 
