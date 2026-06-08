@@ -1,6 +1,16 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-06-08 (★ F-article-model-upgrade 完了、config 変更バッチ。article 生成モデルを
+最終更新: 2026-06-08 (★ F-title-guard-coverage-claim-policy 完了、実装バッチ 1-Q.5。coverage claim
+事実整合の 3 層 (構造データ `configs/coverage_claim_policy.yaml` + script 新ルート生成プロンプト原則 +
+生成後 guard `src/generation/coverage_claim_guard.py` = LLM judge / B-3' / flag のみ) を実装。X1 試運転で
+本番再現した「perspective_gap に silence 絶対表現」を構造的に防止。★ CP-1 grep で起案者仮説 1 を訂正
+(title の silence は `title_generator.py` ハードコード template + `is_strong` ヒューリスティクス由来 = script
+非依存 → Layer 1 プロンプト原則では届かず guard が唯一の安全網) + 仮説 2 確認 (article プロンプトは
+article_writer.py 内ハードコード = branch b、article は guard のみ)。`F-title-guard-coverage-claim-policy` を
+完了済みに移動。新規 2 タスク追加: **F-title-generator-stream-aware-fix** (★中、title silence の根本修正) /
+**F-coverage-claim-guard-auto-action** (★低 条件付き、guard 自動アクション要否を第一作後に判断)。
+baseline 1466 → **1487 passed** (新規 +21、破壊ゼロ)。不変原則 1-5 厳守。
+前回 2026-06-08: F-article-model-upgrade 完了、config 変更バッチ。article 生成モデルを
 gemini-2.5-flash → gemini-3.5-flash に品質昇格 = 選択肢C 第一歩 (B案 = config 変更 + 保存済み候補A
 event での article A/B 再生成)。`GEMINI_ARTICLE_TIER1` を 3 協調箇所 (`.env` runtime / `.env.example`
 template / `factory.py` inline default) で変更 (TIER1==TIER2 = 3.5-flash 追加リトライは意図的、1 値のみ変更)。
@@ -195,14 +205,7 @@ F-stream-2-filter-design 着手 OK 状態に。
   - ★ 追加留意点 (F-gemini-3.5-flash-api-audit / 2026-05-27): 3.5 Flash 投入時に Thought preservation 自動 ON による output_token/レイテンシ増加を PoC 試運転で実測観察 (機能破壊なし、改修不要のコスト面留意点)。LIGHTWEIGHT Tier1 切替は `gemini-3.1-flash-lite` (RPD 150K) が本命 (高頻度・低難度に spike 耐性、3.5 Flash は RPD 10K を Narrative primary と共有しないため使わない)。
   - 関連: F-gemini-model-audit (本起案元)、F-gemini-model-migrate-emergency (emergency 移行完了、Lightweight Tier1 切替を本 PoC に保留)、F-gemini-3.5-flash-api-audit (★ 候補リスト更新 + API 破壊的変更なし確定)、Phase A.5-3b 第一作起案
 
-- **F-title-guard-coverage-claim-policy** ★★高 (ChatGPT Round 2 レビュー / 2026-05-27 起案、F-docs-update-chatgpt-round2-and-error10 で grep 裏取り、Phase A.5-3b 第一作着手前必須)
-  - 背景: `src/generation/title_generator.py` が evidence strong 時に絶対的 silence_gap 表現「日本では報道されない{topic}」(L136/149/203) / サムネ「日本で無報道」(L380/394) を出力する仕組みが残存。`is_strong` ゲート (`_is_strong_evidence` L41-72) は `editorial:perspective_gap_score >= 3.0` でも真になる (L66/L70) ため、**系統 2 (perspective_gap) の事象でも絶対的 silence_gap 表現が選択され得る**。第一作候補A (cls-6889e9e1c7ac) は perspective_gap = 「広範事件 (9,600 人虐待) は日本報道済 (AFPBB 等) + 特定角度 (ICRC 監視操作) のみ未報道」のため、silence_gap 絶対表現がタイトル/サムネに出ると「いや AFPBB で報じてるじゃん」と視聴者から突っ込まれるリスク。ADR-0003 の「誇大表現回避」と衝突し、Hydrangea ミッション「検証可能な事実で殴る」に直接矛盾。★ grep 裏取り: `coverage_claim_policy` / `title_layer_guard` / `publish_gate` / `manual_poc/` はいずれも 0 件 = グリーンフィールド (既存破壊なし)。
-  - 対応案: (a) `manual_poc/` 配下の candidate_a_editorial_brief (Phase A.5-3b 第一作の手動固定データ、隔離原則で新規作成) に `coverage_claim_policy` 構造データ追加 (`allowed_claim_level: perspective_gap_only` / `forbidden_title_claims: [absolute_silence_gap, event_not_reported_in_japan]`) (b) 生成後に title_layer_guard (新規スクリプト or publish_gate) で `coverage_claim_policy` と title/thumbnail の整合チェック。各論プロンプト制御でなく構造データに基づく虚偽防止 = LLM の知性に委ねる設計と整合 (クラウド誤り 9 各論コントロール回避)。title_generator.py 本体改修は最小化し、構造データ + 生成後 guard を主軸とする設計を推奨。
-  - 検討時期: Phase A.5-3b 第一作起案前 (= F-gemini-quality-tier-poc 完了後、第一作着手前のロードマップ追加)
-  - 想定工数: 3-5h
-  - 関連ファイル: `src/generation/title_generator.py` (現状確認のみ = 不変原則対象外だが本体改修時は例外条件適用判断要)、`manual_poc/` 配下に新規 (Phase A.5-3b 隔離原則)、`docs/ADR/0003-content-moral-guidelines.md` (整合確認)、`docs/runs/F-docs-update-chatgpt-round2-and-error10/title_guard_analysis.json` (grep 裏取り)
-  - 関連: ChatGPT Round 2 レビュー (2026-05-27 指摘 2)、ADR-0003、Phase A.5-3b 第一作起案、Hydrangea ミッション「検証可能な事実で殴る」
-  - ★ **X1 試運転で本番実証 (2026-05-31)**: Slot-1 cls-c8876d474612 の `platform_title="日本では報道されないIsraelの視点"` が stream_classification=`stream_2_perspective_gap` (= 一部報道済) に対して silence_gap 絶対表現を出力し、ChatGPT Round 2 指摘 2 の懸念をそのまま再現。さらに **article Facts セクション** も「現在のところ、日本の主要メディアからのこの特定の出来事に関する詳細な報道は確認できません」と silence_gap 寄りに書いており、broad_event (中東紛争一般、日本で報道済) と particular_angle (ボーフォール城再占領、日本未深掘り) の **切り分け精度の曖昧さ** が production 経路で確認された。→ 本タスクの対応案 (a)(b) に加えて、第一作 framing 指針 (Phase A.5-3b) で article 側の broad/particular 切り分け文言も含めて指針化することを推奨。詳細は `docs/runs/F-particular-angle-metadata-production-wire/REPORT.md` セクション 6.3。
+- ~~**F-title-guard-coverage-claim-policy** ★★高 (1-Q.5)~~ → ★ **完了 (F-title-guard-coverage-claim-policy / 2026-06-08)**。汎用 coverage_claim_policy 構造データ (`configs/coverage_claim_policy.yaml`) + script 新ルート生成プロンプト原則 (事実整合) + 生成後 guard (LLM judge、事実整合検証、flag のみ) を実装。詳細は「完了済み」セクション参照。★ CP-1 訂正: 起案者仮説 1「silence 表現は script の title 素材から流入」は **誤り** — grep で `title_generator.py` の **ハードコード template** (`_platform_title_candidates` L136/149/203) + `is_strong` evidence ヒューリスティクス由来と確定 (script 本文非依存)。よって title の silence は Layer 1 プロンプト原則では届かず、guard (Layer 3) が唯一の安全網。title_generator.py を stream-aware にする根本修正は別タスク (下記新規 ★中) に分離。
 
 - ~~**config.py/factory.py default 不一致整合** ★低 (F-gemini-model-audit §9-3 / F-gemini-model-migrate-emergency 2026-05-19 残置)~~ → ★ **完了 (F-gemini-quality-tier-poc / 2026-05-27、Q2=揃える)**。config.py:76-79 の GEMINI_MODEL_TIER1-4 inline default を最終布陣 v2 (QUALITY 系統 = gemini-3.5-flash / 2.5-flash / 3.1-flash-lite / 2.5-flash-lite) に整合し、factory.py QUALITY default と一致させた。runtime 影響なしの既知 doc-drift を解消。
 
@@ -444,6 +447,25 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 ---
 
+- **F-title-generator-stream-aware-fix** (F-title-guard-coverage-claim-policy / 2026-06-08 CP-1 起案、仮説 1 訂正由来)
+  - 背景: 1-Q.5 CP-1 で確定 = `src/generation/title_generator.py` の silence 絶対表現
+    「日本では報道されない{topic}(の視点)」(`_platform_title_candidates` L136/149/203) + サムネ
+    「日本で無報道」(L380/394) は **決定的合成のハードコード template** で、`is_strong` evidence
+    ヒューリスティクス (`_is_strong_evidence` L41-72、`perspective_gap_score>=3.0` でも真) で選択される。
+    stream_classification を一切参照しないため、**perspective_gap / framing_inversion でも silence
+    絶対表現が出る**。1-Q.5 では guard (Layer 3、flag のみ) が安全網になったが、**根本 (生成時に
+    stream に応じて silence template を抑制) は未対処**。Layer 1 プロンプト原則は title が LLM 非経由の
+    決定的合成のため届かない。
+  - 対応案: `title_generator.py` の `is_strong → silence template` 選択を stream-aware にする
+    (例: perspective_gap / framing_inversion では silence 絶対 candidate を非選択、coverage_claim_policy
+    の allowed_claim_level を参照)。★ title_generator.py は不変原則対象外だが本体改修のため最小改変 +
+    既存テスト保護。各論の言い回し強制ではなく「事実に反する template を選ばない」構造選択に留める
+    (クラウド誤り 9 回避)。selected_pattern / stream の橋渡しが必要 (現状 title 生成に stream 未伝播)。
+  - 検討時期: 第一作 (1-S) で guard の flag 挙動を観測してから判断 (flag が多発 = 根本修正の価値が高い)。
+  - 関連ファイル: `src/generation/title_generator.py`、`src/generation/script_writer.py` (title 生成呼出時の
+    stream 伝播)、`configs/coverage_claim_policy.yaml`、`src/generation/coverage_claim_guard.py`
+  - 関連: F-title-guard-coverage-claim-policy (guard = 暫定安全網)、クラウド誤り 9
+
 - **F-periodic-health-check** (F-trial-run-candidate-a-reverify / 2026-05-19 起案、F-gemini-model-audit / 2026-05-19 で緊急度 高 → 中に降格、カズヤ確認済)
   - 背景: Phase A.5-3d は cron 6 時間おきの完全自動投稿 (人手介入ゼロ)。F-trial-run-candidate-a-reverify で Gemini 503 多発 → Slot-1 台本 fallback 落ちが起きたように、無人運用では Gemini 503 / Grounding 0 件 / fallback 落ち等の品質劣化を検知する仕組みが前提として必要。
   - 降格理由 (F-gemini-model-audit / 2026-05-19): 本番リリース前は不要。Phase A.5-3d cron 自動投稿実装時に着手すれば足りる (カズヤ確認済)。
@@ -611,6 +633,21 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 ---
 
+- **F-coverage-claim-guard-auto-action** ★低 (条件付き・未確定) (F-title-guard-coverage-claim-policy / 2026-06-08 起案)
+  - 背景: 1-Q.5 で coverage claim guard は **flag のみ** (自動置換・自動再生成はしない) で実装した。
+    検出した虚偽を機械が穏当表現に直すのは「どう書くべきか」を機械が決める = クラウド誤り 9。第一作は
+    手動運用のため flag 止まりで十分。自動アクション (再生成 trigger / 置換) の要否は第一作の guard
+    挙動を観測してから判断する。
+  - 対応案: 第一作 (1-S) + 数本の運用で guard の flag 頻度・精度・false positive 率を観測。flag が
+    高頻度かつ手動修正が回らないなら、(a) 再生成 trigger (script 新ルートを stream 強調で再呼出) /
+    (b) production パイプライン (main.py) への guard 配線 (非ブロッキング観測 → ブロッキング gate) を
+    段階導入。いずれも各論の言い回し強制を機械化しない設計に留める (クラウド誤り 9)。
+  - 検討時期: 第一作 (1-S) の guard 観測後。production 配線 (main.py) は本バッチでは見送り
+    (flag のみ / 第一作は手動 / 自動アクションは挙動観測後)。
+  - 関連ファイル: `src/generation/coverage_claim_guard.py`、`src/main.py` (生成 dispatch
+    L1959/L2010、配線時)、`scripts/run_coverage_claim_guard.py`
+  - 関連: F-title-guard-coverage-claim-policy、クラウド誤り 9、1-S 第一作起案
+
 - **F-article-3.1-pro-escalation** ★低 (条件付き・未確定) (F-article-model-upgrade / 2026-06-08 起案)
   - 背景: F-article-model-upgrade で article を gemini-2.5-flash → gemini-3.5-flash に品質昇格 (選択肢C 第一歩)。3.5-flash で article 品質が物足りない場合、選択肢C の次段として gemini-3.1-pro-preview へエスカレする構想。本バッチでは扱わない (3.1 Pro は未配線)。
   - 対応案: カズヤの axis_5 主観評価 (`docs/runs/F-article-model-upgrade/article_2.5flash.md` vs `article_3.5flash.md`) で 3.5-flash が不足と判断された場合のみ着手。`GEMINI_ARTICLE_TIER1` を gemini-3.1-pro-preview に変更 (+ pricing / RPD / thinking パラメータを公式 docs 一次ソースで確認 = クラウド誤り 10 派生「外部 AI 権威化」回避)。★ DISCUSSION_NOTES「article が 3.1 Pro に上がる場合の Editorial Guardian (1-T、gemini-3.1-pro-preview 予定) との布陣整理」観点と統合検討 (3.1 Pro 二役問題)。
@@ -764,6 +801,52 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **F-title-guard-coverage-claim-policy — coverage claim 事実整合の構造データ + 生成プロンプト原則 + 生成後 guard (実装バッチ、1-Q.5)**
+  (F-title-guard-coverage-claim-policy / 2026-06-08 完了)
+  - 発生バッチ: ChatGPT Round 2 (2026-05-27 指摘 2) で起案、X1 試運転 (2026-05-31) で本番再現実証。
+    Slot-1 cls-c8876d474612 の `platform_title="日本では報道されないIsraelの視点"` が
+    stream_classification=`stream_2_perspective_gap` (= 事件本体は一部報道済) に対して silence 絶対
+    表現を出力。F-article-model-upgrade A/B でも article 本文が「9,600 人虐待は日本でも報道済」を明示
+    せず silence 寄りに振れた = title 単体でなく article 本文も coverage claim が破れる production 再現。
+  - 対応 (原則プロンプト指示 + 生成後 guard の 3 層):
+    - **Layer 2 構造データ**: `configs/coverage_claim_policy.yaml` 新規 (系統 → allowed_claim_level /
+      forbidden_claim_categories の意味カテゴリ)。guard 判定基準 + プロンプト原則の根拠を両層で共有。
+      各論の言い回し強制ではなく「自系統判定に反する事実主張を弾く」基準のみを構造化 (クラウド誤り 9 回避)。
+    - **Layer 1 プロンプト原則**: `configs/prompts/analysis/geo_lens/script_with_analysis.md` に事実整合
+      原則を追記 (perspective_gap / framing_inversion なら事件本体は報道済の事実を踏まえ silence 絶対
+      表現をしない。具体的言い回しは LLM の知性に委ねる = 足すのは「事実に反するな」原則のみ)。
+      ★ 仮説 2 分岐 = branch (b): article プロンプトは `article_writer.py` 内 `_PROMPT_TEMPLATE`
+      ハードコード (不変原則 1) のため **article 側はプロンプト原則を追加せず guard のみで担保**。
+    - **Layer 3 生成後 guard**: `src/generation/coverage_claim_guard.py` 新規 (article_writer.py /
+      script_writer.py 既存ルート不変)。title + article + 真値 stream_classification を入力に LLM judge
+      で事実整合を検証。★ キーワードマッチ不採用 (言い換えで漏れる脆さ + Stream 3 過剰検出の轍)。
+      ★ B-3' 原則: LLM が「明示的に矛盾」(status=contradiction) と判定した場合のみ flag、uncertain /
+      沈黙は flag しない。検出 → **flag のみ** (自動置換・再生成はしない、第一作は手動)。
+      silence_gap / out_of_scope は forbidden 空のため LLM を呼ばず短絡 (flag なし)。
+    - 手動ランナー `scripts/run_coverage_claim_guard.py` 新規 (保存済み script.json + article.md +
+      analysis.json に guard を適用、第一作 1-S 用)。
+  - ★ CP-1 起案前提訂正 (クラウド誤り 10 作法、grep-first):
+    - **仮説 1 (訂正)**: 起案者は「title の silence は script の title 素材から流入」と想定したが、grep で
+      `generate_title_layer` は LLM stage 不在の決定的合成 (factory.py L20 裏取り)、silence 絶対表現は
+      `title_generator.py:_platform_title_candidates` の **ハードコード template** (L136/149/203) を
+      `is_strong` evidence ヒューリスティクス (`_is_strong_evidence` L41-72、perspective_gap_score>=3.0
+      でも真) で選択した結果と確定 = **script 本文非依存**。⇒ title の silence は Layer 1 プロンプト原則
+      では届かず、guard (Layer 3) が唯一の安全網。
+    - **仮説 2 (確認、scope 分岐)**: article プロンプトは `article_writer.py` 内 `_PROMPT_TEMPLATE`
+      ハードコード = branch (b)。article 側はプロンプト原則を加えず guard のみで対応。
+    - 仮説 3/4/5 確認: 新ルート `generate_script_with_analysis` は X1 で particular_angle_metadata
+      (stream_classification 含む) 配線済 / title・coverage guard は不在 (グリーンフィールド) /
+      stream_classification 真値は `ScoredEvent.analysis_result.particular_angle_metadata.stream_classification`
+      で guard 実行時に参照可能。
+    - 仮説 6 確認: baseline 実測 **1466 passed** (311s)。
+  - テスト: `tests/test_coverage_claim_policy.py` (7) + `tests/test_coverage_claim_guard.py` (14) =
+    新規 +21。baseline 1466 → **1487 passed** (破壊ゼロ)。
+  - 不変原則違反: なし (article_writer.py 0 行 / script_writer.py 既存ルート 0 行 / triage 不変 /
+    analysis 既存ファイル不変。guard は src/generation/ 新規ファイルで出力を外から検証)。
+  - 詳細レポート: `docs/runs/F-title-guard-coverage-claim-policy/REPORT.md`
+  - 関連バッチ: F-particular-angle-metadata-production-wire (X1、本番再現実証元) / 1-S 第一作起案
+    (候補A 固有 framing 指針はこちらの領分) / 1-T Editorial Guardian (高リスク事実検証)
 
 - **F-particular-angle-metadata-production-wire (X1) — particular_angle_metadata + sontaku_signals 本番配線 + target_enemy 解消統合 + F-analysis-max-tokens-tune 統合 (実装バッチ、1-R)**
   (F-particular-angle-metadata-production-wire / 2026-05-31 完了)

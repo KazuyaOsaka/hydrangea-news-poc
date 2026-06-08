@@ -1,6 +1,13 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-05-31 (★ F-particular-angle-metadata-production-wire (X1) 完了、実装バッチ 1-R。
+最終更新: 2026-06-08 (★ F-title-guard-coverage-claim-policy 完了、実装バッチ 1-Q.5。4-A 新規 2 件 =
+「coverage claim 事実整合 guard の設計判断 (各論コントロール=誤り9 を踏まずに虚偽を弾く事実整合検証という
+整理)」(昇格候補 DECISION_LOG = 本バッチで実装完了) +「AI 文体の根治方針 (生成プロンプト側で
+burstiness/反ヘッジ/反テンプレ、humanizer は最後の質感のみ、検出回避は追わない、人間編集は第一作で観測し
+生成プロンプト改善の教師信号、本格設計は第一作後)」(Active、観点のみ・今は実装しない=誤り6 回避)。
+coverage claim 3 層 (policy YAML + script 新ルートプロンプト原則 + 生成後 guard) 実装、baseline 1466→1487。
+CP-1 grep で起案者仮説 1 訂正 (title silence は title_generator.py ハードコード由来)。前回 2026-05-31:
+F-particular-angle-metadata-production-wire (X1) 完了、実装バッチ 1-R。
 4-A 新規 1 件 =「2026-05-31: X1 新ルート本番配線完了 + 試運転 6 引継ぎ事項確定 + 試運転データ確保の
 構造的困難」(ステータス Resolved/タスク化)。4-B 既存再評価 2 件: **「2026-05-11: production-pipeline と
 docs 概念整理の乖離」を Resolved 化** (X1 で particular_angle_metadata + sontaku_signals + 新ルート
@@ -28,6 +35,42 @@ Cultural Divide + used_fallback=false / retries=0 + JSON 切断ゼロ)。axis_5 
 ---
 
 ## 未分類 (Active)
+
+### 2026-06-08: coverage claim 事実整合 guard の設計判断 — 各論コントロール (誤り9) を踏まずに虚偽を弾く整理 (F-title-guard-coverage-claim-policy)
+- **内容**: 1-Q.5 で「系統判定 (stream_classification) に反する coverage claim を防ぐ」guard を実装した。
+  設計の核心は **「表現を強制する各論コントロール (クラウド誤り 9) ではなく、事実整合検証である」** という
+  整理。すなわち guard は「どう書くべきか」(言い回し最適化) を機械が決めるのではなく、「自分の系統判定が
+  示す報道状態に反する事実主張をしていないか」だけを検証する。具体化:
+  (1) 判定基準は構造データ `configs/coverage_claim_policy.yaml` (系統 → 許容 claim level / 禁止される
+  未報道断定の意味カテゴリ)。各論の言い回しテンプレではなく「事実に反する主張の意味カテゴリ」を構造化。
+  (2) 判定は LLM judge で「意味」照合 (キーワードマッチ不採用 = 言い換えで漏れる脆さ + Stream 3 過剰検出の轍)。
+  (3) B-3' 原則 = 明示的矛盾のみ flag、沈黙/uncertain は flag しない。
+  (4) アクション = flag のみ (自動置換・再生成はしない、第一作は手動 = 表現の最終判断はカズヤ)。
+  この整理により「品質を保証したい善意」が各論ルール累積 (誤り9) に流れるのを防ぎつつ、Hydrangea ミッション
+  「嘘をつかない / 検証可能な事実で殴る」を構造的に担保する。★ CP-1 で起案者仮説 1 を grep 訂正 = title の
+  silence は `title_generator.py` のハードコード template + `is_strong` ヒューリスティクス由来 (script 非依存) で、
+  Layer 1 プロンプト原則では届かず guard が唯一の安全網。title 根本修正は別タスク (★中) に分離。
+- **出典**: F-title-guard-coverage-claim-policy バッチプロンプト / DECISION_LOG「2026-06-08:
+  F-title-guard-coverage-claim-policy」/ CLAUDE.md クラウド誤り 9 / `docs/PARTICULAR_ANGLE_DEFINITION.md`
+  セクション 3.7 (LLM の知性に委ねる)
+- **ステータス**: `昇格候補(DECISION_LOG)` (本バッチで実装完了 = DECISION_LOG に記録済。設計判断の整理として
+  継続参照、第一作で guard 挙動を観測後に自動アクション要否を再評価)
+
+### 2026-06-08: AI 文体の根治方針 — 生成プロンプト側で効かせるのが本筋、humanizer は最後の質感のみ (F-title-guard-coverage-claim-policy 相乗り、観点のみ・今は実装しない)
+- **内容**: coverage claim guard と同じ「生成後検査 vs 生成時根治」の構図で、AI っぽい文体 (ヘッジ過多 /
+  テンプレ構文 / burstiness 欠如 = 文長・リズムの単調さ) の対処方針を観点として記録する。
+  方針: **生成プロンプト側で burstiness (文長・構文のばらつき) / 反ヘッジ (「〜かもしれない」乱発の抑制) /
+  反テンプレを効かせるのが本筋**。後工程 (humanizer) は最後の質感調整のみに留める。
+  - **検出回避 (AI だと気づかれない) は追わない** = (a) 開示義務 (ADR-0003 のモラル指針) と矛盾、
+    (b) AI 検出器自体が不完全で軍拡競争になる。狙うのは「検出を欺く」ではなく「実際に読み応えのある文体」。
+  - **人間編集は恒久工程ではない** = 第一作で一回だけ人間が編集を観測し、その差分を **生成プロンプト改善の
+    教師信号** にする (毎回人手を挟む運用にしない)。
+  - **本格設計は第一作 (1-S) 後** = 今は実装しない。現段階で humanizer や文体ルールを足すと「過剰拡張性の罠」
+    (クラウド誤り 6) + 各論ルール累積 (クラウド誤り 9) のリスク。実装先・教師信号 (第一作の人間編集差分) が
+    まだ存在しないため、抽象化・前倒しは却下し観点としてのみ残す。
+- **出典**: F-title-guard-coverage-claim-policy バッチプロンプト Task 4 (相乗り観点) / CLAUDE.md クラウド誤り
+  6 (過剰拡張性) + 誤り 9 (各論コントロール) / ADR-0003 (開示・モラル指針)
+- **ステータス**: `Active` (観点のみ、今は実装しない。第一作 1-S で人間編集差分が出た時点で本格設計を再評価)
 
 ### 2026-06-08: article が将来 3.1 Pro に上がる場合の Editorial Guardian (1-T) との布陣整理 (F-article-model-upgrade、観点のみ)
 - **内容**: F-article-model-upgrade で article を gemini-2.5-flash → gemini-3.5-flash に品質昇格した
