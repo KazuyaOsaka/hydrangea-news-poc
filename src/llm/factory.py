@@ -18,14 +18,17 @@ Routing strategy (Phase 1.5 batch E-3' 以降、F-gemini-quality-tier-poc で最
     "generation" (script。"generation" は本 set 非メンバだが else 分岐で QUALITY
     階層)、"analysis" (jp_coverage_judgement の angle query が共用)。title は LLM
     stage 不在 (generate_title_layer は決定的合成のみ)。
-  - ARTICLE_ROLES (article): output コスト最適化のため gemini-2.5-flash 主軸
-    (2.5-flash → 3.5-flash → 3.1-flash-lite → 2.5-flash-lite)。MAX=1。article は
-    output 5,000-10,000 token で output 単価が支配的 (3.5-flash output $9.00 vs
-    2.5-flash $2.50 = 3.6 倍) のため primary を 2.5-flash に分離する。
+  - ARTICLE_ROLES (article): Narrative 品質主軸 gemini-3.5-flash
+    (3.5-flash → 3.5-flash → 3.1-flash-lite → 2.5-flash-lite)。MAX=1。
+    ★ F-article-model-upgrade (2026-06-08) で 2.5-flash → 3.5-flash に品質昇格
+    (選択肢C 第一歩)。記事は最上級の知能で考えてほしい副次出力で、低頻度のため
+    output 単価 $9.00/1M (vs 2.5-flash $2.50) を許容する。TIER1==TIER2 は意図的
+    (1 値のみ変更 = 3.5-flash 追加リトライ; 旧主軸 2.5-flash は昇格で chain から除外)。
   - 未分類 role は QUALITY_ROLES と同じ階層 (後方互換、role="generation" 経路)。
 
-  ★ editorial_mission_filter / article の lineup 上の意図 (2.5-flash 主軸 / MAX=1):
-    article は本モジュール内で role="article" に分離済 (article_writer.py 不変)。
+  ★ editorial_mission_filter / article の lineup 上の意図:
+    article は本モジュール内で role="article" に分離済 (3.5-flash 主軸 / MAX=1、
+    F-article-model-upgrade で品質昇格、article_writer.py 不変)。
     editorial_mission_filter は get_judge_llm_client() 共用 (main.py:2453) のため
     本バッチでは QUALITY (3.5-flash / MAX=2) のまま = 既知の deviation。完全分離は
     main.py 改修を要し後続バッチ (FUTURE_WORK) で判断する。
@@ -95,7 +98,7 @@ LIGHTWEIGHT_ROLES: set[str] = {
     "viral_filter",
 }
 
-# output コスト最適化タスク → gemini-2.5-flash 主軸 (output 単価が支配的な role)。
+# 記事品質主軸タスク → gemini-3.5-flash 主軸 (F-article-model-upgrade 2026-06-08 で 2.5→3.5 昇格)。
 # ★ get_article_llm_client() が role="article" で dispatch (article_writer.py 不変)。
 ARTICLE_ROLES: set[str] = {
     "article",
@@ -328,19 +331,19 @@ class TieredGeminiClient(LLMClient):
 def _get_tier_models_for_role(role: str) -> list[str]:
     """役割別に Tier 階層のモデルリストを返す (E-3' / F-gemini-quality-tier-poc 最終布陣 v2)。
 
-    ARTICLE_ROLES    → gemini-2.5-flash 主軸 (output コスト最適化)
+    ARTICLE_ROLES    → gemini-3.5-flash 主軸 (記事品質昇格、F-article-model-upgrade)
     LIGHTWEIGHT_ROLES → gemini-3.1-flash-lite 主軸 (低コスト、高 RPD)
     QUALITY_ROLES / 未分類 → gemini-3.5-flash 主軸 (Narrative 品質)
 
-    env 変数で各 Tier モデルを上書き可能。デフォルト (inline) は最終布陣 v2 に整合:
+    env 変数で各 Tier モデルを上書き可能。デフォルト (inline) は最終布陣 v2 + F-article-model-upgrade に整合:
       Quality:    gemini-3.5-flash > gemini-2.5-flash > gemini-3.1-flash-lite > gemini-2.5-flash-lite
       Lightweight: gemini-3.1-flash-lite > gemini-2.5-flash-lite > gemini-2.5-flash > gemini-2.5-flash-lite
-      Article:    gemini-2.5-flash > gemini-3.5-flash > gemini-3.1-flash-lite > gemini-2.5-flash-lite
+      Article:    gemini-3.5-flash > gemini-3.5-flash > gemini-3.1-flash-lite > gemini-2.5-flash-lite
     TIER4 は lineup v2 (Tier1-3) の最終安全網として gemini-2.5-flash-lite を据える。
     """
     if role in ARTICLE_ROLES:
         return [
-            os.getenv("GEMINI_ARTICLE_TIER1", "gemini-2.5-flash"),
+            os.getenv("GEMINI_ARTICLE_TIER1", "gemini-3.5-flash"),
             os.getenv("GEMINI_ARTICLE_TIER2", "gemini-3.5-flash"),
             os.getenv("GEMINI_ARTICLE_TIER3", "gemini-3.1-flash-lite"),
             os.getenv("GEMINI_ARTICLE_TIER4", "gemini-2.5-flash-lite"),
@@ -397,7 +400,7 @@ def _make_tiered_gemini_client(role: str = "generation") -> Optional[LLMClient]:
       - LIGHTWEIGHT ("merge_batch" = garbage_filter / cluster_merge 共用)
         → gemini-3.1-flash-lite 主軸 (低コスト、MAX=1)
       - ARTICLE ("article")
-        → gemini-2.5-flash 主軸 (output コスト最適化、MAX=1)
+        → gemini-3.5-flash 主軸 (記事品質昇格、F-article-model-upgrade、MAX=1)
       - QUALITY ("judge" = editorial_mission_filter / elite_judge 共用、"analysis"、
         または未分類 "generation" = script) → gemini-3.5-flash 主軸 (品質、MAX=2)
     """
@@ -545,9 +548,10 @@ def get_script_llm_client() -> Optional[LLMClient]:
 def get_article_llm_client() -> Optional[LLMClient]:
     """Article Writer 用クライアント — ARTICLE 系統 (role="article")。
 
-    F-gemini-quality-tier-poc 最終布陣 v2: article は output 5,000-10,000 token で
-    output 単価が支配的なため、script (role="generation" / QUALITY = gemini-3.5-flash)
-    から分離し gemini-2.5-flash 主軸 (MAX=1) に振り分ける (output $9.00 → $2.50)。
+    F-gemini-quality-tier-poc 最終布陣 v2 で article は role="article" に分離。
+    ★ F-article-model-upgrade (2026-06-08) で primary を 2.5-flash → gemini-3.5-flash に
+    品質昇格 (選択肢C 第一歩)。記事は最上級の知能で考えてほしい低頻度副次出力のため、
+    output 単価 $9.00/1M を許容する。MAX=1 は不変。
     GENERATION_PROVIDER=gemini の場合のみ role="article" の Tier 階層を引く。
     groq/ollama では role はモデル選択に影響しない (provider 固有 fallback に委譲)。
     article_writer.py は本関数を呼ぶだけで不変 (不変原則 1 遵守)。

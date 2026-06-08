@@ -1,6 +1,23 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-05-31 (★ F-particular-angle-metadata-production-wire (X1) 完了、実装バッチ 1-R。
+最終更新: 2026-06-08 (★ F-article-model-upgrade 完了、config 変更バッチ。article 生成モデルを
+gemini-2.5-flash → gemini-3.5-flash に品質昇格 = 選択肢C 第一歩 (B案 = config 変更 + 保存済み候補A
+event での article A/B 再生成)。`GEMINI_ARTICLE_TIER1` を 3 協調箇所 (`.env` runtime / `.env.example`
+template / `factory.py` inline default) で変更 (TIER1==TIER2 = 3.5-flash 追加リトライは意図的、1 値のみ変更)。
+CP-1 grep で起案前提 5 点検証: ★仮説 1 訂正 (「変える 1 値」は 3 箇所協調 + 実 runtime 正は gitignored な
+`.env`)、★仮説 3 訂正 (「MAX1」は MAX_ATTEMPTS であり max_output_tokens ではない。article は
+generation_config=None で token 上限を設定せず truncate なし = クラウド誤り 10 の用語混同訂正)、仮説 2 確認
+(article role は GEMINI_ARTICLE_TIER* 専用 env で完全分離、judge/script/analysis/lightweight に巻き込みなし)、
+仮説 4 確認 (article は共通 LLMClient 経由 / src 全体に thinking_level・thinking_budget 不在 / 3.5-flash で
+A/B 実測 retries=0 = API エラーなし)、仮説 5 確認 (候補A cls-6889e9e1c7ac event_snapshot 残存)。
+article_writer.py / script_writer.py 既存ルート / triage / analysis 既存ファイル不変 (不変原則 1-4 厳守)。
+既存テスト 4 件 (article=2.5-flash の旧設計 = primary distinct を符号化) を新仕様に期待値更新 (構造変更なし)、
+baseline 1466 passed 維持。A/B 両出力 (article_2.5flash.md / article_3.5flash.md + ab_eval_metadata.json) を
+docs/runs/F-article-model-upgrade/ に並置 (優劣判定はせず、axis_5 評価はカズヤ)。新規 2 タスク追加:
+**F-article-3.1-pro-escalation** (★低、条件付き = 3.5-flash 不足時のみ 3.1 Pro へ) / **F-article-max-tokens-policy**
+(★低、grep で article は truncate なし確定済、当面 no-action)。
+
+前回 2026-05-31: F-particular-angle-metadata-production-wire (X1) 完了、実装バッチ 1-R。
 `particular_angle_metadata` + `sontaku_signals` (nested) 本番配線完了で新ルートが production default
 起動 + **target_enemy 自動退役**。不変原則 4 例外条件 5 点充足適用で `src/analysis/particular_angle_extractor.py`
 新規作成。CP-1 でクラウド誤り 10 系統の作法により起案前提と実コードの 3 つの乖離を発見・訂正。
@@ -593,6 +610,20 @@ F-stream-2-filter-design 着手 OK 状態に。
 ## 緊急度 低（時間ある時に検討）
 
 ---
+
+- **F-article-3.1-pro-escalation** ★低 (条件付き・未確定) (F-article-model-upgrade / 2026-06-08 起案)
+  - 背景: F-article-model-upgrade で article を gemini-2.5-flash → gemini-3.5-flash に品質昇格 (選択肢C 第一歩)。3.5-flash で article 品質が物足りない場合、選択肢C の次段として gemini-3.1-pro-preview へエスカレする構想。本バッチでは扱わない (3.1 Pro は未配線)。
+  - 対応案: カズヤの axis_5 主観評価 (`docs/runs/F-article-model-upgrade/article_2.5flash.md` vs `article_3.5flash.md`) で 3.5-flash が不足と判断された場合のみ着手。`GEMINI_ARTICLE_TIER1` を gemini-3.1-pro-preview に変更 (+ pricing / RPD / thinking パラメータを公式 docs 一次ソースで確認 = クラウド誤り 10 派生「外部 AI 権威化」回避)。★ DISCUSSION_NOTES「article が 3.1 Pro に上がる場合の Editorial Guardian (1-T、gemini-3.1-pro-preview 予定) との布陣整理」観点と統合検討 (3.1 Pro 二役問題)。
+  - 検討時期: F-article-model-upgrade の axis_5 評価後 (カズヤ判断)
+  - 関連ファイル: `src/llm/factory.py` (GEMINI_ARTICLE_TIER1 解決)、`.env` / `.env.example`、`docs/runs/F-article-model-upgrade/`
+  - 関連: F-article-model-upgrade (本起案元)、1-T (Editorial Guardian = gemini-3.1-pro-preview 配線、布陣整理観点)
+
+- **F-article-max-tokens-policy** ★低 (F-article-model-upgrade / 2026-06-08 起案、仮説 3 grep で実態確定)
+  - 背景: F-article-model-upgrade 仮説 3 (article の max_tokens が full article を truncate するか) を grep で検証した結果、**article 経路は max_output_tokens を一切設定していない** (`get_article_llm_client()` → `generation_config=None`、`src/llm/factory.py`)。布陣 docs の「MAX1」は MAX_ATTEMPTS=1 (リトライ回数) であって token 上限ではない (起案前提の用語混同を訂正 = クラウド誤り 10 作法)。よって 3.5-flash 出力上限 65,536 までモデル既定でフルに使え、Hydrangea 側の truncate は存在しない = 現状 truncate リスクなし。
+  - 対応案: 当面 no-action。将来 article output コスト/長さを明示制御したくなった場合のみ、analysis 経路 (`ANALYSIS_LLM_MAX_TOKENS`) と同様に article 専用 max_output_tokens env を新設する判断を行う (現状は不要)。
+  - 検討時期: article output が想定外に長く/高コストになった場合のみ
+  - 関連ファイル: `src/llm/factory.py` (`get_article_llm_client` / `generation_config`)、`src/generation/article_writer.py` (不変、呼び出しのみ)
+  - 関連: F-article-model-upgrade (本起案元)、F-analysis-max-tokens-tune (analysis 側の max_tokens 制御の前例)
 
 - **F-job-record-av-path** ★低 (ChatGPT Round 2 レビュー / 2026-05-27 起案、F-docs-update-chatgpt-round2-and-error10 で grep 裏取り、Phase A.5-3c 以降)
   - 背景: `src/shared/models.py` の `JobRecord` (L335) に `voiceover_path` (L342) / `review_mp4_path` (L343) フィールドが存在するが、`src/storage/db.py` の jobs テーブル DDL (L14) + `save_job()` (L189) には `script_path` / `article_path` / `video_payload_path` (L18-20) までしか対応していない = AV path は INSERT/UPSERT いずれにも含まれず DB に永続化されない (grep 裏取り済)。Remotion 化後 (Phase A.5-3c) の成果物追跡を DB に寄せたい際に「あれ、MP4 path が DB にない」が発生する未来負債。現状は run_summary / manifest で追えるため致命的ではない。

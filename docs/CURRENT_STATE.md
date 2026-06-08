@@ -1,6 +1,6 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-05-31 (★ F-particular-angle-metadata-production-wire (X1) 完了、Phase A.5-3a-verify ゲート完了後の **22 つ目のバッチ (1-R)**、**実装バッチ**。`docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 3.6-3.7 で正典化された `ParticularAngleMetadata` (3 要素 + nested `SontakuSignals`) を Hydrangea production に配線、新ルート `generate_script_with_analysis` を production default 起動 (`ANALYSIS_LAYER_ENABLED=true`)。**target_enemy framing が production から自動退役** (Slot-1 試運転で target_enemy=None 確認)。**不変原則 4 例外条件 5 点充足適用** で `src/analysis/particular_angle_extractor.py` 新規作成 (単一パス α、get_analysis_llm_client 経由 = Gemini 3 系 temperature ガード + ANALYSIS_LLM_MAX_TOKENS env 自動適用)。CP-1 でクラウド誤り 10 系統の grep 作法により起案前提と実コードの 3 つの乖離を発見・訂正 (移植元 `scripts/extract_particular_angle.py` は旧 3 分類版 + sontaku 不在、3 要素名称ズレ "broad_event/particular_angle/framing" → 正典 "core_question/differentiation_from_mainstream/hydrangea_axis_alignment"、dispatch 既配線)。CP-2 で sample mode 分析未起動 + スタール枯渇 + GarbageFilter 48h でブロック → **Path A pure (1 fresh batch + 1 run、本番状態維持)** に変更 (カズヤ判断、3 回処理 scaffolding は recency_guard 無効化等で本番と違う人工状態を作るため不採用)。試運転: ingestion `batch_id=20260531_102637` (47 sources / 1326 articles / $0 LLM) + normalized mode exit 0 / run_llm=39 / Slot-1 cls-c8876d474612 で全 X1 必須目的達成 (stream_2_perspective_gap + sontaku.level=high/diplomatic + target_enemy=None + Cultural Divide + char validation passed + used_fallback=false / retries=0 + JSON 切断ゼロ)。axis_5 カズヤ採点で「築900年の城→日本郵船→電気代」具体着地 + target_enemy 退役が質に表れたと評価、**CP-3 = W1 完全成功**。**F-analysis-max-tokens-tune 統合完了** (.env / .env.example で `ANALYSIS_LLM_MAX_TOKENS=2000→4096`)。baseline 1432 → **1466 passed** (新規 +34、破壊ゼロ、113s)。6 後続バッチ向け引継ぎ事項を FUTURE_WORK / DISCUSSION_NOTES に確定: 高リスク事実検証必要性 production 実証 (1-T 必須化、★高に格上げ) / punchline 尻切れ未完結 / title guard + broad/particular 切り分け曖昧さ (1-Q.5 + 第一作 framing) / 視覚プロンプト「仮想敵」語彙残存 / run 間分散未検証 (F-periodic-health-check 統合) / 試運転データ確保の構造的困難 (F-trial-data-procurement-protocol)。前バッチ F-gemini-quality-tier-poc のコミットハッシュ `880ebfb` / `f21f373` を DECISION_LOG に追記。次バッチ最有力: **1-Q.5 F-title-guard-coverage-claim-policy** (第一作着手前必須、X1 trial で本番再現実証))
+最終更新: 2026-06-08 (★ F-article-model-upgrade 完了、**config 変更バッチ** (ゲート完了後 23 つ目)。article 生成モデルを gemini-2.5-flash → **gemini-3.5-flash** に品質昇格 (選択肢C 第一歩、B案 = config 変更 + 候補A での article A/B 再生成)。`GEMINI_ARTICLE_TIER1` を 3 協調箇所 (`.env` runtime / `.env.example` template / `factory.py` inline default) で変更 (TIER1==TIER2 = 3.5-flash 追加リトライは意図的、1 値のみ変更)。CP-1 grep で起案前提 5 点検証 (クラウド誤り 10 作法): ★仮説 1「変える 1 値は 3 箇所協調 + runtime 正は gitignored な .env」+ ★仮説 3「『MAX1』は MAX_ATTEMPTS であり max_output_tokens ではない、article は generation_config=None で truncate なし」を訂正、仮説 2 (article role 完全分離 = 他 role 巻き込みなし) / 仮説 4 (共通 LLMClient 経由 + thinking 系 src 不在 + 3.5-flash 実測 retries=0) / 仮説 5 (候補A event 残存) を確認。article_writer.py / script_writer.py 既存ルート / triage / analysis 既存ファイル不変 (不変原則 1-4 厳守)。既存テスト 4 件 (article=2.5-flash 旧設計 = primary distinct を符号化) を新仕様に期待値更新 (構造変更なし)、baseline **1466 passed** 維持。A/B 両出力 (article_2.5flash.md=1887字 / article_3.5flash.md=2066字、両 LLM 生成・fallback なし・3.5-flash API エラーなし) を docs/runs/F-article-model-upgrade/ に並置、優劣判定はせず axis_5 評価はカズヤ。新規 2 タスク (F-article-3.1-pro-escalation ★低 条件付き / F-article-max-tokens-policy ★低 grep で truncate なし確定) 追加。前バッチ: F-particular-angle-metadata-production-wire (X1) 完了、Phase A.5-3a-verify ゲート完了後の **22 つ目のバッチ (1-R)**、**実装バッチ**。`docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 3.6-3.7 で正典化された `ParticularAngleMetadata` (3 要素 + nested `SontakuSignals`) を Hydrangea production に配線、新ルート `generate_script_with_analysis` を production default 起動 (`ANALYSIS_LAYER_ENABLED=true`)。**target_enemy framing が production から自動退役** (Slot-1 試運転で target_enemy=None 確認)。**不変原則 4 例外条件 5 点充足適用** で `src/analysis/particular_angle_extractor.py` 新規作成 (単一パス α、get_analysis_llm_client 経由 = Gemini 3 系 temperature ガード + ANALYSIS_LLM_MAX_TOKENS env 自動適用)。CP-1 でクラウド誤り 10 系統の grep 作法により起案前提と実コードの 3 つの乖離を発見・訂正 (移植元 `scripts/extract_particular_angle.py` は旧 3 分類版 + sontaku 不在、3 要素名称ズレ "broad_event/particular_angle/framing" → 正典 "core_question/differentiation_from_mainstream/hydrangea_axis_alignment"、dispatch 既配線)。CP-2 で sample mode 分析未起動 + スタール枯渇 + GarbageFilter 48h でブロック → **Path A pure (1 fresh batch + 1 run、本番状態維持)** に変更 (カズヤ判断、3 回処理 scaffolding は recency_guard 無効化等で本番と違う人工状態を作るため不採用)。試運転: ingestion `batch_id=20260531_102637` (47 sources / 1326 articles / $0 LLM) + normalized mode exit 0 / run_llm=39 / Slot-1 cls-c8876d474612 で全 X1 必須目的達成 (stream_2_perspective_gap + sontaku.level=high/diplomatic + target_enemy=None + Cultural Divide + char validation passed + used_fallback=false / retries=0 + JSON 切断ゼロ)。axis_5 カズヤ採点で「築900年の城→日本郵船→電気代」具体着地 + target_enemy 退役が質に表れたと評価、**CP-3 = W1 完全成功**。**F-analysis-max-tokens-tune 統合完了** (.env / .env.example で `ANALYSIS_LLM_MAX_TOKENS=2000→4096`)。baseline 1432 → **1466 passed** (新規 +34、破壊ゼロ、113s)。6 後続バッチ向け引継ぎ事項を FUTURE_WORK / DISCUSSION_NOTES に確定: 高リスク事実検証必要性 production 実証 (1-T 必須化、★高に格上げ) / punchline 尻切れ未完結 / title guard + broad/particular 切り分け曖昧さ (1-Q.5 + 第一作 framing) / 視覚プロンプト「仮想敵」語彙残存 / run 間分散未検証 (F-periodic-health-check 統合) / 試運転データ確保の構造的困難 (F-trial-data-procurement-protocol)。前バッチ F-gemini-quality-tier-poc のコミットハッシュ `880ebfb` / `f21f373` を DECISION_LOG に追記。次バッチ最有力: **1-Q.5 F-title-guard-coverage-claim-policy** (第一作着手前必須、X1 trial で本番再現実証))
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -53,9 +53,16 @@ Round 2 レビュー (7 指摘) を docs 正本と grep 裏取り照合**。指�
 **クラウド誤り 10 を CLAUDE.md に明文化**。
 
 ★ 2026-05-27 (F-gemini-quality-tier-poc) で **最終布陣 v2** を配線。
-QUALITY (judge/script/analysis) = gemini-3.5-flash/MAX2、ARTICLE = gemini-2.5-flash/MAX1 (role 新設分離)、
+QUALITY (judge/script/analysis) = gemini-3.5-flash/MAX2、ARTICLE = gemini-3.5-flash/MAX1 (★ F-article-model-upgrade
+2026-06-08 で 2.5→3.5 品質昇格、role 新設分離は維持)、
 LIGHTWEIGHT (garbage/merge) = gemini-3.1-flash-lite/MAX1 + JUDGE_MODEL 明示 + Gemini 3 系 temperature ガード。
 クラウド誤り 10 派生「外部 AI セカンドオピニオンの権威化」を CLAUDE.md + DISCUSSION_NOTES に正本化。
+
+★ 2026-06-08 (F-article-model-upgrade、config 変更バッチ) で **article 生成モデルを gemini-2.5-flash →
+gemini-3.5-flash に品質昇格** (選択肢C 第一歩)。記事は最上級の知能で考えてほしい低頻度副次出力のため
+output 単価 $9.00/1M を許容。`GEMINI_ARTICLE_TIER1` の 1 値を 3 協調箇所で変更 (article role は他 role と
+完全分離 = 巻き込みなし)。article_writer.py は不変 (呼び出しのみ)。候補A での A/B 再生成を docs/runs に並置、
+axis_5 評価はカズヤ。3.1 Pro エスカレは未確定 (FUTURE_WORK F-article-3.1-pro-escalation ★低)。
 
 ★★★ 2026-05-31 (F-particular-angle-metadata-production-wire、X1、1-R) で
 **`particular_angle_metadata` + nested `sontaku_signals` を Hydrangea production に配線完了**。
@@ -128,27 +135,28 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
 
 ## 1. リポジトリ状態
 
-- **main HEAD コミット**: `f21f373` (Merge branch 'feature/F-gemini-quality-tier-poc')。X1 = F-particular-angle-metadata-production-wire は feature ブランチ `feature/F-particular-angle-metadata-production-wire` で Task A-F 完了、本完了レポート提示後にカズヤ承認 → commit/merge 実行 (Task G)。★ 本バッチは実装バッチ (models.py / particular_angle_extractor.py 新規 / script_writer.py 新ルート / main.py / プロンプト .md / env / tests)
-- **直近 5 件のログ (main、Task G merge 前)**:
+- **main HEAD コミット**: `c6e00c2` (Merge branch 'feature/F-particular-angle-metadata-production-wire' = X1 マージ済)。F-article-model-upgrade は feature ブランチ `feature/F-article-model-upgrade` で完了、本完了レポート提示後にカズヤ承認 → commit/merge 実行。★ 本バッチは config 変更バッチ (.env / .env.example / factory.py の article モデル ID + テスト期待値 4 件 + scripts A/B + docs)
+- **直近 5 件のログ (main、F-article-model-upgrade merge 前)**:
   ```
+  c6e00c2 Merge branch 'feature/F-particular-angle-metadata-production-wire'
+  8089012 feat: F-particular-angle-metadata-production-wire (X1) particular_angle_metadata + sontaku_signals 本番配線 + target_enemy 解消統合 + F-analysis-max-tokens-tune 統合 (実装バッチ、1-R)
   f21f373 Merge branch 'feature/F-gemini-quality-tier-poc'
   880ebfb feat: F-gemini-quality-tier-poc 最終布陣 v2 配線 + Gemini 3 系 temperature 修正 + 外部 AI 権威化警告 CLAUDE.md 追記
   112539d Merge branch 'feature/F-docs-update-chatgpt-round2-and-error10'
-  41f09d6 docs: F-docs-update-chatgpt-round2-and-error10 ChatGPT Round 2 レビュー由来の新規 3 タスク FUTURE_WORK 追加 + クラウド誤り 10 系統 CLAUDE.md 明文化 (docs-only)
-  2f99ebd Merge branch 'feature/F-gemini-3.5-flash-api-audit'
   ```
-- **baseline テスト数**: **1466 passed** (★ X1 = baseline 1432 + 新規 +34 [test_models_particular_angle.py 10 + test_particular_angle_extractor.py 21 + test_script_writer_with_analysis.py 追加 3]。Task A baseline 1432 passed 確認済 = 76.67s、Task D 後 1466 passed = 113.12s、Task E 試運転前 1466 passed 再確認 = 118.13s)
-- **DB schema 変更**: なし (本バッチは新ルート配線 + extractor 新規のみ。AnalysisResult Pydantic に optional field 追加のみで永続化 schema 不変)
+- **baseline テスト数**: **1466 passed** (★ F-article-model-upgrade では テスト追加/削除なし。article=2.5-flash 旧設計を符号化した既存テスト 4 件を新仕様 [article primary=3.5-flash、quality と primary 共有・MAX_ATTEMPTS で分離] に期待値更新したのみ = 構造変更なし。変更前 1466 passed 確認 = 136s、変更後 1466 passed = 90s)
+- **DB schema 変更**: なし (config 変更 + テスト期待値 + scripts + docs のみ。src/ の本体ロジック 0 行変更、article_writer.py 不変)
 
 ## 2. 現在のフェーズ
 
-- **Phase**: Phase A.5-3a-verify **完了** (2026-05-07、ゲート完了後 22 バッチ目が本バッチ)
-- **進行中バッチ**: なし (F-particular-angle-metadata-production-wire 完了直後、Task G 完了レポート提示 → カズヤ承認待ち → commit/merge Task G)
-- **次バッチ候補と推奨** (★ X1 / 2026-05-31 更新):
+- **Phase**: Phase A.5-3a-verify **完了** (2026-05-07、ゲート完了後 23 バッチ目が本バッチ = F-article-model-upgrade)
+- **進行中バッチ**: なし (F-article-model-upgrade 完了直後、完了レポート提示 → カズヤ承認待ち → commit/merge)
+- **次バッチ候補と推奨** (★ F-article-model-upgrade / 2026-06-08 更新):
   - ~~**X1 = F-particular-angle-metadata-production-wire (1-R)**~~ ✅ **完了 (2026-05-31)**。`particular_angle_metadata` + nested `sontaku_signals` 本番配線 + 新ルート起動 + target_enemy 自動退役 + F-analysis-max-tokens-tune 統合。baseline 1432 → 1466 passed、Path A pure trial で CP-3 = W1 完全成功。
+  - ~~**F-article-model-upgrade (1-Q.5 の前に挿入)**~~ ✅ **完了 (2026-06-08)**。article 生成モデルを gemini-2.5-flash → gemini-3.5-flash に品質昇格 (選択肢C 第一歩、B案)。GEMINI_ARTICLE_TIER1 を 3 協調箇所で変更、article role 完全分離で他 role 巻き込みなし、baseline 1466 維持 (テスト 4 件期待値更新)。候補A A/B 再生成を docs/runs に並置、axis_5 評価はカズヤ。
   - **1st: F-title-guard-coverage-claim-policy (1-Q.5)** ★★高 (★ 第一作着手前必須、X1 試運転で本番再現実証)。X1 trial で `platform_title="日本では報道されないIsraelの視点"` が stream_2_perspective_gap (一部報道済) に対して silence_gap 絶対表現を出力、さらに article Facts も silence_gap 寄りに書かれ broad/particular 切り分け曖昧さを production 経路で確認 = 本タスクの必要性を実証。`manual_poc/` 配下の coverage_claim_policy 構造データ (allowed_claim_level / forbidden_title_claims) + 生成後 title_layer_guard で虚偽防止 + article 側 framing 指針も統合。工数 3-5h
-  - **2nd: 第一作公開前の高リスク事実検証ワークフロー (1-T)** ★高 (★ X1 試運転で必須性 production 実証 = 緊急度 中 → 高に格上げ)。X1 trial で article 内に死者数 (3,371 人 / 10,129 人) / 兵士死亡 25 人 / スモトリッチ過激発言引用が production 未検証と判明 = Editorial Guardian (gemini-3.1-pro-preview) 配線が第一作公開前に必須。
-  - **3rd: Phase A.5-3b 第一作起案 (1-S)** ★ (緊急度 高、確定モデル [QUALITY=gemini-3.5-flash / article=gemini-2.5-flash] + 新ルート [particular_angle_metadata + sontaku_signals + target_enemy 排除] で実装。候補A cls-6889e9e1c7ac 手動 event 固定 + 実台本生成 + perspective_gap framing + axis_5 採点)
+  - **2nd: 第一作公開前の高リスク事実検証ワークフロー (1-T)** ★高 (★ X1 試運転で必須性 production 実証 = 緊急度 中 → 高に格上げ)。X1 trial で article 内に死者数 (3,371 人 / 10,129 人) / 兵士死亡 25 人 / スモトリッチ過激発言引用が production 未検証と判明 = Editorial Guardian (gemini-3.1-pro-preview) 配線が第一作公開前に必須。★ article が将来 gemini-3.1-pro にエスカレ (F-article-3.1-pro-escalation) する場合は Guardian と 3.1 Pro 二役になり布陣整理が要る (DISCUSSION_NOTES 2026-06-08 観点)。
+  - **3rd: Phase A.5-3b 第一作起案 (1-S)** ★ (緊急度 高、確定モデル [QUALITY=gemini-3.5-flash / **article=gemini-3.5-flash** (F-article-model-upgrade で昇格)] + 新ルート [particular_angle_metadata + sontaku_signals + target_enemy 排除] で実装。候補A cls-6889e9e1c7ac 手動 event 固定 + 実台本生成 + perspective_gap framing + axis_5 採点)
   - **4th: F-script-punchline-tail-cut-investigate** ★中 (X1 試運転で観察、Slot-1 punchline 「そこから繋がるのが、」未完結。loop-2 仕様か生成バグかの切り分け)
   - **5th: F-trial-data-procurement-protocol** ★中 (X1 試運転 blocker 4 連鎖から起案、試運転実行手順整備 + GarbageFilter env tunable 化判断 + replay_stuck_batch.py 整備)
   - **6th: F-evidence-jp-coverage-audit-trail** ★中 (案 B、score_breakdown evidence 証跡化)
@@ -156,11 +164,12 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
   - **8th: F-periodic-health-check** ★ (Phase A.5-3d 着手時、cron 完全自動投稿前提。★ ChatGPT Round 2 指摘 5 + X1 引継ぎ「run 間分散統計」を統合)
   - **9th: 本番配線判断バッチ群 (X1 に内包しない残分、並走可)**: verify_two_stage 本番配線 / F-stream-2-filter-design 責務範囲再評価
   - **10th: 低優先整合タスク群** ★低: editorial_mission_filter 独立分離 / run_summary model_roles 忠実化 / F-video-payload-visual-prompt-target-enemy (視覚プロンプト旧語彙除去) / locale key 定数一元化 / F-job-record-av-path (Phase A.5-3c DB schema 整理に統合)
-- **推奨フロー**:
-  - commit/merge (本完了レポート提示 → カズヤ承認後)
+- **推奨フロー** (★ F-article-model-upgrade を 1-Q.5 の前に挿入済み = 完了):
+  - F-article-model-upgrade (✅ 完了、article 3.5-flash 昇格)
+    → commit/merge (本完了レポート提示 → カズヤ承認後)
     → **1-Q.5 F-title-guard-coverage-claim-policy (第一作着手前必須、X1 trial で本番再現実証)**
     → 1-T 高リスク事実検証ワークフロー (Editorial Guardian 配線、X1 trial で必須性実証)
-    → 1-S Phase A.5-3b 第一作起案 (確定モデル + 新ルート + 候補A perspective_gap framing + axis_5 採点)
+    → 1-S Phase A.5-3b 第一作起案 (確定モデル [article=3.5-flash] + 新ルート + 候補A perspective_gap framing + axis_5 採点)
     → 並走: F-script-punchline-tail-cut-investigate / F-trial-data-procurement-protocol / F-evidence-jp-coverage-audit-trail / F-grounding-determinism-audit / 本番配線残分
 - **★ Phase A.5-3b 第一作着手前の追加確認事項** (カズヤ指示、2026-05-31 更新):
   1. ~~F-trial-run-candidate-a-reverify~~ ✅ **完了 (2026-05-19)**
@@ -172,10 +181,10 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
   7. ElevenLabs 声選定 (着手前 30 分作業、既存登録済み、カズヤ手作業)
   8. Remotion セットアップ (第一作で Claude Code に書かせる、Node 環境カズヤ手動準備、ADR-0002 D-minimal)
 
-### Phase A.5-3a-verify ロードマップ (★ X1 / 2026-05-31 更新版)
+### Phase A.5-3a-verify ロードマップ (★ F-article-model-upgrade / 2026-06-08 更新版)
 
 **ゲート完了**: 1-A〜1-D''' 全段階完了で Phase A.5-3a-verify ゲート完了 (2026-05-07)。
-本バッチはゲート完了後の **22 つ目のバッチ**。
+本バッチ (F-article-model-upgrade) はゲート完了後の **23 つ目のバッチ**。
 
 | 段階 | バッチ | 状態 | 概要 |
 |---|---|---|---|
@@ -189,8 +198,9 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
 | 1-P.6 | F-docs-update-chatgpt-round2-and-error10 | ✅ 完了 (2026-05-27、docs-only) | ChatGPT Round 2 統合 + クラウド誤り 10 CLAUDE.md 明文化 |
 | 1-Q | F-gemini-quality-tier-poc | ✅ 完了 (2026-05-27、実装) | 最終布陣 v2 配線 (QUALITY/ARTICLE/LIGHTWEIGHT) + JUDGE_MODEL 明示 + Gemini 3 温度ガード |
 | **1-R** | **F-particular-angle-metadata-production-wire (X1)** | ✅ **完了 (2026-05-31、実装)** | **ゲート完了後 22 つ目**。particular_angle_metadata + nested sontaku_signals 本番配線 + 新ルート production default 起動 (ANALYSIS_LAYER_ENABLED=true) + **target_enemy 自動退役** + F-analysis-max-tokens-tune 統合 (4096)。不変原則 4 例外条件 5 点充足適用で `src/analysis/particular_angle_extractor.py` 新規 (単一パス α、get_analysis_llm_client 経由)。CP-1 でクラウド誤り 10 系統の grep 作法により起案前提と実コードの 3 つの乖離 (移植元旧 3 分類版、3 要素名称、dispatch 既配線) を訂正。CP-2 で sample/スタール/48h/RSS 重複 blocker 4 連鎖 → Path A pure (1 fresh batch + 1 run、本番状態維持) に変更。試運転: ingestion `20260531_102637` + normalized exit 0 / run_llm=39 / Slot-1 で全 X1 必須目的達成。axis_5 カズヤ採点で CP-3 = W1 完全成功。baseline 1432→1466 passed。6 引継ぎ事項を FUTURE_WORK / DISCUSSION_NOTES に確定 |
+| **1-R.5** | **F-article-model-upgrade** | ✅ **完了 (2026-06-08、config 変更)** | **ゲート完了後 23 つ目、1-Q.5 の前に挿入**。article 生成モデルを gemini-2.5-flash → **gemini-3.5-flash** に品質昇格 (選択肢C 第一歩、B案 = config 変更 + 候補A article A/B 再生成)。`GEMINI_ARTICLE_TIER1` を 3 協調箇所 (.env / .env.example / factory.py inline) で変更 (TIER1==TIER2 は意図的 1 値変更)。CP-1 grep で起案前提 5 点検証 = 仮説 1 (1 値 3 箇所協調)・仮説 3 (「MAX1」= MAX_ATTEMPTS、article は generation_config=None で truncate なし) を訂正、仮説 2 (article role 完全分離)・仮説 4 (共通 LLMClient + thinking 系不在 + 3.5-flash 実測 retries=0)・仮説 5 (候補A 残存) を確認。article_writer.py / script_writer.py 既存ルート / triage / analysis 不変。既存テスト 4 件を新仕様に期待値更新 (構造変更なし)、baseline 1466 維持。A/B 両出力を docs/runs/F-article-model-upgrade/ に並置、axis_5 評価はカズヤ。新規 2 タスク (F-article-3.1-pro-escalation / F-article-max-tokens-policy ★低) 追加 |
 | 1-Q.5 | F-title-guard-coverage-claim-policy | ★★高 (第一作着手前必須) | **X1 試運転で本番再現実証**。perspective_gap に silence_gap 絶対表現が title/article 両方に出力されるリスクを coverage_claim_policy 構造データ + 生成後 guard + 第一作 framing 指針で防止 |
-| 1-S | Phase A.5-3b 第一作起案 | ★ 緊急度 高 | 確定モデル + 新ルート + 候補A perspective_gap framing + axis_5 採点 |
+| 1-S | Phase A.5-3b 第一作起案 | ★ 緊急度 高 | 確定モデル [article=gemini-3.5-flash] + 新ルート + 候補A perspective_gap framing + axis_5 採点 |
 | 1-T | 第一作公開前の高リスク事実検証ワークフロー (Editorial Guardian 配線) | ★高に格上げ (X1 trial で必須性実証) | article 内の高リスク数字・引用検証ワークフロー実装、gemini-3.1-pro-preview 配線 |
 | 1-U | F-evidence-jp-coverage-audit-trail / F-grounding-determinism-audit / 本番配線残分 (verify_two_stage / F-stream-2-filter-design) | ★ 並走候補 | evidence 監査トレース新設 / broad Grounding 分散集約 / 二段階クエリ機械判別 |
 
@@ -204,6 +214,13 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 
 ## 3. 直近の試運転結果サマリー
 
+> ★ F-article-model-upgrade (2026-06-08) は **パイプライン試運転を実施していない** (B案 = config 変更 +
+> 保存済み候補A event での article A/B 再生成のみ)。新規 ingestion / full pipeline run は行わず、
+> `scripts/ab_article_model_upgrade.py` で候補A `cls-6889e9e1c7ac` に対し article を 2.5-flash / 3.5-flash の
+> 両モデルで再生成 (両モデルとも LLM 生成成功・template fallback なし、3.5-flash retries=0・API エラーなし)。
+> 出力は `docs/runs/F-article-model-upgrade/article_2.5flash.md` (1887字) / `article_3.5flash.md` (2066字) +
+> `ab_eval_metadata.json` に並置 = axis_5 主観評価はカズヤ (優劣判定は Claude Code は出さない)。
+>
 > ★ X1 (2026-05-31) の Task E 試運転は **Path A pure** (1 fresh batch + 1 run、本番状態維持、カズヤ判断) で
 > 実施 = ingestion 1 回 + normalized mode 1 回。当初 5 batch 連続案は sample mode 分析未起動 / スタール枯渇 /
 > GarbageFilter 48h / RSS 重複排除の blocker 4 連鎖で実行不可と判明、CP-2 で計画変更。
@@ -246,9 +263,9 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 - `src/generation/video_payload_writer.py` (不変原則 1-4 対象外、★ X1 で確認: target_enemy は L457-458 で条件付き露出 = 新ルート None なら非露出。`visual_goal` テンプレ L72 に「仮想敵」語彙残存 = F-video-payload-visual-prompt-target-enemy ★低)
 - `src/shared/models.py` (★ X1 で SontakuSignals + ParticularAngleMetadata (nested) + AnalysisResult.particular_angle_metadata optional field 追加。後方互換必須)
 - `src/main.py` (不変原則対象外、★ X1 で分析ブロック L3028 に `extract_for_scored_event` 呼出 + `model_copy(update={...})` で metadata 付与追加。run_analysis_layer 不変)
-- `src/llm/factory.py` / `src/shared/config.py` の Gemini モデル ID default (★ F-gemini-quality-tier-poc / 2026-05-27 で最終布陣 v2 配線済)
+- `src/llm/factory.py` / `src/shared/config.py` の Gemini モデル ID default (★ F-gemini-quality-tier-poc / 2026-05-27 で最終布陣 v2 配線済。★ F-article-model-upgrade / 2026-06-08 で `GEMINI_ARTICLE_TIER1` inline default を gemini-2.5-flash → gemini-3.5-flash に変更 = article 品質昇格)
 - `src/analysis/` (★ X1 で不変原則 4 例外条件 5 点充足適用で `particular_angle_extractor.py` 新規作成、既存ファイル一切不変)
-- `.env` / `.env.example` (リポジトリルート直下。★ `.env` は gitignored。★ X1 で `ANALYSIS_LAYER_ENABLED=false→true` (production default 化) + `ANALYSIS_LLM_MAX_TOKENS=2000→4096` (F-analysis-max-tokens-tune 統合))
+- `.env` / `.env.example` (リポジトリルート直下。★ `.env` は gitignored。★ X1 で `ANALYSIS_LAYER_ENABLED=false→true` (production default 化) + `ANALYSIS_LLM_MAX_TOKENS=2000→4096` (F-analysis-max-tokens-tune 統合)。★ F-article-model-upgrade で `GEMINI_ARTICLE_TIER1=gemini-2.5-flash→gemini-3.5-flash` (article 品質昇格。`.env` runtime が正、`.env.example` template / factory.py inline default と 3 協調))
 
 ### 触ってはいけない領域
 - `src/generation/article_writer.py` (不変原則 1)
@@ -284,6 +301,12 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 
 ## 7. カズヤの直近フィードバック要点
 
+- **「記事は最上級の知能で考えてほしい」+「選択肢C = まず 3.5-flash、物足りなければ将来 3.1 Pro」**
+  (★ F-article-model-upgrade / 2026-06-08) — article を gemini-3.5-flash に品質昇格。3.1 Pro は段階を踏んで
+  (axis_5 評価後に) 判断 = 一気にやらず「1 バッチで欲張らない」。
+- **「この 1 値のみ変更」** (★ F-article-model-upgrade) — config 変更は最小限。TIER1==TIER2 重複も「1 値のみ」
+  を厳守し意図的に許容 (2 値変更を避ける)。クラウド誤り 10 作法で「変える 1 値」が実は 3 協調箇所 + runtime 正が
+  gitignored な `.env` であることを grep で訂正してから実装。
 - **「外部レビュー / 起案前事前情報も grep + コード精読で検証してから起案する」** (★ クラウド誤り 10、
   F-f1-locale-key-fix / F-jp-coverage-cache で 2 回発生 → F-script-writer-target-enemy (2026-05-26) +
   F-gemini-3.5-flash-api-audit (2026-05-27) で本作法が機能 → **★ X1 (2026-05-31) CP-1 で本作法
@@ -329,6 +352,7 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 - 編集ミッションフィルタ設計 (F-13 隠れ層含む) → `docs/EDITORIAL_MISSION_FILTER_DESIGN.md`
 - ★ 「特定角度」概念正典 → `docs/PARTICULAR_ANGLE_DEFINITION.md`
 - Claude Code 振る舞い指針 → `CLAUDE.md`
+- ★ **F-article-model-upgrade REPORT + A/B 証跡** → `docs/runs/F-article-model-upgrade/REPORT.md` + `article_2.5flash.md` + `article_3.5flash.md` + `ab_eval_metadata.json` (axis_5 評価はカズヤ) + `scripts/ab_article_model_upgrade.py` (A/B 再生成スクリプト)
 - ★ **X1 = F-particular-angle-metadata-production-wire REPORT + 試運転証跡** → `docs/runs/F-particular-angle-metadata-production-wire/REPORT.md` + `analysis_result_current.json` + `extractor_migration_design.json` + `script_writer_new_route.json` + `main_dispatch_point.json` + `jp_coverage_analysis_impact.json` + `side_effects_investigation.json` + `ingestion_investigation.json` + `trial_run_aggregated.json` + `environment_snapshot.json` + `trial_outputs/fresh_run/*` (Slot-1 script/article/analysis snapshot)
 - F-gemini-quality-tier-poc REPORT → `docs/runs/F-gemini-quality-tier-poc/REPORT.md`
 - F-docs-update-chatgpt-round2-and-error10 REPORT → `docs/runs/F-docs-update-chatgpt-round2-and-error10/REPORT.md`
@@ -341,7 +365,19 @@ ADR-0003 で正典化。★ 完全自動投稿の前提として F-periodic-heal
 
 *このドキュメントは F-state-protocol (2026-05-01) で導入。Claude Code が
 バッチ完了時に全置換更新する運用 (BATCH_PROTOCOL.md Task 5)。
-F-particular-angle-metadata-production-wire (X1 / 2026-05-31) は **ゲート完了後の 22 つ目のバッチ (1-R)**、**実装バッチ**。
+F-article-model-upgrade (2026-06-08) は **ゲート完了後の 23 つ目のバッチ (1-R.5、1-Q.5 の前に挿入)**、
+**config 変更バッチ**。article 生成モデルを gemini-2.5-flash → **gemini-3.5-flash** に品質昇格 (選択肢C 第一歩、
+B案 = config 変更 + 候補A での article A/B 再生成)。`GEMINI_ARTICLE_TIER1` の 1 値を 3 協調箇所 (`.env` runtime /
+`.env.example` template / `factory.py` inline default) で変更 (TIER1==TIER2 は意図的)。CP-1 grep で起案前提 5 点を
+検証 = 仮説 1 (変える 1 値は 3 箇所協調)・仮説 3 (「MAX1」は MAX_ATTEMPTS であり token 上限ではない、article は
+generation_config=None で truncate なし) を訂正、仮説 2 (article role 完全分離)・仮説 4 (共通 LLMClient + thinking 系
+不在 + 3.5-flash 実測 retries=0)・仮説 5 (候補A 残存) を確認。article_writer.py / script_writer.py 既存ルート /
+triage / analysis 既存ファイル不変 (不変原則 1-4 厳守)。既存テスト 4 件 (article=2.5-flash 旧設計符号化) を新仕様に
+期待値更新 (構造変更なし)、baseline 1466 passed 維持。A/B 両出力 (article_2.5flash.md=1887字 / article_3.5flash.md=
+2066字、両 LLM 生成・3.5-flash API エラーなし) を docs/runs/F-article-model-upgrade/ に並置、優劣判定はせず axis_5
+評価はカズヤ。新規 2 タスク (F-article-3.1-pro-escalation ★低 / F-article-max-tokens-policy ★低) 追加。
+次バッチ最有力 = 1-Q.5 F-title-guard-coverage-claim-policy (第一作着手前必須、X1 trial で本番再現実証)。
+前バッチ F-particular-angle-metadata-production-wire (X1 / 2026-05-31) は **ゲート完了後の 22 つ目のバッチ (1-R)**、**実装バッチ**。
 `docs/PARTICULAR_ANGLE_DEFINITION.md` セクション 3.6-3.7 で正典化された `ParticularAngleMetadata` (3 要素 +
 nested `SontakuSignals`) を Hydrangea production に配線、新ルート `generate_script_with_analysis` を
 production default 起動 (ANALYSIS_LAYER_ENABLED=true)。**target_enemy framing が production から自動退役**

@@ -1,0 +1,36 @@
+{
+  "batch": "F-article-model-upgrade",
+  "scope": "B案 (config 変更 + 保存済み event での article A/B 再生成)",
+  "generated_at_utc": "2026-06-08T04:44:46.544006+00:00",
+  "event_id": "cls-6889e9e1c7ac",
+  "event_title": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners",
+  "event_pool_batch_id": "20260511_044914",
+  "event_pool_created_at": "2026-05-11T05:01:00.083027+00:00",
+  "video_script_source": "data/output/cls-6889e9e1c7ac_script.json",
+  "inputs_identical_across_models": true,
+  "model_separation_note": "role='article' の Tier を os.environ で固定。GEMINI_ARTICLE_TIER1〜4 を 対象モデルに pin (生成成功時は必ず対象モデル由来、全失敗時のみ template fallback)。",
+  "article_writer_unchanged": true,
+  "evaluator": "カズヤ (axis_5 主観評価) — 本スクリプトは並置のみ、優劣判定はしない",
+  "runs": [
+    {
+      "model_id": "gemini-2.5-flash",
+      "output_file": "article_2.5flash.md",
+      "word_count": 1887,
+      "char_len": 1930,
+      "used_template_fallback": false,
+      "elapsed_sec": 25.2,
+      "article_max_attempts_per_tier": 1,
+      "generation_config": null
+    },
+    {
+      "model_id": "gemini-3.5-flash",
+      "output_file": "article_3.5flash.md",
+      "word_count": 2066,
+      "char_len": 2123,
+      "used_template_fallback": false,
+      "elapsed_sec": 15.9,
+      "article_max_attempts_per_tier": 1,
+      "generation_config": null
+    }
+  ]
+}
