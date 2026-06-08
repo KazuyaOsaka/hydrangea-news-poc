@@ -5893,3 +5893,99 @@ Phase A.5-3a-verify ゲート完了後 **22 つ目のバッチ (1-R)**。F-parti
   F-gemini-3.5-flash-api-audit (1-P.5、3.5-flash API 破壊的変更なし確定) /
   F-article-3.1-pro-escalation (選択肢C 次段、条件付き未確定) / 1-T (Editorial Guardian = 3.1-pro、布陣整理観点)
 
+
+## 2026-06-08: F-title-guard-coverage-claim-policy — coverage claim 事実整合の構造データ + 生成プロンプト原則 + 生成後 guard (1-Q.5)
+
+### 背景
+
+- stream_classification (系統判定) と、生成された title / article の coverage claim (報道状態の
+  主張) の **事実整合** を、第一作公開前に構造的に担保する必要があった。
+- X1 試運転 (2026-05-31) で `platform_title="日本では報道されないIsraelの視点"` が
+  `stream_2_perspective_gap` (事件本体は一部報道済) に対して silence 絶対表現を出力。
+  F-article-model-upgrade A/B でも両記事が「9,600 人虐待は日本でも報道済」を明示せず silence
+  寄りに振れた = title 単体でなく article 本文にも coverage claim の破れが production 経路で再現。
+- カズヤ確定の設計方針: **原則プロンプト指示 + 生成後 guard** の二段。どちらも「表現を強制する
+  各論コントロール (クラウド誤り 9)」ではなく「自分の系統判定に反する事実主張を弾く事実整合検証」に
+  徹する。検出 → flag のみ (自動置換・自動再生成はしない。第一作は手動、表現の最終判断はカズヤ)。
+- 射程: title + article 本文の coverage claim まで (title 単体 guard は対症療法 = title は決定的合成
+  なので合成元の破れが根因)。
+
+### 議論
+
+- 起案前仮説 6 点を grep + 実コード精読で検証 (クラウド誤り 10 作法、CP-1)。**仮説 2 の結果で
+  実装スコープが分岐**する設計だったため、grep-first を必須化した。
+  - **仮説 1 (★ 訂正)**: 起案者は「title の silence は script の title 素材から流入」と想定したが、
+    grep で **誤りと確定**。`generate_title_layer` は LLM stage 不在の決定的合成 (factory.py L20 裏取り)、
+    silence 絶対表現は `src/generation/title_generator.py:_platform_title_candidates` の **ハードコード
+    template** (L136 `日本では報道されない{topic}の視点` / L149 / L203) を `is_strong` evidence
+    ヒューリスティクス (`_is_strong_evidence` L41-72、`editorial:perspective_gap_score>=3.0` でも真) で
+    選択した結果。**script 本文に非依存**で、stream_classification を一切参照しない。⇒ title の silence は
+    Layer 1 プロンプト原則 (script/article テキスト向け) では届かない。guard (Layer 3) が title の唯一の
+    安全網。title_generator.py の根本修正は別タスク (F-title-generator-stream-aware-fix ★中) に分離。
+  - **仮説 2 (★ 確認、scope 分岐 → branch b)**: article 生成プロンプトは `src/generation/article_writer.py`
+    内の `_PROMPT_TEMPLATE` (L19) **ハードコード**。不変原則 1 で触れない ⇒ **article 側はプロンプト
+    原則を追加せず、Layer 3 guard のみで担保**。Layer 1 プロンプト原則は script 新ルートのみに限定。
+  - **仮説 3 (確認)**: script 新ルート `generate_script_with_analysis` は `script_with_analysis.md` を
+    `load_prompt` で読み込み、X1 で `particular_angle_metadata` (stream_classification 含む) を
+    `_build_script_with_analysis_prompt` L1199-1236 で配線済。新ルートは不変原則 2 の例外で改修可。
+  - **仮説 4 (確認)**: 既存の title/coverage guard は不在 (recency_guard のみ、無関係) = グリーンフィールド。
+  - **仮説 5 (確認)**: guard の真値 stream_classification は
+    `ScoredEvent.analysis_result.particular_angle_metadata.stream_classification` (models.py L455/L485/L170)
+    で参照可能。main.py 生成 dispatch (L1959 article / L2010 script) で event/top/script/article が全て揃う。
+  - **仮説 6 (確認)**: baseline 実測 **1466 passed** (311s)。
+- guard 方式: **LLM judge** を採用。キーワードマッチで未報道断定を機械検出する案は不採用
+  (言い換えで漏れる脆さ + CLAUDE.md「URL マッチング粒度で報道済み確定するクセ」「Stream 3 過剰検出」の轍)。
+- **B-3' 原則適用**: LLM が「明示的に矛盾」(status=contradiction) と判定した場合のみ flag。
+  uncertain / 沈黙は flag しない (沈黙を矛盾と読み替えない)。さらに系統ポリシーに無い forbidden_category を
+  LLM が返しても不採用にする安全網を実装。
+- 配置: `manual_poc/` は存在しないため (grep 確認)、config は YAML 慣例 (channels.yaml /
+  source_profiles.yaml 等) に揃え `configs/coverage_claim_policy.yaml` に配置。
+
+### 決定
+
+- **Layer 2 構造データ**: `configs/coverage_claim_policy.yaml` 新規。系統 (stream_classification) →
+  allowed_claim_level + forbidden_claim_categories (意味カテゴリ event_total_silence / angle_total_silence)。
+  silence_gap / out_of_scope は forbidden 空 (未報道断定が事実整合 / 真値不明)。guard 判定基準 +
+  プロンプト原則の根拠を両層で共有。
+- **Layer 1 プロンプト原則**: `configs/prompts/analysis/geo_lens/script_with_analysis.md` に事実整合原則を
+  追記 (perspective_gap / framing_inversion なら事件本体は報道済の事実を踏まえ silence 絶対表現をしない。
+  具体的言い回しは LLM の知性に委ねる = 足すのは「事実に反するな」原則のみ。クラウド誤り 9 回避)。
+  article 側は branch (b) のため未追加。
+- **Layer 3 guard**: `src/generation/coverage_claim_guard.py` 新規。policy ローダ (Pydantic + lru_cache +
+  graceful fallback) + LLM judge (`get_analysis_llm_client` 経由 = 事実重視 temp 0.3、extractor と同方針、
+  DI 可) + B-3' 抽出 + Pydantic 結果モデル (`CoverageClaimGuardResult`、JSON 化可能)。検出 → flag のみ。
+  silence_gap / out_of_scope / LLM 不在 / 真値不明は skip (flag なし、安全側)。
+- 手動ランナー `scripts/run_coverage_claim_guard.py` 新規 (保存済み成果物に guard 適用、第一作 1-S 用)。
+- guard プロンプト `configs/prompts/analysis/geo_lens/coverage_claim_guard.md` 新規。
+
+### 結果
+
+- baseline 1466 → **1487 passed** (新規 +21、破壊ゼロ)。`tests/test_coverage_claim_policy.py` (7) +
+  `tests/test_coverage_claim_guard.py` (14)。
+- guard flag 出力例 (X1 Slot-1 cls-c8876d474612、stub judge で実証):
+  `{"stream_classification":"stream_2_perspective_gap","flagged":true,"flags":[{"artifact":"title",`
+  `"span":"日本では報道されないIsraelの視点","forbidden_category":"event_total_silence",`
+  `"reasoning":"事件本体は日本でも報道済みのため未報道断定は事実に反する"}],"title_status":"contradiction",`
+  `"article_status":"consistent","skipped":false}`。
+- 不変原則違反: なし (article_writer.py 0 行 / script_writer.py 既存ルート 0 行 / triage 不変 /
+  analysis 既存ファイル不変。guard は src/generation/ 新規ファイルで出力を外から検証 = 不変原則 1-2 厳守)。
+- 後続: title の silence 根本修正 (F-title-generator-stream-aware-fix ★中) + guard 自動アクション要否
+  (F-coverage-claim-guard-auto-action ★低) を FUTURE_WORK 登録。候補A 固有 framing (虐待は報道済を
+  明示する等) は 1-S の領分 (本バッチは汎用基盤まで)。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規: `configs/coverage_claim_policy.yaml` / `configs/prompts/analysis/geo_lens/coverage_claim_guard.md` /
+  `src/generation/coverage_claim_guard.py` / `scripts/run_coverage_claim_guard.py` /
+  `tests/test_coverage_claim_policy.py` / `tests/test_coverage_claim_guard.py`
+- 変更: `configs/prompts/analysis/geo_lens/script_with_analysis.md` (事実整合原則を追記、新規 `{}`
+  プレースホルダなし = `.format()` 不変)
+- ドキュメント更新: `docs/CURRENT_STATE.md` (全置換) / `docs/DECISION_LOG.md` (本エントリ +
+  前バッチ F-article-model-upgrade のコミットハッシュ追記) / `docs/FUTURE_WORK.md`
+  (F-title-guard 完了移動 + 新規 2 タスク) / `docs/DISCUSSION_NOTES.md` (4-A 新規 2 件)
+- 不変原則違反: なし
+- 関連バッチ: F-particular-angle-metadata-production-wire (X1、本番再現実証元 + 真値配線元) /
+  F-docs-update-chatgpt-round2-and-error10 (1-P.6、ChatGPT Round 2 指摘 2 起案元) /
+  1-S Phase A.5-3b 第一作起案 (候補A 固有 framing 指針) / 1-T Editorial Guardian (高リスク事実検証)
+

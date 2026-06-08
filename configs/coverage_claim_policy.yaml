@@ -1,0 +1,94 @@
+# coverage_claim_policy.yaml
+#
+# 系統 (stream_classification) 別の coverage claim (報道状態の主張) 事実整合ポリシー。
+#
+# 起源: F-title-guard-coverage-claim-policy (1-Q.5, 2026-06-08)。
+# X1 試運転で platform_title="日本では報道されないIsraelの視点" が
+# stream_2_perspective_gap (事件本体は一部報道済) に対して silence 絶対表現を出力、
+# さらに article 本文も silence 寄りに振れた = 系統判定と coverage claim の事実不整合が
+# production 経路で再現したことを受けて新設。
+#
+# 用途 (両層から参照):
+#   1. 生成後 guard (src/generation/coverage_claim_guard.py) の事実整合 LLM judge の判定基準
+#   2. script 新ルート生成プロンプト原則 (configs/prompts/analysis/geo_lens/script_with_analysis.md)
+#      の事実整合原則の根拠
+#
+# ★ 設計原則 (クラウド誤り 9「各論コントロールへの誘惑」回避):
+#   - 本ポリシーは「この語を使え/使うな」という具体的言い回しの強制ルールではない。
+#   - 「自分の系統判定 (stream_classification) に反する事実主張を弾く」という
+#     事実整合検証の基準のみを構造化する。言い回しの選択は LLM の知性に委ねる
+#     (正典: docs/PARTICULAR_ANGLE_DEFINITION.md セクション 3.7「LLM の知性に委ねる」)。
+#   - 禁止対象は「未報道断定の意味カテゴリ」であってキーワードではない。判定は guard の
+#     LLM judge が意味で行う (キーワードマッチ不採用 = 言い換えで漏れる脆さの回避)。
+#
+# ★ B-3' 原則 (沈黙を矛盾と読み替えない):
+#   guard は「明示的に系統判定と矛盾する coverage claim」のみ flag する。
+#   主張が曖昧 / 沈黙 / 解釈の余地がある場合は flag しない。
+
+version: 1
+
+# ── 系統別の coverage claim 整合ルール ────────────────────────────────────────
+# broad_event_reported_in_jp     : 広範事件 (事象本体) が日本主要メディアで報道済みか
+# particular_angle_reported_in_jp: 特定角度 (海外メディア独自の切り口) が報道済みか
+# allowed_claim_level            : その系統で事実として成立する coverage claim の上限
+# forbidden_claim_categories     : その系統では事実に反する未報道断定の意味カテゴリ
+streams:
+  stream_1_silence_gap:
+    label: 完全な情報空白
+    broad_event_reported_in_jp: false
+    particular_angle_reported_in_jp: false
+    allowed_claim_level: full_silence
+    forbidden_claim_categories: []
+    description: >-
+      広範事件も特定角度も日本主要メディアで未報道。「日本では報じられなかった」
+      「黙殺されてきた」という silence (未報道断定) 表現が事実として成立する唯一の系統。
+      未報道断定は事実整合であり flag 対象ではない。
+
+  stream_2_perspective_gap:
+    label: 観点不足
+    broad_event_reported_in_jp: true
+    particular_angle_reported_in_jp: false
+    allowed_claim_level: angle_silence
+    forbidden_claim_categories:
+      - event_total_silence
+    description: >-
+      事件本体は日本でも報道済み、特定角度のみ未報道。「事件自体が日本で報じられ
+      なかった / 黙殺された」と読める silence 絶対表現は事実に反する。許容されるのは
+      「事件は報じられたが、◯◯という角度 / 構造には触れられていない」までの主張。
+
+  stream_3_framing_inversion:
+    label: 解釈差
+    broad_event_reported_in_jp: true
+    particular_angle_reported_in_jp: true
+    allowed_claim_level: framing_difference
+    forbidden_claim_categories:
+      - event_total_silence
+      - angle_total_silence
+    description: >-
+      広範事件も特定角度も日本主要メディアで報道済み + 解釈・評価フレームの差。
+      事件本体・特定角度のいずれについても未報道断定 (silence) は事実に反する。
+      許容されるのは「日本は××と捉えたが、海外は△△と批判している」という解釈差の提示。
+
+  out_of_scope:
+    label: 動画化対象外 / 系統判定なし
+    broad_event_reported_in_jp: null
+    particular_angle_reported_in_jp: null
+    allowed_claim_level: unknown
+    forbidden_claim_categories: []
+    description: >-
+      系統判定が out_of_scope または不明 (metadata 不在含む)。真値が確定しないため
+      guard は coverage claim を flag しない (B-3' 沈黙を矛盾と読み替えない)。
+
+# ── 未報道断定の意味カテゴリ定義 ──────────────────────────────────────────────
+# guard の LLM judge は forbidden_claim_categories に列挙された意味カテゴリを
+# 「意味」で照合する (キーワードマッチではない)。
+forbidden_claim_categories:
+  event_total_silence:
+    meaning: >-
+      その事件・出来事そのものが日本のメディアで一切報じられていない / 黙殺されている、
+      と読める未報道の絶対断定。事件本体に対して「日本では報道されない」「日本の主流
+      メディアは黙殺した」「日本では一切伝えられていない」等を主張すること。
+  angle_total_silence:
+    meaning: >-
+      その特定角度が日本のメディアで全く存在しない / 一切報じられていないと読める断定。
+      framing_inversion では特定角度も報道済みであるため、角度の完全未報道断定は事実に反する。
