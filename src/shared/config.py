@@ -222,6 +222,15 @@ JP_COVERAGE_GROUNDING_MODEL: str = os.getenv(
     "JP_COVERAGE_GROUNDING_MODEL", "gemini-2.5-flash"
 )
 
+# ── 1-T.2: Editorial Guardian 真実性検証 (corroboration) の証拠収集モデル ──────
+# grounded 検索 (google_search tool) で独立ソースの証拠を収集する軽量モデル。
+# 検索は「証拠の運搬係」であって検証者ではない (corroboration の判定は
+# GUARDIAN role = gemini-3.1-pro-preview が行う。沈黙的劣化の禁止は判定層で維持)。
+# default は F-13.B と同じ実績モデル。
+GUARDIAN_GROUNDING_MODEL: str = os.getenv(
+    "GUARDIAN_GROUNDING_MODEL", "gemini-2.5-flash"
+)
+
 # Groq設定 (LLM_PROVIDER=groq のとき使用)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_SCRIPT_MODEL = os.getenv("GROQ_SCRIPT_MODEL", "llama-3.3-70b-versatile")

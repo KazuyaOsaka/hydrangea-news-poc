@@ -105,6 +105,10 @@ git checkout -b feature/{バッチ名}
 - ブランチ単位で `git reset --hard` できる構造
 - main へのマージ後も問題発生時はフィーチャーフラグでオフ可能
 
+### 4. secrets の表示ガード (F-editorial-guardian-corroboration / 2026-06-10 追加)
+
+- `.env` 等の secrets ファイルを表示する際は値をマスクする (キー名のみ表示、例: `grep -oE '^[A-Z_]+' .env`)。API キー・トークン等の実値を端末出力・レポート・ログに出さない。
+
 ---
 
 ## LLM 呼び出し方針
