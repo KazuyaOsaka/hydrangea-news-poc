@@ -1,6 +1,15 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-06-08 (★ F-title-guard-coverage-claim-policy 完了、実装バッチ 1-Q.5。4-A 新規 2 件 =
+最終更新: 2026-06-10 (★ F-editorial-guardian-corroboration 完了、実装バッチ 1-T.2。4-A 新規 1 件 =
+「truthfulness 語彙と公開可否バーの確定」(昇格候補 DECISION_LOG = 本バッチで実装完了。語彙 =
+`corroborated / contradicted / uncorroborated` + harness 値 `unverified`、公開可否バー = supported ×
+corroborated のみ非 flag、独立性は最小定義 = 元ソースドメイン階層除外 + deterministic 安全網)。
+4-B 再評価 2 件 = ①1-T.1「検証の2層モデル」エントリの pending 語彙を解決済みに更新 (2層モデル記録
+として Active 継続) ②「Fable 5 挙動観察」エントリに ⑤ secrets 表示ガード不在を追記 (1-T.1 で .env
+全行表示により API キー露出 → 1-T.2 相乗りで CLAUDE.md ガードレール §4 に値マスク原則を明文化)。
+検索と判定の分離アーキテクチャ (証拠収集 = GUARDIAN_GROUNDING_MODEL 軽量 / 判定 = Guardian 単一
+モデル) で 3.1-pro の google_search サポート未知数に非依存。baseline 1519 → 1557 passed (新規 +38)。
+前回 2026-06-08: F-title-guard-coverage-claim-policy 完了、実装バッチ 1-Q.5。4-A 新規 2 件 =
 「coverage claim 事実整合 guard の設計判断 (各論コントロール=誤り9 を踏まずに虚偽を弾く事実整合検証という
 整理)」(昇格候補 DECISION_LOG = 本バッチで実装完了) +「AI 文体の根治方針 (生成プロンプト側で
 burstiness/反ヘッジ/反テンプレ、humanizer は最後の質感のみ、検出回避は追わない、人間編集は第一作で観測し
@@ -36,6 +45,31 @@ Cultural Divide + used_fallback=false / retries=0 + JSON 切断ゼロ)。axis_5 
 
 ## 未分類 (Active)
 
+### 2026-06-10: truthfulness 語彙と公開可否バーの確定 (F-editorial-guardian-corroboration、1-T.2)
+- **内容**: 1-T.1 で pending だった第2層・真実性の語彙を 1-T.2 で確定した (確定値は
+  DECISION_LOG「2026-06-10: F-editorial-guardian-corroboration」が正本、スキーマ定数は
+  `src/generation/editorial_guardian.py`)。
+  (1) **語彙 (第1層と平行構造)**: LLM judge の3値 = `corroborated` (元ソースドメイン以外の
+  独立ソースが支持) / `contradicted` (外部ソースが**明示的に**矛盾 = B-3' 哲学、見つからない
+  ことを矛盾と読み替えない) / `uncorroborated` (検索成功したが独立支持なし、**≠ 虚偽**、
+  人間レビュー行き) + harness 値 `unverified` (検索 or 判定が完了しなかった = 検証未完、
+  沈黙的劣化の禁止)。skip された claim (第1層 contradicted / unverified) は `pending` のまま
+  skip 理由を notes に記録 — 人間が直したら手動ランナー再実行が運用ループ。
+  (2) **公開可否の最終バー**: claim が flag されないのは **supported かつ corroborated** の
+  場合のみ。それ以外 (いずれかの層で contradicted / uncorroborated / not_in_source /
+  unverified / pending) は全て flagged_claims = 人間レビュー行き。flag のみ (自動修正・
+  公開ブロックなし、公開判断はカズヤ)。両層の安全方向の組合せ: 第1層は「入力に無いことを
+  書いた」を見落とさない方向、第2層は「独立した裏が取れない」を見落とさない方向に倒し、
+  どちらも「裏が取れない ≠ 虚偽」の区別を維持する。
+  (3) **独立性の最小定義**: 元ソースドメイン (event.source_urls / sources_by_locale 由来) の
+  階層除外のみ。プロンプト + deterministic 安全網の両方で担保 (judge が元ソースのみ / 証拠に
+  現れないドメインを根拠に corroborated を返したら harness が uncorroborated に倒す)。
+  提携メディア DB は作らない (F-guardian-independence-axis ★低 = 観測後に判断)。
+- **出典**: F-editorial-guardian-corroboration バッチプロンプト §0 / DECISION_LOG
+  「2026-06-10: F-editorial-guardian-corroboration」/ 1-T.1 エントリ「検証の2層モデル」
+- **ステータス**: `昇格候補(DECISION_LOG)` = 本バッチで実装完了・DECISION_LOG 記録済み
+  (語彙の再変更は第一作 validation run の観測なしには行わない)
+
 ### 2026-06-10: 検証の2層モデル + flag 意味論の文脈反転 — 1-Q.5 B-3' との対比 (F-editorial-guardian-claim-extraction)
 - **内容**: 1-T.1 で公開前検証の第1層 (忠実性) を実装した。設計の核 2 点を記録する。
   (1) **検証の2層モデル**: 第1層・忠実性 = 「生成器が見た入力に主張が支持されるか」
@@ -52,8 +86,10 @@ Cultural Divide + used_fallback=false / retries=0 + JSON 切断ゼロ)。axis_5 
   保ち、判定が完了しなかった主張にだけ harness 値 `unverified` を付与する分離にした。
 - **出典**: F-editorial-guardian-claim-extraction バッチプロンプト / DECISION_LOG「2026-06-10:
   F-editorial-guardian-claim-extraction」/ ADR-0003「公開前検証」/ 1-Q.5 B-3' (対比元)
-- **ステータス**: `Active` (1-T.2 の corroboration 語彙設計 = pending 以降の値はこの整理を
-  継承して確定する)
+- **ステータス**: `Active` → ★ **2026-06-10 (1-T.2) 解決**: pending 以降の語彙は本整理を継承して
+  確定済み (`corroborated / contradicted / uncorroborated` + harness 値 `unverified`。上の
+  「truthfulness 語彙と公開可否バーの確定」エントリ + DECISION_LOG 1-T.2 エントリが正本)。
+  2層モデル自体の記録として Active 継続
 
 ### 2026-06-10: coverage_claim_guard と Editorial Guardian の責務分担と将来統合の観点 (F-editorial-guardian-claim-extraction)
 - **内容**: 両者は「生成成果物を外から検証する flag-only 安全網 (不変原則 1-2 を踏まない)」と
@@ -86,6 +122,12 @@ Cultural Divide + used_fallback=false / retries=0 + JSON 切断ゼロ)。axis_5 
   標本 1、継続観察)。
 - **出典**: F-editorial-guardian-claim-extraction バッチプロンプト §0 副次目的 / 本バッチ
   完了レポート
+- ★ **追記 (F-editorial-guardian-corroboration / 2026-06-10)**: ⑤ **secrets 表示ガードの不在**
+  — 1-T.1 で .env 全行表示により API キーが端末出力に露出した (カズヤ判断でキーは継続使用)。
+  スコープ規律 (①〜④) は良好だったが、secrets を値ごと表示しないガードが行動規範に存在
+  しなかった。1-T.2 相乗りで CLAUDE.md ガードレール §4 に「secrets ファイルは値をマスクして
+  表示 (キー名のみ、例: `grep -oE '^[A-Z_]+' .env`)」を明文化済み。1-T.2 では .env 追記を
+  `cat >>` + キー名のみの grep 検証で実施し、値の表示ゼロを維持した。
 - **ステータス**: `Active` (次バッチ以降も Fable 5 挙動の観察を継続、数バッチ分溜まったら
   アーカイブ判断)
 

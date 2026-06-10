@@ -1,6 +1,16 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-06-10 (★ F-editorial-guardian-claim-extraction 完了、実装バッチ 1-T.1。Editorial
+最終更新: 2026-06-10 (★ F-editorial-guardian-corroboration 完了、実装バッチ 1-T.2。Editorial Guardian
+第2段 = 真実性検証 (grounding 複数ソース突合) + レポート enrichment。検索と判定の分離 (証拠収集 =
+`GUARDIAN_GROUNDING_MODEL` 軽量モデル / 判定 = Guardian 単一モデル = 沈黙的劣化の禁止を判定層で維持)。
+truthfulness 語彙確定 (`corroborated / contradicted / uncorroborated` + harness 値 `unverified`) +
+公開可否バー (supported × corroborated のみ非 flag) + 独立性最小定義 + deterministic 安全網。
+X1 Slot-1 実走 2 回 = 503 波下で沈黙的劣化の禁止が実地で機能 + 再実行ループ実証 + run 間分散を
+Guardian 文脈でも実測。`F-editorial-guardian-corroboration` を完了済みに移動 (**第一作前の関門ゼロ、
+次バッチ = 1-S**)。新規 2 タスク: **F-guardian-production-wire** (★中、Guardian 2 層 production 配線 +
+Phase A.5-3d 投稿前ゲート統合) / **F-guardian-independence-axis** (★低 条件付き、独立性評価軸の拡張要否)。
+baseline 1519 → **1557 passed** (新規 +38、破壊ゼロ)。不変原則 1-5 厳守。
+前回 2026-06-10: F-editorial-guardian-claim-extraction 完了、実装バッチ 1-T.1。Editorial
 Guardian 第1段 = 高リスク事実主張の抽出 + 元ソース忠実性検証 (`supported / contradicted /
 not_in_source` 3値 + harness 値 `unverified`) + 2層検証レポート骨格 (truthfulness_status=pending で
 1-T.2 差し込みスキーマ固定)。factory.py に GUARDIAN role 新設 (gemini-3.1-pro-preview **単一要素
@@ -516,34 +526,24 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 関連ファイル: `src/main.py` (sample/normalized mode 分岐、★ 不変原則対象外)、`src/ingestion/run_ingestion.py` (ingestion パス、★ 不変原則対象外)、`src/triage/garbage_filter.py` (★ 不変原則 3 保護)、新規 `scripts/replay_stuck_batch.py` / `docs/TRIAL_RUN_GUIDE.md`
   - 関連: X1 (本起案元)、F-periodic-health-check (production 観測との対比)、Phase A.5-3b 第一作 / 1-Q.5 / 1-T (再発リスク回避先)
 
-- **★★ F-editorial-guardian-corroboration (1-T.2): 第2層・真実性検証 = grounding による複数ソース突合** (F-editorial-guardian-claim-extraction / 2026-06-10 起案、★★高 = **第一作 (1-S) 前必須**、カズヤ確定の 2 バッチ構成の後半)
-  - 背景: 1-T.1 (F-editorial-guardian-claim-extraction、2026-06-10 完了) が第1層・忠実性
-    (生成器入力との整合) を実装済み。しかし忠実性は「生成器が見た入力に合っている」までしか
-    保証しない — **元ソース自体の正しさ** (候補A の TeleSUR はベネズエラ政府系 = 党派性あり) と
-    **入力に無い主張 (not_in_source) の真偽** は独立ソースとの突合でしか検証できない。
-    ADR-0003「複数ソース突合 (TeleSUR + Al Jazeera + Middle East Eye 等)」の機械化。
-  - 対応案: 1-T.1 レポートの差し込みスキーマを埋める — claim ごとの `truthfulness_status`
-    (pending → 1-T.2 が語彙確定) + `truthfulness_notes`。入力は 1-T.1 が生成済みの
-    `verification_queries` (claim ごと 1〜3 件、ja/en locale 付き)。grounding 実行は
-    F-13.B JpCoverageVerifier の機構を流用 (★ 偵察レポート
-    `docs/runs/F-editorial-guardian-claim-extraction/grounding_reuse_survey.md` が起案入力:
-    流用可 = raw genai.Client + google_search tool 呼び出しパターン / redirect URL 回避の
-    ドメイン抽出ヘルパ / B-3' 判定哲学 / per-call timeout。新設計要 = 国際ソース独立性の評価軸 /
-    claim 単位の処理)。
-  - ★ 起案前仮説 (1-T.2 CP-1 で grep + 実呼び出し検証): (a) gemini-3.1-pro-preview が
-    google_search tool をサポートするか (未検証、非サポートなら検索実行と corroboration 判定の
-    モデル分離設計)、(b) grounding run 間分散 (F-grounding-determinism-audit) 下で複数クエリ
-    集約により判定が安定するか、(c) redirect URL の記事実体解決可否 (監査可能性)。
-  - ★ 設計原則の継承: 沈黙的劣化の禁止 (corroboration 判定は Guardian 単一モデル) +
-    unverified ≠ 虚偽 (裏が取れない = uncorroborated は人間レビュー行き flag、虚偽断定はしない)。
-  - 検討時期: **次バッチ最有力** (1-S 第一作起案の前)。
-  - 想定工数: 4-6 時間 (CP-1 仮説検証 + corroboration 実装 + mock テスト + X1/候補A 実証)
-  - 関連ファイル: `src/generation/editorial_guardian.py` (truthfulness 差し込み先)、
-    `src/triage/jp_coverage_verifier.py` (流用元、不変原則 3 = 読むだけ)、
-    `docs/runs/F-editorial-guardian-claim-extraction/grounding_reuse_survey.md` (起案入力)
-  - 関連: F-editorial-guardian-claim-extraction (1-T.1、第1層 + スキーマ固定元)、
-    F-grounding-determinism-audit (分散課題元)、1-S Phase A.5-3b 第一作起案 (適用先)、
-    Phase A.5-3d 投稿前ゲート (チェックリスト 6 項目の機械判定への将来統合先)
+- **F-guardian-production-wire: Guardian 2 層の production 配線 + Phase A.5-3d 投稿前ゲート統合** ★中 (F-editorial-guardian-corroboration / 2026-06-10 起案、第一作後)
+  - 背景: 1-T.1 + 1-T.2 で Editorial Guardian 2 層 (忠実性 + 真実性) が手動ランナー 2 本
+    (`scripts/run_editorial_guardian.py` → `scripts/run_editorial_guardian_corroboration.py`)
+    で完成した。第一作 (1-S) は手動運用だが、Phase A.5-3d (cron 完全自動投稿) では投稿前
+    ゲートのチェックリスト 6 項目 (ADR-0003) の「6. 高リスク事実: 公開前検証完了済みか」を
+    機械判定に組み込む必要がある。
+  - 対応案: (a) main.py 生成 dispatch 後の Guardian 2 層自動実行 (非ブロッキング観測 →
+    ブロッキング gate の段階導入、coverage_claim_guard の production 配線判断と並走)、
+    (b) budget.py 経由化 (1-T.1 判断 5 で手動運用のため見送った分)、(c) flagged_claims
+    非空時の投稿保留フロー (公開可否バー = supported × corroborated のみ通過を gate 化)。
+    レポート層の統合 (coverage_claim_guard + Guardian を 1 レポートに束ねる) は
+    DISCUSSION_NOTES 2026-06-10 ② の整理に従い判定ロジックは統合しない。
+  - 検討時期: 第一作 (1-S) で手動運用の運用感を観測後、Phase A.5-3d 着手時
+  - 想定工数: 3-5 時間 (配線 + gate 化判断 + budget 統合)
+  - 関連ファイル: `src/main.py`、`src/generation/editorial_guardian.py` /
+    `editorial_guardian_corroboration.py`、`src/budget.py`、`scripts/run_editorial_guardian*.py`
+  - 関連: 1-T.1 / 1-T.2 (実装元)、Phase A.5-3d 投稿前ゲート (統合先)、
+    F-coverage-claim-guard-auto-action (並走判断)、F-periodic-health-check (無人運用の前提)
 
 - **F-grounding-determinism-audit** (F-jp-coverage-llm-judgement-extraction / 2026-05-16 で起案)
   - 背景: F-jp-coverage-llm-judgement-extraction Task E-fix-F 再々測定で、ゴールデンセット live-API 計測が **run 間で broad Grounding API の WL メディアドメイン返却が大きく変動** することが顕在化。v3 run では 11 件の reported event で WL ヒット 0 (うち Gemini 503 が 2) = B-3' 判定以前に False に倒れ、ヘッドライン Recall を 0.4706 まで薄めた (WL マッチ条件下では Recall 1.0000 = B-3' 自体は設計通り機能)。同一クエリでも Task E run と v3 run で WL ヒット有無が反転する event 多数 (例: covered_008/009)。
@@ -665,6 +665,20 @@ F-stream-2-filter-design 着手 OK 状態に。
 ## 緊急度 低（時間ある時に検討）
 
 ---
+
+- **F-guardian-independence-axis: 独立性評価軸の拡張要否** ★低 (条件付き・未確定) (F-editorial-guardian-corroboration / 2026-06-10 起案)
+  - 背景: 1-T.2 の corroboration は独立性を**最小定義** (元ソースドメインの階層除外のみ) で
+    実装した。提携メディア・通信社配信 (同一ワイヤ記事の転載)・国家系メディア同士の相互引用は
+    「独立した支持」に見えても実質同源の可能性がある。1-T.2 では作り込まず (誤り6 = 過剰拡張性
+    回避)、発見ドメインを evidence に全列挙して人間監査に委ねる設計とした。
+  - 対応案: 第一作 (1-S) + 数本の validation run で「corroborated の根拠ドメインが実質同源
+    だった」事例が観測された場合のみ拡張を検討。候補: (a) 通信社 (AP / Reuters / AFP) 配信の
+    検出、(b) 国家系メディア群の同源グルーピング (TeleSUR/RT 系等)、(c) 判定プロンプトへの
+    「同一ワイヤ記事の転載は独立扱いしない」原則追加 (構造データ化が先、誤り9 回避)。
+  - 検討時期: 1-S validation run の観測後 (事例が出なければ着手しない)
+  - 関連ファイル: `src/generation/editorial_guardian_corroboration.py`
+    (`_validated_independent_domains`)、`configs/prompts/analysis/geo_lens/editorial_guardian_corroboration.md`
+  - 関連: F-editorial-guardian-corroboration (1-T.2、最小定義の採用元)、クラウド誤り 6 / 9
 
 - **F-coverage-claim-guard-auto-action** ★低 (条件付き・未確定) (F-title-guard-coverage-claim-policy / 2026-06-08 起案)
   - 背景: 1-Q.5 で coverage claim guard は **flag のみ** (自動置換・自動再生成はしない) で実装した。
@@ -834,6 +848,42 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **F-editorial-guardian-corroboration (1-T.2) — Editorial Guardian 第2段: 真実性検証 = grounding 複数ソース突合 + レポート enrichment (実装バッチ)**
+  (F-editorial-guardian-corroboration / 2026-06-10 完了)
+  - 発生バッチ: F-editorial-guardian-claim-extraction (1-T.1 / 2026-06-10) で ★★高 起案。
+    カズヤ確定 2 バッチ構成の後半、**第一作 (1-S) 前の最後の関門** (これで関門ゼロ)。
+  - 対応 (検証の2層モデルの第2層、★ 検索と判定の分離):
+    - **`src/generation/editorial_guardian_corroboration.py` 新規**: 証拠収集 =
+      `GroundingSearchClient` (raw genai.Client 注入 + google_search tool、
+      `GUARDIAN_GROUNDING_MODEL` default gemini-2.5-flash = F-13.B 同実績、per-call timeout、
+      redirect URL の記事実体解決 best effort)。claim ごとに 1-T.1 の verification_queries を
+      全実行 (run 間分散への緩和 = 複数クエリ証拠の集約判定)。判定 = Guardian 単一モデル
+      (gemini-3.1-pro-preview、沈黙的劣化の禁止は判定層で維持、3.1-pro の google_search
+      サポートに非依存)。
+    - **truthfulness 語彙確定**: `corroborated / contradicted (明示的矛盾のみ = B-3') /
+      uncorroborated (≠ 虚偽)` + harness 値 `unverified` (検証未完)。第1層 contradicted /
+      unverified は skip (pending + skip 理由 notes、人間修正後に手動ランナー再実行が運用ループ)。
+    - **独立性の最小定義 + deterministic 安全網**: 元ソースドメイン (event_snapshot 由来) の
+      階層除外のみ。judge が元ソースのみ / 証拠に無いドメインを根拠に corroborated →
+      harness が uncorroborated に倒す。発見ドメインは evidence に全列挙 (人間監査)。
+    - **公開可否の最終バー**: supported × corroborated のみ非 flag。**flag のみ** (自動修正・
+      公開ブロックなし、公開判断はカズヤ)。enriched レポートは schema_version=2 (入力不変の
+      deep copy enrichment)。
+    - 手動ランナー `scripts/run_editorial_guardian_corroboration.py` (入力 = 1-T.1 レポート
+      JSON、exit 2 = judge unavailable)。
+  - ★ X1 Slot-1 実走 2 回: run1 = 2.5-flash の transient 503 波 (13/21 クエリ) 下で
+    corroborated 7 / unverified 12 = **沈黙的劣化の禁止が実地で機能**。run2 (再実行ループ実証) =
+    corroborated 10 / unverified 9。両 run 合算 13/19 corroborated、run 間分散
+    (c7/c11/c16 反転) を Guardian 文脈でも実測 (F-grounding-determinism-audit 観点)。
+    c16 (死者 3,371 / 負傷 10,129) / c18 (スモトリッチ発言) 等を独立ソースで裏取り成功。
+  - テスト: `tests/test_editorial_guardian_corroboration.py` 新規 +38。baseline 1519 →
+    **1557 passed** (破壊ゼロ、1-T.1 の 32 テストも全通過 = スキーマ additive 拡張の無破壊)。
+  - 不変原則違反: なし (triage ヘルパは同形再実装、写し元行番号記録)。
+  - 相乗り: CLAUDE.md ガードレール §4 secrets 表示ガード (1-T.1 の .env 露出の再発防止)。
+  - 詳細レポート: `docs/runs/F-editorial-guardian-corroboration/REPORT.md`
+  - 関連バッチ: 1-T.1 (前半 + スキーマ正本) / F-guardian-production-wire (★中、新規起案) /
+    F-guardian-independence-axis (★低、新規起案) / 1-S 第一作起案 (次バッチ、関門ゼロ)
 
 - **第一作公開前の高リスク事実検証ワークフロー 第1段 (1-T.1) — Editorial Guardian: 高リスク主張抽出 + 忠実性検証 + 2層レポート骨格 (実装バッチ)**
   (F-editorial-guardian-claim-extraction / 2026-06-10 完了)

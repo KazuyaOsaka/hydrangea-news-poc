@@ -83,9 +83,19 @@ _FLAGGED_STATUSES = {
     FAITHFULNESS_UNVERIFIED,
 }
 
-# 第2層・真実性 (1-T.2 が埋める)。本バッチでは常に pending。
-# pending 以降の語彙は 1-T.2 (F-editorial-guardian-corroboration) が確定する。
+# 第2層・真実性。1-T.1 (本モジュール) は常に pending を出力し、1-T.2
+# (editorial_guardian_corroboration.py) が grounding 複数ソース突合で埋める。
+# 語彙 (1-T.2 = F-editorial-guardian-corroboration で確定、第1層と平行構造):
+#   - corroborated:   元ソースのドメイン以外の独立ソースが主張を支持
+#   - contradicted:   外部ソースが明示的に矛盾 (B-3' 哲学: 明示的矛盾のみ。
+#                     見つからないことを矛盾と読み替えない)
+#   - uncorroborated: 検索は成功したが独立した支持が見つからない (≠ 虚偽)
+#   - unverified:     検索 or 判定が完了しなかった (harness 値、検証未完)
 TRUTHFULNESS_PENDING = "pending"
+TRUTHFULNESS_CORROBORATED = "corroborated"
+TRUTHFULNESS_CONTRADICTED = "contradicted"
+TRUTHFULNESS_UNCORROBORATED = "uncorroborated"
+TRUTHFULNESS_UNVERIFIED = "unverified"
 
 # 抽出語彙
 _VALID_ARTIFACTS = {"article", "script", "title"}
@@ -110,6 +120,46 @@ class VerificationQuery(BaseModel):
     purpose: str = ""       # 何を確かめるためのクエリか
 
 
+class CorroborationEvidence(BaseModel):
+    """grounded 検索 1 クエリ分の証拠 (1-T.2 が収集、人間監査の正本)。
+
+    検索モデルは「証拠の運搬係」であって検証者ではない (判定は Guardian が行う)。
+    domains は chunk.web.title 由来の実ドメイン (redirect URL は使わない、
+    F-jp-coverage-improve 知見)。resolved_urls は redirect URL の HTTP 解決で
+    得た記事実体 URL (best effort、解決失敗してもバッチは止めない)。
+    """
+
+    query: str
+    locale: str = "en"
+    purpose: str = ""
+    domains: list[str] = Field(default_factory=list)        # 実ドメイン (正規化済、全列挙)
+    titles: list[str] = Field(default_factory=list)         # chunk.web.title の生値 (監査用)
+    resolved_urls: list[str] = Field(default_factory=list)  # 記事実体 URL (解決できた分のみ)
+    response_text: str = ""                                  # grounded 応答テキスト
+    error: str = ""                                          # クエリ失敗理由 (成功時は空)
+
+
+class TruthfulnessSummary(BaseModel):
+    """第2層・真実性検証 (1-T.2) のレポートレベルサマリ。
+
+    None (未設定) = 第2層未実行 (1-T.1 のみのレポート)。
+    judge_unavailable=True は第2層の「検証済み」を一切意味しない (検証未完)。
+    沈黙的劣化の禁止は判定層で維持: judge は Guardian 単一モデルのみ。
+    """
+
+    grounding_model_used: Optional[str] = None  # 証拠収集 (検索) モデル
+    judge_model_used: Optional[str] = None      # corroboration 判定モデル (Guardian)
+    judge_unavailable: bool = False
+    unavailable_reason: Optional[str] = None
+    source_domains: list[str] = Field(default_factory=list)  # 独立性ルールの除外基準 (元ソース)
+    n_corroborated: int = 0
+    n_contradicted: int = 0
+    n_uncorroborated: int = 0
+    n_unverified: int = 0
+    n_pending: int = 0      # 第2層 skip (第1層 contradicted / unverified、修正後に再実行)
+    completed_at: str = ""
+
+
 class HighRiskClaim(BaseModel):
     """抽出された高リスク事実主張 1 件 (ADR-0003 公開前検証の対象)。"""
 
@@ -132,8 +182,13 @@ class ClaimVerification(BaseModel):
     faithfulness_reasoning: str = ""
     source_evidence: str = ""   # 入力素材中の支持/矛盾箇所の引用 (judge が抜粋)
     truthfulness_status: str = TRUTHFULNESS_PENDING
-    truthfulness_notes: str = ""  # 1-T.2 用に確保 (本バッチでは常に空)
+    truthfulness_notes: str = ""  # skip 理由 / harness 安全網の記録等 (1-T.2 が埋める)
     verification_queries: list[VerificationQuery] = Field(default_factory=list)
+    # ── 以下は 1-T.2 (editorial_guardian_corroboration.py) が埋める ──────────
+    truthfulness_reasoning: str = ""  # corroboration 判定理由 (根拠ドメイン明示)
+    corroborating_domains: list[str] = Field(default_factory=list)  # 独立支持ドメイン (検証済)
+    truthfulness_evidence: list[CorroborationEvidence] = Field(default_factory=list)
+    truthfulness_verified_at: str = ""  # claim 単位の検証時刻 (ISO 8601)
 
 
 class SourceMaterialScope(BaseModel):
@@ -175,6 +230,8 @@ class EditorialGuardianReport(BaseModel):
     n_contradicted: int = 0
     n_not_in_source: int = 0
     n_unverified: int = 0
+    # ── 1-T.2 (corroboration) が enrichment 時に設定 (None = 第2層未実行) ────
+    truthfulness_summary: Optional[TruthfulnessSummary] = None
 
 
 # ── 入力ブロック整形 ─────────────────────────────────────────────────────────

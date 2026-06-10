@@ -1,0 +1,1006 @@
+{
+  "schema_version": 2,
+  "event_id": "cls-c8876d474612",
+  "generated_at": "2026-06-10T05:18:14.256744+00:00",
+  "guardian_model_used": "gemini-3.1-pro-preview",
+  "guardian_unavailable": false,
+  "unavailable_reason": null,
+  "source_material_scope": {
+    "has_event": true,
+    "has_analysis": true,
+    "event_summary_chars": 4678,
+    "event_global_view_chars": 4967,
+    "notes": "faithfulness layer compares against event data only; generated artifacts are excluded from source material (a generated artifact cannot vouch for another). generation-time ScoredEvent wrapper fields (judge_result / editorial_mission_*) are not reconstructable from the pool snapshot and are excluded."
+  },
+  "claims": [
+    {
+      "claim": {
+        "claim_id": "c1",
+        "claim_text": "イスラエルが南レバノンへの侵攻を拡大し、戦略的な城を占拠した。",
+        "artifact": "title",
+        "risk_category": "rights_violation",
+        "quote_span": "Israel seizes strategic castle as it expands invasion of south Lebanon"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "入力素材のタイトルおよび本文に、イスラエルがレバノン南部への侵攻を拡大し、戦略的な城（ボーフォール城）を占拠したと明記されています。",
+      "source_evidence": "Israel seizes strategic castle as it expands invasion of south Lebanon",
+      "truthfulness_status": "corroborated",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Israel seizes Beaufort Castle south Lebanon expands invasion",
+          "locale": "en",
+          "purpose": "イスラエルが南レバノンへの侵攻を拡大し、戦略的な城を占拠した事実を独立した国際報道で確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "newarab.comやpbs.org、yomiuri.co.jpなど複数の独立ソースが、イスラエル軍がレバノン南部への侵攻を拡大し、戦略的拠点であるボフォール城を占拠したと報じており、主張を完全に支持しています。",
+      "corroborating_domains": [
+        "newarab.com",
+        "manassa.news",
+        "wikipedia.org",
+        "pbs.org",
+        "thehindu.com",
+        "yomiuri.co.jp",
+        "livedoor.com",
+        "firstonline.info",
+        "qab.co.jp"
+      ],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel seizes Beaufort Castle south Lebanon expands invasion",
+          "locale": "en",
+          "purpose": "イスラエルが南レバノンへの侵攻を拡大し、戦略的な城を占拠した事実を独立した国際報道で確認する。",
+          "domains": [
+            "newarab.com",
+            "manassa.news",
+            "middleeasteye.net",
+            "wikipedia.org",
+            "pbs.org",
+            "thehindu.com",
+            "yomiuri.co.jp",
+            "livedoor.com",
+            "firstonline.info",
+            "qab.co.jp"
+          ],
+          "titles": [
+            "newarab.com",
+            "manassa.news",
+            "middleeasteye.net",
+            "wikipedia.org",
+            "pbs.org",
+            "thehindu.com",
+            "yomiuri.co.jp",
+            "livedoor.com",
+            "firstonline.info",
+            "qab.co.jp"
+          ],
+          "resolved_urls": [
+            "https://manassa.news/en/news/32150",
+            "https://www.middleeasteye.net/news/israel-seizes-strategic-castle-it-expands-invasion-south-lebanon",
+            "https://en.wikipedia.org/wiki/Beaufort_Castle,_Lebanon",
+            "https://www.pbs.org/newshour/world/israeli-troops-seize-strategic-castle-in-lebanon-during-deepest-incursion-in-decades"
+          ],
+          "response_text": "イスラエルが南レバノンへの侵攻を拡大し、戦略的なボフォール城を占拠したという主張について、複数の報道機関が報じています。\n\n以下に、各報道機関・ソースがこの主張について報じている内容を整理して記述します。\n\n*   **The New Arab** (2026年5月31日) は、イスラエルが日曜日（2026年5月31日）に歴史的なボフォール城を占領したと報じました。この占領は、イスラエルが南レバノンへの侵攻を深め、「イエローライン」と呼ばれる緩衝地帯をさらに越えて進軍した後のことであると述べています。アラビア語で「Qalaat al-Shaqif」として知られるこの城は、南レバノンの大部分とイスラエル北部を見下ろす戦略的な要衝に位置していると説明しています。イスラエル国防軍は、この作戦がボフォール尾根とワディ・アル・サルキ地域の支配を確立し、ヒズボラのインフラを破壊することに焦点を当てていたと発表しました。イスラエル国防相のイスラエル・カッツは、城にイスラエル国旗が掲げられたことを「我々の敵への明確なメッセージ」と述べ、イスラエル国民を脅かす者は徐々に戦略的地位を失うだろうと語りました。イスラエルのベンヤミン・ネタニヤフ首相は、この城の占領を「劇的な段階であり、我々が主導している政策の劇的な転換」と呼びました。この占領は、金曜日にワシントンで行われたイスラエルとレバノンの軍事代表団による治安会議の後に行われました。レバノン政府は、系統的なイスラエルによる遺産破壊と称し、ユネスコにこれに関する覚書を提出しています。ボフォール城は、2024年に「武力紛争の際の文化財保護に関するハーグ条約第2議定書」に基づき、「強化された保護」下に置かれていました。\n\n*   **Al Manassa** (2026年6月1日) は、イスラエル占領軍がリタニ川を渡り、日曜日（2026年5月31日）に南レバノンにある戦略的な十字軍時代のボフォール城を占領し、地上侵攻を拡大したと報じました。イスラエル軍は声明で、ゴラニ、ギヴァティ、第7旅団の部隊がシャキフ（ボフォール）高地とワディ・アル・スルーキで大規模な作戦を実施していることを確認しました。AFP通信が公開した画像には、古代の要塞の上にイスラエル国旗が掲げられ、その周囲から濃い煙が立ち上る様子が映し出されていました。イスラエル国防相のイスラエル・カッツは、占領軍が「レバノンでの作戦を拡大し、リタニ川を渡り、ガリラヤの町を守り、兵士の安全を維持するための最も重要な戦略的拠点の一つであるシャキフ高地を支配した」と発表しました。カッツは、イスラエル軍がレバノン内の「治安地帯」の一部としてボフォール城に留まる意向であると述べました。\n\n*   **Middle East Eye** (2026年5月31日) は、イスラエル軍が900年前のボフォール城とその周辺の戦略的な尾根を南レバノンで占領したと報じました。これは、名目上の停戦にもかかわらず、イスラエルの攻撃が拡大している中でのことです。城と尾根の占領は、4月に停戦後に設定された「イエローライン」と呼ばれる境界線を越えて、イスラエルがレバノンでの足跡を深くしたことを意味すると伝えています。イスラエル国防相のイスラエル・カッツは、軍にレバノンでの作戦を拡大し、リタニ川を渡り、ボフォール尾根を占領するよう命じたと述べています。ボフォール城は、南レバノンの広範囲とイスラエル北部を見渡せる戦略的な要衝であり、主要都市ナバティーエから約5kmの場所に位置していると説明しています。\n\n*   **Wikipedia** の「Beaufort Castle, Lebanon」の項目では、ボフォール城が2026年5月に2026年レバノン戦争中にIDF部隊によって再び占領されたと記述されています。また、イスラエル国防軍が1982年から2000年までの南レバノン占領中、この城を拠点として使用していた過去にも言及しています。\n\n*   **PBS** (2026年5月31日) は、イスラエル軍が南レバノンの十字軍によって建てられた城のある戦略的な山を占領したと報じました。これは、過去25年以上で最も深い侵攻であると述べています。イスラエル首相のベンヤミン・ネタニヤフは、このボフォールの占領を「劇的な段階であり、我々が主導している政策の劇的な転換」と呼びました。イスラエル・カッツ国防相は、城を保持し、ヒズボラが使用したとされる数千もの家屋やその他の軍事インフラを破壊する計画であると述べました。\n\n*   **The Hindu** (2026年6月2日) も、イスラエル国防軍がボフォール城を再び占領し、2026年におけるレバノンへの軍事侵攻で最大のエスカレーションと最も深い侵攻となったと報じています。イスラエル国防軍は公式声明で、ゴラニ旅団がヒズボラのインフラを解体するために城の尾根沿いの地域で作戦を実施したことを確認しました。\n\n*   **読売新聞** (2026年6月1日) は、イスラエルが四半世紀ぶりにレバノン南部の要衝であるボフォール城を制圧したと報じました。これは、ヒズボラへの攻撃と占領地の拡大の一環であると述べています。また、12世紀に建てられたボフォール城は戦略的に重要な拠点であり、イスラエル軍は過去にも1982年から2000年までこの城を制圧していたことに言及しています。\n\n*   **ライブドアニュース** (2026年6月1日) も、読売新聞と同様に、イスラエルが四半世紀ぶりにレバノン南部の要衝ボフォール城を制圧し、ヒズボラへの攻撃と占領地を拡大したと報じました。\n\n*   **FIRSTonline** (2026年6月1日) は、イスラエル軍がレバノン南部にある中世の要塞ボフォールを制圧したと報じています。ネタニヤフ首相はこれを「ヒズボラに対する転換点」と呼び、「劇的な転換点」であり、「我々が進めている政策の劇的な段階」であると主張しました。この侵攻は、リタニ川を渡った後に行われたもので、イスラエルがこれほどレバノンの奥深くまで侵攻したのは、2000年に南レバノンから撤退して以来のことであると伝えています。\n\n*   **Quebee キュエビー** (2026年5月31日) は、イスラエルが親イラン武装組織「ヒズボラ」が拠点とするレバノン南部の戦略的要衝を制圧したと報じ、カッツ国防相のSNS投稿を引用して、イスラエル軍がレバノンでの作戦を拡大し、「十字軍城塞」に旗を掲げたことを伝えています。\n\n**主張と明示的に矛盾する報道はありませんでした。**\n\n報告は以上です。",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:10:44.868771+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c2",
+        "claim_text": "対象の城が築900年である。",
+        "artifact": "script",
+        "risk_category": "figure",
+        "quote_span": "築900年の城。それが、今も現役の戦場です。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "入力素材に、対象の城（ボーフォール城）が900年前のものであるとの記述があります。",
+      "source_evidence": "Israeli troops have captured the 900-year-old Beaufort Castle",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "Beaufort Castle Lebanon history 900 years old",
+          "locale": "en",
+          "purpose": "ボーフォール城が築900年の歴史を持つ城であることを確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "Beaufort Castle Lebanon history 900 years old",
+          "locale": "en",
+          "purpose": "ボーフォール城が築900年の歴史を持つ城であることを確認する。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:11:21.781763+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c3",
+        "claim_text": "イスラエル軍がレバノン南部で停戦境界を越え、ボーフォール城を占領した。",
+        "artifact": "script",
+        "risk_category": "rights_violation",
+        "quote_span": "レバノン南部で、イスラエル軍が停戦境界を越え、歴史遺産ボーフォール城を占領しました。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "入力素材に、イスラエル軍が停戦後に設定された「イエローライン」を超えてボーフォール城を占領したことが記載されています。",
+      "source_evidence": "Israeli troops have captured the 900-year-old Beaufort Castle... The capture of the medieval castle and ridge deepens Israeli footprint in the country beyond the demarcation zone known as the \"Yellow Line\", which it established in April following the ceasefire.",
+      "truthfulness_status": "corroborated",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Israel captures Beaufort Castle cross Yellow Line ceasefire",
+          "locale": "en",
+          "purpose": "イスラエル軍が停戦境界（イエローライン）を越えてボーフォール城を占領した事実を確認する。"
+        },
+        {
+          "query": "イスラエル軍 ボーフォール城 イエローライン レバノン南部 占領",
+          "locale": "ja",
+          "purpose": "同事実に関する日本語報道の有無と論調を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "afpbb.comやjoins.com（中央日報）、vietnam.vnなどの複数の独立ソースが、イスラエル軍がレバノン南部のボーフォール城を占領したこと、および停戦境界（イエローラインやゴールデンライン）を越えて作戦を拡大したことを報じており、主張を支持しています。",
+      "corroborating_domains": [
+        "afpbb.com",
+        "joins.com",
+        "vietnam.vn",
+        "investing.com",
+        "saitama-np.co.jp"
+      ],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel captures Beaufort Castle cross Yellow Line ceasefire",
+          "locale": "en",
+          "purpose": "イスラエル軍が停戦境界（イエローライン）を越えてボーフォール城を占領した事実を確認する。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        },
+        {
+          "query": "イスラエル軍 ボーフォール城 イエローライン レバノン南部 占領",
+          "locale": "ja",
+          "purpose": "同事実に関する日本語報道の有無と論調を確認する。",
+          "domains": [
+            "mk.co.kr",
+            "investing.com",
+            "firstonline.info",
+            "afpbb.com",
+            "binance.com",
+            "joins.com",
+            "saitama-np.co.jp",
+            "note.com",
+            "arabnews.jp",
+            "vietnam.vn",
+            "novaist.jp"
+          ],
+          "titles": [
+            "mk.co.kr",
+            "investing.com",
+            "firstonline.info",
+            "afpbb.com",
+            "binance.com",
+            "joins.com",
+            "saitama-np.co.jp",
+            "note.com",
+            "arabnews.jp",
+            "vietnam.vn",
+            "novaist.jp"
+          ],
+          "resolved_urls": [
+            "https://www.afpbb.com/articles/-/3637509",
+            "https://www.binance.com/ja/square/post/328975215910418"
+          ],
+          "response_text": "検証対象の主張「イスラエル軍がレバノン南部で停戦境界を越え、ボーフォール城を占領した」について、複数の報道機関が以下のように報じています。\n\n**報道内容の整理**\n\n*   **AFPBB News / Investing.com / 中央日報 / 埼玉新聞 / Binance News / FIRSTonline / Vietnam.vn / note記事 (与次郎, 宮野宏樹)**\n    *   イスラエル軍はレバノン南部にある戦略的要衝である中世の城塞「ボーフォール城」（またはボーフォート地域、ボーフォート・リッジ）を制圧・占領したと報じられています。\n    *   イスラエルのカッツ国防相は5月31日、軍がボーフォート城を制圧し、イスラエルの旗を掲げたと発表しました。\n    *   ネタニヤフ首相も、ボーフォートの占領はイスラエルが主導している軍事政策の「劇的な段階であり劇的な転換」であると強調し、軍事作戦を継続する考えを示しています。\n    *   この占領は、イスラエルが2000年に南レバノンから撤退して以来、25年ぶりまたは26年ぶりのことであると報じられています。\n    *   イスラエル軍は、今回の作戦が「レバノン南部の作戦統制力を強化し、北部イスラエルに対するヒズボラの直接脅威を除去するための前方防御線拡大目的」と説明しています。\n    *   ボーフォール城は、イスラエル北部のガリラヤ一帯とヒズボラの核心拠点であるレバノン南部のナバティエなどを一望できる戦略的要衝地とされています。\n    *   Investing.comは、この制圧が4月の停戦以降、ヒズボラに対する最も重大な進軍の一つと報じています。\n    *   Vietnam.vnは、イスラエル軍がレバノン南部への軍事作戦をさらに拡大し、停戦合意に基づいて設定された「ゴールデンライン」さえも越えたと報じています。\n    *   note記事（宮野宏樹氏）によると、2026年5月25日までにイスラエル軍は南部国境から最大で約10km内陸まで進入し、レバノン領を占領下に置いており、5月29日にはネタニヤフ首相がリタニ川北側への越境を公に認めました。\n    *   中央日報は、イスラエルが国境から約10キロの地点に設定していた従来の統制線「イエローライン」を越えて作戦を拡大し、29日には両国国境の「ブルーライン」から北に約30キロ離れたリタニ川まで進出したと報じています。\n    *   ARAB NEWSは、ボーフォート城の占領は、イスラエルが以前の停戦協定が想定していたよりも深くレバノン国内に存在感を維持するつもりであることの証拠であると、レバノンでは広く見られていると伝えています。リタニ川は現在の外交努力の中心にあり、リタニ川以南の地域は最終的にレバノン軍の排他的支配下に置かれる枠組みがワシントンで議論されているにもかかわらず、ボーフォート自体は川の向こう側にあることを指摘しています。\n\n**主張と明示的に矛盾する報道**\n\n*   今回の検索では、検証対象の主張「イスラエル軍がレバノン南部で停戦境界を越え、ボーフォール城を占領した」と明示的に矛盾する報道は見つかりませんでした。むしろ、上記の通り多くの報道がこの主張を裏付ける内容となっています。ただし、停戦境界線である「イエローライン」または「ゴールデンライン」を越えたという報道と、国連が画定した「ブルーライン」に関してイスラエルが越境を否定したという過去の報道（2025年11月）は異なる文脈で存在します。レバノンがイスラエルのコンクリート壁建設がブルーラインを越境していると国連安保理に訴える方針を示し、イスラエル側はこれを否定したという報道が2025年11月にありました。\n\n**補足**\n\n*   「イエローライン」や「ゴールデンライン」といった停戦境界の具体的な定義や位置について、今回の検索結果からは詳細な情報は得られませんでした。しかし、イスラエル軍がレバノン南部深くに進攻し、リタニ川を越えたことが複数の報道で言及されており、これは従来の停戦境界線を越えたことを示唆しています。",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:11:24.880491+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c4",
+        "claim_text": "イスラエルがかつて占領していた要衝を再奪取した。",
+        "artifact": "script",
+        "risk_category": "rights_violation",
+        "quote_span": "公式には安全保障ですが、これはかつて占領していた要衝の再奪取です。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "入力素材に、イスラエル軍が1982年から2000年まで同城を占領しており、それを今回再奪取したことが記述されています。",
+      "source_evidence": "Israeli troops previously captured the castle in 1982 and held it until they withdrew from Lebanon in 2000.",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "Israel recapture Beaufort Castle occupied 1982 2000",
+          "locale": "en",
+          "purpose": "イスラエルがかつて占領していたボーフォール城を再奪取した歴史的背景と事実関係を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel recapture Beaufort Castle occupied 1982 2000",
+          "locale": "en",
+          "purpose": "イスラエルがかつて占領していたボーフォール城を再奪取した歴史的背景と事実関係を確認する。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:12:04.004009+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c5",
+        "claim_text": "対象の要衝は標高700メートルであり、築900年である。",
+        "artifact": "script",
+        "risk_category": "figure",
+        "quote_span": "現地では標高700メートルの要衝は築900年の今も現役の軍事拠点です。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "分析レイヤー出力の「geopolitical」の項目に、標高約700メートルで築900年である旨が記載されています。",
+      "source_evidence": "標高約700メートルに位置するこの900年前の城塞は、南レバノンの主要都市ナバティエやイスラエル北部を一望できる要衝であり",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "Beaufort Castle elevation 700 meters 900 years old military outpost",
+          "locale": "en",
+          "purpose": "ボーフォール城の標高が約700mであり、軍事拠点として利用されている事実を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "Beaufort Castle elevation 700 meters 900 years old military outpost",
+          "locale": "en",
+          "purpose": "ボーフォール城の標高が約700mであり、軍事拠点として利用されている事実を確認する。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:12:12.185606+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c6",
+        "claim_text": "対立の長期化により、日本郵船や商船三井などの大手海運が喜望峰迂回を長期化させている。",
+        "artifact": "script",
+        "risk_category": "named_entity_fact",
+        "quote_span": "この対立の長期化は日本郵船や商船三井などの大手海運にスエズ運河を避けた喜望峰迂回を長期化させ、国内製造業の調達遅延とコスト増に直結しています。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "分析レイヤー出力に、日本郵船や商船三井などの海運大手が喜望峰ルートの迂回を長期化させているとの記載があります。",
+      "source_evidence": "日本郵船や商船三井などの海運大手は、スエズ運河周辺の治安悪化懸念から喜望峰ルートの迂回を長期化せざるを得ず、輸送コスト上昇とサプライチェーンの遅延が製造業のコストを圧迫しています。",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "日本郵船 商船三井 中東情勢 喜望峰 迂回 長期化",
+          "locale": "ja",
+          "purpose": "中東情勢による日本の大手海運の喜望峰迂回ルートの長期化状況を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "日本郵船 商船三井 中東情勢 喜望峰 迂回 長期化",
+          "locale": "ja",
+          "purpose": "中東情勢による日本の大手海運の喜望峰迂回ルートの長期化状況を確認する。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:12:15.261900+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c7",
+        "claim_text": "イスラエルがレバノン南部で戦略的要衝を占拠し、停戦下で侵攻を拡大した。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "# イスラエルがレバノン南部で戦略的要衝を占拠：停戦下での侵攻拡大と「安全地帯」再構築の意図"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "入力素材に、名目上の停戦下にもかかわらず、イスラエルがレバノン南部で戦略的要衝を占拠し地上攻勢を拡大したことが記載されています。",
+      "source_evidence": "Israeli troops have captured the 900-year-old Beaufort Castle and the strategic ridge surrounding it in southern Lebanon, the military said on Sunday, as it expands its ground offensive despite a nominal ceasefire.",
+      "truthfulness_status": "corroborated",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Israel captures strategic castle Lebanon expands ground offensive ceasefire",
+          "locale": "en",
+          "purpose": "停戦下でのイスラエルによるレバノン南部への侵攻拡大と戦略的要衝の占拠を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "theguardian.comやwfae.orgなどの複数の独立ソースが、イスラエルが停戦合意下であるにもかかわらずレバノン南部の戦略的要衝（ボーフォート城）を占拠し、地上作戦を拡大したと報じており、主張を支持しています。",
+      "corroborating_domains": [
+        "theguardian.com",
+        "wfae.org",
+        "houstonchronicle.com",
+        "indiatimes.com",
+        "afpbb.com",
+        "yomiuri.co.jp"
+      ],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel captures strategic castle Lebanon expands ground offensive ceasefire",
+          "locale": "en",
+          "purpose": "停戦下でのイスラエルによるレバノン南部への侵攻拡大と戦略的要衝の占拠を確認する。",
+          "domains": [
+            "afpbb.com",
+            "wfae.org",
+            "houstonchronicle.com",
+            "indiatimes.com",
+            "theguardian.com",
+            "middleeasteye.net",
+            "ajunews.com",
+            "livedoor.com",
+            "yomiuri.co.jp",
+            "nippon.com",
+            "arabnews.jp",
+            "khb-tv.co.jp",
+            "jetro.go.jp",
+            "diamond.jp",
+            "qab.co.jp",
+            "hatena.ne.jp",
+            "newsweekjapan.jp",
+            "peace-winds.org"
+          ],
+          "titles": [
+            "afpbb.com",
+            "wfae.org",
+            "houstonchronicle.com",
+            "indiatimes.com",
+            "theguardian.com",
+            "middleeasteye.net",
+            "ajunews.com",
+            "livedoor.com",
+            "yomiuri.co.jp",
+            "nippon.com",
+            "arabnews.jp",
+            "khb-tv.co.jp",
+            "jetro.go.jp",
+            "diamond.jp",
+            "qab.co.jp",
+            "hatena.ne.jp",
+            "newsweekjapan.jp",
+            "peace-winds.org"
+          ],
+          "resolved_urls": [
+            "https://www.afpbb.com/articles/-/3637509",
+            "https://www.wfae.org/world/2026-05-31/israel-seizes-a-medieval-castle-as-it-expands-major-offensive-in-southern-lebanon",
+            "https://www.houstonchronicle.com/news/world/article/israeli-army-captures-strategic-castle-in-lebanon-22284531.php",
+            "https://timesofindia.indiatimes.com/world/middle-east/israel-captures-strategic-lebanon-castle-after-days-of-fighting-despite-ceasefire/articleshow/131419389.cms",
+            "https://www.theguardian.com/world/2026/may/31/israel-pursuing-scorced-earth-policy-says-lebanon-pm-as-more-airstrikes-hit-countrys-south"
+          ],
+          "response_text": "検証対象の主張: イスラエルがレバノン南部で戦略的要衝を占拠し、停戦下で侵攻を拡大した。\n\n---\n\n### 報道内容の整理\n\nWeb検索の結果、複数の報道機関が、イスラエルがレバノン南部で戦略的要衝を占拠し、停戦下で侵攻を拡大したとする主張と密接に関連する事実を報じています。\n\n**AFPBB News / WFAE / Houston Chronicle / The Times of India / The Guardian / Middle East Eye / nippon.com / 読売新聞 / ライブドアニュース / ARAB NEWS (2026年5月31日～6月1日)**\nこれらの報道機関は、イスラエル軍が2026年5月31日頃にレバノン南部の戦略的要衝である中世の城塞「ボーフォート城（Qalaat al-Shaqif）」を制圧したと伝えています。\n*   WFAE、Houston Chronicle、The Guardian、The Times of Indiaは、これをイスラエルがレバノンに深く侵攻した過去26年間で最も深い進出であると報じています。\n*   多くの報道で、この占拠と地上作戦の拡大は、4月17日から、または新たに仲介された停戦合意が存在するにもかかわらず行われたと指摘されています。\n*   イスラエルのイスラエル・カッツ国防相は、ボーフォート城の制圧を宣言し、レバノンにおける安全保障地帯の一部として部隊が駐留し続ける意向を示し、リタニ川を越えて作戦を拡大するよう命じたと報じられています。\n*   レバノンのナワフ・サラム首相は、イスラエルの侵攻を非難し、「焦土作戦と集団的懲罰」が安全と安定をもたらすことはないとし、迅速で真の停戦を呼びかけたとGuardianは伝えています。\n*   イスラエルは、ヒズボラのインフラを解体し、イスラエル国民への直接的な脅威を排除するために作戦を開始したと述べています。\n\n**ジェトロ / khb東日本放送 / QAB 琉球朝日放送 / ダイヤモンド・オンライン / 読売新聞 / ARAB NEWS (2026年6月4日)**\nこれらの報道機関は、2026年6月2日から3日にかけて米国主導でイスラエルとレバノンが停戦の実施に合意したと報じています。\n*   この停戦合意の条件には、レバノン南部を拠点とするヒズボラによる攻撃の完全停止およびリタニ川以南からの同組織戦闘員の撤退が含まれています。\n*   しかし、停戦合意の成立からわずか数時間後にイスラエル軍とヒズボラとの間で交戦があり、双方とも停戦合意への関与の度合いについて疑念を呈したとダイヤモンド・オンラインは伝えています。\n*   イスラエル国防相は、停戦合意にもかかわらず、レバノン南部での攻撃と地上作戦を継続し、駐留を続ける考えを明らかにしています。\n*   ヒズボラの最高指導者は、イスラエル軍がレバノンから完全に撤退するまで攻撃を停止しないと述べ、停戦合意の核心的条件を拒否しました。\n\n**ニューズウィーク / 朝日新聞 (2026年4月9日～4月10日)**\nこれらの報道は、2026年4月にも停戦合意があったにもかかわらず、イスラエルがレバノンへの攻撃を継続し、地上侵攻を拡大している状況を伝えています。\n*   朝日新聞は、イスラエル政府がレバノン政府と停戦合意を結んでいるにもかかわらず、ネタニヤフ首相が軍にレバノン領内での侵攻拡大を指示したと報じています。\n*   ニューズウィークは、停戦合意後もレバノンへの攻撃を続けるイスラエルの行動が、イランとの合意を複雑化させていると指摘しています。\n\n### 主張と明示的に矛盾する報道\n\n直接的に主張と矛盾する報道は見つかりませんでした。むしろ、複数の報道機関が、イスラエルがレバノン南部の戦略的要衝を占拠し、停戦（あるいは名目上の停戦）期間中に地上侵攻を拡大したという主張を裏付ける内容を報じています。ただし、停戦合意が締結された後も、その実効性や履行には課題があり、双方の戦闘が継続している状況が伝えられています。",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:12:22.020717+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c8",
+        "claim_text": "イスラエル軍がレバノン南部のボーフォール城とその周辺の戦略的尾根を占拠し、地上攻勢を拡大した。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "イスラエル軍はレバノン南部の歴史的なボーフォール城とその周辺の戦略的尾根を占拠し、名目上の停戦合意にもかかわらず地上攻勢を拡大しました。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "入力素材に、イスラエル軍がボーフォール城とその周辺の戦略的尾根を占拠し、攻勢を拡大したと明記されています。",
+      "source_evidence": "Israeli troops have captured the 900-year-old Beaufort Castle and the strategic ridge surrounding it in southern Lebanon, the military said on Sunday, as it expands its ground offensive",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "Israel military Beaufort Castle strategic ridge offensive Lebanon",
+          "locale": "en",
+          "purpose": "イスラエル軍によるボーフォール城と周辺の尾根の占拠事実を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel military Beaufort Castle strategic ridge offensive Lebanon",
+          "locale": "en",
+          "purpose": "イスラエル軍によるボーフォール城と周辺の尾根の占拠事実を確認する。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:13:02.711881+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c9",
+        "claim_text": "イスラエルの軍事行動が4月の停戦合意で設定された「イエローライン」を越えた。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "この軍事行動は、4月の停戦合意で設定された「イエローライン」を超え、リタニ川を事実上の境界としていたこれまでの範囲を逸脱するものです。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "入力素材に、占領が4月の停戦後に設けられた「イエローライン」を超えた行動であると記載されています。",
+      "source_evidence": "The capture of the medieval castle and ridge deepens Israeli footprint in the country beyond the demarcation zone known as the \"Yellow Line\", which it established in April following the ceasefire.",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "Israel military operations beyond Yellow Line April ceasefire Lebanon",
+          "locale": "en",
+          "purpose": "イスラエルの軍事行動が4月の停戦合意で設定された「イエローライン」を越えたことを確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel military operations beyond Yellow Line April ceasefire Lebanon",
+          "locale": "en",
+          "purpose": "イスラエルの軍事行動が4月の停戦合意で設定された「イエローライン」を越えたことを確認する。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:13:10.051062+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c10",
+        "claim_text": "イスラエルの防衛相が占拠地を「安全保障地帯」の一部とすると発言した。",
+        "artifact": "article",
+        "risk_category": "attributed_statement",
+        "quote_span": "海外メディアは、イスラエルの防衛相がこの占拠地を「安全保障地帯」の一部とするとした発言を報じ、中東における力関係の変化と主権侵害の懸念を指摘しています。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "イスラエルのカッツ防衛相が占拠地をレバノンにおける「安全保障地帯（security zone）」の一部として留まると発言したことが記載されています。",
+      "source_evidence": "Katz later announced that Israeli troops would remain at the castle as part of Israel's \"security zone\" in Lebanon.",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "Israel Defense Minister Katz security zone Beaufort Castle Lebanon",
+          "locale": "en",
+          "purpose": "カッツ防衛相がボーフォール城を安全保障地帯の一部と位置付けた発言を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel Defense Minister Katz security zone Beaufort Castle Lebanon",
+          "locale": "en",
+          "purpose": "カッツ防衛相がボーフォール城を安全保障地帯の一部と位置付けた発言を確認する。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:13:12.681135+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c11",
+        "claim_text": "イスラエル軍が2026年5月31日にレバノン南部の築900年の歴史を持つボーフォール城と周囲の尾根を占拠した。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "中東系の英語メディアであるMiddle East EyeとAlJazeeraは、イスラエル軍が2026年5月31日にレバノン南部の900年の歴史を持つボーフォール城と、その周囲の戦略的な尾根を占拠したと報じました。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "記事の日付（2026年5月31日 日曜日）と「日曜日に軍が発表した」との記載から、同日に占拠または発表が行われたことが支持されます。",
+      "source_evidence": "Submitted by MEE staff on Sun, 05/31/2026 ... Israeli troops have captured the 900-year-old Beaufort Castle and the strategic ridge surrounding it in southern Lebanon, the military said on Sunday",
+      "truthfulness_status": "corroborated",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Israel capture Beaufort Castle May 31 2026",
+          "locale": "en",
+          "purpose": "2026年5月31日にイスラエル軍がボーフォール城を占拠したという報道日付と事実関係を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "The Guardian、The Times of Israel、AFPBB Newsなどの複数の独立ソースが、2026年5月31日にイスラエル軍がレバノン南部の築900年のボーフォール城とその周囲の尾根を占拠した事実を報じており、主張を強く支持しています。",
+      "corroborating_domains": [
+        "theguardian.com",
+        "timesofisrael.com",
+        "afpbb.com",
+        "egypttoday.com",
+        "investing.com",
+        "yomiuri.co.jp",
+        "arabnews.jp"
+      ],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel capture Beaufort Castle May 31 2026",
+          "locale": "en",
+          "purpose": "2026年5月31日にイスラエル軍がボーフォール城を占拠したという報道日付と事実関係を確認する。",
+          "domains": [
+            "theguardian.com",
+            "timesofisrael.com",
+            "al-monitor.com",
+            "egypttoday.com",
+            "afpbb.com",
+            "yomiuri.co.jp",
+            "arabnews.jp",
+            "investing.com"
+          ],
+          "titles": [
+            "theguardian.com",
+            "timesofisrael.com",
+            "al-monitor.com",
+            "egypttoday.com",
+            "afpbb.com",
+            "yomiuri.co.jp",
+            "arabnews.jp",
+            "investing.com"
+          ],
+          "resolved_urls": [
+            "https://www.theguardian.com/world/2026/may/31/israel-pursuing-scorced-earth-policy-says-lebanon-pm-as-more-airstrikes-hit-countrys-south",
+            "https://www.timesofisrael.com/we-returned-stronger-than-ever-netanyahu-hails-capture-of-lebanons-beaufort-castle/",
+            "https://www.al-monitor.com/originals/2026/05/israel-troops-capture-beaufort-castle-southern-lebanon-push-against-hezbollah",
+            "https://www.afpbb.com/articles/-/3637509"
+          ],
+          "response_text": "2026年5月31日にイスラエル軍がレバノン南部の築900年の歴史を持つボーフォール城と周囲の尾根を占拠したという主張について、複数の報道機関が報じています。\n\n以下に報道内容をソースごとに整理して報告します。\n\n*   **The Guardian (2026年5月31日)**:\n    イスラエル軍がレバノンに26年ぶりとなる最深部への侵攻を行い、崖の上の城を占拠したと報じています。数日間の激しい戦闘と空爆の後、イスラエルのイスラエル・カッツ国防相は、1982年から2000年までのレバノン南部占領時に拠点として使用していたボーフォール城（別名カラート・アル・シャキフ）を軍が制圧したと述べました。イスラエル国防軍（IDF）はヒズボラに対する作戦で既にリタニ川までの領土を支配していましたが、部隊は現在、さらに北へ約6マイルのザフラニ川に向かって進軍しているとのことです。フランスのジャン＝ノエル・バロ外相は、イスラエルのレバノンでの軍事作戦について話し合うため、月曜日に国連安全保障理事会の緊急会合を要請しました。城にはイスラエルとゴラニ旅団の旗が掲げられた画像や映像が公開されています。IDFは「ヒズボラのインフラを解体し、地域の支配を拡大するため、レバノン南部のボーフォール・リッジとワディ・アル・サルキ地域で作戦を開始した」と述べています。\n\n*   **The Times of Israel (2026年5月31日)**:\n    ベンヤミン・ネタニヤフ首相は、イスラエル国防軍によるレバノンの歴史的なボーフォール城と周囲の戦略的尾根の占拠を「劇的な転換」と称賛し、ヒズボラに対する地上攻勢が拡大する中で部隊がレバノン南部により深く進軍していると述べました。ネタニヤフ首相は、「ボーフォール占拠は、我々が主導している政策における劇的な段階であり、劇的な転換である」と語り、「私の指示は、ヒズボラの支配下にあった地域での我々の支配を深め、拡大することだ」と付け加えました。また、ゴラニ旅団のイスラエル国防軍兵士がボーフォール城で活動している映像が公開され、イスラエルとイスラエル国防軍の旗が十字軍が建設した要塞に掲げられている様子が映っていました。\n\n*   **Reuters (2026年5月31日)**:\n    イスラエル軍がレバノン南部の築900年のボーフォール城とその戦略的な尾根を制圧したと、軍が日曜日に発表したと報じています。これは、6週間以上前に発表された停戦にもかかわらず、イランが支援するヒズボラに対する大きな前進であるとのことです。土曜日は4月の停戦以来、ヒズボラによるイスラエル北部への砲撃が最も激しい日の一つであり、学校の閉鎖や規制が促されました。軍は、作戦はボーフォール・リッジとワディ・アル・サルキ地域の支配を確立し、イランの指示の下でリッジに構築されたヒズボラの民兵組織とそのインフラを破壊することに焦点を当てていたと述べました。\n\n*   **EgyptToday (2026年5月31日)**:\n    イスラエル軍がレバノン南部にある、十字軍が建設したボーフォール城がそびえ立つ戦略的な山を占拠したと軍が日曜日に発表したと報じています。ナビエ近郊のこの場所の占拠は、数日間の空爆と、イスラエル軍がレバノンの険しい国境地帯でヒズボラ戦闘員と交戦した近隣の村での激しい戦闘に続きました。イスラエル・カッツ国防相は、ボーフォール・リッジの占拠は「ガリラヤ共同体の防衛にとって最も重要な戦略地点の一つ」を表すと述べました。\n\n*   **AFPBB News (2026年5月31日、6月1日)**:\n    イスラエルのイスラエル・カッツ国防相が31日、親イラン民兵組織ヒズボラに対する地上作戦を拡大しているレバノン南部において、戦略的要衝である中世の城塞「ボーフォール城」を制圧したと発表しました。また、ベンヤミン・ネタニヤフ首相が5月31日、同国軍がボーフォール城を制圧したことは、ヒズボラに対する作戦における「劇的な転換」であると述べ、さらに深く進軍すると誓ったと報じています。フランスは、イスラエルによる攻勢拡大を受けて、国連安保理の緊急会合を開催する予定であると報じられています。\n\n*   **読売新聞 (2026年6月1日)**:\n    イスラエルのベンヤミン・ネタニヤフ首相が5月31日、イスラエル軍がレバノン南部の要衝、ボーフォール城を制圧したと明らかにし、イスラエルが掌握するのはおよそ四半世紀ぶりであると報じています。\n\n*   **Arab News (2026年6月1日)**:\n    ベンヤミン・ネタニヤフ・イスラエル首相が、軍が中世のボーフォール城を占領した後、ヒズボラに対する作戦の「劇的な変化」と称し、レバノンに深く攻め込むことを誓ったと報じています。\n\n*   **Investing.com (2026年5月31日)**:\n    ロイターの報道として、イスラエル軍はレバノン南部に位置する築900年のボーフォール城とその周辺のボーフォール・リッジを制圧したと報じています。これは4月の停戦以降、ヒズボラに対する最も重大な進軍の一つとされています。イスラエル軍は、今回の作戦の目的は戦略的な高地を確保し、同地域におけるヒズボラのインフラを解体することにあると述べました。\n\n**主張と明示的に矛盾する報道はありませんでした。**",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:13:15.647329+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c12",
+        "claim_text": "イスラエルの占拠が4月に設定された「イエローライン」を越えてレバノン国内に広がっている。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "Middle East Eyeによると、この占拠は名目上の停戦合意にもかかわらず地上攻勢を拡大するものであり、4月に設定された「イエローライン」と呼ばれる境界線を越えて、イスラエルの足跡をレバノン国内に深く広げるものと伝えています。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "Middle East Eyeの記事本文に、停戦下での攻勢拡大であり、「イエローライン」を越えてイスラエルの足跡を深めるとの主張通りの記述があります。",
+      "source_evidence": "as it expands its ground offensive despite a nominal ceasefire. The capture of the medieval castle and ridge deepens Israeli footprint in the country beyond the demarcation zone known as the \"Yellow Line\", which it established in April following the ceasefire.",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "Israel Beaufort Castle Yellow Line nominal ceasefire",
+          "locale": "en",
+          "purpose": "イスラエルのボーフォール城占拠が「イエローライン」越えであり停戦の逸脱であるという国際メディアの論調を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel Beaufort Castle Yellow Line nominal ceasefire",
+          "locale": "en",
+          "purpose": "イスラエルのボーフォール城占拠が「イエローライン」越えであり停戦の逸脱であるという国際メディアの論調を確認する。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:13:56.601227+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c13",
+        "claim_text": "イスラエルのカッツ国防相がレバノンでの作戦拡大とボーフォール尾根の占拠を命じた。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "さらに、AlJazeeraやMiddle East Eyeは、イスラエルのカッツ国防相がレバノンでの作戦拡大とリタニ川を越えたボーフォール尾根の占拠を命じたことに言及し、"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "カッツ国防相がリタニ川を越えてボーフォール尾根を占拠する作戦の拡大を命じたことが、記事に記載されています。",
+      "source_evidence": "Israeli Defence Minister Israel Katz said he had ordered the army to expand its operations in Lebanon, cross the Litani River, which the Israeli military had previously used as a de facto boundary, and capture the Beaufort Ridge.",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "Israel Defense Minister Katz order capture Beaufort Ridge cross Litani River",
+          "locale": "en",
+          "purpose": "カッツ国防相によるリタニ川渡河およびボーフォール尾根占領の命令に関する報道を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel Defense Minister Katz order capture Beaufort Ridge cross Litani River",
+          "locale": "en",
+          "purpose": "カッツ国防相によるリタニ川渡河およびボーフォール尾根占領の命令に関する報道を確認する。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:14:14.331337+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c14",
+        "claim_text": "イスラエルのカッツ国防相が、イスラエル軍はレバノンにおける「安全保障地帯」の一部として城に留まると発表した。",
+        "artifact": "article",
+        "risk_category": "attributed_statement",
+        "quote_span": "後にカッツ国防相がイスラエル軍はレバノンにおける「安全保障地帯」の一部として城に留まると発表したと報じました。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "カッツ国防相が、城に「安全保障地帯」の一部として留まると発表したことが記載されています。",
+      "source_evidence": "Katz later announced that Israeli troops would remain at the castle as part of Israel's \"security zone\" in Lebanon.",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "Katz Israeli troops remain Beaufort Castle security zone",
+          "locale": "en",
+          "purpose": "イスラエル軍が同城を安全保障地帯の一部として恒久的に利用するというカッツ国防相の声明を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "Katz Israeli troops remain Beaufort Castle security zone",
+          "locale": "en",
+          "purpose": "イスラエル軍が同城を安全保障地帯の一部として恒久的に利用するというカッツ国防相の声明を確認する。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:14:24.903038+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c15",
+        "claim_text": "イスラエル軍がザハラニ川以南の広範な地域に新たな大規模退去命令を発令した。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "また、イスラエル軍がザハラニ川以南の広範な地域に新たな大規模退去命令を発令したこと、"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "イスラエル軍がザハラニ川以南の地域に新たな大規模退去命令（mass expulsion order）を出したことが記載されています。",
+      "source_evidence": "The latest advance came as the Israeli military issued a new mass expulsion order covering areas south of the Zahrani River",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "Israel military mass expulsion order Zahrani River Lebanon",
+          "locale": "en",
+          "purpose": "ザハラニ川以南に対するイスラエル軍の大規模退去命令の事実を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel military mass expulsion order Zahrani River Lebanon",
+          "locale": "en",
+          "purpose": "ザハラニ川以南に対するイスラエル軍の大規模退去命令の事実を確認する。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:14:28.536348+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c16",
+        "claim_text": "レバノン側の死者数が3,371人、負傷者数が10,129人に達した。",
+        "artifact": "article",
+        "risk_category": "figure",
+        "quote_span": "レバノン保健省によると紛争開始以降のレバノン側の死者数が3,371人、負傷者数が10,129人に達したことにも焦点を当てています。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "レバノン保健省のデータとして、死者数3,371人、負傷者数10,129人に達したことが記載されています。",
+      "source_evidence": "bringing the death toll in Lebanon to 3,371 and the number of wounded to 10,129 since the war started on 2 March, according to the Lebanese health ministry.",
+      "truthfulness_status": "corroborated",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Lebanese health ministry death toll 3371 wounded 10129",
+          "locale": "en",
+          "purpose": "紛争開始以降のレバノン側の死傷者数が、死者3,371人、負傷者10,129人であることを確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "レバノン側の死者数3,371人、負傷者数10,129人という数字は、元ソース以外の複数の独立した外部ソース（sbs.com.au, sana.sy, see.news）によってレバノン保健省の発表として報じられており、裏付けられます。",
+      "corroborating_domains": [
+        "sbs.com.au",
+        "sana.sy",
+        "see.news"
+      ],
+      "truthfulness_evidence": [
+        {
+          "query": "Lebanese health ministry death toll 3371 wounded 10129",
+          "locale": "en",
+          "purpose": "紛争開始以降のレバノン側の死傷者数が、死者3,371人、負傷者10,129人であることを確認する。",
+          "domains": [
+            "sbs.com.au",
+            "sana.sy",
+            "see.news",
+            "middleeasteye.net"
+          ],
+          "titles": [
+            "sbs.com.au",
+            "sana.sy",
+            "see.news",
+            "middleeasteye.net"
+          ],
+          "resolved_urls": [
+            "https://www.sbs.com.au/news/podcast-episode/global-concerns-grow-over-israels-military-campaign-in-lebanon/xsb42mepl",
+            "https://sana.sy/en/international/2320350/",
+            "https://sana.sy/en/international/2320500/",
+            "https://see.news/lebanon-aggression-toll-3371-killed-10129-wounded",
+            "https://www.middleeasteye.net/news/israel-seizes-strategic-castle-it-expands-invasion-south-lebanon"
+          ],
+          "response_text": "以下の報道機関・ソースが、検証対象の主張について以下のように報じています。\n\n*   **SBS News** (2026年6月2日付) は、レバノン保健省が、3月2日以降のイスラエルによる攻撃による民間人の死者数が3,371人、負傷者数が10,129人に達したと報じたと伝えています。記事は、イスラエルによるティルス近郊の病院への攻撃や、ベイルート南部郊外への攻撃の可能性に関する警告が民間人の懸念を高めている状況の中で、これらの数字が報告されたと述べています。\n\n*   **SANA (Syrian Arab News Agency)** (2026年5月30日付) は、レバノン保健省が、3月2日以降のイスラエルによるレバノンへの攻撃の結果、死者数が3,371人に、負傷者数が10,129人に増加したと発表したと報じています。同省によると、これらの数字は継続的な攻撃による人的被害の規模を反映しているとのことです。\n\n*   **Sada Elbalad English** (2026年5月31日付) は、レバノン公衆衛生省の公衆衛生緊急作戦センターが、3月2日から5月30日までのイスラエルによる侵略による累計の犠牲者数が、殉教者3,371人、負傷者10,129人に増加したと発表したと報じています。センターは、これらの数字が、上記の期間中にレバノン各地を標的とした継続的な攻撃による人的損失の規模を反映していると説明しています。\n\n*   **Middle East Eye** (2026年5月31日付) は、レバノン保健省によると、土曜日のイスラエルによる攻撃で少なくとも16人が死亡、34人が負傷し、3月2日の戦争開始以来、レバノンでの死者数は3,371人、負傷者数は10,129人に達したと報じています。\n\n現在のところ、この主張と明示的に矛盾する報道は見つかっていません。",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:14:33.444323+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c17",
+        "claim_text": "ヒズボラがイスラエル北部への攻撃を継続し、イスラエル軍兵士25人が死亡した。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "ヒズボラがイスラエル北部への攻撃を継続し、イスラエル軍兵士25人が死亡したことも報じられています。"
+      },
+      "faithfulness_status": "contradicted",
+      "faithfulness_reasoning": "主張では「北部への攻撃」によりイスラエル軍兵士25人が死亡したように読めますが、入力素材では「3月上旬以来レバノン国内で死亡した兵士の累計」が25人になったとされており、場所および死者の期間設定に矛盾があります。",
+      "source_evidence": "Meanwhile, Hezbollah launched multiple attacks targeting northern Israel on Saturday and clashed with Israeli soldiers occupying southern Lebanon... It also said on Sunday that a soldier was killed the previous day by a Hezbollah explosive drone attack, bringing the number of Israeli troops killed in Lebanon since early March to 25.",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "skipped by corroboration (1-T.2): faithfulness_status=contradicted — fix the claim / re-run the faithfulness layer, then re-run corroboration manually.",
+      "verification_queries": [
+        {
+          "query": "Israeli troops killed in Lebanon total march 25 Hezbollah",
+          "locale": "en",
+          "purpose": "ヒズボラとの戦闘におけるイスラエル軍兵士のレバノン国内での累計死者数を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c18",
+        "claim_text": "イスラエルのスモトリッチ財務相が「ドローン1機につきレバノン国内の建物100棟を破壊すべき」と発言した。",
+        "artifact": "article",
+        "risk_category": "figure",
+        "quote_span": "イスラエルのスモトリッチ財務相が「ドローン1機につきレバノン国内の建物100棟を破壊すべき」と発言したことも伝えられています。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "イスラエルのスモトリッチ財務相が「ドローン1機につき建物100棟を破壊すべき」と発言したことが記載されています。",
+      "source_evidence": "Israeli Finance Minister Bezalel Smotrich this week called for Israel to \"destroy one hundred buildings\" in Lebanon for every drone that strikes a soldier.",
+      "truthfulness_status": "corroborated",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Bezalel Smotrich destroy one hundred buildings Lebanon drone",
+          "locale": "en",
+          "purpose": "スモトリッチ財務相がドローン攻撃に対する報復として「建物100棟の破壊」を主張した発言を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "lorientlejour.com や efeservicios.com などの独立ソースが、スモトリッチ財務相がドローン1機につきレバノン（ベイルート）の建物100棟を破壊すべきと発言したと報じており、主張の裏付けが確認できるため。一部ソースで「10棟」という数字の不一致が見られるものの、100棟とする独立ソースによる明確な支持が存在する。",
+      "corroborating_domains": [
+        "lorientlejour.com",
+        "efeservicios.com"
+      ],
+      "truthfulness_evidence": [
+        {
+          "query": "Bezalel Smotrich destroy one hundred buildings Lebanon drone",
+          "locale": "en",
+          "purpose": "スモトリッチ財務相がドローン攻撃に対する報復として「建物100棟の破壊」を主張した発言を確認する。",
+          "domains": [
+            "lorientlejour.com",
+            "breakingthenews.net",
+            "libnanews.com",
+            "dawn.com",
+            "efeservicios.com",
+            "middleeasteye.net",
+            "sadanews.ps",
+            "youtube.com",
+            "turkiyetoday.com"
+          ],
+          "titles": [
+            "lorientlejour.com",
+            "breakingthenews.net",
+            "libnanews.com",
+            "dawn.com",
+            "efeservicios.com",
+            "middleeasteye.net",
+            "sadanews.ps",
+            "youtube.com",
+            "turkiyetoday.com"
+          ],
+          "resolved_urls": [
+            "https://today.lorientlejour.com/article/1508218/smotrich-says-to-destroy-100-buildings-in-beirut-for-every-drone-that-injures-an-israeli-soldier.html",
+            "https://breakingthenews.net/Article/Smotrich-vows-Beirut-buildings-hit-after-soldier's-death/66356101",
+            "https://en.libnanews.com/smotrich-reiterates-its-threats-against-beirut-and-lebanon/",
+            "https://efs.efeservicios.com/texto/israeli-minister-calls-destroying-100-buildings-beirut-drone-attack/55020446862"
+          ],
+          "response_text": "## イスラエル スモトリッチ財務相によるレバノン関連の発言に関する報道内容\n\nイスラエルのベザレル・スモトリッチ財務相が「ドローン1機につきレバノン国内の建物100棟を破壊すべき」と発言したとされる主張について、複数の報道機関が報じています。\n\n### 報道機関・ソースごとの報告\n\n*   **L'Orient Today (2026年5月28日付)**: スモトリッチ財務相が、イスラエル兵を負傷させるヒズボラのドローン攻撃に対し、ベイルートの建物を破壊することを提唱したと報じています。同氏が「兵士が負傷するドローン1機につき、100棟の建物を破壊する」とX（旧Twitter）に投稿したメッセージを、イスラエルの日刊紙『Haaretz』が報じたと伝えています。この発言は、水曜日にイスラエル北部でのドローン爆発により死亡したとされる20歳のロテム・ヤナイ軍曹への追悼メッセージの中でなされたとされています。しかし、この報道の別の箇所では、「ヒズボラのドローン1機につきベイルート郊外の建物10棟を破壊すべき」と呼びかけたと記載されており、100棟と10棟の両方の数字が報じられています。\n\n*   **Breaking The News (2026年5月25日付)**: スモトリッチ財務相が、兵士が攻撃で死亡した後、ヒズボラの爆発性ドローンによる脅威を終わらせると誓ったと報じています。同氏は「爆発性ドローン1機につき、ベイルートの建物10棟が倒れるべきだ」と述べ、不均衡な報復を求めたとされています。\n\n*   **Libnanews (2026年6月1日付)**: スモトリッチ財務相が、ヒズボラが発射する爆発性ドローン1機につき、レバノンの首都の建物10棟を破壊するよう要求し、ベイルートをイスラエルの軍事的脅威の中心に据えたと報じています。同氏は、防衛だけではヒズボラのドローンに対応できないとし、爆発性ドローン1機につきベイルートの建物10棟を破壊すべきだと述べたとのことです。また、イスラエルと国際メディアがその発言を報じていると指摘しています。\n\n*   **Dawn (2026年5月25日付)**: イスラエルの極右財務相であるベザレル・スモトリッチ氏が、イスラエルは「ヒズボラの爆発性ドローンの脅威を終わらせるべきだ」と述べたと報じています。同氏は、「爆発性ドローン1機につき、ベイルートの建物10棟が倒れるべきだ。重大な脅威への対応は重大でなければならない」と述べたとされています。\n\n*   **Texto (2026年5月28日付)**: イスラエルのベザレル・スモトリッチ財務相が木曜日に、ヒズボラのドローン1機につきベイルートの建物100棟を破壊するよう求めたと報じています。\n\n*   **Middle East Eye (2026年5月31日付)**: イスラエルのベザレル・スモトリッチ財務相が今週、兵士を攻撃するドローン1機につきレバノンで「100棟の建物を破壊すべきだ」と要求したと報じています。\n\n*   **Sada News Agency (2026年5月25日付)**: イスラエルのベザレル・スモトリッチ財務相が、爆発性ドローンへの対処は防衛だけではなく攻撃によって行われるべきだと主張したと報じています。同氏は「爆発性ドローン1機につき、ベイルートの建物10棟が倒れるべきだ」と述べ、民間インフラを標的とした抑止政策に言及しています。\n\n*   **YouTube (2026年5月27日付、チャンネル名不明)**: イスラエルのベザレル・スモトリッチ財務相が、ヒズボラを阻止する最も効果的な方法として「発射されたドローン1機につきベイルートの建物10棟を破壊する」という公式を公に示したと述べています。7機のドローンがあれば70棟、15機であれば150棟とし、ベイルートに建物がなくなればティルス、サイダ、ベッカー渓谷に移ると報じています。\n\n### 主張と明示的に矛盾する報道\n\n*   **Israeli cabinet splits over Beirut strikes as Hezbollah drones kill another soldier (2026年5月25日付)**: スモトリッチ財務相が「爆発性ドローン1機につき、ベイルートの建物10棟が倒れるべきだ」と公に述べた一方で、ネタニヤフ首相は閣議でスモトリッチ氏の提案を直接却下したと報じられています。「ドローンがあるたびに10棟の建物を爆撃するのか？ガザからドローンがあればガザで10棟の建物を爆撃するのか？」とネタニヤフ首相が反論したとされています。この報道では、ネタニヤフ首相がベイルートへの攻撃を承認しなかったと明記されています。\n\n### 結論\n\nベザレル・スモトリッチ財務相が「ドローン1機につきレバノン国内の建物100棟を破壊すべき」と発言したという主張については、複数の報道機関が取り上げています。L'Orient Today、Texto、Middle East Eyeは「100棟」という数字に言及していますが、他の多くの報道機関（Breaking The News、Libnanews、Dawn、Sada News Agency、YouTubeの報道）では「10棟」という数字が報じられています。また、ネタニヤフ首相がスモトリッチ氏のベイルート攻撃の提案を却下したという報道もあります。",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:20:41.102809+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c19",
+        "claim_text": "イスラエルが1982年から2000年までボーフォール城を占領していた。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "ボーフォール城は、1982年から2000年までイスラエルが占領していた経緯があり、この再占拠は単なる軍事作戦以上の歴史的・政治的含意を持つと捉えられている可能性があります。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "イスラエルが1982年から2000年までボーフォール城を占領していた歴史的事実と、再占拠の含意について分析レイヤーの記述等に支持されます。",
+      "source_evidence": "Israeli troops previously captured the castle in 1982 and held it until they withdrew from Lebanon in 2000.",
+      "truthfulness_status": "corroborated",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Israel occupation Beaufort Castle 1982 to 2000 history",
+          "locale": "en",
+          "purpose": "イスラエルが1982年から2000年にかけてボーフォール城を占領していた歴史的背景を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "alhurra.comやstraitstimes.com、latimes.comなどの複数の独立ソースが、イスラエル軍が1982年のレバノン侵攻時にボーフォール城を占領し、2000年に撤退するまで駐留していたと報じており、主張を支持しています。",
+      "corroborating_domains": [
+        "alhurra.com",
+        "straitstimes.com",
+        "arabnews.jp",
+        "un.org",
+        "latimes.com"
+      ],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel occupation Beaufort Castle 1982 to 2000 history",
+          "locale": "en",
+          "purpose": "イスラエルが1982年から2000年にかけてボーフォール城を占領していた歴史的背景を確認する。",
+          "domains": [
+            "alhurra.com",
+            "straitstimes.com",
+            "arabnews.jp",
+            "un.org",
+            "latimes.com",
+            "mk.co.kr",
+            "joins.com",
+            "youtube.com"
+          ],
+          "titles": [
+            "alhurra.com",
+            "straitstimes.com",
+            "arabnews.jp",
+            "un.org",
+            "latimes.com",
+            "mk.co.kr",
+            "joins.com",
+            "youtube.com"
+          ],
+          "resolved_urls": [
+            "https://alhurra.com/en/21648",
+            "https://www.straitstimes.com/world/middle-east/lebanon-crusader-castle-seized-by-israel-a-symbol-of-bloody-history",
+            "https://www.arabnews.jp/en/middle-east/article_171751/",
+            "https://press.un.org/en/2026/sc16376.doc.htm",
+            "https://www.latimes.com/world-nation/story/2026-06-01/from-crusaders-to-hezbollah-bloody-history-of-lebanons-beaufort-castle"
+          ],
+          "response_text": "提示された主張「イスラエルが1982年から2000年までボーフォール城を占領していた」について、ウェブ検索で見つかった報道内容は以下の通りです。\n\n**報道内容の整理**\n\n複数の報道機関や情報源が、イスラエルが1982年から2000年までボーフォール城を占領していたという主張を裏付ける内容を報じています。\n\n*   **Alhurra** は、イスラエルが1982年のレバノン侵攻中にボーフォール城を占領し、2000年に南部レバノンから撤退するまで駐留していたと報じています。また、2007年のイスラエル映画「ボーフォール」が、イスラエルが撤退する直前の2000年に城に駐屯していた若いイスラエル兵のグループを追っていることを言及しています。この城は、イスラエルによる占領期間中の南部住民にとって「イスラエル優位性と支配の象徴」であったとされています。\n*   **The Straits Times** も同様に、イスラエル軍が1982年のレバノン侵攻時にボーフォール城を奪取し、2000年に南部レバノンから撤退するまで保持していたと伝えています。\n*   **ARAB NEWS** は、イスラエル軍が1982年から2000年までの南部レバノン占領中にボーフォール城を基地として使用していたと報じています。\n*   **UN Meetings Coverage and Press Releases** は、イスラエル国防軍がボーフォール城にイスラエル国旗を掲げた画像を回覧し、「1982年から2000年までのイスラエルによる南部レバノン占領の記憶を呼び起こすものであり、当時城はイスラエルの基地として使われていた」と報告しています。\n*   **LA Times** は、イスラエルが1982年にボーフォールを占領し、18年間の南部レバノン占領期間中に保持していたと述べています。 2000年にヒズボラとその同盟国がイスラエルをレバノンから撤退させた際、イスラエル軍は撤退前に要塞を爆破したと報じられています。\n*   **読売新聞（中央日報の報道を引用）** は、イスラエル軍が1982年にもボーフォール城を占領し、2000年にレバノンから撤退するまで掌握していたと伝えています。\n*   **YouTubeチャンネルの報道** では、1982年にイスラエルがレバノンに侵攻し、PLOからバフェットを奪取した際、イスラエルは2000年に撤退するまでこの城を軍事基地として使用していたと説明されています。\n\n**主張と明示的に矛盾する報道**\n\n今回の検索では、検証対象の主張と明示的に矛盾する報道は見つかりませんでした。\n\n**関連する報道が見つからなかった場合**\n\n関連する報道は見つかりませんでした、という状況ではありません。",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:22:00.906897+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c20",
+        "claim_text": "日本郵船や商船三井などの海運大手が喜望峰ルートの迂回を長期化せざるを得ない状況になっている。",
+        "artifact": "article",
+        "risk_category": "named_entity_fact",
+        "quote_span": "特に、日本郵船や商船三井などの海運大手が喜望峰ルートの迂回を長期化せざるを得ない状況は、国内製造業の生産コストを押し上げ、ひいては私たちの生活にもインフレ圧力として跳ね返ってくることが懸念されます。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "分析レイヤー出力に、日本郵船や商船三井などの海運大手が喜望峰ルートの迂回を長期化させ、コストを押し上げインフレ圧力を生んでいることが記載されています。",
+      "source_evidence": "日本経済に恒常的なインフレ圧力を加えます。日本郵船や商船三井などの海運大手は、スエズ運河周辺の治安悪化懸念から喜望峰ルートの迂回を長期化せざるを得ず、輸送コスト上昇とサプライチェーンの遅延が製造業のコストを圧迫しています。",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "日本郵船 商船三井 喜望峰迂回 物流コスト インフレ 中東情勢",
+          "locale": "ja",
+          "purpose": "中東情勢による日本の海運大手の喜望峰迂回の長期化と、それが及ぼす国内のインフレ圧力への影響を確認する。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "日本郵船 商船三井 喜望峰迂回 物流コスト インフレ 中東情勢",
+          "locale": "ja",
+          "purpose": "中東情勢による日本の海運大手の喜望峰迂回の長期化と、それが及ぼす国内のインフレ圧力への影響を確認する。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T07:24:06.638638+00:00"
+    }
+  ],
+  "flagged_claims": [
+    "c2",
+    "c4",
+    "c5",
+    "c6",
+    "c8",
+    "c9",
+    "c10",
+    "c12",
+    "c13",
+    "c14",
+    "c15",
+    "c17",
+    "c20"
+  ],
+  "n_supported": 19,
+  "n_contradicted": 1,
+  "n_not_in_source": 0,
+  "n_unverified": 0,
+  "truthfulness_summary": {
+    "grounding_model_used": "gemini-2.5-flash",
+    "judge_model_used": "gemini-3.1-pro-preview",
+    "judge_unavailable": false,
+    "unavailable_reason": null,
+    "source_domains": [
+      "middleeasteye.net",
+      "aljazeera.com"
+    ],
+    "n_corroborated": 7,
+    "n_contradicted": 0,
+    "n_uncorroborated": 0,
+    "n_unverified": 12,
+    "n_pending": 1,
+    "completed_at": "2026-06-10T07:24:08.897017+00:00"
+  }
+}
