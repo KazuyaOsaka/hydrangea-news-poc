@@ -36,6 +36,59 @@ Cultural Divide + used_fallback=false / retries=0 + JSON 切断ゼロ)。axis_5 
 
 ## 未分類 (Active)
 
+### 2026-06-10: 検証の2層モデル + flag 意味論の文脈反転 — 1-Q.5 B-3' との対比 (F-editorial-guardian-claim-extraction)
+- **内容**: 1-T.1 で公開前検証の第1層 (忠実性) を実装した。設計の核 2 点を記録する。
+  (1) **検証の2層モデル**: 第1層・忠実性 = 「生成器が見た入力に主張が支持されるか」
+  (`supported / contradicted / not_in_source`)。第2層・真実性 = 「主張そのものが独立ソースで
+  裏取りできるか」(元ソース自体の正しさを含む。候補A の TeleSUR はベネズエラ政府系 = 党派性
+  あり)。忠実性が通っても真実性は別問題 — 党派ソースに忠実なだけの主張は第2層 (1-T.2) でしか
+  検証できない。逆に not_in_source は「生成器が入力に無いことを書いた」ことの検出であり、
+  世界知識上の真偽判定ではない (Guardian プロンプトで世界知識による判定を明示的に禁止した)。
+  (2) **flag 意味論の文脈反転**: 1-Q.5 coverage_claim_guard は B-3' = 明示的矛盾のみ flag
+  (過剰 flag が表現の自由度を削る害が大きい文脈)。公開前検証は **supported 以外すべて flag**
+  (見落としが公開事故に直結する文脈 = false negative の害が大きい)。ただし両者は「LLM の沈黙を
+  否定と読み替えない」精神を共有しており、**unverified (検証未完) を contradicted (矛盾断定) と
+  明確に区別する** — 裏が取れないことは虚偽の証明ではない。実装上は LLM judge の語彙を3値に
+  保ち、判定が完了しなかった主張にだけ harness 値 `unverified` を付与する分離にした。
+- **出典**: F-editorial-guardian-claim-extraction バッチプロンプト / DECISION_LOG「2026-06-10:
+  F-editorial-guardian-claim-extraction」/ ADR-0003「公開前検証」/ 1-Q.5 B-3' (対比元)
+- **ステータス**: `Active` (1-T.2 の corroboration 語彙設計 = pending 以降の値はこの整理を
+  継承して確定する)
+
+### 2026-06-10: coverage_claim_guard と Editorial Guardian の責務分担と将来統合の観点 (F-editorial-guardian-claim-extraction)
+- **内容**: 両者は「生成成果物を外から検証する flag-only 安全網 (不変原則 1-2 を踏まない)」と
+  いう形が同じだが、**責務は直交**する:
+  - coverage_claim_guard (1-Q.5): **報道状態の主張** (coverage claim) と系統判定の整合。
+    真値はリポジトリ内 (`stream_classification`)。judge は analysis client (3.5-flash)。
+  - Editorial Guardian (1-T): **事実主張の真偽**。第1層の照合対象は生成器入力、第2層は外部
+    ソース。judge は guardian 専用 (3.1-pro 単一モデル、沈黙的劣化の禁止)。
+  統合は将来判断: 第一作 (1-S) で両ランナー (`run_coverage_claim_guard.py` /
+  `run_editorial_guardian.py`) を並走させた運用感 (手間・レポート突合のしやすさ) を見てから。
+  統合するなら「公開前ゲートの 1 レポートに両結果を束ねる」**レポート層の統合が先**で、判定
+  ロジックの統合はしない (責務直交のため。判定基準も flag 意味論も別物)。Phase A.5-3d 投稿前
+  ゲート (チェックリスト 6 項目) が自然な統合先。
+- **出典**: F-editorial-guardian-claim-extraction バッチプロンプト「やらないこと」/ 1-Q.5
+  DECISION_LOG / ADR-0003 投稿前ゲートチェックリスト
+- **ステータス**: `Active` (1-S 運用観測後に再評価、統合実装は Phase A.5-3d 投稿前ゲートで判断)
+
+### 2026-06-10: Fable 5 (xhigh) 初バッチの挙動観察 (F-editorial-guardian-claim-extraction)
+- **内容**: Fable 5 + xhigh の慣らし運転として本バッチの挙動を記録する (バッチプロンプト副次目的)。
+  ① **不変原則遵守**: article_writer.py 0 行 / script_writer.py 既存ルート 0 行 / triage 既存
+  ファイル 0 行 (仮説 7 は読むだけ) / analysis 既存ファイル 0 行 / baseline 1487 → 1519 passed
+  (破壊ゼロ)。② **頼んでいない整理・リファクタ**: なし — factory.py への変更は GUARDIAN 新設に
+  必要な最小 3 箇所 (role set + tier 分岐 + max_attempts 分岐) + アクセサ + docstring 整合のみ。
+  既存 role の構造変更・リネーム・「ついで」修正はゼロ。スコープ外の改善候補 (budget.py 経由化
+  等) は実装せず完了レポートの判断事項に留めた。③ CP-1 grep-first 作法 (誤り 10) は機能:
+  仮説 1 の精密化 (pool snapshot は分析前保存 = analysis_result=None) が照合素材の再構成設計を
+  確定させ、推定のまま実装していれば「snapshot だけ読めば生成器入力が揃う」という誤実装に
+  なっていた。④ 公式注意 (高 effort 時の過剰整理傾向) に対し、本バッチでは不変原則 +
+  「最もシンプルに動くものを作る」指示が防壁として機能したと評価できる (1 バッチでの観察 =
+  標本 1、継続観察)。
+- **出典**: F-editorial-guardian-claim-extraction バッチプロンプト §0 副次目的 / 本バッチ
+  完了レポート
+- **ステータス**: `Active` (次バッチ以降も Fable 5 挙動の観察を継続、数バッチ分溜まったら
+  アーカイブ判断)
+
 ### 2026-06-08: coverage claim 事実整合 guard の設計判断 — 各論コントロール (誤り9) を踏まずに虚偽を弾く整理 (F-title-guard-coverage-claim-policy)
 - **内容**: 1-Q.5 で「系統判定 (stream_classification) に反する coverage claim を防ぐ」guard を実装した。
   設計の核心は **「表現を強制する各論コントロール (クラウド誤り 9) ではなく、事実整合検証である」** という
@@ -83,7 +136,10 @@ Cultural Divide + used_fallback=false / retries=0 + JSON 切断ゼロ)。axis_5 
   あくまで「article が 3.1 Pro に上がる判断をする時点で Guardian との布陣を一緒に考える」という **観点としてのみ** 記録する。
 - **出典**: F-article-model-upgrade バッチプロンプト Task 4 / DECISION_LOG「2026-06-08: F-article-model-upgrade」/
   FUTURE_WORK `F-article-3.1-pro-escalation` (★低) / 1-T (Editorial Guardian = gemini-3.1-pro-preview 配線予定)
-- **ステータス**: `Active` (観点のみ。article→3.1 Pro エスカレ判断 or 1-T 着手のいずれか早い時点で再評価)
+- **ステータス**: `Active` (★ 2026-06-10 再評価 = 1-T.1 着手済で条件成立: Guardian 側は
+  `GEMINI_GUARDIAN_TIER1` 専用 env + GUARDIAN role で配線完了し、article (`GEMINI_ARTICLE_TIER*`)
+  とは **env 名レベルで構造的に分離済み** = role 分離の懸念は解消。残る観点は article が 3.1 Pro に
+  エスカレした場合の **RPD 250 の配分とコスト** のみに縮小。F-article-3.1-pro-escalation 着手時に再評価)
 
 ### 2026-05-31: X1 新ルート本番配線完了 + 試運転 6 引継ぎ事項確定 + 試運転データ確保の構造的困難 (F-particular-angle-metadata-production-wire)
 

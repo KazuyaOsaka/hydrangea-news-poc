@@ -1,6 +1,19 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-06-08 (★ F-title-guard-coverage-claim-policy 完了、実装バッチ 1-Q.5。coverage claim
+最終更新: 2026-06-10 (★ F-editorial-guardian-claim-extraction 完了、実装バッチ 1-T.1。Editorial
+Guardian 第1段 = 高リスク事実主張の抽出 + 元ソース忠実性検証 (`supported / contradicted /
+not_in_source` 3値 + harness 値 `unverified`) + 2層検証レポート骨格 (truthfulness_status=pending で
+1-T.2 差し込みスキーマ固定)。factory.py に GUARDIAN role 新設 (gemini-3.1-pro-preview **単一要素
+tier list** = 沈黙的劣化の禁止を構造的に担保、TIER2〜4 なし)。★ CP-1 で仮説 7 点を grep + 実コード +
+実呼び出しで検証: 仮説 1 精密化 (元ソース全文は `event.summary` に raw 埋込 / pool snapshot は
+分析前保存のため analysis_result=None → snapshot.event + analysis.json の合成再構成と確定)、仮説 4
+疎通成功 (paid-only 課金済)。★ X1 Slot-1 実走で**本物の歪曲を検出** (20 主張中 1 contradicted =
+「兵士 25 人死亡」の場所・期間帰属取り違え)。仮説 7 偵察 = F-13.B grounding 再利用性調査を
+grounding_reuse_survey.md に出力 (コード変更なし)。`第一作公開前の高リスク事実検証ワークフロー`
+(1-T) を 1-T.1 完了として完了済みに移動、**1-T.2 = F-editorial-guardian-corroboration を ★★高
+(第一作前必須、次バッチ最有力) で緊急度 高に正式登録**。baseline 1487 → **1519 passed** (新規 +32、
+破壊ゼロ)。不変原則 1-5 厳守。
+前回 2026-06-08: F-title-guard-coverage-claim-policy 完了、実装バッチ 1-Q.5。coverage claim
 事実整合の 3 層 (構造データ `configs/coverage_claim_policy.yaml` + script 新ルート生成プロンプト原則 +
 生成後 guard `src/generation/coverage_claim_guard.py` = LLM judge / B-3' / flag のみ) を実装。X1 試運転で
 本番再現した「perspective_gap に silence 絶対表現」を構造的に防止。★ CP-1 grep で起案者仮説 1 を訂正
@@ -10,7 +23,7 @@ article_writer.py 内ハードコード = branch b、article は guard のみ)�
 完了済みに移動。新規 2 タスク追加: **F-title-generator-stream-aware-fix** (★中、title silence の根本修正) /
 **F-coverage-claim-guard-auto-action** (★低 条件付き、guard 自動アクション要否を第一作後に判断)。
 baseline 1466 → **1487 passed** (新規 +21、破壊ゼロ)。不変原則 1-5 厳守。
-前回 2026-06-08: F-article-model-upgrade 完了、config 変更バッチ。article 生成モデルを
+前々回 2026-06-08: F-article-model-upgrade 完了、config 変更バッチ。article 生成モデルを
 gemini-2.5-flash → gemini-3.5-flash に品質昇格 = 選択肢C 第一歩 (B案 = config 変更 + 保存済み候補A
 event での article A/B 再生成)。`GEMINI_ARTICLE_TIER1` を 3 協調箇所 (`.env` runtime / `.env.example`
 template / `factory.py` inline default) で変更 (TIER1==TIER2 = 3.5-flash 追加リトライは意図的、1 値のみ変更)。
@@ -503,14 +516,34 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 関連ファイル: `src/main.py` (sample/normalized mode 分岐、★ 不変原則対象外)、`src/ingestion/run_ingestion.py` (ingestion パス、★ 不変原則対象外)、`src/triage/garbage_filter.py` (★ 不変原則 3 保護)、新規 `scripts/replay_stuck_batch.py` / `docs/TRIAL_RUN_GUIDE.md`
   - 関連: X1 (本起案元)、F-periodic-health-check (production 観測との対比)、Phase A.5-3b 第一作 / 1-Q.5 / 1-T (再発リスク回避先)
 
-- **第一作公開前の高リスク事実検証ワークフロー** (F-image-prompt-spec / 2026-05-18 起案、ADR-0003 由来、★ X1 / 2026-05-31 試運転で必須性 production 実証)
-  - ★ **緊急度 中 → 高に格上げ (X1 / 2026-05-31)**: X1 試運転 Slot-1 article で死者数 (レバノン側 3,371 人 / 負傷 10,129 人)、イスラエル軍兵士死亡 25 人、スモトリッチ財務相過激発言引用 ("ドローン 1 機につきレバノン国内の建物 100 棟を破壊すべき") などの高リスク数字・引用が含まれた。これらが元ソース (Middle East Eye / AlJazeera) に実在するかは production 経路で未検証 = **本ワークフロー (1-T、Editorial Guardian=gemini-3.1-pro-preview 配線) が第一作公開前に必須**であることを X1 trial が実証。
-  - 背景: ADR-0003 で「高リスク事実主張 (数字・固有名詞・人権侵害主張・断定的事実) は公開前検証が必須工程」+「投稿前ゲート 6 項目チェックリスト (視覚禁止 / 出典付き固有名詞 / 数字 source_card / 誇大表現なし / AI ラベル / 高リスク事実検証済)」を決定。第一作 (Israel 9,600 人 / ICRC 監視操作疑惑) はこれら全てに該当。
-  - 対応案: (1) 一次ソース確認 (TeleSUR 原文 / ICRC 公式声明) + 複数ソース突合 + 日本報道状況確認のワークフローを手順化、(2) Phase A.5-3d 投稿前ゲートにチェックリスト 6 項目を機械判定 + 人手確認のハイブリッドで実装。第一作は手動運用で先行検証。
-  - 検討時期: Phase A.5-3b 第一作起案と並走 (手動検証先行) → Phase A.5-3d でゲート実装
-  - 想定工数: ワークフロー手順化 2-3 時間 + Phase A.5-3d ゲート実装は別途
-  - 関連ファイル: `docs/ADR/0003-content-moral-guidelines.md`, Phase A.5-3d 投稿前ゲート (新規)
-  - 関連: F-image-prompt-spec (ADR-0003 起案元)、Phase A.5-3b 第一作起案、Phase A.5-3d
+- **★★ F-editorial-guardian-corroboration (1-T.2): 第2層・真実性検証 = grounding による複数ソース突合** (F-editorial-guardian-claim-extraction / 2026-06-10 起案、★★高 = **第一作 (1-S) 前必須**、カズヤ確定の 2 バッチ構成の後半)
+  - 背景: 1-T.1 (F-editorial-guardian-claim-extraction、2026-06-10 完了) が第1層・忠実性
+    (生成器入力との整合) を実装済み。しかし忠実性は「生成器が見た入力に合っている」までしか
+    保証しない — **元ソース自体の正しさ** (候補A の TeleSUR はベネズエラ政府系 = 党派性あり) と
+    **入力に無い主張 (not_in_source) の真偽** は独立ソースとの突合でしか検証できない。
+    ADR-0003「複数ソース突合 (TeleSUR + Al Jazeera + Middle East Eye 等)」の機械化。
+  - 対応案: 1-T.1 レポートの差し込みスキーマを埋める — claim ごとの `truthfulness_status`
+    (pending → 1-T.2 が語彙確定) + `truthfulness_notes`。入力は 1-T.1 が生成済みの
+    `verification_queries` (claim ごと 1〜3 件、ja/en locale 付き)。grounding 実行は
+    F-13.B JpCoverageVerifier の機構を流用 (★ 偵察レポート
+    `docs/runs/F-editorial-guardian-claim-extraction/grounding_reuse_survey.md` が起案入力:
+    流用可 = raw genai.Client + google_search tool 呼び出しパターン / redirect URL 回避の
+    ドメイン抽出ヘルパ / B-3' 判定哲学 / per-call timeout。新設計要 = 国際ソース独立性の評価軸 /
+    claim 単位の処理)。
+  - ★ 起案前仮説 (1-T.2 CP-1 で grep + 実呼び出し検証): (a) gemini-3.1-pro-preview が
+    google_search tool をサポートするか (未検証、非サポートなら検索実行と corroboration 判定の
+    モデル分離設計)、(b) grounding run 間分散 (F-grounding-determinism-audit) 下で複数クエリ
+    集約により判定が安定するか、(c) redirect URL の記事実体解決可否 (監査可能性)。
+  - ★ 設計原則の継承: 沈黙的劣化の禁止 (corroboration 判定は Guardian 単一モデル) +
+    unverified ≠ 虚偽 (裏が取れない = uncorroborated は人間レビュー行き flag、虚偽断定はしない)。
+  - 検討時期: **次バッチ最有力** (1-S 第一作起案の前)。
+  - 想定工数: 4-6 時間 (CP-1 仮説検証 + corroboration 実装 + mock テスト + X1/候補A 実証)
+  - 関連ファイル: `src/generation/editorial_guardian.py` (truthfulness 差し込み先)、
+    `src/triage/jp_coverage_verifier.py` (流用元、不変原則 3 = 読むだけ)、
+    `docs/runs/F-editorial-guardian-claim-extraction/grounding_reuse_survey.md` (起案入力)
+  - 関連: F-editorial-guardian-claim-extraction (1-T.1、第1層 + スキーマ固定元)、
+    F-grounding-determinism-audit (分散課題元)、1-S Phase A.5-3b 第一作起案 (適用先)、
+    Phase A.5-3d 投稿前ゲート (チェックリスト 6 項目の機械判定への将来統合先)
 
 - **F-grounding-determinism-audit** (F-jp-coverage-llm-judgement-extraction / 2026-05-16 で起案)
   - 背景: F-jp-coverage-llm-judgement-extraction Task E-fix-F 再々測定で、ゴールデンセット live-API 計測が **run 間で broad Grounding API の WL メディアドメイン返却が大きく変動** することが顕在化。v3 run では 11 件の reported event で WL ヒット 0 (うち Gemini 503 が 2) = B-3' 判定以前に False に倒れ、ヘッドライン Recall を 0.4706 まで薄めた (WL マッチ条件下では Recall 1.0000 = B-3' 自体は設計通り機能)。同一クエリでも Task E run と v3 run で WL ヒット有無が反転する event 多数 (例: covered_008/009)。
@@ -801,6 +834,36 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **第一作公開前の高リスク事実検証ワークフロー 第1段 (1-T.1) — Editorial Guardian: 高リスク主張抽出 + 忠実性検証 + 2層レポート骨格 (実装バッチ)**
+  (F-editorial-guardian-claim-extraction / 2026-06-10 完了)
+  - 発生バッチ: F-image-prompt-spec (2026-05-18、ADR-0003 由来) で起案、X1 (2026-05-31) で
+    必須性 production 実証 (article 内の死者数 3,371 / 10,129 人・兵士死亡 25 人・スモトリッチ
+    発言引用が production 未検証のまま出力)。カズヤ確定の 2 バッチ構成の前半。
+  - 対応 (検証の2層モデルの第1層):
+    - **factory.py GUARDIAN role 新設**: gemini-3.1-pro-preview **単一要素 tier list**
+      (TIER2〜4 なし) = 沈黙的劣化の禁止を構造的に担保。`get_guardian_llm_client()` 新設。
+      `GEMINI_GUARDIAN_TIER1` を 3 協調箇所 (.env / .env.example / factory.py inline) に配置。
+    - **`src/generation/editorial_guardian.py` 新規**: Guardian モデルで高リスク主張を構造化
+      抽出 (ADR-0003 対象 5 分類 + quote_span) → 第1層・忠実性判定 (`supported / contradicted /
+      not_in_source` 3値 + harness 値 `unverified` = 検証未完) + verification_queries 生成。
+      flag = supported 以外すべて (1-Q.5 B-3' と安全方向が逆、ただし unverified ≠ 虚偽)。
+      **flag のみ** (自動修正・再生成・公開ブロックなし)。
+    - **2層レポート骨格**: `EditorialGuardianReport` (guardian_model_used / guardian_unavailable /
+      SourceMaterialScope / truthfulness_status=pending 確保) = 1-T.2 の差し込みスキーマ固定。
+    - 手動ランナー `scripts/run_editorial_guardian.py` (event_snapshot + analysis.json 合成 →
+      レポート JSON、exit 2 = guardian_unavailable)。
+  - ★ X1 Slot-1 実走 (gemini-3.1-pro-preview 実呼出) で**本物の歪曲を検出**: 20 主張中
+    1 contradicted = article「ヒズボラがイスラエル北部への攻撃を継続し、イスラエル軍兵士25人が
+    死亡した」は元ソースでは「25 人 = 3 月以降のレバノン国内累計戦死者数」(場所・期間帰属の
+    取り違え)。レポート例 `docs/runs/F-editorial-guardian-claim-extraction/x1_slot1_guardian_report.json`。
+  - ★ 仮説 7 偵察: F-13.B grounding 機構の 1-T.2 再利用性調査を
+    `docs/runs/F-editorial-guardian-claim-extraction/grounding_reuse_survey.md` に出力 (コード変更なし)。
+  - テスト: `tests/test_editorial_guardian.py` 新規 +32。baseline 1487 → **1519 passed** (破壊ゼロ)。
+  - 不変原則違反: なし。
+  - 詳細レポート: `docs/runs/F-editorial-guardian-claim-extraction/REPORT.md`
+  - 関連バッチ: 1-T.2 F-editorial-guardian-corroboration (★★高、緊急度 高に正式登録) /
+    1-S 第一作起案 (適用先) / F-grounding-determinism-audit (1-T.2 の分散課題元)
 
 - **F-title-guard-coverage-claim-policy — coverage claim 事実整合の構造データ + 生成プロンプト原則 + 生成後 guard (実装バッチ、1-Q.5)**
   (F-title-guard-coverage-claim-policy / 2026-06-08 完了)
