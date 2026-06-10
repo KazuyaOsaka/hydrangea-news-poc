@@ -5876,7 +5876,7 @@ Phase A.5-3a-verify ゲート完了後 **22 つ目のバッチ (1-R)**。F-parti
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `2514191` (merge: `896da92`、2026-06-10 追記 = F-editorial-guardian-claim-extraction Task 1)
 - 変更 (config + コメント/docstring 正確化): `.env` (gitignored、runtime) / `.env.example` (template) /
   `src/llm/factory.py` (GEMINI_ARTICLE_TIER1 inline default + module/関数 docstring)
 - 変更 (テスト期待値修正、構造変更なし): `tests/test_factory_role_model_resolution.py` /
@@ -5975,7 +5975,7 @@ Phase A.5-3a-verify ゲート完了後 **22 つ目のバッチ (1-R)**。F-parti
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `091cf5e` (merge: `1bead80`、2026-06-10 追記 = F-editorial-guardian-claim-extraction Task 1)
 - 新規: `configs/coverage_claim_policy.yaml` / `configs/prompts/analysis/geo_lens/coverage_claim_guard.md` /
   `src/generation/coverage_claim_guard.py` / `scripts/run_coverage_claim_guard.py` /
   `tests/test_coverage_claim_policy.py` / `tests/test_coverage_claim_guard.py`
@@ -5989,3 +5989,136 @@ Phase A.5-3a-verify ゲート完了後 **22 つ目のバッチ (1-R)**。F-parti
   F-docs-update-chatgpt-round2-and-error10 (1-P.6、ChatGPT Round 2 指摘 2 起案元) /
   1-S Phase A.5-3b 第一作起案 (候補A 固有 framing 指針) / 1-T Editorial Guardian (高リスク事実検証)
 
+
+
+## 2026-06-10: F-editorial-guardian-claim-extraction — Editorial Guardian 第1段: 高リスク主張抽出 + 忠実性検証 + 2層レポート骨格 (1-T.1)
+
+### 背景
+
+- ADR-0003「公開前検証 (高リスク事実主張) = 必須工程」の機械化第一歩。X1 試運転 (2026-05-31) で
+  article 内の死者数 (3,371 人 / 10,129 人) / 兵士死亡 25 人 / スモトリッチ過激発言引用が
+  production 未検証のまま出力されることが実証され、1-T が★高に格上げされていた。
+- ★ 2 バッチ構成 (カズヤ確定): 本バッチ = **1-T.1** (抽出 + 忠実性検証 + レポート骨格)。後続
+  **1-T.2 = F-editorial-guardian-corroboration** (grounding による複数ソース突合 = 真実性検証)
+  が第2層を埋める。両方を第一作 (1-S) 前に完了させる。本バッチは 1-T.2 が差し込めるスキーマを
+  固定するところまでが責務。
+- ★ 検証の2層モデル (設計の核): 第1層・忠実性 (本バッチ) = 生成器が見た入力に出力中の事実主張が
+  支持されるか (`supported / contradicted / not_in_source` の3値)。第2層・真実性 (1-T.2) =
+  主張そのものが独立ソースで裏取りできるか (元ソース自体の正しさを含む。候補A の TeleSUR は
+  ベネズエラ政府系 = 党派性あり)。本バッチではスキーマ上 `truthfulness_status="pending"` で確保。
+- ★ flag の意味論は 1-Q.5 (B-3' = 明示的矛盾のみ flag) と**安全方向が逆**: 公開前検証では
+  unverified (裏が取れない) も人間レビュー行きの flag。ただし「虚偽」ではなく「検証未完」として
+  contradicted と明確に区別する (沈黙を否定と読み替えない精神は維持)。
+- ★ 検証の沈黙的劣化の禁止 (設計原則): Guardian 判定モデルが落ちたとき軽量モデルへ静かに
+  fallback して「検証済み」スタンプを出すことは絶対にしない (弱いモデルの検証印は無検証より悪い)。
+- Guardian モデル: `gemini-3.1-pro-preview` (公式確認済 2026-06-10: paid-only・無料枠なし、
+  $2.00/$12.00 per 1M、入力上限 1,048,576 / 出力上限 65,536)。テストは LLM mock で決定的に。
+- 副次目的: Fable 5 + xhigh の初バッチ (慣らし運転)。
+
+### 議論
+
+- 起案前仮説 7 点を grep + 実コード精読で検証 (クラウド誤り 10 作法、CP-1):
+  - **仮説 1 (★ 確認 + 精密化、最重要)**: 生成器入力の実体を確定。article 生成器は
+    **NewsEvent 全 JSON + ScoredEvent 全 JSON + VideoScript 全 JSON** を見る
+    (`article_writer.py` L300-310 `.replace()` 置換)。script 新ルートは **event title +
+    summary + AnalysisResult フィールド群 (perspective / multi_angle / insights /
+    particular_angle_metadata / sontaku) + 参照 article 全文** (`script_writer.py`
+    L1223-1247 `.format()`)。★ 元ソース「全文」は NewsEvent に専用フィールドが無いが、
+    **ingestion が `event.summary` に元記事 raw テキストを丸ごと埋め込む** (X1 Slot-1 実測:
+    summary 4,678 字 = MEE 記事原文、3,371 / 10,129 / 25 人 / スモトリッチ発言が全て実在) =
+    忠実性検証は実質的な素材に対して成立する。★ 訂正系発見: `recent_event_pool.event_snapshot`
+    は**分析・審判前に保存**されるため `analysis_result=None` / `judge_result=None` (X1 Slot-1
+    実測) ⇒ 照合素材は snapshot.event + `{cls}_analysis.json` の**合成再構成**とし、生成時
+    ScoredEvent の wrapper フィールド (judge_result / editorial_mission_*) は再構成不能として
+    `SourceMaterialScope.notes` に明記する設計に確定。
+  - **仮説 2 (確認)**: 高リスク主張の分布 = article.md 本文 + script.json ナレーション
+    (新ルートは sections のみ、intro/outro 空文字。旧形式互換で非空なら含める) + title_layer
+    (platform/canonical/hook_line/thumbnail) ⇒ 抽出入力範囲を 3 ブロックで確定。
+  - **仮説 3 (確認 + 設計確定)**: GUARDIAN role は factory.py に不在。ARTICLE_ROLES 前例
+    (専用 env tier + get_*_llm_client) に倣い新設。★ 沈黙的劣化の禁止の実装方式 =
+    **単一要素 tier list** (`[GEMINI_GUARDIAN_TIER1]`、TIER2〜4 を作らない)。
+    `TieredGeminiClient` の文書化済み挙動 (single-element → same-model retry only、
+    fallback なし、尽きたら RuntimeError) で **fallback chain を構造的に排除**。
+    Gemini 以外 provider への委譲も None 返却 (guardian_unavailable 扱い)。
+  - **仮説 4 (確認)**: gemini-3.1-pro-preview 疎通成功 (最小 probe 1 回、'OK'、課金設定済み)
+    ⇒ X1 Slot-1 実走可能。
+  - **仮説 5 (確認)**: `particular_angle_extractor.py` (LLM 抽出→JSON、_parse_llm_response、
+    coercion、DI client、max_retries) + `coverage_claim_guard.py` (judge + Pydantic 結果
+    モデル + 手動ランナー) の前例を踏襲。
+  - **仮説 6 (確認)**: baseline **1487 passed** 実測 (87.97s)。
+  - **仮説 7 (偵察完了、コード変更なし)**: F-13.B grounding 機構の 1-T.2 再利用性を
+    `docs/runs/F-editorial-guardian-claim-extraction/grounding_reuse_survey.md` に出力。
+    流用可 = 呼び出しパターン (raw genai.Client + google_search tool) / ドメイン抽出ヘルパ
+    (redirect URL の罠回避) / B-3' 判定哲学 / per-call timeout。新設計要 = クエリ生成
+    (1-T.1 の verification_queries が代替) / WL Tier (目的違い) / キャッシュ (event 単位 ≠
+    claim 単位)。1-T.2 CP で要検証 = 3.1-pro の google_search tool サポート + 分散下の判定安定性。
+- 忠実性照合の対象は「生成器が見たイベントデータ」のみとし、**生成成果物どうしの相互参照
+  (script が見た article 本文) は照合素材から除外** (生成物は自分の保証人になれない。article に
+  しか無い主張が script に出たら not_in_source → 人間レビュー行きが安全方向)。
+- judge が判定を返さなかった主張 / 語彙外 status は `unverified` (検証未完、flag) に倒す —
+  contradicted (矛盾断定) とは区別する第4の harness 値 (LLM judge の語彙は3値のまま)。
+
+### 決定
+
+- **factory.py GUARDIAN role 新設**: `GUARDIAN_ROLES={"guardian"}` + 単一要素 tier list
+  (`GEMINI_GUARDIAN_TIER1` default gemini-3.1-pro-preview、3 協調箇所 = .env / .env.example /
+  factory.py inline) + `GEMINI_GUARDIAN_MAX_ATTEMPTS` default 2 (同一モデル transient retry
+  は劣化ではない) + `get_guardian_llm_client()` (generation_config=None = truncate なし +
+  3 系 temperature 非送出、ARTICLE 前例と同方針)。
+- **`src/generation/editorial_guardian.py` 新規**: (Stage 1) 高リスク主張抽出 = Guardian
+  モデルで article + script ナレーション + title 層から ADR-0003 対象を構造化抽出
+  (claim_text / artifact / risk_category 5 分類 / quote_span)。(Stage 2) 第1層・忠実性判定 =
+  各主張を再構成イベントデータと照合し3値判定 + 判定理由 + source_evidence 引用 +
+  verification_queries (1〜3 件/claim、ja/en) を同一呼出で生成。
+- **2層検証レポート (Pydantic)**: `EditorialGuardianReport` = schema_version /
+  guardian_model_used (実使用モデル、単一モデル運用のため常に primary) /
+  guardian_unavailable + unavailable_reason (検証未完の明示) / SourceMaterialScope
+  (has_event / has_analysis / summary・global_view 文字数 / 除外事項 notes) /
+  claims (ClaimVerification = claim + faithfulness 3値+unverified + truthfulness_status=
+  pending + truthfulness_notes + verification_queries) / flagged_claims (= contradicted +
+  not_in_source + unverified) / 件数サマリ。**flag のみ。自動修正・再生成・公開ブロックなし**。
+- **手動ランナー `scripts/run_editorial_guardian.py`**: event_snapshot (DB) +
+  analysis.json 合成 → guardian 実行 → レポート JSON 出力 (--out で保存)。
+  exit code 2 = guardian_unavailable (検証未完を CI/手動で区別可能に)。
+- プロンプト 2 本新規: `editorial_guardian_extract.md` (過剰抽出優先 = 取りこぼしは安全性に
+  直結) + `editorial_guardian_faithfulness.md` (忠実性 ≠ 真実性 / 世界知識での判定禁止 /
+  迷ったら not_in_source = 人間レビュー行きが安全方向)。
+
+### 結果
+
+- baseline 1487 → **1519 passed** (新規 +32 = `tests/test_editorial_guardian.py`、LLM mock で
+  決定的、破壊ゼロ、126s)。
+- ★ **X1 Slot-1 実走で本物の歪曲を検出** (gemini-3.1-pro-preview 実呼出 2 回): 20 主張抽出 →
+  19 supported / **1 contradicted (c17)**。article の「ヒズボラがイスラエル北部への攻撃を継続し、
+  イスラエル軍兵士25人が死亡した」は、元ソースでは「25 人 = 3 月上旬以降のレバノン国内での累計
+  戦死者数」であり**場所と期間帰属の取り違え** — バッチプロンプトが production 未検証例として
+  挙げた「兵士死亡 25 人」がまさに微妙に歪んでいたことを第1層が捕捉。死者数 3,371 / 10,129 /
+  スモトリッチ発言は supported (生成器入力に実在)。レポート例:
+  `docs/runs/F-editorial-guardian-claim-extraction/x1_slot1_guardian_report.json`。
+- 不変原則違反: なし (article_writer.py 0 行 / script_writer.py 既存ルート 0 行 / triage
+  既存ファイル 0 行 = 仮説 7 は読むだけ / analysis 既存ファイル 0 行。guardian は
+  src/generation/ 新規ファイルで出力を外から検証)。
+- 1-T.2 差し込みスキーマ固定: truthfulness_status (pending) + truthfulness_notes +
+  verification_queries + grounding_reuse_survey.md (起案入力)。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規: `src/generation/editorial_guardian.py` /
+  `configs/prompts/analysis/geo_lens/editorial_guardian_extract.md` /
+  `configs/prompts/analysis/geo_lens/editorial_guardian_faithfulness.md` /
+  `scripts/run_editorial_guardian.py` / `tests/test_editorial_guardian.py` /
+  `docs/runs/F-editorial-guardian-claim-extraction/` (REPORT.md +
+  x1_slot1_guardian_report.json + grounding_reuse_survey.md)
+- 変更: `src/llm/factory.py` (GUARDIAN_ROLES + tier/max_attempts 分岐 +
+  get_guardian_llm_client + module docstring) / `.env` (gitignored) + `.env.example`
+  (GEMINI_GUARDIAN_TIER1 + 系統コメント)
+- ドキュメント更新: `docs/CURRENT_STATE.md` (全置換) / `docs/DECISION_LOG.md` (本エントリ +
+  前 2 バッチのコミットハッシュ placeholder 埋め) / `docs/FUTURE_WORK.md` (1-T.1 完了移動 +
+  1-T.2 ★★高 正式登録) / `docs/DISCUSSION_NOTES.md` (4-A 新規 3 件)
+- 不変原則違反: なし
+- 関連バッチ: 1-T.2 F-editorial-guardian-corroboration (第2層、第一作前必須) /
+  F-title-guard-coverage-claim-policy (1-Q.5、flag 意味論の対比元) /
+  F-particular-angle-metadata-production-wire (X1、必須性実証元) /
+  F-article-3.1-pro-escalation (Guardian と 3.1 Pro 二役になる場合の布陣整理観点) /
+  1-S Phase A.5-3b 第一作起案 (本ワークフローの最初の実運用先)

@@ -24,6 +24,11 @@ Routing strategy (Phase 1.5 batch E-3' 以降、F-gemini-quality-tier-poc で最
     (選択肢C 第一歩)。記事は最上級の知能で考えてほしい副次出力で、低頻度のため
     output 単価 $9.00/1M (vs 2.5-flash $2.50) を許容する。TIER1==TIER2 は意図的
     (1 値のみ変更 = 3.5-flash 追加リトライ; 旧主軸 2.5-flash は昇格で chain から除外)。
+  - GUARDIAN_ROLES (guardian): 公開前検証 (Editorial Guardian) 専用
+    gemini-3.1-pro-preview **単一モデル** (fallback chain なし)。MAX=2。
+    ★ F-editorial-guardian-claim-extraction (1-T.1): 沈黙的劣化の禁止 =
+    下位モデルの検証印は無検証より悪いため、判定経路は単一要素 tier list で
+    構造的に fallback を持たない。primary 不可は guardian_unavailable 扱い。
   - 未分類 role は QUALITY_ROLES と同じ階層 (後方互換、role="generation" 経路)。
 
   ★ editorial_mission_filter / article の lineup 上の意図:
@@ -102,6 +107,17 @@ LIGHTWEIGHT_ROLES: set[str] = {
 # ★ get_article_llm_client() が role="article" で dispatch (article_writer.py 不変)。
 ARTICLE_ROLES: set[str] = {
     "article",
+}
+
+# 公開前検証 (Editorial Guardian) → gemini-3.1-pro-preview 単一モデル
+# (F-editorial-guardian-claim-extraction 1-T.1)。
+# ★ 沈黙的劣化の禁止: Guardian の判定経路は下位モデルへの fallback chain を
+#   構造的に持たない (単一要素 tier list = same-model retry only、
+#   TieredGeminiClient の文書化済み挙動)。弱いモデルの検証印は無検証より悪い。
+#   primary 不可時は呼出側 (editorial_guardian.py) が guardian_unavailable
+#   として検証未完扱いにする。
+GUARDIAN_ROLES: set[str] = {
+    "guardian",
 }
 
 # 性能タスク (Narrative 品質重視) → gemini-3.5-flash 主軸。
@@ -341,6 +357,14 @@ def _get_tier_models_for_role(role: str) -> list[str]:
       Article:    gemini-3.5-flash > gemini-3.5-flash > gemini-3.1-flash-lite > gemini-2.5-flash-lite
     TIER4 は lineup v2 (Tier1-3) の最終安全網として gemini-2.5-flash-lite を据える。
     """
+    if role in GUARDIAN_ROLES:
+        # ★ 単一要素 tier list (意図的): Guardian の検証判定は下位モデルへ
+        #   フォールバックさせない (沈黙的劣化の禁止、1-T.1)。503 等の transient
+        #   エラーは同一モデル retry のみ行い、尽きたら RuntimeError → 呼出側が
+        #   guardian_unavailable として検証未完扱いにする。
+        return [
+            os.getenv("GEMINI_GUARDIAN_TIER1", "gemini-3.1-pro-preview"),
+        ]
     if role in ARTICLE_ROLES:
         return [
             os.getenv("GEMINI_ARTICLE_TIER1", "gemini-3.5-flash"),
@@ -372,6 +396,9 @@ def _get_max_attempts_for_role(role: str) -> int:
     LIGHTWEIGHT (garbage / merge) / ARTICLE → 1 (大量・コスト最適 role は 1 発勝負)
     必要に応じて env で上書き可能。
     """
+    if role in GUARDIAN_ROLES:
+        # 同一モデルへの transient retry は劣化ではない (モデルは変わらない)。
+        return int(os.getenv("GEMINI_GUARDIAN_MAX_ATTEMPTS", "2"))
     if role in ARTICLE_ROLES:
         return int(os.getenv("GEMINI_ARTICLE_MAX_ATTEMPTS", "1"))
     if role in LIGHTWEIGHT_ROLES:
@@ -557,6 +584,27 @@ def get_article_llm_client() -> Optional[LLMClient]:
     article_writer.py は本関数を呼ぶだけで不変 (不変原則 1 遵守)。
     """
     return _make_client(GENERATION_PROVIDER, GENERATION_MODEL, role="article")
+
+
+def get_guardian_llm_client() -> Optional[LLMClient]:
+    """Editorial Guardian (公開前検証) 用クライアント — GUARDIAN 系統 (role="guardian")。
+
+    F-editorial-guardian-claim-extraction (1-T.1)。primary は gemini-3.1-pro-preview
+    (paid-only、$2.00/$12.00 per 1M、公式確認 2026-06-10)。
+
+    ★ 沈黙的劣化の禁止: 単一要素 tier list のため下位モデルへの fallback はしない
+    (TieredGeminiClient の single-element 挙動 = same-model retry only)。Gemini 以外の
+    provider への委譲もしない (検証品質を担保できないため None = guardian_unavailable
+    扱い)。generation_config は None (3 系 default temperature 1.0 / truncate なし、
+    ARTICLE 前例と同方針)。
+    """
+    if not GEMINI_API_KEY or GENERATION_PROVIDER != "gemini":
+        return None
+    return TieredGeminiClient(
+        GEMINI_API_KEY,
+        _get_tier_models_for_role("guardian"),
+        max_attempts_per_tier=_get_max_attempts_for_role("guardian"),
+    )
 
 
 def get_analysis_llm_client() -> Optional[LLMClient]:
