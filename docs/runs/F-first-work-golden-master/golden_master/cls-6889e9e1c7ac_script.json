@@ -1,0 +1,79 @@
+{
+  "event_id": "cls-6889e9e1c7ac",
+  "title": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners",
+  "intro": "",
+  "sections": [
+    {
+      "heading": "hook",
+      "body": "９６００人の拘留者と、日本企業の隠れた損失。",
+      "duration_sec": 4
+    },
+    {
+      "heading": "setup",
+      "body": "イスラエルの刑務所にパレスチナ人９６００人以上が収監され虐待が告発されている事実は、日本でも報道されています。しかし、そこにある隠蔽の構造までは報じられていません。",
+      "duration_sec": 24
+    },
+    {
+      "heading": "twist",
+      "body": "ベネズエラ政府系の『ＴｅｌｅＳＵＲ』は、イスラエルが赤十字国際委員会の訪問を操作し虐待を隠蔽している疑惑を告発。この治安当局の強硬姿勢による中東の緊迫化は、日本郵船の回避運航に伴う物流コスト増や、伊藤忠商事の提携解消にみるレピュテーションリスクとして日本企業を直撃しています。原油価格の高止まりは円安圧力を生み、私たちの生活に波及する構造です。",
+      "duration_sec": 64
+    },
+    {
+      "heading": "punchline",
+      "body": "人道危機の固定化を遠い国の問題と見過ごす代償を、私たちは毎月の電気代や物価高という痛みで支払うことになります。地政学の歪みを生活実感として突きつける、あの",
+      "duration_sec": 28
+    }
+  ],
+  "outro": "",
+  "total_duration_sec": 120,
+  "target_duration_sec": 80,
+  "estimated_duration_sec": 78,
+  "platform_profile": "shared",
+  "title_layer": {
+    "canonical_title": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners",
+    "platform_title": "日本では報道されない9,600 Detaineesの視点",
+    "hook_line": "海外の見方、日本とは違う。",
+    "thumbnail_text": "日本 vs 海外",
+    "title_strength": "strong",
+    "title_style": "Geopolitics"
+  },
+  "director_thought": "報道済みの人道問題を単なるお気持ちで終わらせず、中東の緊張が日本郵船や伊藤忠商事など日本企業のレピュテーションおよび物流リスク、さらには視聴者の生活コストに直結する『Geopolitics』の因果連鎖として再構成しました。",
+  "target_enemy": null,
+  "selected_pattern": "Geopolitics",
+  "loop_mechanism": "loop-2",
+  "seo_keywords": {
+    "primary": "イスラエル 刑務所 虐待",
+    "secondary": [
+      "赤十字国際委員会",
+      "日本郵船 回避運航",
+      "伊藤忠商事 提携解消"
+    ]
+  },
+  "thumbnail_text_variants": {
+    "main": "9600人の監獄",
+    "sub": "日本を直撃する隠蔽の代償"
+  },
+  "hook_variants": [
+    {
+      "type": "A",
+      "label": "数字ショック",
+      "text": "９６００人の拘留者と、日本企業の隠れた損失。"
+    },
+    {
+      "type": "D",
+      "label": "逆説宣言",
+      "text": "人権問題の隠蔽が、電気代高騰に繋がる理由。"
+    },
+    {
+      "type": "E",
+      "label": "名指し暴露",
+      "text": "ベネズエラ国営紙が報じた、赤十字の活動制限。"
+    }
+  ],
+  "peaks": {
+    "3s": "しかし、そこにある隠蔽の構造までは報じられていません。",
+    "7s": "パレスチナ人９６００人以上が収監されている事実",
+    "15s": "赤十字国際委員会の訪問を操作し虐待を隠蔽している疑惑",
+    "30s": "日本郵船の回避運航や伊藤忠商事の提携解消"
+  }
+}

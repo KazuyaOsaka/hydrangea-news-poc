@@ -1,0 +1,16 @@
+2026-06-11T00:45:13 [WARNING] src.llm.factory: [TieredGemini] tier=1 model=gemini-3.5-flash attempt=1/2 transient error — retrying in 15s: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand 
+2026-06-11T00:45:32 [WARNING] src.llm.factory: [TieredGemini] FAIL tier=1 model=gemini-3.5-flash — all 2 attempts exhausted. Next: tier 2 (gemini-2.5-flash). Error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand 
+2026-06-11T00:45:33 [WARNING] src.llm.factory: [TieredGemini] tier=2 model=gemini-2.5-flash attempt=1/2 transient error — retrying in 15s: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand 
+2026-06-11T00:46:01 [INFO] src.llm.factory: [TieredGemini] Success: tier=2 model=gemini-2.5-flash attempt=2/2
+2026-06-11T00:46:01 [INFO] src.generation.coverage_claim_guard: [CoverageClaimGuard] stream=stream_2_perspective_gap flagged=False title=consistent article=consistent n_flags=0
+{
+  "stream_classification": "stream_2_perspective_gap",
+  "flagged": false,
+  "flags": [],
+  "title_status": "consistent",
+  "article_status": "consistent",
+  "skipped": false,
+  "skip_reason": null
+}
+
+[OK] no coverage-claim contradiction detected.

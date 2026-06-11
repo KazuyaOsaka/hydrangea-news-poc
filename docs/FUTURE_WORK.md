@@ -1,6 +1,22 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-06-10 (★ F-editorial-guardian-corroboration 完了、実装バッチ 1-T.2。Editorial Guardian
+最終更新: 2026-06-11 (★ F-first-work-golden-master 完了、実装バッチ 1-S。第一作 (候補A
+cls-6889e9e1c7ac) の golden master 素材一式を自動出力で完成 = ①新ルート再生成 (editorial brief を
+script プロンプトのみにプロセス内注入、article は不変原則 1 で素のまま) ②validation run 2 ガード
+3 ランナー (coverage guard flag 1 = platform_title silence / Guardian 第1層 contradicted 1 = 告発主体
+帰属エラー / 第2層 contradicted 2 = article の coverage 過大主張を独立ソースが明示矛盾) ③image_prompt
+レイヤー新設 (`src/generation/image_prompt_writer.py`、5 プレート = 4 シーン 1:1 + フックカード 9:16、
+文字なし / 意味記述正典 / ADR-0001+0003 強制) ④Remotion テンプレート (manual_poc/remotion/ 独立 npm、
+セーフゾーン 3 帯紙面 + フックカード + Ken Burns + フレーズ同期字幕 + ducking、ダミー MP4 レンダ実証)
+⑤運用規約 docs 化 (docs/golden_master_spec.md = original 凍結 / *_edited 命名 / 再検証ループ / 手動 PoC
+チェックリスト)。★ CP-1 重大乖離訂正 = 候補A は sources_en=1 で extract_perspectives 構造的 0 件 →
+fallback 同形 hidden_stakes 候補をハーネス注入 (production 不変)。★ モデル pin = QUALITY/ARTICLE 全
+Tier を 3.5-flash に固定 (503 波での silent 劣化を fail に変換)。★ punchline 尻切れ再発 (loop-2、X1 と
+同型 = 標本 2 例目)。`Phase A.5-3b 第一作起案` を完了移動 (残り = 手動 PoC、新エントリ ★高)。
+`F-video-payload-visual-prompt-target-enemy` を完了移動 (L72 仮想敵 1 行除去)。新規:
+**F-fable5-guardian-poc** (★低 条件付き)。baseline 1557 → **1581 passed** (新規 +24、破壊ゼロ)。
+不変原則 1-5 + 第一作隔離 (6) 厳守。
+前回 2026-06-10: F-editorial-guardian-corroboration 完了、実装バッチ 1-T.2。Editorial Guardian
 第2段 = 真実性検証 (grounding 複数ソース突合) + レポート enrichment。検索と判定の分離 (証拠収集 =
 `GUARDIAN_GROUNDING_MODEL` 軽量モデル / 判定 = Guardian 単一モデル = 沈黙的劣化の禁止を判定層で維持)。
 truthfulness 語彙確定 (`corroborated / contradicted / uncorroborated` + harness 値 `unverified`) +
@@ -376,14 +392,22 @@ F-stream-2-filter-design 着手 OK 状態に。
 
 - ~~**F-image-prompt-spec** ★スコープ再定義要 (F-doc-backfill / 2026-05-02 登録、F-trial-run-post-llm-extraction / 2026-05-16 でスコープ乖離判明、**F-image-prompt-spec / 2026-05-18 完了**、完了済みセクション参照)~~
 
-- **Phase A.5-3b 第一作起案** (F-image-prompt-spec / 2026-05-18 起案、★ Hydrangea 第一作の本実装)
-  - 背景: 題材確定済 (候補A `cls-6889e9e1c7ac`、Israel 9,600 人 / ICRC 監視操作疑惑、perspective_gap framing)。ADR-0001/0002/0003 + `schema_extension_design.md` で設計前提が固定された。これらを実装に落とし込み第一作を起案・公開する。
-  - 対応案: (1) `src/shared/models.py` に `VideoImage` / `VideoEvent` を Optional default 追加 (後方互換、baseline 1417 を壊さない)、(2) `src/generation/video_payload_writer.py` を最小改変で `images[]` / `events[]` 生成 (既存 4 scene 生成は不変)、(3) image_prompt にブランドカラー 5 色 + トーン語彙を構造データとして注入 (構図・主題は LLM 折衷、schema_extension_design §5 論点 1 を決定)、(4) Remotion を D-minimal で構築 (ADR-0002)、(5) framing 指針 4 点 (9,600 虐待は日本報道済み明示 / ICRC specific 角度未報道が核心 / platform_title 誇大回避 / punchline「中間が良い」遵守) を反映。
-  - ★ **axis_5 採点の移送** (F-trial-run-candidate-a-reverify / 2026-05-19): 候補A の axis_5 主観採点 (5 観点: 台本刺さり度 / Hydrangea ブランド整合 / 系統判定妥当性 / 動画化適性 / video_prompt 品質、各 5 点) は F-trial-run-candidate-a-reverify の Slot-1 が fallback テンプレだったため本バッチで実施せず、第一作起案バッチで **候補A を手動 event 固定 + 実台本生成 → axis_5 採点** として実施する。
-  - 検討時期: F-trial-run-candidate-a-reverify 完了後 = ✅ 完了 (2026-05-19、前提最終確定済)。F-gemini-503-stability-audit と並走で 503 fallback リスク低減推奨。
-  - 想定工数: 数日〜1 週間 (ADR-0002 失敗条件: Remotion 実装 1 週間超で機能削減)
-  - 関連ファイル: src/shared/models.py, src/generation/video_payload_writer.py (不変原則 1-4 対象外), configs/prompts/, Remotion プロジェクト (新規)
-  - 関連: F-image-prompt-spec (本起案元、ADR + schema 前提)、F-trial-run-candidate-a-reverify (★ 着手前必須確認 = 完了、axis_5 採点移送元)、F-gemini-503-stability-audit (並走推奨)、`docs/ADR/0001-0003`、`docs/runs/F-image-prompt-spec/schema_extension_design.md`
+- ~~**Phase A.5-3b 第一作起案**~~ ✅ **golden master 部分完了 (F-first-work-golden-master / 2026-06-11、完了済みセクション参照)**。残作業は下記「第一作 手動 PoC」に引き継ぎ。
+
+- **第一作 手動 PoC (カズヤ手作業 + axis_5 採点)** (F-first-work-golden-master / 2026-06-11 起案、★ 第一作公開の最終工程)
+  - 背景: golden master 素材一式 (script/article/analysis/video_payload/image_prompts 5 本) は
+    `data/output/golden_master/` に凍結済み、validation 3 レポートと手修正対象リストは
+    `docs/runs/F-first-work-golden-master/` に出力済み。道具 (Remotion テンプレート / tts_to_captions /
+    編集→再検証ループ) も全部揃った。残りは人間にしかできない工程のみ。
+  - 対応案: `docs/golden_master_spec.md` §4 チェックリストに従う = flag レビュー + `*_edited.*` 編集 →
+    ガード 3 本再実行ループ → ElevenLabs 実生成 → captions 変換 → 画像 3 候補比較 (Nano Banana Pro /
+    GPT Image 2 / Flux 2 系に同文投入) → BGM 用意 → Remotion 実素材レンダ → axis_5 採点 →
+    公開判断 (公開可否バー + ADR-0003 チェックリスト + AI 開示ラベル必須)。
+  - ★ 特に: c6 (日本郵船/伊藤忠 = analysis 由来の企業主張) は corroborated になるまで公開に乗せない /
+    punchline 尻切れの手修正 / platform_title silence 表現の手修正。
+  - 検討時期: 即時 (バッチ完了直後から着手可)
+  - 関連ファイル: `docs/golden_master_spec.md` (正本)、`data/output/golden_master/`、
+    `docs/runs/F-first-work-golden-master/`、`manual_poc/`
 
 ### Phase A.5-3c 合成パート自動化 (F-doc-backfill / 2026-05-02 登録)
 
@@ -517,6 +541,10 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 想定工数: 2-3 時間 (調査 + 必要なら最小修正)
   - 関連ファイル: `src/generation/script_writer.py` (新ルート punchline 生成 + loop_mechanism)、`configs/prompts/analysis/geo_lens/script_with_analysis.md` (loop_mechanism プロンプト仕様)
   - 関連: X1 試運転実証、Phase A.5-3b 第一作品質
+  - ★ **標本 2 例目** (F-first-work-golden-master / 2026-06-11): 候補A golden master でも
+    punchline 末尾「…地政学の歪みを生活実感として突きつける、あの」で未完結 (loop-2、
+    char validation passed 87 字)。X1 Slot-1 と完全同型 = **loop-2 × 尻切れの再現性が確認された**。
+    調査優先度を裏付ける標本。第一作は手修正で対処 (golden_master_spec §3)。
 
 - **F-trial-data-procurement-protocol** ★中 (F-particular-angle-metadata-production-wire / 2026-05-31 起案、X1 試運転 blocker 4 連鎖から起案)
   - 背景: X1 試運転で blocker 4 連鎖を経験 = (1) sample mode は分析レイヤーブロックを通らない (`run_from_normalized` のみ) → 新ルート未起動、(2) スタール normalized データ (2026-04-27 の 5 週間前) で GarbageFilter `_MAX_AGE_HOURS=48` に全弾かれ → 0 events 処理、(3) 同一 RSS state では duplicate URL ばかりで複数 fresh batch を連続作成できず、(4) 試運転用 fresh データ確保手段 (cron / batch-prefetch / mock-fresh) が PoC 未整備。X1 は「ingestion + 1 run」で本番状態維持しつつ Path A pure で凌いだが、後続バッチ (Phase A.5-3b 第一作 / 1-Q.5 title guard / 1-T 高リスク事実検証) で同様の試運転需要が再発する確率高。
@@ -717,13 +745,22 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 関連ファイル: `src/storage/db.py` (jobs DDL L14 + save_job L189 拡張、idempotent migration)、`src/shared/models.py` (JobRecord 既存維持)、`docs/runs/F-docs-update-chatgpt-round2-and-error10/job_record_analysis.json` (grep 裏取り)
   - 関連: ChatGPT Round 2 レビュー (2026-05-27 指摘 7)、Phase A.5-3c (ElevenLabs + Remotion + 画像生成 本番統合)、Phase 1-C (DB マイグレーション、並走整理候補)
 
-- **F-video-payload-visual-prompt-target-enemy** ★低 (F-particular-angle-metadata-production-wire / 2026-05-31 起案、X1 試運転で観察)
-  - 背景: X1 で新ルート起動により `script.target_enemy` は None で production 退役したが、`src/generation/video_payload_writer.py:72` の twist visual_goal テンプレートが `"裏の構造・仮想敵・地政学/カネ/権力の文脈を図解で暴く"` とハードコードされており、`"仮想敵"` 文字列が **video_payload.json の scene metadata に残存** する (X1 試運転 Slot-1 video_payload で確認)。narration には実害なし (LLM 生成出力に台本テキストとして "仮想敵" は登場しない) だが、video_payload を直接読む下流 (画像/動画プロンプト変換) で legacy 語彙が混入するリスク。
-  - 対応案: `src/generation/video_payload_writer.py:72` の twist visual_goal テンプレートを「裏の構造・地政学/カネ/権力の文脈を図解で暴く」(仮想敵語を除去) に変更。video_payload_writer.py は不変原則 1-4 対象外のため改修可能。最小修正で済む。
-  - 検討時期: Phase A.5-3c の合成パート自動化 (Remotion + 画像生成) 着手前
-  - 想定工数: 0.5h (テンプレ文字列差替 + 既存テスト確認)
-  - 関連ファイル: `src/generation/video_payload_writer.py` L72、X1 試運転 Slot-1 video_payload.json (証拠)
-  - 関連: X1 (本起案元)、Phase A.5-3c (画像/動画プロンプト変換)
+- ~~**F-video-payload-visual-prompt-target-enemy**~~ ✅ **完了 (F-first-work-golden-master / 2026-06-11、完了済みセクション参照)**。L72 仮想敵 1 行除去 (同時解消条項 = 5 行以内 + tests 非依存を grep 確認)。
+
+- **F-fable5-guardian-poc: Claude Fable 5 を Guardian 役で比較 PoC** ★低 (条件付き・未確定) (F-first-work-golden-master / 2026-06-11 起案)
+  - 背景: 第一作 validation run で人間監査済みの ground truth (Guardian 2 層レポート + カズヤの
+    flag レビュー結果) が初めて手に入る。これを使い、Claude Fable 5 ($10/$50 per 1M tokens、
+    拒否時は HTTP 200 + stop_reason:"refusal" で課金なし、Covered Model = 30日 retention・ZDR 不可)
+    を Guardian 役 (抽出 + 忠実性 + corroboration 判定) で gemini-3.1-pro と比較する PoC 構想。
+    1-T.1 harness が client DI 可能 (LLMClient 注入) なので adapter 1 本で試せる。
+  - 対応案: 第一作の人間監査済みレポートを正解セットに、同一入力で Fable 5 adapter を回し
+    事故検出力 (contradicted / not_in_source の検出一致率 + 人間が真と認めた flag の再現) を比較。
+    **採用条件 = 3.1-pro より明確に事故検出力が高い場合のみ**。非採用条件 = コスト不釣合 /
+    拒否多発 / 過剰保守 (supported を過剰に flag)。
+  - 検討時期: 第一作 validation 完了 (カズヤ flag レビュー済み) 後
+  - 関連ファイル: `src/generation/editorial_guardian.py` (client DI) / `src/llm/` (adapter 新規)
+  - 関連: F-editorial-guardian-claim-extraction (1-T.1、DI 設計元)、F-first-work-golden-master
+    (ground truth 供給元)、CLAUDE.md クラウド誤り 10 派生 (一次ソース = 公式 pricing 確認済)
 
 - **README 全面書き直し** (TECH_DEBT.md 7.1 由来)
   - 背景: 初期 PoC 時代のまま、現状と乖離
@@ -848,6 +885,35 @@ F-stream-2-filter-design 着手 OK 状態に。
   - 何を対応したか
 
 ---
+
+- **Phase A.5-3b 第一作起案 (1-S) — golden master 素材一式 + 手動 PoC の道具立て (実装バッチ)**
+  (F-first-work-golden-master / 2026-06-11 完了)
+  - 発生バッチ: F-image-prompt-spec (2026-05-18) で起案、1-T.2 完了 (2026-06-10) で関門ゼロ。
+  - 対応: 候補A `cls-6889e9e1c7ac` の golden master を新ルート + 確定布陣 (QUALITY/ARTICLE 全 Tier
+    gemini-3.5-flash pin = silent 劣化を fail に変換) で再生成し `data/output/golden_master/` に
+    original 凍結 (スナップショット = `docs/runs/F-first-work-golden-master/golden_master/`)。
+    editorial brief (報道済み明示 / ICRC 角度限定 / silence 回避 / punchline 方向 + ADR-0003) は
+    script プロンプトのみプロセス内注入 (production プロンプト不変、article は不変原則 1 で素のまま)。
+    ★ CP-1 重大乖離訂正: 候補A は sources_en=1 で extract_perspectives 構造的 0 件 → fallback 同形
+    hidden_stakes 候補をハーネス注入 (式同形・写し元 L805-847 記録・品質ゲートのみ bypass)。
+    validation = 2 ガード 3 ランナー実走 (title silence flag / c5 帰属エラー contradicted / article
+    coverage 過大主張 c10/c13 を独立ソースが明示矛盾 / c6 企業主張は run3 で corroborated 回収)。
+    image_prompt レイヤー新設 (`src/generation/image_prompt_writer.py`、5 プレート、文字なし /
+    意味記述正典 / ADR-0001+0003 強制、テスト 18 件)。Remotion テンプレート (`manual_poc/remotion/`、
+    独立 npm、セーフゾーン 3 帯紙面 + フックカード + Ken Burns + フレーズ同期字幕 + ducking、
+    ダミー MP4 レンダ実証 = `npx remotion render FirstWork`)。`manual_poc/tts_to_captions.py`
+    (ElevenLabs with-timestamps → captions 変換、公式 docs 一次ソース確認、テスト 6 件)。
+    運用規約 = `docs/golden_master_spec.md` (original 凍結 / *_edited 命名 / 編集→再検証ループ /
+    手動 PoC チェックリスト / AI 開示必須)。axis_5 採点は手動 PoC (新エントリ「第一作 手動 PoC」★高)。
+    baseline 1557 → 1581 passed (+24)。
+
+- **F-video-payload-visual-prompt-target-enemy — twist visual_goal の「仮想敵」語彙除去**
+  (F-first-work-golden-master / 2026-06-11 完了)
+  - 発生バッチ: X1 (2026-05-31) で起案 (★低)。
+  - 対応: `src/generation/video_payload_writer.py` L72 の twist visual_goal テンプレートから
+    「仮想敵」を除去 (「裏の構造・地政学/カネ/権力の文脈を図解で暴く」)。1-S の image_prompt
+    レイヤー新設と同時解消 (5 行以内 + tests 非依存を grep 確認、image_prompt 側には最初から
+    持ち込まない)。既存テスト破壊ゼロ。
 
 - **F-editorial-guardian-corroboration (1-T.2) — Editorial Guardian 第2段: 真実性検証 = grounding 複数ソース突合 + レポート enrichment (実装バッチ)**
   (F-editorial-guardian-corroboration / 2026-06-10 完了)

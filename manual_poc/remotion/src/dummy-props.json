@@ -1,0 +1,25 @@
+{
+  "platformTitle": "ダミー: 9,600人収監とICRC監視操作疑惑",
+  "thumbnailText": "9600人の監獄",
+  "thumbnailSubText": "隠蔽の代償 (ダミー)",
+  "hookCardImage": "dummy/plate_hook_card.png",
+  "scenes": [
+    {"block": "hook", "durationSec": 3, "image": "dummy/plate_hook.png"},
+    {"block": "setup", "durationSec": 5, "image": "dummy/plate_setup.png"},
+    {"block": "twist", "durationSec": 8, "image": "dummy/plate_twist.png"},
+    {"block": "punchline", "durationSec": 4, "image": "dummy/plate_punchline.png"}
+  ],
+  "narrationAudio": "dummy/narration.wav",
+  "bgmAudio": "dummy/bgm.wav",
+  "captions": [
+    {"text": "ダミー字幕: ９６００人の拘留者と", "startSec": 0.4, "endSec": 2.2},
+    {"text": "日本企業の隠れた損失。", "startSec": 2.2, "endSec": 3.6},
+    {"text": "事件そのものは日本でも報道されています。", "startSec": 4.0, "endSec": 6.4},
+    {"text": "しかし隠蔽の構造までは報じられていません。", "startSec": 6.6, "endSec": 9.2},
+    {"text": "赤十字国際委員会の訪問が操作されている疑惑。", "startSec": 9.6, "endSec": 12.8},
+    {"text": "物流コスト増は円安圧力を生み", "startSec": 13.2, "endSec": 15.4},
+    {"text": "私たちの生活に波及する構造です。", "startSec": 15.6, "endSec": 17.8},
+    {"text": "毎月の電気代という痛みで支払うことになります。", "startSec": 18.0, "endSec": 19.6}
+  ],
+  "sourceLabel": "Source: TeleSUR (ダミー)"
+}

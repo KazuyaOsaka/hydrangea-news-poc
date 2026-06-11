@@ -1,0 +1,148 @@
+{
+  "event_id": "cls-6889e9e1c7ac",
+  "title": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners",
+  "generated_at": "2026-06-10T15:38:52.952389+00:00",
+  "aspect_ratio_policy": {
+    "scene_plate": "1:1",
+    "hook_card": "9:16"
+  },
+  "plates": [
+    {
+      "plate_id": "cls-6889e9e1c7ac_plate_hook",
+      "role": "scene_plate",
+      "scene_block": "hook",
+      "aspect_ratio": "1:1",
+      "scene_intent": "a single strong abstract focal motif that condenses the scale and tension of a politics news story at first glance",
+      "composition": "centered composition, one dominant abstract symbol, generous dark negative space around it",
+      "style": "sober investigative documentary infographic style, editorial lighting, source-driven layout, restrained, high-density, sharp, flat graphic design, vector-like clarity",
+      "prompt_en": "Abstract editorial news graphic: a single strong abstract focal motif that condenses the scale and tension of a politics news story at first glance. Suggested abstract motifs (render as flat icons, silhouettes or diagrams, never photorealistic): dense grid of small anonymous human silhouettes behind vertical bars, one silhouette highlighted in hydrangea blue. Composition: centered composition, one dominant abstract symbol, generous dark negative space around it. Style: sober investigative documentary infographic style, editorial lighting, source-driven layout, restrained, high-density, sharp, flat graphic design, vector-like clarity. Colors: strict color palette: near-black background (#0A0A0A), off-white graphic elements (#F5F5F0), hydrangea blue accent (#4A6FA5), grey secondary elements (#808080); muted red (#A04848) only for a single warning motif if essential, never dominant. Constraints: absolutely no text, no letters, no words, no numbers, no captions, no typography, no labels, no logos, no watermarks anywhere in the image (all typography is rendered separately in code).",
+      "negative_prompt_en": "text, letters, words, numbers, captions, typography, labels, logos, watermark, photorealistic reenactment of real events, photorealism, identifiable real person, real person likeness, human face, red cross emblem, red crescent emblem, ICRC logo, ICRC uniform, armband with emblem, combat footage, weapons, gore, blood, cinematic lighting, dark cinematic mood, thriller atmosphere, dramatic shadows, lens flare, film grain",
+      "must_avoid": [
+        "real faces or likenesses of real persons",
+        "realistic depiction of real facilities",
+        "reenactment of real events",
+        "red cross / red crescent / red crystal emblems, ICRC marks or uniforms",
+        "realistic war or violence imagery",
+        "any text, letters or numbers baked into the image"
+      ],
+      "motif_hints": [
+        "dense grid of small anonymous human silhouettes behind vertical bars",
+        "one silhouette highlighted in hydrangea blue"
+      ],
+      "notes": "scene plate for the central visual band; generated square (1:1) so the Remotion Ken Burns pan/zoom can move inside it",
+      "source_scene_id": "cls-6889e9e1c7ac_s00_hook"
+    },
+    {
+      "plate_id": "cls-6889e9e1c7ac_plate_setup",
+      "role": "scene_plate",
+      "scene_block": "setup",
+      "aspect_ratio": "1:1",
+      "scene_intent": "the official surface of the story: abstract document-style motifs (file folders, stacked papers, a podium silhouette with no person) that read as 'official statements and reported facts'",
+      "composition": "orderly grid-like arrangement of abstract document shapes, calm and institutional, slightly off-center focal point",
+      "style": "sober investigative documentary infographic style, editorial lighting, source-driven layout, restrained, high-density, sharp, flat graphic design, vector-like clarity",
+      "prompt_en": "Abstract editorial news graphic: the official surface of the story: abstract document-style motifs (file folders, stacked papers, a podium silhouette with no person) that read as 'official statements and reported facts'. Suggested abstract motifs (render as flat icons, silhouettes or diagrams, never photorealistic): stacked official report documents as flat abstract shapes, press-briefing podium silhouette with no person. Composition: orderly grid-like arrangement of abstract document shapes, calm and institutional, slightly off-center focal point. Style: sober investigative documentary infographic style, editorial lighting, source-driven layout, restrained, high-density, sharp, flat graphic design, vector-like clarity. Colors: strict color palette: near-black background (#0A0A0A), off-white graphic elements (#F5F5F0), hydrangea blue accent (#4A6FA5), grey secondary elements (#808080); muted red (#A04848) only for a single warning motif if essential, never dominant. Constraints: absolutely no text, no letters, no words, no numbers, no captions, no typography, no labels, no logos, no watermarks anywhere in the image (all typography is rendered separately in code).",
+      "negative_prompt_en": "text, letters, words, numbers, captions, typography, labels, logos, watermark, photorealistic reenactment of real events, photorealism, identifiable real person, real person likeness, human face, red cross emblem, red crescent emblem, ICRC logo, ICRC uniform, armband with emblem, combat footage, weapons, gore, blood, cinematic lighting, dark cinematic mood, thriller atmosphere, dramatic shadows, lens flare, film grain",
+      "must_avoid": [
+        "real faces or likenesses of real persons",
+        "realistic depiction of real facilities",
+        "reenactment of real events",
+        "red cross / red crescent / red crystal emblems, ICRC marks or uniforms",
+        "realistic war or violence imagery",
+        "any text, letters or numbers baked into the image"
+      ],
+      "motif_hints": [
+        "stacked official report documents as flat abstract shapes",
+        "press-briefing podium silhouette with no person"
+      ],
+      "notes": "scene plate for the central visual band; generated square (1:1) so the Remotion Ken Burns pan/zoom can move inside it",
+      "source_scene_id": "cls-6889e9e1c7ac_s01_setup"
+    },
+    {
+      "plate_id": "cls-6889e9e1c7ac_plate_twist",
+      "role": "scene_plate",
+      "scene_block": "twist",
+      "aspect_ratio": "1:1",
+      "scene_intent": "the hidden structure behind the story: an abstract diagram-like composition of actors, incentives and flows of power and money in politics, with connector lines and arrow motifs",
+      "composition": "network-diagram composition: abstract nodes connected by thin lines and arrows, asymmetric tension between two clusters",
+      "style": "sober investigative documentary infographic style, editorial lighting, source-driven layout, restrained, high-density, sharp, flat graphic design, vector-like clarity",
+      "prompt_en": "Abstract editorial news graphic: the hidden structure behind the story: an abstract diagram-like composition of actors, incentives and flows of power and money in politics, with connector lines and arrow motifs. Suggested abstract motifs (render as flat icons, silhouettes or diagrams, never photorealistic): abstract monitoring eye motif connected by arrows to a clipboard checklist and a prison gate, a guided inspection route drawn as a dotted line that avoids dark areas of the diagram. Composition: network-diagram composition: abstract nodes connected by thin lines and arrows, asymmetric tension between two clusters. Style: sober investigative documentary infographic style, editorial lighting, source-driven layout, restrained, high-density, sharp, flat graphic design, vector-like clarity. Colors: strict color palette: near-black background (#0A0A0A), off-white graphic elements (#F5F5F0), hydrangea blue accent (#4A6FA5), grey secondary elements (#808080); muted red (#A04848) only for a single warning motif if essential, never dominant. Constraints: absolutely no text, no letters, no words, no numbers, no captions, no typography, no labels, no logos, no watermarks anywhere in the image (all typography is rendered separately in code).",
+      "negative_prompt_en": "text, letters, words, numbers, captions, typography, labels, logos, watermark, photorealistic reenactment of real events, photorealism, identifiable real person, real person likeness, human face, red cross emblem, red crescent emblem, ICRC logo, ICRC uniform, armband with emblem, combat footage, weapons, gore, blood, cinematic lighting, dark cinematic mood, thriller atmosphere, dramatic shadows, lens flare, film grain",
+      "must_avoid": [
+        "real faces or likenesses of real persons",
+        "realistic depiction of real facilities",
+        "reenactment of real events",
+        "red cross / red crescent / red crystal emblems, ICRC marks or uniforms",
+        "realistic war or violence imagery",
+        "any text, letters or numbers baked into the image"
+      ],
+      "motif_hints": [
+        "abstract monitoring eye motif connected by arrows to a clipboard checklist and a prison gate",
+        "a guided inspection route drawn as a dotted line that avoids dark areas of the diagram"
+      ],
+      "notes": "scene plate for the central visual band; generated square (1:1) so the Remotion Ken Burns pan/zoom can move inside it",
+      "source_scene_id": "cls-6889e9e1c7ac_s02_twist"
+    },
+    {
+      "plate_id": "cls-6889e9e1c7ac_plate_punchline",
+      "role": "scene_plate",
+      "scene_block": "punchline",
+      "aspect_ratio": "1:1",
+      "scene_intent": "a quiet, restrained closing motif that links the global structure back to everyday life, leaving a cynical but intelligent afterimage",
+      "composition": "minimal composition with a small isolated motif low in the frame, large breathing space above",
+      "style": "sober investigative documentary infographic style, editorial lighting, source-driven layout, restrained, high-density, sharp, flat graphic design, vector-like clarity",
+      "prompt_en": "Abstract editorial news graphic: a quiet, restrained closing motif that links the global structure back to everyday life, leaving a cynical but intelligent afterimage. Suggested abstract motifs (render as flat icons, silhouettes or diagrams, never photorealistic): a single small lit window in a large dark wall, barbed wire as a thin abstract line motif. Composition: minimal composition with a small isolated motif low in the frame, large breathing space above. Style: sober investigative documentary infographic style, editorial lighting, source-driven layout, restrained, high-density, sharp, flat graphic design, vector-like clarity. Colors: strict color palette: near-black background (#0A0A0A), off-white graphic elements (#F5F5F0), hydrangea blue accent (#4A6FA5), grey secondary elements (#808080); muted red (#A04848) only for a single warning motif if essential, never dominant. Constraints: absolutely no text, no letters, no words, no numbers, no captions, no typography, no labels, no logos, no watermarks anywhere in the image (all typography is rendered separately in code).",
+      "negative_prompt_en": "text, letters, words, numbers, captions, typography, labels, logos, watermark, photorealistic reenactment of real events, photorealism, identifiable real person, real person likeness, human face, red cross emblem, red crescent emblem, ICRC logo, ICRC uniform, armband with emblem, combat footage, weapons, gore, blood, cinematic lighting, dark cinematic mood, thriller atmosphere, dramatic shadows, lens flare, film grain",
+      "must_avoid": [
+        "real faces or likenesses of real persons",
+        "realistic depiction of real facilities",
+        "reenactment of real events",
+        "red cross / red crescent / red crystal emblems, ICRC marks or uniforms",
+        "realistic war or violence imagery",
+        "any text, letters or numbers baked into the image"
+      ],
+      "motif_hints": [
+        "a single small lit window in a large dark wall",
+        "barbed wire as a thin abstract line motif"
+      ],
+      "notes": "scene plate for the central visual band; generated square (1:1) so the Remotion Ken Burns pan/zoom can move inside it",
+      "source_scene_id": "cls-6889e9e1c7ac_s03_punchline"
+    },
+    {
+      "plate_id": "cls-6889e9e1c7ac_plate_hook_card",
+      "role": "hook_card",
+      "scene_block": "hook",
+      "aspect_ratio": "9:16",
+      "scene_intent": "a full-frame vertical cover plate that works as the very first frame of a short news video, as its thumbnail and as its cover image: one striking abstract motif summarizing a politics story, instantly readable at feed-scroll speed",
+      "composition": "9:16 vertical composition; keep the central horizontal band (roughly the middle third of the frame) visually calm and empty as reserved negative space for headline typography overlaid later in code; place the focal motif in the upper third, keep the bottom third dark and quiet",
+      "style": "sober investigative documentary infographic style, editorial lighting, source-driven layout, restrained, high-density, sharp, flat graphic design, vector-like clarity",
+      "prompt_en": "Abstract editorial news graphic: a full-frame vertical cover plate that works as the very first frame of a short news video, as its thumbnail and as its cover image: one striking abstract motif summarizing a politics story, instantly readable at feed-scroll speed. Suggested abstract motifs (render as flat icons, silhouettes or diagrams, never photorealistic): prison gate silhouette with barbed wire under a single cold light, dense grid of anonymous silhouettes fading into darkness. Composition: 9:16 vertical composition; keep the central horizontal band (roughly the middle third of the frame) visually calm and empty as reserved negative space for headline typography overlaid later in code; place the focal motif in the upper third, keep the bottom third dark and quiet. Style: sober investigative documentary infographic style, editorial lighting, source-driven layout, restrained, high-density, sharp, flat graphic design, vector-like clarity. Colors: strict color palette: near-black background (#0A0A0A), off-white graphic elements (#F5F5F0), hydrangea blue accent (#4A6FA5), grey secondary elements (#808080); muted red (#A04848) only for a single warning motif if essential, never dominant. Constraints: absolutely no text, no letters, no words, no numbers, no captions, no typography, no labels, no logos, no watermarks anywhere in the image (all typography is rendered separately in code).",
+      "negative_prompt_en": "text, letters, words, numbers, captions, typography, labels, logos, watermark, photorealistic reenactment of real events, photorealism, identifiable real person, real person likeness, human face, red cross emblem, red crescent emblem, ICRC logo, ICRC uniform, armband with emblem, combat footage, weapons, gore, blood, cinematic lighting, dark cinematic mood, thriller atmosphere, dramatic shadows, lens flare, film grain",
+      "must_avoid": [
+        "real faces or likenesses of real persons",
+        "realistic depiction of real facilities",
+        "reenactment of real events",
+        "red cross / red crescent / red crystal emblems, ICRC marks or uniforms",
+        "realistic war or violence imagery",
+        "any text, letters or numbers baked into the image"
+      ],
+      "motif_hints": [
+        "prison gate silhouette with barbed wire under a single cold light",
+        "dense grid of anonymous silhouettes fading into darkness"
+      ],
+      "notes": "hook card plate: serves as frame 0-2s background, the Shorts thumbnail frame and the TikTok cover. thumbnail_text (3-5 words) is overlaid later by the Remotion typography layer in the reserved central band",
+      "source_scene_id": ""
+    }
+  ],
+  "metadata": {
+    "design_canon": "F-first-work-golden-master 2026-06-11 (DECISION_LOG)",
+    "division_of_labor": "text is drawn in code (Remotion), images carry no text",
+    "model_agnostic": "canonical source is the semantic description (scene_intent + composition + style); prompt_en is one shared prompt submitted identically to all candidate image models",
+    "visual_safety_level": "elevated",
+    "thumbnail_text_for_hook_card": "9600人の監獄",
+    "adr_refs": [
+      "ADR-0001",
+      "ADR-0002",
+      "ADR-0003"
+    ]
+  }
+}

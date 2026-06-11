@@ -4,6 +4,13 @@
 Accepted (2026-05-16 に 3 AI 三角測量で確立、2026-05-18 F-image-prompt-spec
 バッチで ADR として正典化)
 
+> ★ 部分更新 (2026-06-11 F-first-work-golden-master): 2026-06-10 設計正典
+> (セーフゾーン中央帯の「動く紙面」+ 静止プレート前提) により、第一作スコープの
+> 「Ken Burns をやらない」を撤回し **Ken Burns (抑制されたパン・ズーム) を採用**、
+> 字幕は「scene ごとのフェード」から **タイムスタンプ駆動のフレーズ同期** に更新。
+> D-minimal の哲学 (最小機能・ローカル完結・CapCut 非常口) は不変。
+> 経緯: docs/DECISION_LOG.md 2026-06-11 エントリ、実装: manual_poc/remotion/。
+
 ## 文脈
 Phase A.5-3b 第一作で Remotion をどこまで実装するか。検討した 4 案:
 - A. フル実装

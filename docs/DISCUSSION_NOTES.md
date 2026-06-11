@@ -1,6 +1,14 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-06-10 (★ F-editorial-guardian-corroboration 完了、実装バッチ 1-T.2。4-A 新規 1 件 =
+最終更新: 2026-06-11 (★ F-first-work-golden-master 完了、実装バッチ 1-S。4-A 新規 2 件 =
+「第一作の視覚・レイアウト設計正典 5 点」(昇格候補 DECISION_LOG = 本バッチで実装・記録完了。
+中央帯紙面 / フレーズ同期字幕 / 文字とプレートの分業 / モデル非結合 / フックカード=サムネ統合、
+出典 = 2026-06-10 クラウド Web 調査) +「編集差分 = 教師信号の観測開始宣言」(Active、original 凍結 +
+*_edited 命名で第一作から観測開始、生成プロンプト改修は差分観測後)。4-B 再評価 2 件 = ①「Fable 5
+挙動観察」エントリに ⑥ 1-S 観察 (CP-1 で構造的 0 件の重大乖離を実測で発見 / モデル pin 判断 /
+スコープ規律維持) を追記 ②「2026-05-16: video_payload に image_prompt レイヤーが存在しない」
+Resolved エントリに実装完了追記 (image_prompt_writer.py 新設)。baseline 1557 → 1581 passed (+24)。
+前回 2026-06-10: F-editorial-guardian-corroboration 完了、実装バッチ 1-T.2。4-A 新規 1 件 =
 「truthfulness 語彙と公開可否バーの確定」(昇格候補 DECISION_LOG = 本バッチで実装完了。語彙 =
 `corroborated / contradicted / uncorroborated` + harness 値 `unverified`、公開可否バー = supported ×
 corroborated のみ非 flag、独立性は最小定義 = 元ソースドメイン階層除外 + deterministic 安全網)。
@@ -44,6 +52,36 @@ Cultural Divide + used_fallback=false / retries=0 + JSON 切断ゼロ)。axis_5 
 ---
 
 ## 未分類 (Active)
+
+### 2026-06-11: 第一作の視覚・レイアウト設計正典 5 点 (F-first-work-golden-master、1-S)
+- **内容**: 2026-06-10 クラウド Web 調査の結論を本バッチで実装・正典化した 5 点:
+  ① **セーフゾーン中央帯の「動く紙面」** (1080×1920、上 250 / 下 320 / 右マージンに重要要素を
+  置かない、ヘッダー帯 + 中央ビジュアル帯 + 字幕帯の固定 3 帯、全画面没入型 = UGC 文法は採らない)
+  ② **字幕 = burned-in + フレーズレベル同期** (音声オフ多数派前提、サンセリフ・高コントラスト・
+  1〜2 行・演出抑制、同期データ = ElevenLabs character alignment)
+  ③ **分業原則 = 文字はコードで描く、絵は AI で描く** (プレートは文字なし、タイポは全て Remotion、
+  日本語描画品質へのモデル依存を構造排除)
+  ④ **モデル非結合原則** (視覚素材の正典は意味記述 = scene_intent + composition + style。prompt_en
+  は 3 モデル同文投入の共通プロンプト。AI 動画クリップは第一作不使用 = 特定動画モデル結合は負債)
+  ⑤ **サムネ = 第1フレーム = フックカード** (frame 0〜2 秒がフィード初撃 + Shorts サムネフレーム +
+  TikTok カバーの三役、thumbnail_text 3〜5 語規範)。
+  ※ ADR-0001 (6-8 images + 10 events) / ADR-0002 (Ken Burns 禁止) を部分更新 (両 ADR に注記済)。
+- **出典**: 2026-06-10 クラウド Web 調査 (カズヤ承認済バッチプロンプト §0) / DECISION_LOG
+  2026-06-11 エントリ / `src/generation/image_prompt_writer.py` + `manual_poc/remotion/` (実装)
+- **ステータス**: `昇格候補(DECISION_LOG)` = 本バッチで実装・記録完了。第二作以降の正典として参照
+
+### 2026-06-11: 編集差分 = 教師信号の観測開始宣言 (F-first-work-golden-master、1-S)
+- **内容**: golden master を original として凍結し、カズヤ編集を `*_edited.*` に分離する規約
+  (golden_master_spec.md §2) により、**第一作から「人間編集差分」の観測を開始**する。AI 文体・
+  framing の生成プロンプト改修 (burstiness / 反ヘッジ / 反テンプレ等、DISCUSSION_NOTES 2026-06-08
+  方針) は、この差分が溜まってから別バッチで設計する (今は実装しない = 誤り6 回避)。観測対象:
+  ① punchline 尻切れの修正パターン ② coverage 表現の角度限定化 ③ 帰属 (誰が告発し誰が報じたか)
+  の精密化 ④ brief 由来情報の本文への織り込み方 (article は brief 注入不可のため人間編集が唯一の
+  注入経路)。
+- **出典**: `docs/golden_master_spec.md` §2 / DECISION_LOG 2026-06-11 / DISCUSSION_NOTES 2026-06-08
+  「AI 文体の根治方針」
+- **ステータス**: `Active` (第一作編集完了後に差分を収集、数作分溜まったら生成プロンプト改修
+  バッチを起案)
 
 ### 2026-06-10: truthfulness 語彙と公開可否バーの確定 (F-editorial-guardian-corroboration、1-T.2)
 - **内容**: 1-T.1 で pending だった第2層・真実性の語彙を 1-T.2 で確定した (確定値は
@@ -128,6 +166,17 @@ Cultural Divide + used_fallback=false / retries=0 + JSON 切断ゼロ)。axis_5 
   しなかった。1-T.2 相乗りで CLAUDE.md ガードレール §4 に「secrets ファイルは値をマスクして
   表示 (キー名のみ、例: `grep -oE '^[A-Z_]+' .env`)」を明文化済み。1-T.2 では .env 追記を
   `cat >>` + キー名のみの grep 検証で実施し、値の表示ゼロを維持した。
+- ★ **追記 (F-first-work-golden-master / 2026-06-11、⑥ 1-S 観察)**: ① CP-1 grep-first 作法が
+  重大乖離を未然に発見 — 起案前提「候補A の analysis.json 残存 + 新ルート呼出可能」に対し、実測で
+  (a) analysis.json 非存在 (b) **extract_perspectives が構造的 0 件** (sources_en=1 < 最低 2、
+  fallback ゲートも不通過) を確認。推定のまま実装していれば run_analysis_layer が None を返し
+  原因不明の失敗になっていた。ドライラン (LLM 非関与のルールベース部分を実データで先に実行) が
+  有効だった。② **モデル pin 判断** — 初回生成で 503 波により article が tier3 (3.1-flash-lite) へ
+  silent 劣化 → 「golden master の凍結条件 = 確定布陣由来」と解釈し全 Tier pin で再生成 (劣化する
+  くらいなら fail。ab_article 前例の転用)。カズヤ事前指示にない判断だが沈黙的劣化の禁止と同方向。
+  ③ スコープ規律維持 — production 変更は image_prompt_writer 新規 + video_payload_writer 1 行
+  (同時解消条項の事前許可分) のみ。④ secrets ガード (§4) 遵守 — ELEVENLABS キー確認は
+  `grep -oE '^[A-Z_]+'` でキー名のみ表示。
 - **ステータス**: `Active` (次バッチ以降も Fable 5 挙動の観察を継続、数バッチ分溜まったら
   アーカイブ判断)
 
@@ -673,6 +722,10 @@ REPORT §6。FUTURE_WORK 緊急度 高「F-image-prompt-spec」をスコープ�
 正典化。実装は Phase A.5-3b 第一作起案で実施 (FUTURE_WORK 緊急度 高に新規
 タスク化)。詳細は DECISION_LOG「2026-05-18: F-image-prompt-spec」+
 `docs/ADR/0001-0003` + `docs/runs/F-image-prompt-spec/REPORT.md`。
+★ **実装完了追記 (F-first-work-golden-master / 2026-06-11)**: image_prompt レイヤーは
+`src/generation/image_prompt_writer.py` (決定論、5 プレート = 4 シーン 1:1 + フックカード 9:16、
+文字なし / 意味記述正典) として実装完了。images[]/events[] の schema 案は 2026-06-10 設計正典の
+分業原則により「プレート 5 本 + タイポは Remotion」へ簡約 (ADR-0001 注記参照)。
 
 ### 2026-05-16: llm_judgement_text が非永続化 — 将来のデバッグ用に response_text 保存の検討余地 (F-trial-run-post-llm-extraction で観察)
 

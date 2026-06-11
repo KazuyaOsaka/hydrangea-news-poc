@@ -1,0 +1,180 @@
+{
+  "event_id": "cls-6889e9e1c7ac",
+  "title": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners",
+  "scenes": [
+    {
+      "index": 0,
+      "narration": "９６００人の拘留者と、日本企業の隠れた損失。",
+      "visual_hint": "インパクトのあるタイトルカードとBGM開始",
+      "duration_sec": 4,
+      "scene_id": "cls-6889e9e1c7ac_s00_hook",
+      "heading": "hook",
+      "visual_goal": "視聴者の注意を引き、テーマを一言で提示する",
+      "visual_mode": "anchor_style",
+      "video_prompt": "Title card animation: bold Japanese headline text on screen, abstract politics-themed background with motion graphics, high-contrast color scheme, no human faces, no specific identifiable locations",
+      "negative_prompt": "photorealistic reenactment of real events, close-up of named individual's face, fabricated meeting or summit scene, combat or war footage, AI-generated likeness of real person, misleading documentary-style footage",
+      "on_screen_text": "9600人の監獄",
+      "must_include": [],
+      "must_avoid": [
+        "実在人物の顔アップ・特定個人の肖像",
+        "架空の会談・会議シーンの再現映像",
+        "戦闘・暴力・兵器の描写"
+      ],
+      "source_grounding": [
+        "latin_america"
+      ],
+      "transition_hint": "cut → news headline graphic (0.3s)"
+    },
+    {
+      "index": 1,
+      "narration": "イスラエルの刑務所にパレスチナ人９６００人以上が収監され虐待が告発されている事実は、日本でも報道されています。しかし、そこにある隠蔽の構造までは報じられていません。",
+      "visual_hint": "建前・公式発表のテロップと媒体ロゴの提示",
+      "duration_sec": 24,
+      "scene_id": "cls-6889e9e1c7ac_s01_setup",
+      "heading": "setup",
+      "visual_goal": "公式発表・建前を『建前』として名指しで提示する",
+      "visual_mode": "document_style",
+      "video_prompt": "Document-style graphic: clean lower-third for the official statement, press-conference podium silhouette without identifiable faces, newspaper headline overlays from latin_america as supporting context, typographic emphasis on the 'official' framing — no reenactment",
+      "negative_prompt": "photorealistic reenactment of real events, close-up of named individual's face, fabricated meeting or summit scene, combat or war footage, AI-generated likeness of real person, misleading documentary-style footage",
+      "on_screen_text": "イスラエルの刑務所にパレスチナ人９６００人以上が収監され…",
+      "must_include": [
+        "『公式発表 / 建前』であることを示すロワーサード",
+        "ソース名の明示（媒体名テロップ）"
+      ],
+      "must_avoid": [
+        "実在人物の顔アップ・特定個人の肖像",
+        "架空の会談・会議シーンの再現映像",
+        "戦闘・暴力・兵器の描写"
+      ],
+      "source_grounding": [
+        "latin_america"
+      ],
+      "transition_hint": "wipe → document / press statement graphic (0.5s)"
+    },
+    {
+      "index": 2,
+      "narration": "ベネズエラ政府系の『ＴｅｌｅＳＵＲ』は、イスラエルが赤十字国際委員会の訪問を操作し虐待を隠蔽している疑惑を告発。この治安当局の強硬姿勢による中東の緊迫化は、日本郵船の回避運航に伴う物流コスト増や、伊藤忠商事の提携解消にみるレピュテーションリスクとして日本企業を直撃しています。原油価格の高止まりは円安圧力を生み、私たちの生活に波及する構造です。",
+      "visual_hint": "構造図・対立軸インフォグラフィックで裏の文脈を可視化",
+      "duration_sec": 64,
+      "scene_id": "cls-6889e9e1c7ac_s02_twist",
+      "heading": "twist",
+      "visual_goal": "裏の構造・地政学/カネ/権力の文脈を図解で暴く",
+      "visual_mode": "structure_diagram",
+      "video_prompt": "Structure diagram: animated arrows linking actors and incentives in politics, abstract icons for involved governments/industries, side-callouts pointing to underlying drivers, clearly labeled as analytical hypothesis, no reenactment footage",
+      "negative_prompt": "photorealistic reenactment of real events, close-up of named individual's face, fabricated meeting or summit scene, combat or war footage, AI-generated likeness of real person, misleading documentary-style footage, specific confirmed location B-roll, authoritative documentary narration visual",
+      "on_screen_text": "ベネズエラ政府系の『ＴｅｌｅＳＵＲ』は、イスラエルが赤十…",
+      "must_include": [
+        "対立軸・構造を示す矢印 / split-screen / フローチャート",
+        "関与アクター（政府・業界・媒体）のラベル",
+        "比較対象地域の明示: latin_america"
+      ],
+      "must_avoid": [
+        "実在人物の顔アップ・特定個人の肖像",
+        "架空の会談・会議シーンの再現映像",
+        "戦闘・暴力・兵器の描写",
+        "仮説・推論パートでの写実的ドキュメンタリー映像"
+      ],
+      "source_grounding": [
+        "latin_america"
+      ],
+      "transition_hint": "fade → structure diagram / split-screen contrast (0.8s)"
+    },
+    {
+      "index": 3,
+      "narration": "人道危機の固定化を遠い国の問題と見過ごす代償を、私たちは毎月の電気代や物価高という痛みで支払うことになります。地政学の歪みを生活実感として突きつける、あの",
+      "visual_hint": "シニカルな余韻を残すロワーサード + ループ回帰テロップ",
+      "duration_sec": 28,
+      "scene_id": "cls-6889e9e1c7ac_s03_punchline",
+      "heading": "punchline",
+      "visual_goal": "価値観を揺さぶる結末と loop 機構をテロップで定着させる",
+      "visual_mode": "infographic",
+      "video_prompt": "Closing lower-third title card: cynical takeaway phrasing in bold Japanese type, loop-mechanism callback motif (matching the hook's keyword/visual), muted background, single accent color, no human faces, clearly framed as editorial conclusion (not a confirmed prediction)",
+      "negative_prompt": "photorealistic reenactment of real events, close-up of named individual's face, fabricated meeting or summit scene, combat or war footage, AI-generated likeness of real person, misleading documentary-style footage, specific confirmed location B-roll, authoritative documentary narration visual",
+      "on_screen_text": "人道危機の固定化を遠い国の問題と見過ごす代償を、私たちは…",
+      "must_include": [
+        "loop_mechanism を示す視覚要素（hookで使った語/図の再登場）",
+        "シニカルな余韻を示す閉じテロップ"
+      ],
+      "must_avoid": [
+        "実在人物の顔アップ・特定個人の肖像",
+        "架空の会談・会議シーンの再現映像",
+        "戦闘・暴力・兵器の描写"
+      ],
+      "source_grounding": [
+        "japan",
+        "latin_america"
+      ],
+      "transition_hint": "fade-out with cynical lower-third title card (1.0s)"
+    }
+  ],
+  "total_duration_sec": 120,
+  "metadata": {
+    "category": "politics",
+    "source": "TeleSUR",
+    "tags": [
+      "Uncategorized",
+      "Addameer prisoner rights",
+      "administrative detention Israel",
+      "Gaza ceasefire violations 2026",
+      "Palestinian detainees torture",
+      "Palestinian prisoners ICRC"
+    ],
+    "published_at": "2026-05-09T07:12:19+00:00",
+    "target_duration_sec": 80,
+    "estimated_duration_sec": 78,
+    "platform_profile": "shared",
+    "visual_profile": "news_explainer_shared",
+    "visual_safety_level": "elevated",
+    "evidence_strength": "partial",
+    "scene_count": 4,
+    "uses_multi_region_comparison": false,
+    "source_regions": [
+      "latin_america"
+    ],
+    "canonical_title": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners",
+    "platform_title": "日本では報道されない9,600 Detaineesの視点",
+    "hook_line": "海外の見方、日本とは違う。",
+    "thumbnail_text": "9600人の監獄",
+    "thumbnail_text_template": "日本 vs 海外",
+    "thumbnail_text_llm": "9600人の監獄",
+    "thumbnail_text_sub": "日本を直撃する隠蔽の代償",
+    "thumbnail_source": "llm",
+    "title_strength": "strong",
+    "title_style": "Geopolitics",
+    "director_thought": "報道済みの人道問題を単なるお気持ちで終わらせず、中東の緊張が日本郵船や伊藤忠商事など日本企業のレピュテーションおよび物流リスク、さらには視聴者の生活コストに直結する『Geopolitics』の因果連鎖として再構成しました。",
+    "selected_pattern": "Geopolitics",
+    "loop_mechanism": "loop-2",
+    "seo_primary": "イスラエル 刑務所 虐待",
+    "seo_secondary": [
+      "赤十字国際委員会",
+      "日本郵船 回避運航",
+      "伊藤忠商事 提携解消"
+    ],
+    "hook_variants": [
+      {
+        "type": "A",
+        "label": "数字ショック",
+        "text": "９６００人の拘留者と、日本企業の隠れた損失。"
+      },
+      {
+        "type": "D",
+        "label": "逆説宣言",
+        "text": "人権問題の隠蔽が、電気代高騰に繋がる理由。"
+      },
+      {
+        "type": "E",
+        "label": "名指し暴露",
+        "text": "ベネズエラ国営紙が報じた、赤十字の活動制限。"
+      }
+    ],
+    "analysis_layer_enabled": true,
+    "selected_perspective": "hidden_stakes",
+    "selected_duration_profile": "geopolitics_120s",
+    "visual_mood_tags": [
+      "causal_chain",
+      "domino_effect",
+      "interconnected_systems"
+    ],
+    "analysis_version": "v1.0"
+  }
+}
