@@ -1,0 +1,21 @@
+{
+  "name": "hydrangea-first-work",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hydrangea 第一作 Remotion テンプレート (F-first-work-golden-master / ADR-0002 D-minimal)。本体リポジトリから独立した npm プロジェクト (不変原則 6: 第一作隔離)。",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render FirstWork out/first_work.mp4",
+    "render:dummy": "remotion render FirstWork out/first_work_dummy.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.475",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "4.0.475"
+  },
+  "devDependencies": {
+    "@types/react": "19.0.0",
+    "typescript": "5.8.2"
+  }
+}

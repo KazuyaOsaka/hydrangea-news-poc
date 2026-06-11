@@ -4,6 +4,15 @@
 Accepted (2026-05-16 に 3 AI 三角測量 3 ラウンドで確立、2026-05-18
 F-image-prompt-spec バッチで ADR として正典化)
 
+> ★ 部分更新 (2026-06-11 F-first-work-golden-master): 第一作 MVP の
+> 「6-8 枚ベース画像 + 10 視覚イベント」は、2026-06-10 設計正典の分業原則
+> (文字はコードで描く、絵は AI で描く) により **「文字なしプレート 5 本
+> (4 シーン 1:1 + フックカード 9:16) + タイポは全て Remotion レイヤー」に簡約**。
+> テキストカード 4 種 (title/number/source/claim) は AI 画像ではなく Remotion で
+> 描画する。ブランドカラー 5 色・トーン語彙・禁止語彙は不変
+> (src/generation/image_prompt_writer.py が強制 + テストで担保)。
+> 経緯: docs/DECISION_LOG.md 2026-06-11 エントリ。
+
 ## 文脈
 Phase A.5-3b 第一作 (候補A `cls-6889e9e1c7ac`、Israel 9,600 人収監 / ICRC
 監視操作疑惑、perspective_gap framing) の画像戦略を確定する。

@@ -1,0 +1,734 @@
+{
+  "schema_version": 2,
+  "event_id": "cls-6889e9e1c7ac",
+  "generated_at": "2026-06-10T15:48:39.883610+00:00",
+  "guardian_model_used": "gemini-3.1-pro-preview",
+  "guardian_unavailable": false,
+  "unavailable_reason": null,
+  "source_material_scope": {
+    "has_event": true,
+    "has_analysis": true,
+    "event_summary_chars": 403,
+    "event_global_view_chars": 506,
+    "notes": "faithfulness layer compares against event data only; generated artifacts are excluded from source material (a generated artifact cannot vouch for another). generation-time ScoredEvent wrapper fields (judge_result / editorial_mission_*) are not reconstructable from the pool snapshot and are excluded."
+  },
+  "claims": [
+    {
+      "claim": {
+        "claim_id": "c1",
+        "claim_text": "日本では9,600人の拘束者の視点が報道されていない。",
+        "artifact": "title",
+        "risk_category": "rights_violation",
+        "quote_span": "日本では報道されない9,600 Detaineesの視点"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "日本メディアがこの問題を単発の人道問題として処理し、対立軸などに踏み込んだ報道が「極めて限定的」であるという記述により支持される。",
+      "source_evidence": "日本の大手メディア（日本経済新聞やNHKなど）は、本件を単発の中東人道問題として事務的に処理する傾向が強く、構造的な司法制度の欠陥や地政学的な二重基準の対立軸にまで踏み込んだ報道は極めて限定的です。",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "イスラエル パレスチナ 9600人 拘束 報道",
+          "locale": "ja",
+          "purpose": "日本のメディアにおける9,600人のパレスチナ人拘束者に関する報道の有無や内容を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "イスラエル パレスチナ 9600人 拘束 報道",
+          "locale": "ja",
+          "purpose": "日本のメディアにおける9,600人のパレスチナ人拘束者に関する報道の有無や内容を確かめる。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T16:04:10.553591+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c2",
+        "claim_text": "9,600人のパレスチナ人囚人がイスラエルの刑務所で虐待を受けているという告発がある。",
+        "artifact": "title",
+        "risk_category": "rights_violation",
+        "quote_span": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "パレスチナ人囚人擁護センターが、9,600人以上が収容されるイスラエルの刑務所での虐待を隠蔽する行為を告発しているという記述と一致する。",
+      "source_evidence": "The Palestinian Center for the Defense of Prisoners accuses Israel of manipulating ICRC visits to hide abuses in its jails holding over 9,600 Palestinians.",
+      "truthfulness_status": "corroborated",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Israel 9600 Palestinian prisoners abuse denunciation",
+          "locale": "en",
+          "purpose": "9,600人のパレスチナ人囚人がイスラエルの刑務所で虐待を受けているという告発の事実関係を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "apnews.comやamnesty.orgなどの複数の独立ソースが、イスラエル刑務所でのパレスチナ人囚人への虐待の告発を報じており、証拠テキスト上で9,600人という具体的な数字に言及する報道の存在も確認できるため。",
+      "corroborating_domains": [
+        "apnews.com",
+        "amnesty.org",
+        "btselem.org",
+        "bmj.com"
+      ],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel 9600 Palestinian prisoners abuse denunciation",
+          "locale": "en",
+          "purpose": "9,600人のパレスチナ人囚人がイスラエルの刑務所で虐待を受けているという告発の事実関係を確かめる。",
+          "domains": [
+            "imemc.org",
+            "btselem.org",
+            "bmj.com",
+            "apnews.com",
+            "timesofisrael.com",
+            "amnesty.org",
+            "un.org",
+            "cpj.org",
+            "youtube.com"
+          ],
+          "titles": [
+            "imemc.org",
+            "btselem.org",
+            "bmj.com",
+            "apnews.com",
+            "timesofisrael.com",
+            "amnesty.org",
+            "un.org",
+            "cpj.org",
+            "youtube.com"
+          ],
+          "resolved_urls": [
+            "https://imemc.org/article/9400-detainees-face-escalating-abuse-in-israeli-prisons/",
+            "https://apnews.com/article/israel-prisons-report-abuse-ed7d2a9f3730fc575559f3e6218ebd2d",
+            "https://www.timesofisrael.com/israel-vowed-to-sue-over-nyts-abuse-allegations-theres-no-evidence-it-has-or-will/"
+          ],
+          "response_text": "検証対象の主張: 9,600人のパレスチナ人囚人がイスラエルの刑務所で虐待を受けているという告発がある。\n\n### 報道内容の整理\n\n複数の報道機関や人権団体が、イスラエル刑務所におけるパレスチナ人囚人への虐待疑惑について報告しています。9,600人という具体的な数字に言及する報道も複数見られます。\n\n*   **パレスチナ囚人協会 (PPS)**:\n    *   2026年5月26日の報道によると、パレスチナ囚人協会 (PPS) のアブドラ・アル・ザガリ代表は、イスラエルが9,400人以上のパレスチナ人およびアラブ人被拘禁者を刑務所および軍事キャンプに収容しており、その状況は「ますます虐待的で生命を脅かすもの」であると述べています。彼は、組織的な飢餓、拷問、屈辱、性的暴力が横行していると付け加えています。また、戦争開始以来100人以上が死亡し、そのうち89人の身元が確認されているとも報告しています。\n\n*   **B'Tselem (ベツェレム)**:\n    *   イスラエルの人権団体B'Tselemは、2023年10月7日以降に拘束され、その後釈放された55人のパレスチナ人からの証言をまとめた報告書「Welcome to Hell」を発表しました。この報告書では、イスラエルの複数の刑務所施設が、受刑者への虐待を方針として行う「拷問キャンプ」と化しているとされています。証言には、殴打、性暴力、性的暴行の脅迫、強制的なストリップ、犬による攻撃、様々な物体による肛門への強制挿入などが含まれています。\n    *   2026年1月27日のThe BMJの報道では、B'Tselemの報告を引用し、2025年9月末時点で1万人以上のパレスチナ人（350人の子供を含む）が収容されており、2023年10月から2026年1月の間に少なくとも84人のパレスチナ人被拘禁者がイスラエル施設内で死亡したと伝えています。\n    *   2026年1月20日のAP Newsの報道も、B'Tselemの報告書「Living Hell」を引用し、イスラエル刑務所のパレスチナ人が「拷問と虐待の制度的、組織的方針」に耐えていると報じています。同報道によると、拘束中のパレスチナ人は約9,000人いるとされています。\n\n*   **アムネスティ・インターナショナル**:\n    *   2026年3月13日のアムネスティ・インターナショナルの発表によると、イスラエルNGOのHaMokedのデータに基づき、現在イスラエル刑務所には9,446人のパレスチナ人が拘束されていると指摘しています。また、2023年10月以降、Sde Teimanなどの施設でパレスチナ人被拘禁者が不法に拘束され、拷問やその他の虐待、性暴力にさらされていると文書化しています。\n\n*   **国連人権高等弁務官事務所 (OHCHR)**:\n    *   2024年7月31日の報告書で、国連人権高等弁務官事務所は、昨年10月以降、イスラエル当局による数千人のパレスチナ人に対する恣意的で長期にわたる秘密裏の拘禁を報告しています。この報告書には、拷問やその他の残虐、非人道的、品位を傷つける扱い、女性や男性に対する性的虐待の申し立てが含まれています。\n\n*   **Committee to Protect Journalists (CPJ)**:\n    *   2026年2月19日の報道によると、CPJは2023年10月7日以降にイスラエルによる拘束から釈放されたパレスチナ人ジャーナリスト59人から詳細な証言を収集しました。そのうち58人が、拘束中に拷問、虐待、またはその他の暴力の対象になったと報告しています。\n\n*   **Al Jazeera**:\n    *   2025年11月15日のAl Jazeeraの報道では、弁護士がイスラエルの刑務所でパレスチナ人から虐待や拷問の悲惨な証言を聞いたと報じています。特にRamlaにあるRakevet施設では、囚人たちが殴打、医療過誤、飢餓、性的暴行、身体の切断に苦しんでいるとされています。\n\n*   **The New York Times (NYT)**:\n    *   2026年5月13日のYouTubeの報道で、パレスチナ人ジャーナリストSami Alsai氏が2024年2月から2025年6月にかけてイスラエル刑務所で経験した虐待や性的暴力を詳細に語っています。彼は、システム的な性的虐待や拷問、強姦、殴打、裸体検査、性的暴力の脅迫を経験したと述べています。\n    *   2026年6月4日の報道では、NYTの意見コラムニストNicholas Kristof氏が5月11日に発表した記事「The silence that meets the rape of Palestinians」で、イスラエルによる「男性、女性、さらには子供に対する広範な性的暴力のパターン」を主張していると報じています。\n\n### 主張と明示的に矛盾する報道\n\n検索結果から、上記の主張（9,600人のパレスチナ人囚人がイスラエルの刑務所で虐待を受けているという告発）と明示的に矛盾する報道は見つかりませんでした。むしろ、多くの報道がこの主張を裏付けるか、密接に関連する事実を報告しています。\n\nただし、2026年5月13日の報道では、国連の報告書が、イスラエル当局がパレスチナ人被拘禁者に対する拷問や虐待を命じている証拠はないものの、性暴力が標準的な手順となっている治安機構を助長していると指摘していることが示されています。 また、2026年6月4日の報道では、イスラエル司法省の公共弁護人室が2025年12月に発表した報告書で、パレスチナ人囚人に対するイスラエル拘禁施設や刑務所におけるシステム的な暴力を詳述しているが、ニューヨーク・タイムズの記事が主張するような性的虐待の申し立ては含まれていなかったと報じられています。",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T16:04:18.895551+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c3",
+        "claim_text": "9,600人の拘留者が存在し、日本企業に損失が生じている。",
+        "artifact": "script",
+        "risk_category": "rights_violation",
+        "quote_span": "９６００人の拘留者と、日本企業の隠れた損失。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "9,600人のパレスチナ人が拘束されていること、および中東の地政学的リスクが物流コスト増や供給遅延を通じて日本企業に悪影響を及ぼしていることが記述されている。",
+      "source_evidence": "holding over 9,600 Palestinians... 日本企業への波及は「中東航路の地政学的リスク持続→日本郵船や商船三井などの回避運航に伴う物流コスト増→自動車部品や原材料の供給遅延」という3ステップの因果連鎖で製造業の業績を下押しします。",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "イスラエル パレスチナ 中東リスク 物流コスト増 日本企業",
+          "locale": "ja",
+          "purpose": "中東情勢の緊迫化が日本企業の物流や業績に与えている経済的影響を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "イスラエル パレスチナ 中東リスク 物流コスト増 日本企業",
+          "locale": "ja",
+          "purpose": "中東情勢の緊迫化が日本企業の物流や業績に与えている経済的影響を確かめる。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T16:04:49.819042+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c4",
+        "claim_text": "イスラエルの刑務所に9,600人以上のパレスチナ人が収監され、虐待が告発されている事実が日本でも報道されている。",
+        "artifact": "script",
+        "risk_category": "rights_violation",
+        "quote_span": "イスラエルの刑務所にパレスチナ人９６００人以上が収監され虐待が告発されている事実は、日本でも報道されています。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "日本のメディアが本件を「単発の中東人道問題として事務的に処理する」とあり、深くは掘り下げないものの報道自体はされていることが読み取れる。",
+      "source_evidence": "日本の大手メディア（日本経済新聞やNHKなど）は、本件を単発の中東人道問題として事務的に処理する傾向が強く",
+      "truthfulness_status": "corroborated",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "イスラエル パレスチナ人 9600人 収監 虐待",
+          "locale": "ja",
+          "purpose": "イスラエル刑務所のパレスチナ人収監と虐待告発に関する日本国内での報道状況を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "voi.idやarabnews.jpなどの複数メディアが日本語で、イスラエルの刑務所に9,600人規模のパレスチナ人が収監され、拷問や虐待の告発がなされている事実を報じており、主張は独立ソースで裏付けられています。",
+      "corroborating_domains": [
+        "voi.id",
+        "arabnews.jp",
+        "amnesty.or.jp",
+        "youtube.com",
+        "afpbb.com"
+      ],
+      "truthfulness_evidence": [
+        {
+          "query": "イスラエル パレスチナ人 9600人 収監 虐待",
+          "locale": "ja",
+          "purpose": "イスラエル刑務所のパレスチナ人収監と虐待告発に関する日本国内での報道状況を確かめる。",
+          "domains": [
+            "voi.id",
+            "amnesty.or.jp",
+            "newsphere.jp",
+            "arabnews.jp",
+            "youtube.com",
+            "afpbb.com",
+            "joins.com"
+          ],
+          "titles": [
+            "voi.id",
+            "amnesty.or.jp",
+            "newsphere.jp",
+            "arabnews.jp",
+            "youtube.com",
+            "afpbb.com",
+            "joins.com"
+          ],
+          "resolved_urls": [
+            "https://voi.id/ja/news/570863",
+            "https://www.amnesty.or.jp/news/2026/0317_10932.html",
+            "https://newsphere.jp/world-report/20260121-1/",
+            "https://www.arabnews.jp/article/middle-east/article_171411/",
+            "https://www.amnesty.or.jp/news/2023/1121_10134.html"
+          ],
+          "response_text": "Web検索の結果、イスラエルの刑務所に9,600人以上のパレスチナ人が収監され、虐待が告発されている事実が日本でも報道されていることが確認できました。\n\n以下に、報道機関・ソースごとの内容を整理して報告します。\n\n*   **VOI (2026年4月18日)**\n    VOIは、9,600人以上のパレスチナ人がイスラエルの刑務所に拘禁されており、その中には行政拘禁下の3,532人以上の人々が含まれると報じています。また、18歳未満の子供の囚人の数は約350人に達すると述べています。声明によると、治療の禁止を含む拷問と医療虐待の政策がまだ続いていると確認しています。さらに、2023年10月7日の紛争以降、イスラエルによる拘禁中に死亡した囚人の数が89人に達し、全体で326人の囚人が死亡したと報告しています。\n\n*   **アムネスティ日本 (2026年3月17日)**\n    アムネスティ日本は、イスラエルの人権NGO「ハモケド」の報告として、現在イスラエルの刑務所には9,446人のパレスチナ人が拘禁されていると報じています。また、アムネスティは以前、スデ・テイマン刑務所に拘禁されたパレスチナ人たちが外部との連絡を絶たれ、拷問やその他の虐待を受けている実態を記録していると述べています。イスラエル軍法務総監が、スデ・テイマン軍事刑務所でのパレスチナ人被拘禁者への虐待および性的暴行の容疑に問われていたイスラエル軍兵士5人に対し、起訴しないと決定したことも伝えています。\n\n*   **ARAB NEWS (2026年1月21日)**\n    イスラエルの主要な人権団体「ベツェレム（B'Tselem）」が2025年10月の停戦で釈放された21人のパレスチナ人への聞き取りに基づき発表した報告書を引用し、イスラエルの刑務所に収容されている数千人のパレスチナ人が「組織的かつ制度化された拷問と虐待の政策」にさらされていると報じています。報告書は、収容施設や刑務所における「深刻な性暴力のパターン」を詳述しており、性的虐待の脅しや、重傷を負わせる性器への殴打などの身体的暴行、物体による強制的な肛門への挿入などが含まれます。また、殴打、電気ショック、催涙ガスやスタングレネードの使用といった継続的で組織的な暴力、極度の過密状態、食料や衛生環境への制限、適切な医療の拒否なども報告されています。 イスラエル矯正局はこれらの「虚偽の主張を断固として拒否する」と述べています。\n\n*   **ARAB NEWS (2026年3月)**\n    パレスチナ人囚人団体の報告として、イスラエルの刑務所当局は3月第1週時点で9,500人の囚人・被拘禁者を収容していると報じています。このうち行政拘禁者は3,442人で、イスラエルの刑務所に収容されているパレスチナ人全体の36％を占めるとのことです。\n\n*   **アムネスティ日本 (2023年11月21日)**\n    イスラエル当局が占領下のヨルダン川西岸地区一帯でパレスチナ人に対する行政拘禁を劇的に増やしていると報じています。非政府組織パレスチナ囚人クラブによると、2023年10月7日以降、イスラエル軍は2,200人以上のパレスチナ人を拘禁しました。釈放された人々や人権派弁護士からの証言、動画や写真は、囚人がイスラエル軍から激しい殴打や屈辱的な仕打ちなど、拷問にあたる扱いや虐待を受けたことを示していると指摘しています。\n\n*   **BBC News Japan (YouTube, 2023年11月27日)**\n    イスラエルとハマスの戦闘休止合意に基づき釈放された17歳のパレスチナ人少年が、イスラエルの刑務所内での虐待を証言したことを報じる動画が公開されています。少年は、収監中に「地獄のような拷問を受けていた」と語っています。\n\n*   **Alghad TV (YouTube, 2026年4月16日)**\n    パレスチナ捕虜の日を前に、2023年10月7日以降、イスラエル占領刑務所に収容されているパレスチナ人被拘禁者の数が83%増の9,600人以上に達したと報じています。その中には86人の女性と350人の子供、3,500人以上の行政拘禁者が含まれるとしています。 また、弁護士たちが子供たちの間で多数の病状が記録されたと報告していることも伝えています。\n\n*   **ARAB NEWS (2024年8月1日)**\n    イスラエル南部のスデ・テイマン収容施設でのパレスチナ人虐待疑惑をめぐる調査に対し、極右議員を含む数十人の抗議者が軍警察と衝突したことを報じています。国連人権チーフのフォルカー・ターク氏が、イスラエルが囚人たちに「水責めや犬を放すなど、さまざまなひどい行為」を行ったことを示唆する証言を行ったと述べたことも伝えています。\n\n*   **AFPBB News (2024年7月29日)**\n    イスラエル軍が、同国南部のスデ・テイマン基地に収容されているパレスチナ人1人を「虐待した疑い」で、取り調べのため兵士9人を拘束したと発表したことを報じています。\n\n*   **Joongang Ilbo (中央日報, 2025年11月5日)**\n    イスラエル軍の最高法務責任者が、パレスチナ人収監者を虐待する様子が記録された映像の流出を承認したとして逮捕されたことを報じています。この映像は2024年7月にスデ・テイマン軍事刑務所で撮影されたもので、イスラエル兵がパレスチナ人収監者を殴打し、鋭利な物体で肛門部を突き刺す場面が映っており、収監者は重傷を負ったとされています。\n\n*   **ARAB NEWS (2024年7月16日)**\n    パレスチナ自治政府（PA）の囚人問題担当大臣が、イスラエルとハマスの戦争が始まって以来、イスラエルがパレスチナ人拘留者に対して虐待的な「復讐戦争」を繰り広げていると非難したことを報じています。大臣は、看守が囚人に「裸で腹ばいにさせ、消火器のチューブを尻に挿入し、消火器のスイッチを入れた」と聞いたと語っています。\n\n**主張と明示的に矛盾する報道:**\n今回の検索では、検証対象の主張と明示的に矛盾する報道は見つかりませんでした。ただし、上記のARAB NEWS (2026年1月21日)の報道では、イスラエル矯正局が人権団体による「虚偽の主張を断固として拒否する」と述べ、法に基づいて運営されており、監視や苦情の審査を受けていると主張していることが言及されています。 これは虐待の事実を否定する見解ですが、報道内容そのものと矛盾するものではありません。",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T16:05:05.956253+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c5",
+        "claim_text": "ベネズエラ政府系のTeleSURが、イスラエルが赤十字国際委員会の訪問を操作し刑務所での虐待を隠蔽している疑惑を告発した。",
+        "artifact": "script",
+        "risk_category": "rights_violation",
+        "quote_span": "ベネズエラ政府系の『ＴｅｌｅＳＵＲ』は、イスラエルが赤十字国際委員会の訪問を操作し虐待を隠蔽している疑惑を告発。"
+      },
+      "faithfulness_status": "contradicted",
+      "faithfulness_reasoning": "入力素材では、告発の主体はTeleSURではなく「The Palestinian Center for the Defense of Prisoners」である（TeleSURはそれを報じたメディア）。またTeleSURについて「政府系」という記述は存在しない。",
+      "source_evidence": "The Palestinian Center for the Defense of Prisoners accuses Israel of manipulating ICRC visits to hide abuses in its jails holding over 9,600 Palestinians. / ベネズエラを拠点とする左派メディアのTeleSURなどのグローバルサウス報道は...",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "skipped by corroboration (1-T.2): faithfulness_status=contradicted — fix the claim / re-run the faithfulness layer, then re-run corroboration manually.",
+      "verification_queries": [
+        {
+          "query": "TeleSUR Israel ICRC visits manipulation abuse",
+          "locale": "en",
+          "purpose": "TeleSURがイスラエルによるICRC訪問制限や虐待隠蔽の疑惑をどのように報じたか、および実際の告発主体を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c6",
+        "claim_text": "中東の緊迫化により、日本郵船が回避運航を行い、伊藤忠商事が提携を解消した。",
+        "artifact": "script",
+        "risk_category": "named_entity_fact",
+        "quote_span": "この治安当局の強硬姿勢による中東の緊迫化は、日本郵船の回避運航に伴う物流コスト増や、伊藤忠商事の提携解消にみるレピュテーションリスクとして日本企業を直撃しています。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "日本郵船の回避運航による物流コスト増や、伊藤忠商事傘下の商社によるイスラエル企業との提携解消が、中東の緊張による日本企業への影響の具体例として明記されている。",
+      "source_evidence": "日本郵船や商船三井などの回避運航に伴う物流コスト増 / 過去の防衛装備品協力見直し（例：伊藤忠商事傘下の商社によるイスラエル企業との提携解消）",
+      "truthfulness_status": "corroborated",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "日本郵船 回避運航 伊藤忠商事 イスラエル 提携解消",
+          "locale": "ja",
+          "purpose": "中東情勢を受けた日本郵船の回避運航と伊藤忠商事のイスラエル企業との提携解消の事実を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "toyokeizai.netやarabnews.jpなどの報道により、中東情勢の緊迫化（紅海でのフーシ派の攻撃やガザ紛争）を背景として、日本郵船が回避運航を行っている事実と、伊藤忠商事がイスラエル軍事企業との提携を解消した事実の両方が独立して支持されているため。",
+      "corroborating_domains": [
+        "toyokeizai.net",
+        "arabnews.jp",
+        "trafficnews.jp",
+        "business-humanrights.org",
+        "parstoday.ir",
+        "huffingtonpost.jp"
+      ],
+      "truthfulness_evidence": [
+        {
+          "query": "日本郵船 回避運航 伊藤忠商事 イスラエル 提携解消",
+          "locale": "ja",
+          "purpose": "中東情勢を受けた日本郵船の回避運航と伊藤忠商事のイスラエル企業との提携解消の事実を確かめる。",
+          "domains": [
+            "trafficnews.jp",
+            "arabnews.jp",
+            "toyokeizai.net",
+            "youtube.com",
+            "afpbb.com",
+            "business-humanrights.org",
+            "parstoday.ir",
+            "huffingtonpost.jp",
+            "maidonanews.jp"
+          ],
+          "titles": [
+            "trafficnews.jp",
+            "arabnews.jp",
+            "toyokeizai.net",
+            "youtube.com",
+            "afpbb.com",
+            "business-humanrights.org",
+            "parstoday.ir",
+            "huffingtonpost.jp",
+            "maidonanews.jp"
+          ],
+          "resolved_urls": [
+            "https://trafficnews.jp/post/130550",
+            "https://www.arabnews.jp/article/japan/article_107600/",
+            "https://toyokeizai.net/articles/-/729474?display=b",
+            "https://toyokeizai.net/articles/-/728365",
+            "https://www.youtube.com/watch?v=nocbA3B7-xQ"
+          ],
+          "response_text": "中東の緊迫化をめぐる「日本郵船が回避運航を行い、伊藤忠商事が提携を解消した」との主張について、以下の報道内容が見つかりました。\n\n### 日本郵船の回避運航について\n\n*   **乗りものニュース (2024年1月23日)**: 紅海周辺でのイエメンの武装組織フーシ派などによる船舶への攻撃増加を受け、日本郵船、商船三井、川崎汽船の海運大手3社は2024年1月に入り、紅海を通過する全船舶の運航を停止したと報じています。これらの船はアフリカ大陸の喜望峰回りへと迂回を強いられています。記事は、2023年11月には日本郵船が用船する自動車船「GALAXY LEADER」が紅海で拿捕されたことに言及しています。\n*   **ARAB NEWS (2023年12月22日)**: 日本のコンテナ船事業会社オーシャン・ネットワーク・エクスプレス（ONE、日本郵船、商船三井、川崎汽船の合弁会社）が、フーシ派反乱軍による攻撃のため、紅海とアデン湾の航行を停止し、航路を喜望峰経由に切り替えるか、一時停止すると報じています。これは、11月に日本郵船が運航する自動車専用貨物線「ギャラクシー・リーダー」号がハイジャックされたことによるものです。\n*   **東洋経済オンライン (2024年1月24日)**: イエメンの武装組織「フーシ派」が2023年11月19日に日本郵船のチャーター運航の自動車専用船を紅海で拿捕したことを背景に、日本郵船、商船三井、川崎汽船の3社が共同出資するオーシャンネットワークエクスプレス（ONE）が「スエズ運河と紅海から船舶の航路を変更する」と昨年12月20日に発表したと伝えています。多くの海運企業もルートを変更しているとのことです。\n*   **東洋経済オンライン (2024年1月17日)**: イエメンの親イラン武装組織フーシ派が紅海で船舶への攻撃を繰り返す中、国内海運大手3社（日本郵船、商船三井、川崎汽船）が紅海での全ての船舶の運航を停止したことが明らかになったと報じています。\n*   **ANN (2025年1月21日)**: 親イラン武装組織フーシ派の幹部が、パレスチナ・ガザ地区での停戦開始を受け、2023年11月に拿捕した日本郵船が運航する貨物船を返還する意向を示したと報じています。\n*   **AFPBB News (2023年11月20日)**: イエメンの反政府勢力フーシ派が19日、紅海で拿捕した船舶「GALAXY LEADER」の所有者はイスラエルの実業家だと主張したと伝えています。\n\n### 伊藤忠商事の提携解消について\n\n*   **ビジネスと人権センター (2024年2月5日)**: 伊藤忠商事が、国際司法裁判所（ICJ）が先月イスラエルにジェノサイド行為を阻止する措置を講じるよう命じた判決を受けて、子会社を通じてイスラエルの軍事産業大手「エルビット・システムズ」と結んでいた協力関係を2月末までに終了すると発表したと報じています。伊藤忠は、この協力関係は日本の安全保障に必要な防衛装備品の輸入を目的としており、イスラエルとパレスチナの紛争には関与していないとしつつも、ICJの役割に対する日本政府の支持を考慮し、新たな活動を停止していると述べています。\n*   **Pars Today (2026年3月2日)**: 伊藤忠商事がイスラエル軍需企業「エルビット・システムズ」との協力関係を2月末にも終了すると発表したことを報じています。この決定は、イスラエルによるガザ攻撃に反対する市民らの抗議活動が背景にあるとされています。\n*   **東洋経済オンライン (2024年2月18日)**: 伊藤忠商事が、イスラエルとガザの激化する戦闘による死者急増の中、批判にさらされ軍事企業との協力解消を決断したと報じています。その背景には、国際司法裁判所（ICJ）がイスラエルに下した「ジェノサイド防止」暫定措置命令という判断があったと述べています。\n*   **ARAB NEWS (2024年2月5日)**: 伊藤忠商事の副社長が、イスラエルの軍事技術会社エルビット・システムズ社との契約を2月末までに終了すると発表したことを報じています。報道では、イスラエルがガザへの砲撃を続ける中、国際的な批判やボイコットの可能性を受けての決定とされています。また、伊藤忠側は、防衛省からの要請によるもので、日本の安全保障に必要な防衛装備品の輸入が目的だと説明し、「イスラエルとパレスチナの紛争には関与していない」と述べていますが、国際司法裁判所の判決を考慮し新たな活動は停止しているとしています。\n*   **ハフポストNEWS (2024年2月15日)**: 伊藤忠商事が子会社の伊藤忠アビエーションとイスラエル軍事大手「エルビット・システムズ」との協力覚書（MOU）を2月末をめどに終了すると発表したことを報じています。伊藤忠商事は「防衛省の依頼に基づいたもの」と説明していましたが、防衛省はハフポスト日本版の取材に対し「ご指摘のような事実はありません」と回答しており、伊藤忠の説明と食い違いがあることが報じられています。\n*   **現代ビジネス (2024年2月10日)**: 伊藤忠商事の子会社である伊藤忠アビエーションが、イスラエル軍事企業エルビット・システムズと結んだ協力関係の覚書を2月末で終了すると発表したことを報じています。記事は、国際司法裁判所がイスラエルにジェノサイド防止の措置を命じたことを受け、国際的な批判や伊藤忠全体のイメージ悪化を避ける狙いがあったと分析しています。\n\n### 主張と明示的に矛盾する報道\n\n*   伊藤忠商事の提携解消について、同社は防衛省からの要請に基づくと説明していましたが、防衛省は「ご指摘のような事実はありません」と回答しており、伊藤忠側の説明と食い違いがあることが報じられています。この点は、提携解消の直接的なきっかけや背景に関する伊藤忠側の主張の一部と矛盾する可能性があります。",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T16:05:49.693940+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c7",
+        "claim_text": "イスラエルの刑務所で9,600人が拘束されており、人権団体が赤十字査察の妨害を告発している。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "9,600人が拘束されるイスラエル刑務所：人権擁護団体が告発する「赤十字査察の妨害」と報道の空白"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "イスラエルの刑務所で9,600人以上が拘束されており、パレスチナ人囚人擁護センター（人権擁護団体）が赤十字国際委員会の訪問操作を告発している記述と一致する。",
+      "source_evidence": "The Palestinian Center for the Defense of Prisoners accuses Israel of manipulating ICRC visits to hide abuses in its jails holding over 9,600 Palestinians.",
+      "truthfulness_status": "corroborated",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Palestinian human rights group Israel ICRC visits manipulation 9600",
+          "locale": "en",
+          "purpose": "人権団体がイスラエルによる赤十字査察の妨害を告発している事実を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "アナドル通信（aa.com.tr）などの独立ソースが、イスラエル刑務所で約9,600人（または9,623人）が拘束されていること、および複数の人権団体が赤十字の訪問禁止措置（妨害）に対して提訴・告発している事実を報じており、主張を支持しています。",
+      "corroborating_domains": [
+        "aa.com.tr",
+        "wafa.ps"
+      ],
+      "truthfulness_evidence": [
+        {
+          "query": "Palestinian human rights group Israel ICRC visits manipulation 9600",
+          "locale": "en",
+          "purpose": "人権団体がイスラエルによる赤十字査察の妨害を告発している事実を確かめる。",
+          "domains": [
+            "palestinechronicle.com",
+            "ansarollah.com.ye",
+            "wafa.ps",
+            "aa.com.tr",
+            "youtube.com",
+            "jpost.com",
+            "internazionale.it",
+            "timesofisrael.com",
+            "straitstimes.com",
+            "arabnews.com",
+            "thenationalnews.com"
+          ],
+          "titles": [
+            "palestinechronicle.com",
+            "ansarollah.com.ye",
+            "wafa.ps",
+            "aa.com.tr",
+            "youtube.com",
+            "jpost.com",
+            "internazionale.it",
+            "timesofisrael.com",
+            "straitstimes.com",
+            "arabnews.com",
+            "thenationalnews.com"
+          ],
+          "resolved_urls": [
+            "https://ansarollah.com.ye/en/archives/797341",
+            "https://english.wafa.ps/Pages/Details/169453",
+            "https://www.aa.com.tr/en/middle-east/over-9-600-palestinians-held-in-israeli-prisons-rights-group/3262975",
+            "https://www.youtube.com/watch?v=da4UMWcDBrI"
+          ],
+          "response_text": "以下の検証対象の主張について、Web検索で見つかった報道内容を整理して報告します。\n\n**検証対象の主張:** イスラエルの刑務所で9,600人が拘束されており、人権団体が赤十字査察の妨害を告発している。\n\n---\n\n### 報道内容の整理\n\n複数の報道機関や情報源が、この主張の各要素について以下のように報じています。\n\n#### 1. イスラエルの刑務所におけるパレスチナ人の拘束数について\n\n*   **Palestinian Prisoners' Information Office、Palestinian Detainees and Ex-Detainees Affairs Commission、Palestinian Prisoner Society、Addameer Prisoner Support and Human Rights Association などのパレスチナ人捕虜団体:**\n    *   2026年4月初旬の時点で、9,600人以上のパレスチナ人およびアラブ人がイスラエルの刑務所に拘束されていると報告しています。\n    *   これらの数字には、女性86人（うち25人が行政拘禁）、子供約350人が含まれるとされています。\n    *   3,532人が起訴も裁判もなく行政拘禁されており、1,251人が「非合法戦闘員」として分類され、標準的な法的保護なしに拘禁されているとされています。\n    *   ガザ地区からの多くの被拘禁者は、公式の刑務所システム外の軍事施設に収容されているため、これらの数字には含まれておらず、実際の総数はさらに多いと見られています。\n    *   報道では、独房監禁、身体的・精神的虐待、医療ネグレクトが蔓延していると報告されています。\n\n*   **Anadolu Ajansı（アナドル通信）:**\n    *   2024年7月1日の報道では、イスラエルの公式な数字を引用して、少なくとも9,623人のパレスチナ人がイスラエル刑務所に拘束されていると報じています。このうち3,379人が行政拘禁、1,402人が非合法戦闘員であると、イスラエルの人権団体HaMokedの情報を基に伝えています。\n\n*   **Middle East Eye:**\n    *   2024年7月11日の報道で、パレスチナ人捕虜団体によると、ヨルダン川西岸と東エルサレムから9,600人以上のパレスチナ人がイスラエル刑務所に拘束されていると述べています。パレスチナの人権団体Addameerによると、3,380人が行政拘禁されています。\n\n*   **Haaretz（ハアレツ）:**\n    *   2026年5月8日の報道で、パレスチナ人捕虜・元捕虜問題委員会（Palestinian Commission of Detainees' and Ex-Detainees' Affairs）の数字として、4月時点で9,600人のパレスチナ人がイスラエル刑務所に拘束されており、これには女性84人、子供350人が含まれると報じています。\n\n#### 2. 人権団体による赤十字査察の妨害告発と関連報道について\n\n*   **複数の人権団体（Association for Civil Rights in Israel (ACRI), Physicians for Human Rights-Israel, HaMoked, Gisha など）:**\n    *   2023年10月7日のハマスによる攻撃とその後の戦争勃発以降、イスラエル政府が国際赤十字委員会（ICRC）による「治安」関連のパレスチナ人被拘禁者への訪問を全面的に禁止したことに対し、これらの団体がイスラエル最高裁判所に提訴しました。\n    *   彼らは、この禁止が被拘禁者の権利を侵害し、イスラエル法および国際人道法に違反していると主張しました。\n    *   提訴の背景には、被拘禁者の処遇の悪化、虐待の報告、医療介護の拒否、飢餓などが挙げられています。\n\n*   **イスラエル最高裁判所の判決（2026年6月3日または4日）:**\n    *   最高裁は、ICRCによる治安関連の被拘禁者への訪問禁止措置は違法であり、取り消されなければならないと全員一致で判決を下しました。\n    *   裁判所は、国家がこの包括的な禁止政策に対する一貫した法的根拠を提示できなかったと指摘しました。\n    *   当初、イスラエル側はハマスによって拘束された人質の帰還を理由に訪問禁止を正当化していましたが、すべての人質が2025年10月に解放された後も禁止が継続されており、裁判所はこの正当化を却下しました。\n\n*   **国際赤十字委員会（ICRC）:**\n    *   最高裁の判決を歓迎し、イスラエル国内の拘禁施設への訪問を再開する用意があると表明しました。\n    *   ICRCは、被拘禁者へのアクセス、特に彼らと個別に面会する能力は国際法上の義務であると強調しています。\n\n*   **欧州連合（EU）の当局者:**\n    *   2025年11月3日には、EUの平等・準備・危機管理担当委員が、イスラエルがICRCのパレスチナ人捕虜へのアクセスを拒否していることを批判し、これは人道原則に違反すると述べました。\n\n#### 主張と明示的に矛盾する報道\n\n*   今回の検索では、検証対象の主張「イスラエルの刑務所で9,600人が拘束されており、人権団体が赤十字査察の妨害を告発している」と明示的に矛盾する報道は見つかりませんでした。むしろ、検索結果は主張の両方の要素を裏付けるものでした。",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T16:06:21.996878+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c8",
+        "claim_text": "パレスチナの人権団体が、イスラエルが刑務所内の虐待隠蔽を目的にICRCの訪問を制限・操作していると告発した。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "パレスチナの人権団体が、イスラエルが刑務所内での虐待を隠蔽するため赤十字国際委員会（ICRC）の訪問を制限・操作していると告発した。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "パレスチナ人囚人擁護センターが、虐待隠蔽のためにICRCの訪問を操作しているとイスラエルを非難している記述に合致する。",
+      "source_evidence": "The Palestinian Center for the Defense of Prisoners accuses Israel of manipulating ICRC visits to hide abuses in its jails...",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "Palestinian Center for the Defense of Prisoners Israel ICRC access hide abuses",
+          "locale": "en",
+          "purpose": "パレスチナ囚人擁護センターによるICRC訪問制限・操作を通じた虐待隠蔽に関する告発内容を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "Palestinian Center for the Defense of Prisoners Israel ICRC access hide abuses",
+          "locale": "en",
+          "purpose": "パレスチナ囚人擁護センターによるICRC訪問制限・操作を通じた虐待隠蔽に関する告発内容を確かめる。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T16:06:56.855475+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c9",
+        "claim_text": "イスラエル国内の施設には現在9,600人以上のパレスチナ人が拘束されている。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "イスラエル国内の施設には現在9,600人以上のパレスチナ人が拘束されているとされ、ガザでの対立が続く中で人道状況の悪化が指摘されている。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "イスラエルの刑務所に9,600人以上のパレスチナ人が収容されているという数字の記述と一致する。",
+      "source_evidence": "its jails holding over 9,600 Palestinians",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "Israel jails 9600 Palestinians",
+          "locale": "en",
+          "purpose": "現在イスラエル国内に9,600人以上のパレスチナ人が拘束されているという人数の正確性を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "Israel jails 9600 Palestinians",
+          "locale": "en",
+          "purpose": "現在イスラエル国内に9,600人以上のパレスチナ人が拘束されているという人数の正確性を確かめる。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T16:07:07.522602+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c10",
+        "claim_text": "日本国内ではこの告発や囚人の処遇に関する詳細な報道が極めて少ない。",
+        "artifact": "article",
+        "risk_category": "assertive_fact",
+        "quote_span": "日本国内ではこの具体的な告発や囚人の処遇に関する詳細な報道が極めて少なく、国際社会と日本の間での関心や情報の非対称性が顕著になっている。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "日本の大手メディアにおいて、構造的な欠陥などに踏み込んだ詳細な報道が「極めて限定的」であるという記述により支持される。",
+      "source_evidence": "日本の大手メディア（日本日本経済新聞やNHKなど）は、本件を単発の中東人道問題として事務的に処理する傾向が強く、構造的な司法制度の欠陥や地政学的な二重基準の対立軸にまで踏み込んだ報道は極めて限定的です。",
+      "truthfulness_status": "contradicted",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "イスラエル 刑務所 虐待 パレスチナ人 報道",
+          "locale": "ja",
+          "purpose": "日本国内でイスラエル刑務所での虐待に関する詳細な報道がどの程度行われているかを確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "証拠テキストは、日本の報道機関や日本語メディアから詳細な報道が多数確認できると述べており、「報道が極めて少ない」という主張と明示的に矛盾していると指摘しているため。",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "イスラエル 刑務所 虐待 パレスチナ人 報道",
+          "locale": "ja",
+          "purpose": "日本国内でイスラエル刑務所での虐待に関する詳細な報道がどの程度行われているかを確かめる。",
+          "domains": [
+            "newsphere.jp",
+            "joins.com",
+            "tufs.ac.jp",
+            "arabnews.jp",
+            "amnesty.or.jp",
+            "youtube.com",
+            "afpbb.com",
+            "huffingtonpost.jp"
+          ],
+          "titles": [
+            "newsphere.jp",
+            "joins.com",
+            "tufs.ac.jp",
+            "arabnews.jp",
+            "amnesty.or.jp",
+            "youtube.com",
+            "afpbb.com",
+            "huffingtonpost.jp"
+          ],
+          "resolved_urls": [
+            "https://newsphere.jp/world-report/20260121-1/",
+            "https://japanese.joins.com/JArticle/322104?sectcode=A00&servcode=A00",
+            "http://www.el.tufs.ac.jp/prmeis/html/r/News20251024_223141.html",
+            "https://www.arabnews.jp/article/middle-east/article_162028/",
+            "https://www.arabnews.jp/article/middle-east/article_125555/"
+          ],
+          "response_text": "検証対象の主張: 日本国内ではこの告発や囚人の処遇に関する詳細な報道が極めて少ない。\n検索クエリ: イスラエル 刑務所 虐待 パレスチナ人 報道\n\n---\n\n### 報告内容\n\nWeb検索の結果、日本の報道機関や日本語で情報発信している国際的なソースから、イスラエル刑務所におけるパレスチナ人囚人への虐待や処遇に関する詳細な報道が複数見つかりました。これらの報道は、主張されている「極めて少ない」という内容と明示的に矛盾しています。\n\n以下に、見つかった報道内容をソースごとに整理して報告します。\n\n*   **NewSphere**\n    *   2026年1月21日の報道で、イスラエルの主要な人権団体「ベツェレム（B'Tselem）」が発表した報告書に基づき、イスラエルの刑務所に収容されている数千人のパレスチナ人が「組織的かつ制度化された拷問と虐待の政策」にさらされていると報じています。性暴力の脅し、性器への殴打などの身体的暴行、物体による強制的な肛門への挿入、殴打、電気ショック、催涙ガスやスタングレネードの使用といった継続的で組織的な暴力、極度の過密状態、食料や衛生環境への制限、適切な医療の拒否といった詳細な虐待内容が記述されています。\n\n*   **中央日報（Joongang Ilbo）日本語版**\n    *   2024年8月7日の報道で、イスラエル人権団体ベツェレムの「ここは地獄（Welcome to Hell）」と題された報告書を引用し、パレスチナ人収監者に対する性暴力や殴打、水不足、劣悪な衛生環境、少量の食事といった非人間的な虐待が頻繁に起きていると報じています。また、ウォールストリートジャーナル（WSJ）が、ネゲブ砂漠にある軍収容所で兵士10人が収監者を性的虐待した容疑で逮捕されたと報じたことに触れ、国連人権事務所の報告書が水拷問、睡眠妨害、電気衝撃、犬を放すなどの各種虐待を明らかにしていることも伝えています。\n\n*   **東京外国語大学（アナトリア通信翻訳）**\n    *   2025年10月24日の報道で、イスラエル治安部隊の隊員がネゲブ地方（南部）の「ケツィオット」刑務所でパレスチナ人捕虜を虐待している様子を捉えた動画が拡散されていると伝えています。ヘブライ語ウェブサイト「キカル・ハシャバット」が公開した写真群には、パレスチナ人捕虜が屈辱的に扱われ、厳しい検査措置を受けている様子や、著しく閉鎖的な生活空間、手錠をかけられ地面に座らされている姿など、人間の尊厳を損なう扱いが示されていると詳述しています。\n\n*   **ARAB NEWS（アラブニュース）日本語版**\n    *   2025年11月5日の報道で、イスラエル国防軍が拘束したパレスチナ人被拘禁者への虐待疑惑をめぐる騒動について、暴行を加える様子を撮影した兵士たちだけでなく、軍の最高顧問弁護士が暴露したことで拡大したと報じています。人権団体は、このスキャンダルがイスラエルの刑務所における組織的な虐待を反映していると警告していると伝えています。\n    *   2024年8月1日の報道では、軍事拘禁施設でのパレスチナ人虐待に関する調査が右翼の抗議行動に飛び火したこと、水責め、感電死、睡眠不足など、イスラエルに拘束されたパレスチナ人に対する新たな告発があったことを報じています。\n\n*   **アムネスティ日本（Amnesty Japan）**\n    *   2026年3月17日のニュースリリースで、イスラエルの悪名高いスデ・テイマン軍事刑務所でパレスチナ人被拘禁者への虐待および性的暴行の容疑に問われていたイスラエル軍兵士5人に対し、イスラエル軍法務総監が起訴しないと決定したことを「恥ずべき不起訴処分」と非難しています。アムネスティは以前から、同刑務所に拘禁されたパレスチナ人が外部との連絡を絶たれ、拷問やその他の虐待を受けている実態を記録していると述べています。\n\n*   **TBS NEWS DIG**\n    *   2023年12月31日の報道で、イスラエル占領下で続く「行政拘禁」の実態について、16歳で身に覚えのない行為で拘束され、起訴も裁判も開かれないまま17か月間刑務所に収容された少年の証言を交えながら報じています。10月7日のハマスによるイスラエル襲撃後、刑務所内でパレスチナ人に対する報復のような暴力が始まったと伝えています。\n    *   2023年11月27日、YouTubeでBBC News Japanの動画として、イスラエルの刑務所から釈放された17歳のパレスチナ人少年が、刑務所内が「地獄だった」と証言し、超満員、食料不足、連絡手段の遮断、毛布の撤去など、劣悪な状況を具体的に語った内容が配信されています。\n    *   2023年12月1日、YouTubeでBBC News Japanの動画として、イスラエルの刑務所から釈放された18歳のパレスチナ人モハメド・ナザルさんが、棒で殴られたり、犬をけしかけられたり、顔を踏まれたりしたと証言。殴打により両手を骨折したが、釈放されるまで治療を受けられなかった詳細な内容が報じられています。\n\n*   **AFPBB News**\n    *   2024年8月6日の報道で、国連の特別報告者が、イスラエルがガザ地区での戦闘開始以降、拘束したパレスチナ人への「拷問をエスカレートさせている」と述べ、国際社会に対し人道に対する罪の防止に向け圧力を掛けるよう呼び掛けたと伝えています。また、関連記事として、パレスチナ人被収容者を虐待したとされる兵士9人が拘束されたことや、解放されたパレスチナ人男性らがイスラエル軍拘束下で「拷問」を受けたと主張していることも報じています。\n\n*   **ハフポスト（HuffPost）日本語版**\n    *   2025年11月4日の報道で、イスラエル兵がパレスチナ人収監者を暴行する映像を流出させた軍法務部門トップが逮捕されたと報じています。虐待には性的暴行も含まれていたと考えられており、被害者を治療した医師は、肛門や直腸の激しい損傷や、肋骨の骨折などの重傷を負っていたと証言したと詳しく伝えています。\n\n### 主張と明示的に矛盾する報道\n\n上記の報道内容から、「日本国内ではこの告発や囚人の処遇に関する詳細な報道が極めて少ない」という主張は、Web検索で確認できた情報と明示的に矛盾しています。NewSphere、中央日報（日本語版）、ARAB NEWS（日本語版）、アムネスティ日本、TBS NEWS DIG、BBC News Japan（日本語コンテンツ）、AFPBB News（日本語版）、ハフポスト（日本語版）といった複数の報道機関や国際組織の日本語版が、イスラエル刑務所におけるパレスチナ人囚人への虐待について、人権団体の報告書や元囚人の証言、国連の指摘、映像流出などの具体的事実を詳細に報じています。これらの報道は、虐待の内容（性的暴力、拷問、医療放棄、劣悪な環境など）や、その背景、関与したとされる兵士の逮捕・不起訴の動きに至るまで、多岐にわたる情報を提供しており、その量と詳細さから「極めて少ない」とは言えないと判断できます。",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T16:07:10.682846+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c11",
+        "claim_text": "多国籍メディアTeleSURが、パレスチナ人囚人擁護センターによるイスラエル当局非難を報じた。",
+        "artifact": "article",
+        "risk_category": "attributed_statement",
+        "quote_span": "中南米を拠点とする多国籍メディア「TeleSUR」は、パレスチナ人囚人擁護センター（The Palestinian Center for the Defense of Prisoners）がイスラエル当局を非難したと報じた。"
+      },
+      "faithfulness_status": "not_in_source",
+      "faithfulness_reasoning": "TeleSURがパレスチナ人囚人擁護センターの告発を報じた事実は入力に存在するが、TeleSURを「多国籍メディア」とする記述は入力素材に含まれていない。",
+      "source_evidence": "",
+      "truthfulness_status": "uncorroborated",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "TeleSUR Palestinian Center for the Defense of Prisoners Israel",
+          "locale": "en",
+          "purpose": "TeleSURがパレスチナ囚人擁護センターの告発を実際に報じたか、また同社が多国籍メディアに該当するかを確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "パレスチナ人囚人擁護センターがイスラエル当局を非難した事実は確認されましたが（saba.ye）、TeleSURがその事実を報じたことを裏付ける独立ソースによる言及は証拠内に見つかりませんでした。",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "TeleSUR Palestinian Center for the Defense of Prisoners Israel",
+          "locale": "en",
+          "purpose": "TeleSURがパレスチナ囚人擁護センターの告発を実際に報じたか、また同社が多国籍メディアに該当するかを確かめる。",
+          "domains": [
+            "www.saba.ye",
+            "youtube.com",
+            "mezan.org"
+          ],
+          "titles": [
+            "www.saba.ye",
+            "youtube.com",
+            "mezan.org"
+          ],
+          "resolved_urls": [
+            "https://www.saba.ye/en/news3663095.htm",
+            "https://www.youtube.com/watch?v=VEzLNtzEbs8",
+            "https://www.youtube.com/watch?v=L6fMTgy-Zco",
+            "https://www.youtube.com/watch?v=oJsArLxVLho",
+            "https://www.mezan.org/public/en/post/44394/teleSUR:-Israeli-Forces-Arrested-609-Palestinians-During-March,-2018"
+          ],
+          "response_text": "## テレSURとパレスチナ人囚人擁護センターによるイスラエル当局非難に関する報道状況\n\n検証対象の主張：「多国籍メディアTeleSURが、パレスチナ人囚人擁護センターによるイスラエル当局非難を報じた。」という主張についてWeb検索を行った結果、以下の報道内容が見つかりました。\n\n### 報道機関・ソースごとの報道内容\n\n*   **Saba (ガザ)**：\n    2026年3月10日の報道によると、パレスチナ人囚人擁護センターは、イスラエルの国家安全保障大臣イタマル・ベン＝グヴィルに対し、パレスチナ人囚人への最近の攻撃について直接的な責任を負わせ、占領下のイスラエル刑務所に収容されているパレスチナ人囚人に対する緊急の国際的保護を呼びかけました。同センターは、刑務所セクションへの襲撃は、パレスチナ人囚人運動を標的とした組織的な国家テロであると説明しています。また、ベンヤミン・ネタニヤフ首相率いるイスラエル政府が、刑務所内の弾圧強化に対する政治的保護を提供していると述べています。\n\n*   **TeleSUR (多国籍メディア)**：\n    TeleSURは、パレスチナ人囚人を取り巻く状況やイスラエル当局による行為について、継続的に報道しています。\n    *   2026年1月25日の報道では、イスラエル刑務所の報道官が、イスラエル刑務所に少なくとも53人の誘拐されたパレスチナ人女性がおり、その中には23人の母親が含まれると述べていることを報じました。また、イスラエル刑務所当局がこれらの女性に28か月間、面会を許可していないことに言及し、心理的苦痛を悪化させていると指摘しています。\n    *   2026年1月22日のインタビューでは、イスラエル当局がパレスチナ人囚人に対して組織的な暴力、食料剥奪、医療ネグレクトなどの拷問方法を使用していることを認めたと報じています。\n    *   2026年5月18日には、占領下のヨルダン川西岸地区で、パレスチナ人囚人の処刑を可能にするイスラエル法が施行されたことに対し、人権団体がシオニストの大量虐殺政策の危険なエスカレーションであるとして非難していると報じました。\n    *   2018年4月15日の報道では、TeleSURは、捕虜・元捕虜問題委員会、囚人クラブ、Addameer人権協会、Al Mezan人権センターが発表した報告書に基づき、2018年3月にイスラエル軍が609人のパレスチナ人を逮捕したことを報じています。\n\n### 主張と明示的に矛盾する報道\n\n検索の結果、主張と明示的に矛盾する報道は見つかりませんでした。\n\n### 関連する報道が見つからなかった場合\n\n「パレスチナ人囚人擁護センター」（Palestinian Center for Prisoner Defense）がイスラエル当局を非難したことについて、TeleSURが直接報じたという明示的な報道は今回の検索では見つかりませんでした。しかし、TeleSURはパレスチナ人囚人に関する問題を頻繁に取り上げ、他の人権団体によるイスラエル当局への非難も報じていることが確認されました。また、「パレスチナ人囚人擁護センター」は実際にイスラエル当局を非難する声明を発表していることも確認されています。",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T16:08:37.511679+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c12",
+        "claim_text": "パレスチナ人囚人擁護センターによれば、イスラエルは9,600人以上が収容される刑務所での虐待行為を隠蔽するため、ICRCの訪問調査を操作・制限している。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "同センターによると、イスラエルは9,600人以上のパレスチナ人が収容されている刑務所内での虐待行為を隠蔽するため、赤十字国際委員会（ICRC）による訪問調査を操作し、アクセスを厳しく制限しているとされる。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "パレスチナ人囚人擁護センターが、9,600人以上のパレスチナ人がいる刑務所での虐待を隠すためにICRCの訪問を操作・制限していると非難した記述と完全に一致する。",
+      "source_evidence": "The Palestinian Center for the Defense of Prisoners accuses Israel of manipulating ICRC visits to hide abuses in its jails holding over 9,600 Palestinians. The plan limits access and conceals violations...",
+      "truthfulness_status": "uncorroborated",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Palestinian Center for the Defense of Prisoners Israel abuses ICRC 9600",
+          "locale": "en",
+          "purpose": "パレスチナ囚人擁護センターが9,600人の囚人とICRC訪問操作について告発した詳細を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "証拠において、収容者数（9,600人超）やICRC訪問制限による虐待隠蔽の警告については言及されていますが、隠蔽を警告した主体は「パレスチナ人捕虜協会 (PPS)」等とされており、「パレスチナ人囚人擁護センター」が本主張を行ったことを完全に支持する独立ソースの記述は見つかりませんでした。",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "Palestinian Center for the Defense of Prisoners Israel abuses ICRC 9600",
+          "locale": "en",
+          "purpose": "パレスチナ囚人擁護センターが9,600人の囚人とICRC訪問操作について告発した詳細を確かめる。",
+          "domains": [
+            "palprisoners.ps",
+            "www.saba.ye",
+            "palestinechronicle.com",
+            "aa.com.tr",
+            "wafa.ps",
+            "icrc.org",
+            "middleeastmonitor.com",
+            "gulf-times.com",
+            "internazionale.it",
+            "thenationalnews.com",
+            "ktwb.com",
+            "newarab.com",
+            "youtube.com"
+          ],
+          "titles": [
+            "palprisoners.ps",
+            "www.saba.ye",
+            "palestinechronicle.com",
+            "aa.com.tr",
+            "wafa.ps",
+            "icrc.org",
+            "middleeastmonitor.com",
+            "gulf-times.com",
+            "internazionale.it",
+            "thenationalnews.com",
+            "ktwb.com",
+            "newarab.com",
+            "youtube.com"
+          ],
+          "resolved_urls": [
+            "https://palprisoners.ps/?page_id=863&lang=en",
+            "https://www.saba.ye/en/news3721268.htm?cid=15",
+            "https://www.aa.com.tr/en/middle-east/israel-continues-to-bar-red-cross-representatives-from-meeting-palestinian-detainees/3931792",
+            "https://english.wafa.ps/Pages/Details/169453"
+          ],
+          "response_text": "パレスチナ人囚人擁護センターによれば、イスラエルは9,600人以上が収容される刑務所での虐待行為を隠蔽するため、ICRCの訪問調査を操作・制限しているという主張について、以下の報道内容が見つかりました。\n\n### 報道内容の整理\n\n*   **パレスチナ人捕虜擁護センター (Palestinian Center for Prisoners' Advocacy / Palestinian Center for Prisoner Studies)**:\n    *   このセンターは2008年にガザ地区で設立された人権団体であり、イスラエル占領下の刑務所にいるパレスチナ人捕虜や被拘禁者の苦しみに光を当て、彼らが直面する人権侵害を記録し、報告書を公表する活動を行っています。捕虜や被拘禁者の状況に関する正確で信頼できる情報を提供することを使命としています。\n    *   パレスチナ人捕虜研究センターの代表であるリヤド・アルアシュカール氏は、イスラエルの刑務所で捕虜の命が前例のないほど軽視されており、意図的な医療 Neglect (放置) により病気が急速に蔓延し、捕虜の命を直接脅かしていると述べています。\n    *   また、複数のパレスチナ人権団体が発表した報告によると、2026年4月初旬の時点で、イスラエルの刑務所に収容されているパレスチナ人捕虜の数は9,600人を超えているとされています。この中には86人の女性と350人の子供、3,532人の行政拘禁者、1,251人の「不法戦闘員」が含まれています。\n    *   パレスチナ人捕虜協会 (Palestinian Prisoner's Society, PPS) は、イスラエルが「安全保障上の懸念」を口実にICRCのパレスチナ人捕虜訪問を禁止し続けていることは、刑務当局が虐待行為の証拠を隠蔽し、捕虜に対する犯罪を激化させることをさらに助長していると警告しています。\n\n*   **赤十字国際委員会 (ICRC) および関連する報道機関**:\n    *   ICRCは2023年10月7日以降、イスラエルの拘禁施設にいるパレスチナ人被拘禁者を訪問できていないことを繰り返し表明しています。ICRCは、すべての被拘禁者の運命と居場所を通知され、彼らに面会する許可が与えられる必要性を繰り返し訴えています。ICRCは、被拘禁者の処遇と拘禁状況を監視するために、定期的な訪問を再開する準備ができています。\n    *   ICRCは、その活動が「純粋に人道的」なものであり、「被拘禁者の処遇と収容状況を評価し、被拘禁者と家族との連絡を回復する」ために不可欠であると強調しています。\n    *   2026年6月3日、イスラエル最高裁判所は、ガザ戦争開始時に導入されたICRCのパレスチナ人捕虜訪問禁止令を撤回する判決を下しました。裁判所は、政府がこの全面的な禁止に対する十分な正当性を提供できなかったと判断しました。この禁止は、パレスチナ人捕虜に対する体系的な虐待、飢餓、医療拒否の報告が続く中で、彼らの処遇に関する独立した検証を制限していました。\n    *   イスラエル政府は当初、2023年10月7日の出来事後、すべての人質が解放されるまでICRCの訪問を停止することが安全保障上の利益であると主張していました。しかし、最高裁判所は、人質がすべて解放された後も禁止が継続されており、政府がその継続に対する新たな正当性を提供しなかったことを指摘し、ICRCの訪問を全面的に禁止することやパレスチナ人被拘禁者に関する情報伝達を停止することに法的根拠がないと結論付けました。\n    *   イスラエル最高裁判所の判決は、ICRCのアクセス禁止がイスラエル法および国際人道法上の義務において適切な根拠を持たないと判断しています。\n    *   2026年5月の報道では、イスラエル政府はICRCの代表者が刑務施設を視察し、刑務所職員と面会することは許可するものの、被拘禁者と個別に私的な面会を行うことは引き続き禁止すると最高裁判所に通知したと報じられました。これはネタニヤフ首相の指示によるものとされています。しかし、この決定はその後、最高裁判所の判決により覆された形となります。\n    *   ACRI (Association for Civil Rights in Israel) などのイスラエルの人権団体は、禁止解除を求める共同請願を提出していました。ACRIは、9,000人以上のパレスチナ人治安被拘禁者が約3年ぶりに訪問を受けることになると述べています。\n\n### 主張と明示的に矛盾する報道\n\n主張と明示的に矛盾する報道は見つかりませんでした。むしろ、多くの報道が、イスラエルがICRCの訪問を制限していたこと、そしてその制限がパレスチナ人捕虜への虐待疑惑の検証を妨げていたという主張を裏付ける内容となっています。イスラエル最高裁判所がICRCの訪問禁止に法的根拠がないと判断したことは、イスラエル政府によるICRC訪問の制限が不当であった可能性を示唆しています。",
+          "error": ""
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T16:09:29.517143+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c13",
+        "claim_text": "日本の主要メディアでは、イスラエル刑務所のパレスチナ人拘束者の処遇に関する具体的な告発を深く掘り下げた報道がほとんど見られない。",
+        "artifact": "article",
+        "risk_category": "assertive_fact",
+        "quote_span": "一方で、日本の主要メディアにおいて、この具体的な告発やイスラエル刑務所内におけるパレスチナ人拘束者の詳細な処遇を単独で深く掘り下げた報道は、現時点でほとんど見られない。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "主要メディアが拘留者虐待やICRCへのアクセス制限といった具体的な制度的隠蔽の告発について「深く掘り下げることは避ける傾向がある」という記述と合致する。",
+      "source_evidence": "主要メディアはガザの戦闘や一般的な人道危機を報じるものの、イスラエル刑務所内での拘留者虐待やICRCへのアクセス制限といった具体的な制度的隠蔽の告発について深く掘り下げることは避ける傾向がある。",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "イスラエル 刑務所 パレスチナ人 拘束者 処遇 告発",
+          "locale": "ja",
+          "purpose": "日本の主要メディアがイスラエル刑務所内のパレスチナ人の処遇についてどのように報じているか（掘り下げているか）を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "イスラエル 刑務所 パレスチナ人 拘束者 処遇 告発",
+          "locale": "ja",
+          "purpose": "日本の主要メディアがイスラエル刑務所内のパレスチナ人の処遇についてどのように報じているか（掘り下げているか）を確かめる。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T16:10:16.906596+00:00"
+    },
+    {
+      "claim": {
+        "claim_id": "c14",
+        "claim_text": "TeleSURはラテンアメリカを拠点とするメディアである。",
+        "artifact": "article",
+        "risk_category": "named_entity_fact",
+        "quote_span": "今回これを大きく報じたTeleSURはラテンアメリカを拠点とするメディアであり"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "TeleSURがベネズエラを拠点としており、メタデータのリージョンとしてもラテンアメリカに分類されている記述と一致する。",
+      "source_evidence": "ベネズエラを拠点とする左派メディアのTeleSUR / \"region\": \"latin_america\"",
+      "truthfulness_status": "unverified",
+      "truthfulness_notes": "all 1 grounded search(es) failed; corroboration judgement not performed",
+      "verification_queries": [
+        {
+          "query": "TeleSUR latin america media based",
+          "locale": "en",
+          "purpose": "TeleSURがラテンアメリカ（ベネズエラ）を拠点とするメディアであることを確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [
+        {
+          "query": "TeleSUR latin america media based",
+          "locale": "en",
+          "purpose": "TeleSURがラテンアメリカ（ベネズエラ）を拠点とするメディアであることを確かめる。",
+          "domains": [],
+          "titles": [],
+          "resolved_urls": [],
+          "response_text": "",
+          "error": "ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+        }
+      ],
+      "truthfulness_verified_at": "2026-06-10T16:10:19.527361+00:00"
+    }
+  ],
+  "flagged_claims": [
+    "c1",
+    "c3",
+    "c5",
+    "c8",
+    "c9",
+    "c10",
+    "c11",
+    "c12",
+    "c13",
+    "c14"
+  ],
+  "n_supported": 12,
+  "n_contradicted": 1,
+  "n_not_in_source": 1,
+  "n_unverified": 0,
+  "truthfulness_summary": {
+    "grounding_model_used": "gemini-2.5-flash",
+    "judge_model_used": "gemini-3.1-pro-preview",
+    "judge_unavailable": false,
+    "unavailable_reason": null,
+    "source_domains": [
+      "telesurenglish.net"
+    ],
+    "n_corroborated": 4,
+    "n_contradicted": 1,
+    "n_uncorroborated": 2,
+    "n_unverified": 6,
+    "n_pending": 1,
+    "completed_at": "2026-06-10T16:10:21.815376+00:00"
+  }
+}

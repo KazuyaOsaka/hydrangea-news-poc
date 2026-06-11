@@ -6243,7 +6243,7 @@ Phase A.5-3a-verify ゲート完了後 **22 つ目のバッチ (1-R)**。F-parti
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `132082a` (merge `18b5287`、F-first-work-golden-master / 2026-06-11 で placeholder 埋め)
 - 新規: `src/generation/editorial_guardian_corroboration.py` /
   `configs/prompts/analysis/geo_lens/editorial_guardian_corroboration.md` /
   `scripts/run_editorial_guardian_corroboration.py` /
@@ -6266,3 +6266,154 @@ Phase A.5-3a-verify ゲート完了後 **22 つ目のバッチ (1-R)**。F-parti
   F-guardian-production-wire (production 配線 + 投稿前ゲート統合、★中) /
   F-guardian-independence-axis (独立性評価軸の拡張要否、★低) /
   1-S Phase A.5-3b 第一作起案 (次バッチ、関門ゼロ)
+
+## 2026-06-11: F-first-work-golden-master — 第一作 golden master 素材一式の自動出力完成 + 手動動画 PoC の道具立て (1-S)
+
+### 背景
+
+- Phase A.5-3b 第一作起案 (1-S)。1-T.2 完了で**着手前関門ゼロ** (CURRENT_STATE 2026-06-10)。
+- カズヤ原則: **ワークフロー部品は自動で完成させてから手動 PoC**。手動なのは動画組立
+  (画像 3 候補比較・実音声・Remotion 調整) と公開判断のみ。
+- 題材確定済: 候補A `cls-6889e9e1c7ac` (Israel 9,600人監獄虐待・ICRC 監視操作疑惑、TeleSUR 発、
+  perspective_gap framing、2026-05-16/19 人間確定)。
+- **第一作隔離原則 (不変原則 6 として扱う)**: 成果物・作業は `manual_poc/` +
+  `data/output/golden_master/` + `docs/golden_master_spec.md` に隔離。production 経路の
+  振る舞いを第一作固有の事情で変えない。
+
+### 議論
+
+- **★ 設計正典 5 点の採用 (2026-06-10 クラウド Web 調査の結論を本バッチで実装・正典化)**:
+  1. **レイアウト = セーフゾーン中央帯の「動く紙面」**: 1080×1920、上 250px (ユーザー名/音源 UI)・
+     下 320px (説明/CTA UI)・右端 (UI 列) に重要要素を置かない。ヘッダー帯 (platform_title) /
+     中央ビジュアル帯 (プレート + Ken Burns) / 字幕帯の固定 3 帯構造をコードで設計。
+     全画面没入型は UGC の文法であり採らない。
+  2. **字幕 = burned-in + フレーズレベル同期**: 視聴者の多数派は音声オフ。サンセリフ・高コントラスト・
+     中央配置・1〜2 行、演出抑制 (踊る絵文字カラオケ字幕は禁止 = editorial トーン)。同期データは
+     ElevenLabs のタイムスタンプ出力 (character-level alignment、公式 docs 一次ソース確認済)。
+  3. **分業原則 = 文字はコードで描く、絵は AI で描く**: AI 画像は**文字なしのビジュアルプレート**
+     (no text を positive/negative 両方で担保)。タイポグラフィは全て Remotion レイヤー。
+     日本語描画品質へのモデル依存を構造的に排除。
+  4. **モデル非結合原則**: 視覚素材の正典は「意味記述 (scene_intent + composition + style)」であり
+     特定モデルのプロンプト方言ではない。prompt_en は 3 モデル同文投入の共通プロンプト 1 本。
+     AI 動画クリップは第一作不使用 (特定動画モデルへの結合は確定的負債)。
+  5. **サムネ = 第1フレーム = フックカード**: Shorts はフレーム選択方式が基本。冒頭 0〜2 秒の
+     フックカード (thumbnail_text + 9:16 プレート) が①フィード最初の1秒②サムネフレーム
+     ③TikTok カバーの三役。thumbnail_text は 3〜5 語規範 (既存素材をそのまま使用)。
+  - ※ この正典は ADR-0002 (D-minimal) の「第一作で Ken Burns をやらない」を**部分的に更新**する
+    (静止プレート + 紙面レイアウト前提では Ken Burns が最小限の動きの担保。
+    ADR-0001 の images[] 6-8 枚 + events[] 10 個 MVP も「プレート 5 本 + タイポは Remotion」に簡約)。
+- **image_prompt レイヤーの置き場所**: video_payload_writer.py 拡張 vs 新モジュール → **新モジュール
+  `src/generation/image_prompt_writer.py`** (決定論ビルダー、LLM 非関与、既存 payload 出力に
+  一切触れない = 最もシンプルで隔離的)。イベント固有モチーフは `motif_hints` (英語意味記述) を
+  呼び出し側が注入する設計 (production モジュールは汎用、候補A 固有値はハーネス側 = 隔離原則)。
+- **brief 注入の経路**: script 新ルートのプロンプトはファイルロード (`load_prompt`) → ハーネスが
+  プロセス内でロード後に「## STEP 1」アンカー直前へ挿入 (production プロンプトファイル不変)。
+  article は article_writer.py 内ハードコード (不変原則 1) のため**注入不可** → 素のまま生成し、
+  brief 充足は人間編集 + Guardian 再実行ループで担保 (編集差分が教師信号)。
+- **モデル pin (生成中の設計判断)**: 初回生成で 503 波により article が tier3
+  (gemini-3.1-flash-lite) へ silent 劣化 → golden master の凍結条件は「確定布陣由来」のため、
+  QUALITY/ARTICLE 全 Tier を gemini-3.5-flash に pin (ab_article_model_upgrade.py 前例) して再生成。
+  **劣化するくらいなら fail して再実行** (沈黙的劣化の禁止の生成版)。
+- **CP-1 起案前仮説 6 点の検証 (誤り 10 作法)**:
+  - 仮説 1 ★**乖離 2 件訂正**: (a) `cls-6889e9e1c7ac_analysis.json` は**非存在** (候補A は
+    2026-05-11 batch = analysis layer production 配線前) → ハーネスが分析を新規実行。
+    (b) ★重大: 候補A は sources_en=1 のため `extract_perspectives` が**構造的に 0 候補**
+    (4 軸最低 en>=2 + fallback 品質ゲート sources_total>=2 を共に不通過、実測)。→ engine の
+    fallback ビルダー同形 (式・文言同形、写し元 L805-847 記録) の hidden_stakes 候補を品質ゲート
+    のみ bypass して構築し、`analysis_engine.extract_perspectives` をプロセス内差し替えで注入。
+    Step 2-6 (LLM 選定検証 / 多角分析 / 洞察 / 尺) は production オーケストレーションのまま実走。
+    補足: event.summary は 403 字 (X1 の 4,678 字 raw 埋込前の ingestion 仕様)。
+  - 仮説 2 確認: プロンプトはファイルロード + 呼出時 import → プロセス内注入可。article 注入不可も確認。
+  - 仮説 3 確認 + 訂正: image_prompt 非存在 / 決定論 / 「仮想敵」L72 のみ。visual_mode は
+    「4 modes」ではなく evidence strength 連動の 7 種 (anchor_style/document_style/split_screen/
+    structure_diagram/infographic/symbolic/market_graphic)。★ L72 仮想敵は 1 行除去で同時解消
+    (tests 非依存を grep 確認、F-video-payload-visual-prompt-target-enemy 完了)。
+  - 仮説 4: `.env` に ELEVENLABS_API_KEY **不在** (キー名のみ確認、値非表示) → 実呼出なし、
+    公式 docs (一次ソース) で with-timestamps 応答契約を確認し変換スクリプトを fixture テストで実装。
+  - 仮説 5 確認: Node v22.21.0 / npm 11.13.0、Remotion 4.0.475 scaffold + render 成功。
+    remotion-dev/skills は実在 (3.6k stars) だが「internal package、no documentation」→ skill 導入は
+    せず SKILL.md の指針 (CSS アニメーション禁止 / useCurrentFrame + interpolate / staticFile) を
+    実装に反映。
+  - 仮説 6 確認: baseline **1557 passed** 実測 (main HEAD `18b5287`)。
+- **stream_classification の人間検証値担保**: pool snapshot に JP 報道情報が無いため機械抽出の
+  誤分類リスクあり → 機械値が stream_2 以外なら人間確定値に訂正する設計 (実走では機械も
+  stream_2_perspective_gap を返し**訂正不要**だった。機械値・訂正有無は generation_metadata に記録)。
+
+### 決定
+
+- **`manual_poc/generate_golden_master.py`**: 候補A 単発再生成ハーネス (snapshot ロード → 観点注入 →
+  run_analysis_layer → particular_angle 抽出 → article (素) → script (brief 注入 + legacy fallback 検出で
+  fail-fast) → video_payload → image_prompts 5 本 → generation_metadata 監査証跡)。
+- **`manual_poc/editorial_brief_candidate_a.md`**: 候補A 固有 brief (①9,600人虐待は afpbb 等で日本でも
+  報道済みを本文で明示 ②未報道は ICRC 監視操作疑惑等の特定角度のみ = perspective_gap の核心
+  ③silence 絶対表現を避け中立表現 ④punchline = シニカル × 生活実感、メディア断定回避 +
+  ADR-0003: 数字・固有名詞出典付き / TeleSUR 党派性のソース名明示透明化)。
+- **`src/generation/image_prompt_writer.py` (production 機能)**: 4 シーンプレート (1:1、Ken Burns
+  可動域) + フックカードプレート (9:16、中央帯にタイポ用余白予約) = 計 5 本。意味記述 3 要素が正典、
+  ADR-0001 5 色パレット + editorial 語彙強制、ADR-0003 禁止事項を negative + must_avoid 両建て、
+  禁止語彙 (cinematic 等) の positive 混入はテストで構造的に排除。
+- **`manual_poc/remotion/`**: 独立 npm プロジェクト (Remotion 4.0.475)。セーフゾーン定数 + 紙面 3 帯 +
+  フックカード + Ken Burns + フレーズ同期字幕 + BGM ducking (0.12/0.35) + 完全 props JSON 駆動。
+  ダミー素材 (純 Python 生成 PNG/WAV、Pillow/ffmpeg 不要) で `npx remotion render` MP4 1 本実証。
+- **`manual_poc/tts_to_captions.py`**: ElevenLabs with-timestamps 応答 → Remotion captions 契約変換
+  (句読点 + 最大文字数のフレーズ分割、決定論、fixture テスト 6 件)。
+- **`docs/golden_master_spec.md`**: 隔離原則 / original 凍結 + `*_edited.*` 命名 / 編集→ガード 3 本
+  再実行ループ / 手動 PoC チェックリスト / AI 開示 (YouTube/TikTok 投稿時必須) を正典化。
+- **`src/generation/video_payload_writer.py` L72**: 「仮想敵」語彙 1 行除去 (同時解消条項適用)。
+
+### 結果
+
+- **golden master 凍結**: `data/output/golden_master/` (script + article + analysis + video_payload +
+  image_prompts 5 本 + generation_metadata)。コミット用スナップショットは
+  `docs/runs/F-first-work-golden-master/golden_master/`。全成果物 gemini-3.5-flash 由来 (pin 下で
+  503 波をリトライ吸収、script retries=0 / target_enemy=None / char validation passed)。
+- **brief の実効性**: setup「事実は、日本でも報道されています」+ twist「ベネズエラ政府系の『TeleSUR』」+
+  punchline 生活実感着地 = brief 4 点が台本に反映された。
+- **★ validation run (2 ガード 3 ランナー)**:
+  - coverage_claim_guard: run1 = title consistent (判定揺れ) → run2 = **title contradiction flag**
+    (platform_title「日本では報道されない9,600 Detaineesの視点」、想定通り title_generator ハードコード
+    由来)。**ガード文脈でも run 間判定分散を実測** (同一入力・flag 有無が反転)。
+  - Guardian 第1層: 14 主張 → 12 supported / **1 contradicted (c5 = 告発主体の帰属エラー: 告発は
+    囚人擁護センターで TeleSUR は報じた側 — 本物の編集欠陥を検出)** / 1 not_in_source (c11)。
+    ★ **brief 由来の記述 (TeleSUR = ベネズエラ政府系) は第1層で flag される**ことを実測 — 照合素材
+    (snapshot + analysis) に brief は含まれないため。これは仕様 (第1層 = 忠実性、第2層 = 真実性)。
+  - Guardian 第2層: run1 = corroborated 5 / **contradicted 2 (c10/c13 = article の「日本では詳細報道が
+    極めて少ない」に対し独立ソース [クーリエ・ジャポン / AFPBB / アムネスティ日本等の日本語報道実例]
+    が明示的に矛盾)** / uncorroborated 2 / unverified 4 (503)。**第2層が article の coverage 過大主張を
+    捕捉 = brief を注入できない article 側の構造的弱点が実地で立証された** (1-Q.5 guard は angle 主張を
+    consistent と判定したが、真実性層が事実主張としての強すぎる表現を弾いた)。
+  - corroboration は計 3 run (503 波対応の再実行ループ、canonical = run1 が単一 run 最完全、
+    run2 (503 波) / run3 は監査証跡)。run3 で **c6 (日本郵船回避運航 / 伊藤忠提携解消 = analysis
+    レイヤーが世界知識から導入した企業主張) が corroborated に回収** (toyokeizai.net /
+    arabnews.jp 等) + c7 も回収。c8/c9 は 3 run とも 503 で unverified (検証未完 ≠ 虚偽、
+    再実行で回収する)。c12 は run 間で corroborated ⇄ uncorroborated の判定揺れ (503 ではなく
+    証拠セット差: 告発主体名の独立支持有無 = 人間監査向き検出)。「analysis 由来の固有名詞主張は
+    corroborated になるまで公開に乗せない」を spec §3 に明文化。
+- **手修正対象リスト (カズヤ監査の入口、`flag_summary_for_human_audit.md`)**: ①platform_title
+  silence 表現 (guard flag) ②script c5 帰属エラー ③article c10/c13 coverage 過大表現
+  ④script punchline 尻切れ「…突きつける、あの」 (★ X1 と同型の loop-2 尻切れ**再発** =
+  F-script-punchline-tail-cut-investigate の標本 2 例目) ⑤article c11/c12 主体名・記述の出典確認。
+- baseline 1557 → **1581 passed** (新規 +24 = test_image_prompt_writer 18 + test_tts_to_captions 6、
+  破壊ゼロ、実測 345s)。不変原則 1-5 厳守 (article_writer 0 行 / script_writer 既存ルート 0 行 /
+  triage 0 行 / analysis 既存ファイル 0 行 / 既存テスト 0 行変更)。
+- 新規タスク: **F-fable5-guardian-poc** (★低 条件付き、第一作 ground truth で Claude Fable 5 を
+  Guardian 役比較)。完了移動: Phase A.5-3b 第一作起案 (本バッチで golden master 完成、残りは手動 PoC) /
+  F-video-payload-visual-prompt-target-enemy。
+
+### 関連ファイル・コミット
+
+- コミット: (push 後追記)
+- 新規: `manual_poc/generate_golden_master.py` / `manual_poc/editorial_brief_candidate_a.md` /
+  `manual_poc/tts_to_captions.py` / `manual_poc/README.md` / `manual_poc/remotion/` (独立 npm
+  プロジェクト一式) / `src/generation/image_prompt_writer.py` / `tests/test_image_prompt_writer.py` /
+  `tests/test_tts_to_captions.py` / `docs/golden_master_spec.md` /
+  `docs/runs/F-first-work-golden-master/` (validation レポート 3 種 + run 監査証跡 + golden_master
+  スナップショット)
+- 変更: `src/generation/video_payload_writer.py` (L72 仮想敵 1 行除去のみ)
+- ドキュメント更新: `docs/CURRENT_STATE.md` (全置換) / `docs/DECISION_LOG.md` (本エントリ + 1-T.2
+  placeholder 埋め `132082a`) / `docs/FUTURE_WORK.md` / `docs/DISCUSSION_NOTES.md`
+- 不変原則違反: なし (不変原則 6 = 第一作隔離も遵守、production 変更は image_prompt_writer 新規 +
+  video_payload_writer 1 行のみ)
+- 関連バッチ: F-image-prompt-spec (ADR 3 件 + 起案元) / F-editorial-guardian-* (validation 2 層) /
+  F-title-guard-coverage-claim-policy (guard) / F-script-punchline-tail-cut-investigate (尻切れ標本 2 例目) /
+  F-grounding-determinism-audit (run 間分散 = guard 文脈でも実測) / F-fable5-guardian-poc (新規 ★低)

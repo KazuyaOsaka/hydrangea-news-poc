@@ -1,0 +1,16 @@
+{
+  "stream_classification": "stream_2_perspective_gap",
+  "flagged": true,
+  "flags": [
+    {
+      "artifact": "title",
+      "span": "日本では報道されない9,600 Detaineesの視点",
+      "forbidden_category": "event_total_silence",
+      "reasoning": "「9,600 Detainees」という事実は、広範なイスラエル・パレスチナ紛争の一側面であり、系統判定で「広範事件は日本主要メディアで報道済み」とされている。しかし、「日本では報道されない」という表現は、この事実全体が日本で全く報じられていないかのように読め、事実に反する未報道断定（event_total_silence）に該当する。"
+    }
+  ],
+  "title_status": "contradiction",
+  "article_status": "consistent",
+  "skipped": false,
+  "skip_reason": null
+}

@@ -1,0 +1,376 @@
+{
+  "schema_version": 1,
+  "event_id": "cls-6889e9e1c7ac",
+  "generated_at": "2026-06-10T15:48:39.883610+00:00",
+  "guardian_model_used": "gemini-3.1-pro-preview",
+  "guardian_unavailable": false,
+  "unavailable_reason": null,
+  "source_material_scope": {
+    "has_event": true,
+    "has_analysis": true,
+    "event_summary_chars": 403,
+    "event_global_view_chars": 506,
+    "notes": "faithfulness layer compares against event data only; generated artifacts are excluded from source material (a generated artifact cannot vouch for another). generation-time ScoredEvent wrapper fields (judge_result / editorial_mission_*) are not reconstructable from the pool snapshot and are excluded."
+  },
+  "claims": [
+    {
+      "claim": {
+        "claim_id": "c1",
+        "claim_text": "日本では9,600人の拘束者の視点が報道されていない。",
+        "artifact": "title",
+        "risk_category": "rights_violation",
+        "quote_span": "日本では報道されない9,600 Detaineesの視点"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "日本メディアがこの問題を単発の人道問題として処理し、対立軸などに踏み込んだ報道が「極めて限定的」であるという記述により支持される。",
+      "source_evidence": "日本の大手メディア（日本経済新聞やNHKなど）は、本件を単発の中東人道問題として事務的に処理する傾向が強く、構造的な司法制度の欠陥や地政学的な二重基準の対立軸にまで踏み込んだ報道は極めて限定的です。",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "イスラエル パレスチナ 9600人 拘束 報道",
+          "locale": "ja",
+          "purpose": "日本のメディアにおける9,600人のパレスチナ人拘束者に関する報道の有無や内容を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c2",
+        "claim_text": "9,600人のパレスチナ人囚人がイスラエルの刑務所で虐待を受けているという告発がある。",
+        "artifact": "title",
+        "risk_category": "rights_violation",
+        "quote_span": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "パレスチナ人囚人擁護センターが、9,600人以上が収容されるイスラエルの刑務所での虐待を隠蔽する行為を告発しているという記述と一致する。",
+      "source_evidence": "The Palestinian Center for the Defense of Prisoners accuses Israel of manipulating ICRC visits to hide abuses in its jails holding over 9,600 Palestinians.",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Israel 9600 Palestinian prisoners abuse denunciation",
+          "locale": "en",
+          "purpose": "9,600人のパレスチナ人囚人がイスラエルの刑務所で虐待を受けているという告発の事実関係を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c3",
+        "claim_text": "9,600人の拘留者が存在し、日本企業に損失が生じている。",
+        "artifact": "script",
+        "risk_category": "rights_violation",
+        "quote_span": "９６００人の拘留者と、日本企業の隠れた損失。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "9,600人のパレスチナ人が拘束されていること、および中東の地政学的リスクが物流コスト増や供給遅延を通じて日本企業に悪影響を及ぼしていることが記述されている。",
+      "source_evidence": "holding over 9,600 Palestinians... 日本企業への波及は「中東航路の地政学的リスク持続→日本郵船や商船三井などの回避運航に伴う物流コスト増→自動車部品や原材料の供給遅延」という3ステップの因果連鎖で製造業の業績を下押しします。",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "イスラエル パレスチナ 中東リスク 物流コスト増 日本企業",
+          "locale": "ja",
+          "purpose": "中東情勢の緊迫化が日本企業の物流や業績に与えている経済的影響を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c4",
+        "claim_text": "イスラエルの刑務所に9,600人以上のパレスチナ人が収監され、虐待が告発されている事実が日本でも報道されている。",
+        "artifact": "script",
+        "risk_category": "rights_violation",
+        "quote_span": "イスラエルの刑務所にパレスチナ人９６００人以上が収監され虐待が告発されている事実は、日本でも報道されています。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "日本のメディアが本件を「単発の中東人道問題として事務的に処理する」とあり、深くは掘り下げないものの報道自体はされていることが読み取れる。",
+      "source_evidence": "日本の大手メディア（日本経済新聞やNHKなど）は、本件を単発の中東人道問題として事務的に処理する傾向が強く",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "イスラエル パレスチナ人 9600人 収監 虐待",
+          "locale": "ja",
+          "purpose": "イスラエル刑務所のパレスチナ人収監と虐待告発に関する日本国内での報道状況を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c5",
+        "claim_text": "ベネズエラ政府系のTeleSURが、イスラエルが赤十字国際委員会の訪問を操作し刑務所での虐待を隠蔽している疑惑を告発した。",
+        "artifact": "script",
+        "risk_category": "rights_violation",
+        "quote_span": "ベネズエラ政府系の『ＴｅｌｅＳＵＲ』は、イスラエルが赤十字国際委員会の訪問を操作し虐待を隠蔽している疑惑を告発。"
+      },
+      "faithfulness_status": "contradicted",
+      "faithfulness_reasoning": "入力素材では、告発の主体はTeleSURではなく「The Palestinian Center for the Defense of Prisoners」である（TeleSURはそれを報じたメディア）。またTeleSURについて「政府系」という記述は存在しない。",
+      "source_evidence": "The Palestinian Center for the Defense of Prisoners accuses Israel of manipulating ICRC visits to hide abuses in its jails holding over 9,600 Palestinians. / ベネズエラを拠点とする左派メディアのTeleSURなどのグローバルサウス報道は...",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "TeleSUR Israel ICRC visits manipulation abuse",
+          "locale": "en",
+          "purpose": "TeleSURがイスラエルによるICRC訪問制限や虐待隠蔽の疑惑をどのように報じたか、および実際の告発主体を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c6",
+        "claim_text": "中東の緊迫化により、日本郵船が回避運航を行い、伊藤忠商事が提携を解消した。",
+        "artifact": "script",
+        "risk_category": "named_entity_fact",
+        "quote_span": "この治安当局の強硬姿勢による中東の緊迫化は、日本郵船の回避運航に伴う物流コスト増や、伊藤忠商事の提携解消にみるレピュテーションリスクとして日本企業を直撃しています。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "日本郵船の回避運航による物流コスト増や、伊藤忠商事傘下の商社によるイスラエル企業との提携解消が、中東の緊張による日本企業への影響の具体例として明記されている。",
+      "source_evidence": "日本郵船や商船三井などの回避運航に伴う物流コスト増 / 過去の防衛装備品協力見直し（例：伊藤忠商事傘下の商社によるイスラエル企業との提携解消）",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "日本郵船 回避運航 伊藤忠商事 イスラエル 提携解消",
+          "locale": "ja",
+          "purpose": "中東情勢を受けた日本郵船の回避運航と伊藤忠商事のイスラエル企業との提携解消の事実を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c7",
+        "claim_text": "イスラエルの刑務所で9,600人が拘束されており、人権団体が赤十字査察の妨害を告発している。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "9,600人が拘束されるイスラエル刑務所：人権擁護団体が告発する「赤十字査察の妨害」と報道の空白"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "イスラエルの刑務所で9,600人以上が拘束されており、パレスチナ人囚人擁護センター（人権擁護団体）が赤十字国際委員会の訪問操作を告発している記述と一致する。",
+      "source_evidence": "The Palestinian Center for the Defense of Prisoners accuses Israel of manipulating ICRC visits to hide abuses in its jails holding over 9,600 Palestinians.",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Palestinian human rights group Israel ICRC visits manipulation 9600",
+          "locale": "en",
+          "purpose": "人権団体がイスラエルによる赤十字査察の妨害を告発している事実を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c8",
+        "claim_text": "パレスチナの人権団体が、イスラエルが刑務所内の虐待隠蔽を目的にICRCの訪問を制限・操作していると告発した。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "パレスチナの人権団体が、イスラエルが刑務所内での虐待を隠蔽するため赤十字国際委員会（ICRC）の訪問を制限・操作していると告発した。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "パレスチナ人囚人擁護センターが、虐待隠蔽のためにICRCの訪問を操作しているとイスラエルを非難している記述に合致する。",
+      "source_evidence": "The Palestinian Center for the Defense of Prisoners accuses Israel of manipulating ICRC visits to hide abuses in its jails...",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Palestinian Center for the Defense of Prisoners Israel ICRC access hide abuses",
+          "locale": "en",
+          "purpose": "パレスチナ囚人擁護センターによるICRC訪問制限・操作を通じた虐待隠蔽に関する告発内容を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c9",
+        "claim_text": "イスラエル国内の施設には現在9,600人以上のパレスチナ人が拘束されている。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "イスラエル国内の施設には現在9,600人以上のパレスチナ人が拘束されているとされ、ガザでの対立が続く中で人道状況の悪化が指摘されている。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "イスラエルの刑務所に9,600人以上のパレスチナ人が収容されているという数字の記述と一致する。",
+      "source_evidence": "its jails holding over 9,600 Palestinians",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Israel jails 9600 Palestinians",
+          "locale": "en",
+          "purpose": "現在イスラエル国内に9,600人以上のパレスチナ人が拘束されているという人数の正確性を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c10",
+        "claim_text": "日本国内ではこの告発や囚人の処遇に関する詳細な報道が極めて少ない。",
+        "artifact": "article",
+        "risk_category": "assertive_fact",
+        "quote_span": "日本国内ではこの具体的な告発や囚人の処遇に関する詳細な報道が極めて少なく、国際社会と日本の間での関心や情報の非対称性が顕著になっている。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "日本の大手メディアにおいて、構造的な欠陥などに踏み込んだ詳細な報道が「極めて限定的」であるという記述により支持される。",
+      "source_evidence": "日本の大手メディア（日本日本経済新聞やNHKなど）は、本件を単発の中東人道問題として事務的に処理する傾向が強く、構造的な司法制度の欠陥や地政学的な二重基準の対立軸にまで踏み込んだ報道は極めて限定的です。",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "イスラエル 刑務所 虐待 パレスチナ人 報道",
+          "locale": "ja",
+          "purpose": "日本国内でイスラエル刑務所での虐待に関する詳細な報道がどの程度行われているかを確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c11",
+        "claim_text": "多国籍メディアTeleSURが、パレスチナ人囚人擁護センターによるイスラエル当局非難を報じた。",
+        "artifact": "article",
+        "risk_category": "attributed_statement",
+        "quote_span": "中南米を拠点とする多国籍メディア「TeleSUR」は、パレスチナ人囚人擁護センター（The Palestinian Center for the Defense of Prisoners）がイスラエル当局を非難したと報じた。"
+      },
+      "faithfulness_status": "not_in_source",
+      "faithfulness_reasoning": "TeleSURがパレスチナ人囚人擁護センターの告発を報じた事実は入力に存在するが、TeleSURを「多国籍メディア」とする記述は入力素材に含まれていない。",
+      "source_evidence": "",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "TeleSUR Palestinian Center for the Defense of Prisoners Israel",
+          "locale": "en",
+          "purpose": "TeleSURがパレスチナ囚人擁護センターの告発を実際に報じたか、また同社が多国籍メディアに該当するかを確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c12",
+        "claim_text": "パレスチナ人囚人擁護センターによれば、イスラエルは9,600人以上が収容される刑務所での虐待行為を隠蔽するため、ICRCの訪問調査を操作・制限している。",
+        "artifact": "article",
+        "risk_category": "rights_violation",
+        "quote_span": "同センターによると、イスラエルは9,600人以上のパレスチナ人が収容されている刑務所内での虐待行為を隠蔽するため、赤十字国際委員会（ICRC）による訪問調査を操作し、アクセスを厳しく制限しているとされる。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "パレスチナ人囚人擁護センターが、9,600人以上のパレスチナ人がいる刑務所での虐待を隠すためにICRCの訪問を操作・制限していると非難した記述と完全に一致する。",
+      "source_evidence": "The Palestinian Center for the Defense of Prisoners accuses Israel of manipulating ICRC visits to hide abuses in its jails holding over 9,600 Palestinians. The plan limits access and conceals violations...",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "Palestinian Center for the Defense of Prisoners Israel abuses ICRC 9600",
+          "locale": "en",
+          "purpose": "パレスチナ囚人擁護センターが9,600人の囚人とICRC訪問操作について告発した詳細を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c13",
+        "claim_text": "日本の主要メディアでは、イスラエル刑務所のパレスチナ人拘束者の処遇に関する具体的な告発を深く掘り下げた報道がほとんど見られない。",
+        "artifact": "article",
+        "risk_category": "assertive_fact",
+        "quote_span": "一方で、日本の主要メディアにおいて、この具体的な告発やイスラエル刑務所内におけるパレスチナ人拘束者の詳細な処遇を単独で深く掘り下げた報道は、現時点でほとんど見られない。"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "主要メディアが拘留者虐待やICRCへのアクセス制限といった具体的な制度的隠蔽の告発について「深く掘り下げることは避ける傾向がある」という記述と合致する。",
+      "source_evidence": "主要メディアはガザの戦闘や一般的な人道危機を報じるものの、イスラエル刑務所内での拘留者虐待やICRCへのアクセス制限といった具体的な制度的隠蔽の告発について深く掘り下げることは避ける傾向がある。",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "イスラエル 刑務所 パレスチナ人 拘束者 処遇 告発",
+          "locale": "ja",
+          "purpose": "日本の主要メディアがイスラエル刑務所内のパレスチナ人の処遇についてどのように報じているか（掘り下げているか）を確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    },
+    {
+      "claim": {
+        "claim_id": "c14",
+        "claim_text": "TeleSURはラテンアメリカを拠点とするメディアである。",
+        "artifact": "article",
+        "risk_category": "named_entity_fact",
+        "quote_span": "今回これを大きく報じたTeleSURはラテンアメリカを拠点とするメディアであり"
+      },
+      "faithfulness_status": "supported",
+      "faithfulness_reasoning": "TeleSURがベネズエラを拠点としており、メタデータのリージョンとしてもラテンアメリカに分類されている記述と一致する。",
+      "source_evidence": "ベネズエラを拠点とする左派メディアのTeleSUR / \"region\": \"latin_america\"",
+      "truthfulness_status": "pending",
+      "truthfulness_notes": "",
+      "verification_queries": [
+        {
+          "query": "TeleSUR latin america media based",
+          "locale": "en",
+          "purpose": "TeleSURがラテンアメリカ（ベネズエラ）を拠点とするメディアであることを確かめる。"
+        }
+      ],
+      "truthfulness_reasoning": "",
+      "corroborating_domains": [],
+      "truthfulness_evidence": [],
+      "truthfulness_verified_at": ""
+    }
+  ],
+  "flagged_claims": [
+    "c5",
+    "c11"
+  ],
+  "n_supported": 12,
+  "n_contradicted": 1,
+  "n_not_in_source": 1,
+  "n_unverified": 0,
+  "truthfulness_summary": null
+}

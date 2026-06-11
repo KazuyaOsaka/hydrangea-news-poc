@@ -1,0 +1,46 @@
+{
+  "batch": "F-first-work-golden-master",
+  "generated_at_utc": "2026-06-10T15:27:24.047245+00:00",
+  "finished_at_utc": "2026-06-10T15:38:52.955313+00:00",
+  "event_id": "cls-6889e9e1c7ac",
+  "event_title": "9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners",
+  "event_pool_batch_id": "20260511_044914",
+  "event_pool_created_at": "2026-05-11T05:01:00.083027+00:00",
+  "event_summary_chars": 403,
+  "models": {
+    "quality_pinned_all_tiers": "gemini-3.5-flash",
+    "article_pinned_all_tiers": "gemini-3.5-flash",
+    "pin_note": "成功出力は必ず pin モデル由来 (全 Tier 同一、下位モデル劣化なし)"
+  },
+  "harness_injections": [
+    "all QUALITY/ARTICLE tiers pinned to gemini-3.5-flash / gemini-3.5-flash: a 503 wave degrades to FAIL (re-run), never to a lesser model (silent-degradation ban for the frozen golden master)",
+    "perspective candidate injected (fallback-shaped hidden_stakes, quality gate bypassed): candidate A has sources_en=1 so extract_perspectives structurally returns 0 candidates (CP-1 measured)",
+    "editorial brief injected into script_with_analysis prompt (process-local, inserted before '## STEP 1: パターン選択'; production prompt file unchanged; article NOT injected = invariant 1)"
+  ],
+  "injected_perspective": {
+    "axis": "hidden_stakes",
+    "score": 0.0,
+    "reasoning": "fallback 同形 (golden master ハーネス注入、品質ゲート bypass): sources_total=1, ijai=0.0, ga=0.0 → score=0.00",
+    "evidence_refs": [
+      "https://www.telesurenglish.net/israel-prison-abuses-palestine/"
+    ],
+    "why_now": "「9,600 Detainees: Shocking Denunciation of Israel Prison Abuses Against Palestinian Prisoners」は 4 軸の典型成立条件には乗らないが、(間接インパクト 0.0/10、海外関心度 0.0/10; 海外 1 件 / 日本 0 件) の構成で日本人視聴者にとっての隠れた利害を世界視点から再解釈する余地がある。"
+  },
+  "machine_stream_classification": "stream_2_perspective_gap",
+  "stream_overridden_to": null,
+  "editorial_brief": {
+    "path": "manual_poc/editorial_brief_candidate_a.md",
+    "sha256_16": "dc2d3ed60ee36350",
+    "injected_into": "script_with_analysis prompt only"
+  },
+  "script_route": "generate_script_with_analysis (new route, no legacy fallback)",
+  "script_log_records": [
+    "[ScriptWithAnalysis] Generating script for event=[cls-6889e9e1c7ac] perspective=hidden_stakes insights=3 profile=geopolitics_120s",
+    "[ScriptWithAnalysis] director_thought (attempt 1): 報道済みの人道問題を単なるお気持ちで終わらせず、中東の緊張が日本郵船や伊藤忠商事など日本企業のレピュテーションおよび物流リスク、さらには視聴者の生活コストに直結する『Geopolitics』の因果連鎖として再構成しました。",
+    "[ScriptWithAnalysis] pattern='Geopolitics' loop='loop-2' profile='geopolitics_120s'",
+    "[ScriptWithAnalysis] char validation passed (hook=22, setup=82, twist=172, punchline=77)",
+    "[ScriptWithAnalysis] Generated via gemini: 4 sections, total=120s, profile=geopolitics_120s, retries=0"
+  ],
+  "frozen_as_original": true,
+  "editing_rule": "this directory is the frozen ORIGINAL. Human edits go to separate *_edited.* files (docs/golden_master_spec.md). original vs edited diff = teaching signal for AI style improvement."
+}
