@@ -2421,7 +2421,7 @@ F-13.B JpCoverageVerifier の precision/recall を実データで測定し、Hyd
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `069c318` (merge: `20da7c0`。★ F-verify-jp-coverage-golden-fix と合算 1 コミット = git log 実測で確認。F-docs-backlog-registration / 2026-06-11 で追記)
 - 変更:
   - `docs/runs/F-verify-jp-coverage/golden_set.json` (新規、20 entries)
   - `docs/DECISION_LOG.md` (本エントリ)
@@ -2539,7 +2539,7 @@ F-verify-jp-coverage-golden (前バッチ、未マージ feature ブランチ
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `069c318` (merge: `20da7c0`。★ F-verify-jp-coverage-golden と合算 1 コミット。F-docs-backlog-registration / 2026-06-11 で追記)
 - 変更:
   - `docs/runs/F-verify-jp-coverage/golden_set.json` (v1.0 → v1.1: 4 件
     True 修正 + 1 件削除 + メタ更新 + stream_2_candidate 追加 + v1_1_changelog
@@ -2629,7 +2629,7 @@ F-13.B の `_search_with_grounding()` 内で `chunk.web.uri` を URL として
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `d23908e` (merge: `b5d571d`。F-docs-backlog-registration / 2026-06-11 で追記)
 - 新規追加:
   - `scripts/verify_jp_coverage_measure.py` (約 600 行、CLI スクリプト)
   - `docs/runs/F-verify-jp-coverage/measurement_result.json`
@@ -2823,7 +2823,7 @@ verdict: **fail** (4 指標とも閾値未達のまま)。ただし「ロジッ�
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `3c8d470` (merge: `fd76660`。★ 後続の `27be010` / merge `2925fb8` は同一コミットメッセージだが内容は F-trial-run-post-fix 成果物 = git show --stat 実測で確認。F-docs-backlog-registration / 2026-06-11 で追記)
 - 新規追加:
   - `tests/test_jp_coverage_verifier_domain_extract.py` (28 テスト、ドメイン
     抽出レイヤー検証)
@@ -3036,7 +3036,7 @@ F-stream-2-filter-design 着手 OK。
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `27be010` (merge: `2925fb8`。★ コミットメッセージは F-jp-coverage-improve 文面の流用だが、内容は本バッチ成果物 = docs/runs/F-trial-run-post-fix/ 一式 + scripts/replay_jp_coverage.py を git show --stat 実測で確認。F-docs-backlog-registration / 2026-06-11 で追記)
 - 新規追加:
   - `scripts/replay_jp_coverage.py` (過去試運転データ再判定スクリプト)
   - `docs/runs/F-trial-run-post-fix/REPORT.md` (統合レポート)
@@ -3165,7 +3165,7 @@ docs 更新のみ。baseline 1345 passed 維持。
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `737d85c` (merge: `edca8e6`。F-docs-backlog-registration / 2026-06-11 で追記)
 - 新規追加:
   - `docs/PARTICULAR_ANGLE_DEFINITION.md` (「特定角度」概念正典 docs)
   - `scripts/extract_particular_angle.py` (LLM ベース特定角度抽出スクリプト)
@@ -3317,7 +3317,7 @@ incremental save + timeout 追加 → 第 2 試行で完走、というスクリ
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `e789b2f` (merge: `6b9a1fb`。F-docs-backlog-registration / 2026-06-11 で追記)
 - 新規追加:
   - `scripts/reclassify_annotations.py` (4 分類化 LLM 再判定スクリプト、resume + incremental save + per-call timeout)
   - `scripts/generate_review_draft_v2.py` (4 分類版 review_draft_v2.md 生成)
@@ -3497,7 +3497,7 @@ DISCUSSION_NOTES に詳細エントリ追加 + PARTICULAR_ANGLE_DEFINITION.md
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `6a8efc4` (merge: `2c9ee96`。F-docs-backlog-registration / 2026-06-11 で追記)
 - 新規追加:
   - `scripts/add_sontaku_signals.py` (LLM ベース sontaku_signals 推定スクリプト、resume + incremental save + per-call timeout)
   - `docs/runs/F-particular-angle-redesign/extension_log.json` (拡張作業ログ + level / type / confidence 分布)
@@ -3653,7 +3653,7 @@ tests/ configs/ への変更なし、既存関数のシグネチャ・戻り値�
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `038c298` (merge: `1311cd0`。F-docs-backlog-registration / 2026-06-11 で追記)
 - 改修:
   - `docs/DISCUSSION_NOTES.md` (1 エントリ更新 [stream_3=0 件 + (c) 仮説] +
     1 エントリ新規 [sontaku_signals type 分布バイアス] + ヘッダ最終更新日付)
@@ -3773,7 +3773,7 @@ F-particular-angle-redesign/REPORT.md にセクション 12 (Task E カズヤレ
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `bbc00db` (merge: `e1ad637`。F-docs-backlog-registration / 2026-06-11 で追記)
 - 改修:
   - `docs/DISCUSSION_NOTES.md` (新規 4 エントリ + 既存 1 エントリ追記 +
     ヘッダ最終更新日付)
@@ -3978,7 +3978,7 @@ diamond.jp / yomiuri.co.jp / newsweekjapan.jp / asahi.com がヒット → strea
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `beb4aa7` (merge: `82ce0d0`。F-docs-backlog-registration / 2026-06-11 で追記)
 - 新規ファイル:
   - `tests/test_jp_coverage_verifier_two_stage.py` (19 件、新規)
   - `scripts/measure_two_stage_accuracy.py` (新規)
@@ -4251,7 +4251,7 @@ verify_two_stage の構造設計 + WL 整備の合わせ技で「実用ライン
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `84a678e` (merge: `4062639`。F-docs-backlog-registration / 2026-06-11 で追記)
 - 改修:
   - `src/triage/jp_coverage_verifier.py` (`_match_whitelist` 階層判定化 +
     `_domain_matches_hierarchy` 新規モジュール関数追加 + `JP_MEDIA_WHITELIST`
@@ -4435,7 +4435,7 @@ docs/ 配下のみ更新 (新規 10 ファイル + 既存 4 ファイル更新) 
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `b81376f` (merge: `eb0dd5e`。F-docs-backlog-registration / 2026-06-11 で追記)
 - 新規ファイル:
   - `docs/runs/F-trial-run-post-tune/REPORT.md`
   - `docs/runs/F-trial-run-post-tune/environment_snapshot.json`
@@ -4596,7 +4596,7 @@ baseline 1390 passed 維持。
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `12e92c1` (merge: `915ace3`。F-docs-backlog-registration / 2026-06-11 で追記)
 - 新規ファイル:
   - `scripts/dump_grounding_chunks.py`
   - `docs/runs/F-wl-hit-quality-audit/REPORT.md`
@@ -4702,7 +4702,7 @@ Task E 想定外退行を CP で検知し commit/merge せず保留 → B-3 を�
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `3d90f34` (B-3' final。WIP コミット: `e97eea7` = Task C-D / `f239e13` = Task E 退行検出。merge: `ba51e5f`。F-docs-backlog-registration / 2026-06-11 で追記)
 - 新規ファイル:
   - `docs/runs/F-jp-coverage-llm-judgement-extraction/design_spec_v2.md`
   - `docs/runs/F-jp-coverage-llm-judgement-extraction/REPORT.md`
@@ -5761,7 +5761,7 @@ Phase A.5-3a-verify ゲート完了後 **22 つ目のバッチ (1-R)**。F-parti
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `8089012` (merge: `c6e00c2`。F-docs-backlog-registration / 2026-06-11 で追記)
 - 改修 (不変原則対象外):
   - `src/shared/models.py` (SontakuSignals + ParticularAngleMetadata + AnalysisResult optional field)
   - `src/main.py` (分析ブロックで extractor 呼出 + model_copy で metadata 付与、run_analysis_layer 不変)
@@ -6402,7 +6402,7 @@ Phase A.5-3a-verify ゲート完了後 **22 つ目のバッチ (1-R)**。F-parti
 
 ### 関連ファイル・コミット
 
-- コミット: (push 後追記)
+- コミット: `6230649` (merge: `eadb517`。F-docs-backlog-registration / 2026-06-11 で追記)
 - 新規: `manual_poc/generate_golden_master.py` / `manual_poc/editorial_brief_candidate_a.md` /
   `manual_poc/tts_to_captions.py` / `manual_poc/README.md` / `manual_poc/remotion/` (独立 npm
   プロジェクト一式) / `src/generation/image_prompt_writer.py` / `tests/test_image_prompt_writer.py` /
@@ -6417,3 +6417,58 @@ Phase A.5-3a-verify ゲート完了後 **22 つ目のバッチ (1-R)**。F-parti
 - 関連バッチ: F-image-prompt-spec (ADR 3 件 + 起案元) / F-editorial-guardian-* (validation 2 層) /
   F-title-guard-coverage-claim-policy (guard) / F-script-punchline-tail-cut-investigate (尻切れ標本 2 例目) /
   F-grounding-determinism-audit (run 間分散 = guard 文脈でも実測) / F-fable5-guardian-poc (新規 ★低)
+
+## 2026-06-11: F-docs-backlog-registration — チャット合意 3 件の FUTURE_WORK 登録漏れ回収 + DECISION_LOG コミット placeholder 全 17 箇所解消 (docs-only)
+
+### 背景
+
+- 2026-06-05 / 2026-06 上旬のチャット合意 3 件 (老朽化 docs 刷新 / A.5-3c 前の負債棚卸し /
+  auto-progression 原則) がセッション跨ぎで FUTURE_WORK に未登録のまま漏れていた。
+- 2026-06-11 のチャット側検証で、DECISION_LOG に「コミット未記載 placeholder」(push 後に
+  人間が追記する前提の仮置き文字列) の残存が発見された (起案時点の認識は 3 箇所)。
+
+### 議論
+
+- 起案前提「placeholder 3 箇所」に対し、着手時 grep で **17 箇所** の残存を実測
+  (クラウド誤り 10 作法 = 起案者前提を grep で検証・訂正。本バッチで 5 回目の適用)。
+  完了条件が「grep 0 件」と定義されていたため、CP-1 訂正権限の範囲で全 17 箇所を
+  埋める方針に拡大した (docs-only・全ハッシュは git log / git show --stat 実測)。
+- auto-progression 原則は合意原文が未記録のため、**推定定義のまま正典化しない**
+  (FUTURE_WORK エントリと DISCUSSION_NOTES の両方に「カズヤ確認待ち」を明記し、
+  起案時の意図確認を必須とした)。
+
+### 決定
+
+- FUTURE_WORK 緊急度 低に 3 エントリ追加: **F-docs-architecture-refresh** (ARCHITECTURE /
+  REFACTORING_PLAN / TECH_DEBT 刷新 + BATCH_PROTOCOL 老朽化解消をスコープに含む) /
+  **F-tech-debt-audit-pre-3c** (読み取り専用棚卸し) / **F-claude-code-auto-progression-principle**
+  (推定定義・起案前カズヤ意図確認必須)。
+- DECISION_LOG の placeholder 全 17 箇所を実ハッシュで解消。副次発見 2 件を該当エントリに注記:
+  - ① F-verify-jp-coverage-golden (2026-05-03) と F-verify-jp-coverage-golden-fix (2026-05-04) は
+    **合算 1 コミット** (`069c318` / merge `20da7c0`、コミットメッセージに combined と明記)。
+  - ② F-trial-run-post-fix (1-D''') の実コミット `27be010` (merge `2925fb8`) は、コミット
+    メッセージが直前バッチ F-jp-coverage-improve の文面を流用している (内容は
+    docs/runs/F-trial-run-post-fix/ 一式 + scripts/replay_jp_coverage.py = post-fix 成果物で
+    あることを git show --stat で確認)。ハッシュだけ拾うと誤帰属する罠のため両エントリに注記。
+
+### 結果
+
+- placeholder 文字列の grep = **0 件**。チャット合意 3 件が docs 正本に登録され、
+  セッション跨ぎ消失リスクが解消。
+- placeholder 慣行 (push 後に人間が遡及追記する前提) は、最古 2026-05-03 から約 5 週間
+  17 箇所が放置された実績により機能していないことが確定。今後のバッチは仮置き文字列を
+  使わず、ブランチ名参照 + 次バッチでの遡及追記を運用とする (恒久ルール化は
+  BATCH_PROTOCOL 老朽化解消 = F-docs-architecture-refresh のスコープ)。
+- コード・テスト・configs 0 行変更、baseline **1581 passed** 維持 (実測)。不変原則 1-5 +
+  第一作隔離 (6) は自明に維持 (docs/ のみ)。
+
+### 関連ファイル・コミット
+
+- コミット: ブランチ `feature/F-docs-backlog-registration` (ハッシュはマージ後に
+  `git log --oneline | grep docs-backlog-registration` で参照。仮置き文字列は完了条件
+  grep = 0 件維持のため本エントリでは不使用)
+- 変更: `docs/FUTURE_WORK.md` (3 エントリ追加 + ヘッダ) / `docs/DECISION_LOG.md`
+  (placeholder 17 箇所 + 本エントリ) / `docs/DISCUSSION_NOTES.md` (4-A 新規 2 件 + ヘッダ) /
+  `docs/CURRENT_STATE.md` (全置換) / `docs/runs/F-docs-backlog-registration/REPORT.md` (新規)
+- 関連バッチ: F-docs-architecture-refresh / F-tech-debt-audit-pre-3c /
+  F-claude-code-auto-progression-principle (いずれも本バッチで登録、実装は別バッチ)

@@ -1,6 +1,13 @@
 # Hydrangea — Discussion Notes (DISCUSSION_NOTES.md)
 
-最終更新: 2026-06-11 (★ F-first-work-golden-master 完了、実装バッチ 1-S。4-A 新規 2 件 =
+最終更新: 2026-06-11 (★ F-docs-backlog-registration 完了、docs-only バッチ。4-A 新規 2 件 =
+「auto-progression 原則の推定定義 (カズヤ確認待ち)」(Active、原文未記録の合意 = 推定のまま正典化しない) +
+「チャット側クラウドの起案セッションは必ずプロジェクト内で開始する (Project Knowledge 接続の自己点検込み)」
+(Active、2026-06-11 プロジェクト外チャット起案発覚 → 三重安全構造 = リポジトリ正本 + CP-1 grep-first +
+カズヤ評価ゲートで実害ゼロを監査確認済)。4-B 再評価 = 既存エントリ全件継続 (本バッチは登録・placeholder
+回収のみで既存議論の状況変化なし)。FUTURE_WORK 3 エントリ登録 + DECISION_LOG コミット placeholder を
+起案前提 3 箇所 → grep 実測 17 箇所に訂正の上、全件実ハッシュで解消。baseline 1581 passed 維持。
+前回 2026-06-11: F-first-work-golden-master 完了、実装バッチ 1-S。4-A 新規 2 件 =
 「第一作の視覚・レイアウト設計正典 5 点」(昇格候補 DECISION_LOG = 本バッチで実装・記録完了。
 中央帯紙面 / フレーズ同期字幕 / 文字とプレートの分業 / モデル非結合 / フックカード=サムネ統合、
 出典 = 2026-06-10 クラウド Web 調査) +「編集差分 = 教師信号の観測開始宣言」(Active、original 凍結 +
@@ -52,6 +59,30 @@ Cultural Divide + used_fallback=false / retries=0 + JSON 切断ゼロ)。axis_5 
 ---
 
 ## 未分類 (Active)
+
+### 2026-06-11: auto-progression 原則の推定定義 — カズヤ確認待ち (F-docs-backlog-registration で登録漏れ回収)
+- **内容**: 2026-06 上旬のチャットで合意されたが**原文未記録**のまま FUTURE_WORK 登録が漏れていた
+  (F-docs-backlog-registration で回収)。**以下はクラウドの推定定義であり未確認**: バッチ実行中の
+  Claude Code が確認質問で停止せず、起案プロンプトの「乖離訂正権限」「停止条件」の範囲でクラウド
+  推奨案により自動進行する原則を、CLAUDE.md に汎用明文化する構想。**推定のまま正典化しない**
+  (クラウド誤り 10 = 検証なしの仮説受容の回避)。起案時にまずカズヤに意図を確認し、推定が誤って
+  いれば FUTURE_WORK エントリ (F-claude-code-auto-progression-principle) を修正する。現状は各バッチ
+  プロンプトの個別条項 (乖離訂正権限 / 停止条件) で同等の運用が機能しているため、汎用原則化の
+  要否判断そのものも起案時の論点に含む。
+- **出典**: 2026-06 上旬チャット (原文未記録)、`docs/FUTURE_WORK.md`
+  「F-claude-code-auto-progression-principle」(2026-06-11 登録)
+- **ステータス**: `Active` (要カズヤ意図確認 — 確認まで起案不可)
+
+### 2026-06-11: チャット側クラウドの起案セッションは必ずプロジェクト内で開始する — Project Knowledge 接続の自己点検込み (F-docs-backlog-registration で記録)
+- **内容**: 2026-06-11 に、チャット側クラウドの起案セッションが**プロジェクト外チャット**
+  (Project Knowledge 非接続) で開始されていたことが発覚。三重安全構造 (①リポジトリ docs 正本 =
+  起案の根拠は常にリポジトリ側にある ②CP-1 grep-first = Claude Code が起案者前提を実コード・
+  git 履歴で検証する作法 ③カズヤ評価ゲート) により**実害ゼロを監査確認済み** (不変原則違反 0 /
+  ADR 改訂は正規手続き / 未訂正の誤前提 0)。再発防止の運用: 起案セッションは必ずプロジェクト内で
+  開始し、セッション冒頭で Project Knowledge 接続の自己点検 (CURRENT_STATE.md の「最終更新日」が
+  最新かの確認等、BATCH_PROTOCOL「Project Knowledge 最新化運用ルール」注意事項と同型) を行う。
+- **出典**: 2026-06-11 チャット側監査、`docs/BATCH_PROTOCOL.md`「Project Knowledge 最新化運用ルール」
+- **ステータス**: `Active` (チャット側運用ルールとして継続参照)
 
 ### 2026-06-11: 第一作の視覚・レイアウト設計正典 5 点 (F-first-work-golden-master、1-S)
 - **内容**: 2026-06-10 クラウド Web 調査の結論を本バッチで実装・正典化した 5 点:

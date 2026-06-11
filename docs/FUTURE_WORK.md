@@ -1,6 +1,16 @@
 # Hydrangea — 将来対応リスト (FUTURE_WORK)
 
-最終更新: 2026-06-11 (★ F-first-work-golden-master 完了、実装バッチ 1-S。第一作 (候補A
+最終更新: 2026-06-11 (★ F-docs-backlog-registration 完了、docs-only バッチ (ゲート完了後 28 つ目)。
+チャット合意 3 件 (2026-06-05 / 2026-06 上旬) のセッション跨ぎ登録漏れを回収 = **F-docs-architecture-refresh**
+(★低、ARCHITECTURE / REFACTORING_PLAN / TECH_DEBT 刷新 + BATCH_PROTOCOL 老朽化解消をスコープに含む) +
+**F-tech-debt-audit-pre-3c** (★低、A.5-3c 着手前の読み取り専用負債棚卸し) +
+**F-claude-code-auto-progression-principle** (★低、**推定定義・起案前カズヤ意図確認必須**) を緊急度 低に追加。
+DECISION_LOG のコミット placeholder は起案前提 3 箇所に対し grep 実測 **17 箇所** 残存と判明 (クラウド誤り 10
+作法で起案前提を訂正) → 全 17 箇所を git log 実ハッシュで解消 (grep「push 後追記」= 0 件)。★ 副次発見 2 件 =
+①F-verify-jp-coverage-golden / golden-fix は合算 1 コミット (`069c318`) ②F-trial-run-post-fix のコミット
+`27be010` はメッセージが F-jp-coverage-improve 文面の流用 (内容は post-fix 成果物、git show --stat で確認)。
+コード・テスト・configs 0 行変更、baseline 1581 passed 維持。
+前回 2026-06-11: F-first-work-golden-master 完了、実装バッチ 1-S。第一作 (候補A
 cls-6889e9e1c7ac) の golden master 素材一式を自動出力で完成 = ①新ルート再生成 (editorial brief を
 script プロンプトのみにプロセス内注入、article は不変原則 1 で素のまま) ②validation run 2 ガード
 3 ランナー (coverage guard flag 1 = platform_title silence / Guardian 第1層 contradicted 1 = 告発主体
@@ -693,6 +703,45 @@ F-stream-2-filter-design 着手 OK 状態に。
 ## 緊急度 低（時間ある時に検討）
 
 ---
+
+- **F-docs-architecture-refresh: 老朽化 docs (ARCHITECTURE / REFACTORING_PLAN / TECH_DEBT / BATCH_PROTOCOL) の刷新・役割整理** ★低 (2026-06-05 チャット合意、F-docs-backlog-registration / 2026-06-11 で登録漏れ回収)
+  - 背景: `docs/ARCHITECTURE.md` / `docs/REFACTORING_PLAN.md` / `docs/TECH_DEBT.md` が 2026-04 下旬から
+    未更新で現状と乖離。これらはバッチの Task 1-5 更新対象外のため構造的に停滞する (2026-06-05 チャット
+    合意、セッション跨ぎで登録漏れ → F-docs-backlog-registration で回収)。
+  - 対応案: 第一作公開後に docs-only バッチで刷新 or 役割整理 (REFACTORING_PLAN は歴史資料化、TECH_DEBT は
+    FUTURE_WORK への統合も選択肢)。読み取り専用作業のため Claude Code dynamic workflow の試用候補。加えて
+    **BATCH_PROTOCOL.md 自体の老朽化も本タスクのスコープに含める**: baseline 記載「1315 passed」の化石化の
+    解消方針 (live 値は CURRENT_STATE 参照に一本化等) + Project Knowledge 運用ルール (L233 付近「主要 .py を
+    Project Knowledge に上げる場合」) の見直し (コードスナップショットは鮮度リスクのため PK 非搭載方針へ。
+    2026-06-11 に `jp_coverage_verifier.py` を PK から撤去済み)。
+  - 検討時期: 第一作公開後
+  - 想定工数: 0.5〜1 日
+  - 関連ファイル: `docs/ARCHITECTURE.md`、`docs/REFACTORING_PLAN.md`、`docs/TECH_DEBT.md`、`docs/BATCH_PROTOCOL.md`
+  - 関連: F-tech-debt-audit-pre-3c、README 全面書き直し (既存エントリ)、REFACTORING_PLAN.md の最終整理 (既存エントリ)
+
+- **F-tech-debt-audit-pre-3c: A.5-3c 着手前の技術的負債 読み取り専用棚卸し** ★低 (2026-06-05 チャット合意、F-docs-backlog-registration / 2026-06-11 で登録漏れ回収)
+  - 背景: A.5-3c (合成パート自動化) はパイプラインへの大型追加のため、着手前に技術的負債の読み取り専用
+    棚卸しを行う (2026-06-05 チャット合意、セッション跨ぎ登録漏れの回収)。
+  - 対応案: 既知項目 (legacy fallback 経路の target_enemy 復活構造 / verify_two_stage 未配線 / locale key
+    定数散在 等) + 未知の発見を読み取り専用監査でリスト化し、A.5-3c 起案の入力にする。読み取り専用 =
+    acceptEdits 並列と干渉しないため dynamic workflow 試用候補。
+  - 検討時期: Phase A.5-3c 着手前
+  - 想定工数: 0.5 日
+  - 関連ファイル: `src/` 全域 (読み取りのみ)
+  - 関連: F-docs-architecture-refresh、Phase A.5-3c (合成パート自動化)
+
+- **F-claude-code-auto-progression-principle: バッチ実行中の自動進行原則の CLAUDE.md 汎用明文化 (要カズヤ意図確認)** ★低 (2026-06 上旬チャット合意・原文未記録、F-docs-backlog-registration / 2026-06-11 で登録漏れ回収)
+  - 背景: 2026-06 上旬のチャットで合意されたが原文未記録のまま登録が漏れた (本バッチで回収)。
+    **以下の定義はクラウドの推定であり未確認**: バッチ実行中の Claude Code が確認質問で停止せず、
+    起案プロンプトの「乖離訂正権限」「停止条件」の範囲でクラウド推奨案により自動進行する原則を、
+    CLAUDE.md に汎用明文化する構想。
+  - 対応案: **起案時にまずカズヤに意図を確認し、推定が誤っていれば本エントリを修正**。現状は各バッチ
+    プロンプトの個別条項で同等の運用が機能しているため、汎用原則化の要否判断を含む。
+  - 検討時期: 未定 (起案前にカズヤの意図確認が必須)
+  - 想定工数: 0.5h (docs のみ)
+  - 関連ファイル: `CLAUDE.md`、`docs/BATCH_PROTOCOL.md`
+  - 関連: クラウド誤り 10 (検証なしの仮説受容 — 推定定義のまま正典化しないこと)、
+    DISCUSSION_NOTES「auto-progression 原則の推定定義 (カズヤ確認待ち)」(2026-06-11)
 
 - **F-guardian-independence-axis: 独立性評価軸の拡張要否** ★低 (条件付き・未確定) (F-editorial-guardian-corroboration / 2026-06-10 起案)
   - 背景: 1-T.2 の corroboration は独立性を**最小定義** (元ソースドメインの階層除外のみ) で

@@ -1,6 +1,19 @@
 # Hydrangea — Current State (CURRENT_STATE.md)
 
-最終更新: 2026-06-11 (★ F-first-work-golden-master 完了、**実装バッチ 1-S** (ゲート完了後 27 つ目)。
+最終更新: 2026-06-11 (★ F-docs-backlog-registration 完了、**docs-only バッチ** (ゲート完了後 28 つ目)。
+チャット合意 3 件のセッション跨ぎ登録漏れを FUTURE_WORK 緊急度 低に回収 = **F-docs-architecture-refresh**
+(ARCHITECTURE / REFACTORING_PLAN / TECH_DEBT 刷新 + BATCH_PROTOCOL 老朽化解消をスコープに含む) +
+**F-tech-debt-audit-pre-3c** (A.5-3c 着手前の読み取り専用負債棚卸し) +
+**F-claude-code-auto-progression-principle** (★ 推定定義・起案前カズヤ意図確認必須 = 推定のまま正典化
+しない)。DECISION_LOG のコミット未記載 placeholder は起案前提 3 箇所に対し grep 実測 **17 箇所** 残存
+(クラウド誤り 10 作法で起案前提を訂正) → 全 17 箇所を git log / git show --stat 実ハッシュで解消
+(grep = 0 件)。★ 副次発見 2 件 = ①F-verify-jp-coverage-golden / golden-fix は合算 1 コミット
+(`069c318`) ②F-trial-run-post-fix の実コミット `27be010` はメッセージが F-jp-coverage-improve 文面の
+流用 (誤帰属の罠、両エントリに注記)。DISCUSSION_NOTES 4-A 新規 2 件 (auto-progression 推定定義 =
+カズヤ確認待ち / 起案セッションは必ずプロジェクト内開始 + PK 接続自己点検 = 三重安全構造で実害ゼロ
+監査済)。コード・テスト・configs 0 行変更、baseline **1581 passed** 維持 (実測)。フェーズは引き続き
+**手動 PoC** (1-S golden master はカズヤ承認済 = main マージ済 `eadb517`)。
+前バッチ: F-first-work-golden-master 完了 (2026-06-11、1-S、ゲート完了後 27 つ目、実装)。
 **Phase A.5-3b 第一作起案 = 候補A golden master 素材一式の自動出力完成 + 手動動画 PoC の道具立て**。
 カズヤ原則「ワークフロー部品は自動で完成させてから手動 PoC。手動なのは動画組立と公開判断のみ」を実装。
 ①候補A `cls-6889e9e1c7ac` を新ルート + 確定布陣で再生成 (**editorial brief を script プロンプトのみに
@@ -28,12 +41,10 @@ Guardian 第1層 14 主張 → 12 supported + **1 contradicted (c5 = 告発主�
 `flag_summary_for_human_audit.md` にサマリ化 (カズヤ監査の入口)。baseline 1557 → **1581 passed**
 (新規 +24、破壊ゼロ)。不変原則 1-5 + **第一作隔離 (6)** 厳守。新規 1 タスク = F-fable5-guardian-poc ★低。
 **バッチ完了 = 手動 PoC フェーズ開始** (次バッチは PoC 結果待ち、並走候補あり)。
-前バッチ: F-editorial-guardian-corroboration 完了 (2026-06-10、1-T.2、ゲート完了後 26 つ目)。Editorial
+前々バッチ: F-editorial-guardian-corroboration 完了 (2026-06-10、1-T.2、ゲート完了後 26 つ目)。Editorial
 Guardian 第2段 = 真実性検証 (grounding 複数ソース突合) + 公開可否バー (supported × corroborated のみ
 非 flag)。検索と判定の分離 (証拠収集 = GUARDIAN_GROUNDING_MODEL 軽量 / 判定 = Guardian 単一モデル =
-沈黙的劣化の禁止)。X1 Slot-1 実走 2 回 = 503 波下で沈黙的劣化の禁止が実地で機能。baseline 1519 → 1557。
-前々バッチ: F-editorial-guardian-claim-extraction (2026-06-10、1-T.1)。Guardian 第1段 = 高リスク主張
-抽出 + 忠実性検証。X1 Slot-1 で「兵士 25 人死亡」帰属取り違え検出。baseline 1487 → 1519)
+沈黙的劣化の禁止)。X1 Slot-1 実走 2 回 = 503 波下で沈黙的劣化の禁止が実地で機能。baseline 1519 → 1557)
 
 > このドキュメントは Hydrangea の「今この瞬間のスナップショット」。
 > 各バッチ完了時に Claude Code が **全置換更新** する (追記ではない)。
@@ -155,31 +166,30 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
 
 ## 1. リポジトリ状態
 
-- **main HEAD コミット**: `18b5287` (Merge branch 'feature/F-editorial-guardian-corroboration' = 1-T.2 マージ済)。F-first-work-golden-master (1-S) は feature ブランチ `feature/F-first-work-golden-master` で完了、本完了レポート提示後にカズヤ承認 → commit/merge 実行。★ 本バッチは実装バッチ (manual_poc/ 新設一式 + image_prompt_writer.py + video_payload_writer.py 1 行 + tests 2 ファイル + docs/golden_master_spec.md + docs/runs/F-first-work-golden-master/ + ADR-0001/0002 注記 + docs)
-- **直近 6 件のログ (main、F-first-work-golden-master merge 前)**:
+- **main HEAD コミット**: `eadb517` (Merge branch 'feature/F-first-work-golden-master' = 1-S マージ済、カズヤ承認済)。F-docs-backlog-registration (本バッチ) は feature ブランチ `feature/F-docs-backlog-registration` で完了、完了レポート提示後にカズヤ承認 → commit/merge 実行。★ 本バッチは **docs-only** (変更は docs/ 配下のみ = FUTURE_WORK / DECISION_LOG / DISCUSSION_NOTES / CURRENT_STATE / docs/runs/F-docs-backlog-registration/。src/ tests/ configs/ scripts/ manual_poc/ 0 行)
+- **直近 5 件のログ (main、F-docs-backlog-registration merge 前)**:
   ```
+  eadb517 Merge branch 'feature/F-first-work-golden-master'
+  6230649 feat: F-first-work-golden-master (1-S) 第一作 golden master 素材一式 + image_prompt レイヤー + Remotion テンプレート + 運用規約
   18b5287 Merge branch 'feature/F-editorial-guardian-corroboration'
   132082a feat: F-editorial-guardian-corroboration (1-T.2) 真実性検証 = grounding 複数ソース突合 + 公開可否バー + レポート enrichment
   a1754b6 Merge branch 'feature/F-editorial-guardian-claim-extraction'
-  b7e9256 feat: F-editorial-guardian-claim-extraction (1-T.1) Editorial Guardian 第1段 — 高リスク主張抽出 + 忠実性検証 + 2層レポート骨格
-  1bead80 Merge branch 'feature/F-title-guard-coverage-claim-policy'
-  091cf5e feat: F-title-guard-coverage-claim-policy (1-Q.5) coverage claim 事実整合の構造データ + 生成プロンプト原則 + 生成後 guard
   ```
-- **baseline テスト数**: **1581 passed** (F-first-work-golden-master で新規 +24 = `tests/test_image_prompt_writer.py` 18 + `tests/test_tts_to_captions.py` 6。いずれも決定論 (LLM 非関与) で mock 不要。変更前 baseline 1557 passed 実測 = 381s、変更後 1581 passed = 345s)
-- **DB schema 変更**: なし (recent_event_pool は読み取りのみ。production 変更は `src/generation/image_prompt_writer.py` 新規 + `src/generation/video_payload_writer.py` L72 仮想敵 1 行除去のみ。article_writer.py / script_writer.py / triage / analysis 既存ファイル 0 行)
+- **baseline テスト数**: **1581 passed** (F-docs-backlog-registration で実測維持 = docs-only・コード 0 行変更。1-S で 1557 → 1581 = 新規 +24 = `tests/test_image_prompt_writer.py` 18 + `tests/test_tts_to_captions.py` 6)
+- **DB schema 変更**: なし (本バッチは docs-only)
 - **Node 依存**: `manual_poc/remotion/` は独立 npm プロジェクト (Remotion 4.0.475、node_modules は gitignored)。本体 requirements.txt 変更なし
 
 ## 2. 現在のフェーズ
 
-- **Phase**: Phase A.5-3b 第一作 — **golden master 完成、手動 PoC フェーズ開始** (2026-06-11)
-- **進行中バッチ**: なし (F-first-work-golden-master 完了直後、完了レポート提示 → カズヤ承認待ち → commit/merge)
+- **Phase**: Phase A.5-3b 第一作 — **golden master 完成済み、手動 PoC フェーズ** (2026-06-11 開始、継続中)
+- **進行中バッチ**: なし (F-docs-backlog-registration 完了直後、完了レポート提示 → カズヤ承認待ち → commit/merge)
 - **★ 手動 PoC (カズヤ工程、`docs/golden_master_spec.md` §4 チェックリストが正本)**:
   1. flag レビュー (`docs/runs/F-first-work-golden-master/flag_summary_for_human_audit.md` = 入口、手修正対象 5 点) → `*_edited.*` 編集 → ガード 3 本再実行ループ
   2. ElevenLabs 実生成 (声選定済み前提) → `manual_poc/tts_to_captions.py` で captions 変換
   3. 画像 3 候補比較 (image_prompts.json の同文投入: Nano Banana Pro / GPT Image 2 / Flux 2 系)
   4. BGM 用意 (ロイヤリティフリー、editorial トーン) → Remotion 実素材レンダ (props JSON 差し替え)
   5. axis_5 採点 → 公開判断 (公開可否バー + ADR-0003 チェックリスト + **AI 開示ラベル投稿時必須**)
-- **次バッチ候補と推奨** (★ F-first-work-golden-master / 2026-06-11 更新):
+- **次バッチ候補と推奨** (★ F-first-work-golden-master / 2026-06-11 確定、F-docs-backlog-registration で変更なし):
   - ~~**1-S Phase A.5-3b 第一作起案**~~ ✅ **golden master 部分完了 (2026-06-11)**。残り = 上記手動 PoC。
   - **1st (PoC 結果待ちの間の並走候補): F-script-punchline-tail-cut-investigate** ★中 (★ 1-S で標本 2 例目 = loop-2 × 尻切れの再現性確認、調査優先度が上がった)
   - **2nd: F-trial-data-procurement-protocol** ★中 (試運転実行手順整備)
@@ -188,17 +198,16 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
   - **5th: F-title-generator-stream-aware-fix** ★中 (1-S で guard flag が実証 = platform_title silence は第一作で手修正、根本修正の価値が確認された)
   - **6th: F-guardian-production-wire** ★中 (第一作後、Phase A.5-3d 投稿前ゲート統合)
   - **7th: F-fable5-guardian-poc** ★低 (条件付き、第一作の人間監査済み ground truth 確定後)
-  - **8th: F-periodic-health-check** ★ (Phase A.5-3d 着手時) / 本番配線判断バッチ群 (verify_two_stage / F-stream-2-filter-design) / 低優先整合タスク群 ★低
+  - **8th: F-periodic-health-check** ★ (Phase A.5-3d 着手時) / 本番配線判断バッチ群 (verify_two_stage / F-stream-2-filter-design) / 低優先整合タスク群 ★低 (★ F-docs-backlog-registration で 3 件追加 = F-docs-architecture-refresh / F-tech-debt-audit-pre-3c / F-claude-code-auto-progression-principle = 要カズヤ意図確認)
 - **推奨フロー**:
-  - F-first-work-golden-master (✅ 完了) → commit/merge (カズヤ承認後)
-    → **カズヤ手動 PoC** (上記 1-5、公開判断まで)
+  - F-first-work-golden-master (✅ 完了・マージ済 `eadb517`) → **カズヤ手動 PoC** (上記 1-5、公開判断まで)
     → 並走: F-script-punchline-tail-cut-investigate / F-trial-data-procurement-protocol 等
     → PoC 完了後: 第二作起案 or Phase A.5-3c (合成パート自動化 = ElevenLabs/画像/Remotion の本番統合) 判断
 
-### Phase A.5-3a-verify ロードマップ (★ F-first-work-golden-master / 2026-06-11 更新版)
+### Phase A.5-3a-verify ロードマップ (★ F-docs-backlog-registration / 2026-06-11 更新版)
 
 **ゲート完了**: 1-A〜1-D''' 全段階完了で Phase A.5-3a-verify ゲート完了 (2026-05-07)。
-本バッチ (F-first-work-golden-master) はゲート完了後の **27 つ目のバッチ**。
+本バッチ (F-docs-backlog-registration) はゲート完了後の **28 つ目のバッチ** (docs-only)。
 
 | 段階 | バッチ | 状態 | 概要 |
 |---|---|---|---|
@@ -210,7 +219,8 @@ Phase A.5-3d で本番リリースするのは geo_lens のみ単独。
 | 1-Q.5 | F-title-guard-coverage-claim-policy | ✅ 完了 (2026-06-08) | coverage claim 事実整合 3 層。baseline 1466→1487 |
 | 1-T.1 | F-editorial-guardian-claim-extraction | ✅ 完了 (2026-06-10) | Guardian 第1段 = 抽出 + 忠実性。baseline 1487→1519 |
 | 1-T.2 | F-editorial-guardian-corroboration | ✅ 完了 (2026-06-10) | Guardian 第2段 = 真実性 + 公開可否バー。baseline 1519→1557 |
-| **1-S** | **F-first-work-golden-master** | ✅ **完了 (2026-06-11、実装)** | **ゲート完了後 27 つ目**。第一作 golden master 素材一式の自動出力完成 + 手動 PoC 道具立て。①候補A 新ルート再生成 (brief script 注入 / モデル pin = 全 Tier 3.5-flash / fallback 検出 fail-fast) ②validation 2 ガード 3 ランナー (title silence flag + c5 帰属エラー + c10/c13 coverage 過大の明示矛盾 + c6 corroborated 回収) ③image_prompt レイヤー新設 (決定論 5 プレート、文字なし / 意味記述正典) ④Remotion テンプレート (3 帯紙面 + フックカード + Ken Burns + フレーズ同期字幕 + ducking、ダミー MP4 実証) ⑤golden_master_spec.md 正典化。CP-1 重大乖離 2 件訂正 (analysis.json 非存在 / 観点候補構造的 0 件 → fallback 同形注入)。punchline 尻切れ標本 2 例目。baseline 1557→1581 |
+| 1-S | F-first-work-golden-master | ✅ 完了 (2026-06-11、実装、マージ済 `eadb517`) | **ゲート完了後 27 つ目**。第一作 golden master 素材一式の自動出力完成 + 手動 PoC 道具立て。①候補A 新ルート再生成 (brief script 注入 / モデル pin = 全 Tier 3.5-flash / fallback 検出 fail-fast) ②validation 2 ガード 3 ランナー (title silence flag + c5 帰属エラー + c10/c13 coverage 過大の明示矛盾 + c6 corroborated 回収) ③image_prompt レイヤー新設 (決定論 5 プレート、文字なし / 意味記述正典) ④Remotion テンプレート (3 帯紙面 + フックカード + Ken Burns + フレーズ同期字幕 + ducking、ダミー MP4 実証) ⑤golden_master_spec.md 正典化。CP-1 重大乖離 2 件訂正 (analysis.json 非存在 / 観点候補構造的 0 件 → fallback 同形注入)。punchline 尻切れ標本 2 例目。baseline 1557→1581 |
+| **(docs)** | **F-docs-backlog-registration** | ✅ **完了 (2026-06-11、docs-only)** | **ゲート完了後 28 つ目**。チャット合意 3 件の FUTURE_WORK 登録漏れ回収 (F-docs-architecture-refresh / F-tech-debt-audit-pre-3c / F-claude-code-auto-progression-principle = 推定定義・カズヤ確認待ち) + DECISION_LOG コミット placeholder 解消 (起案前提 3 箇所 → grep 実測 **17 箇所** に訂正の上、全件実ハッシュで埋め = grep 0 件)。副次発見 2 件 (golden/golden-fix 合算コミット / post-fix コミットメッセージ流用) を該当エントリに注記。コード 0 行、baseline 1581 維持 |
 | 1-S 後続 | 手動 PoC (カズヤ) | ★ **進行中フェーズ** | flag レビュー編集 → 再検証ループ → ElevenLabs → 画像 3 候補 → 実素材レンダ → axis_5 → 公開判断 |
 | 1-U | F-script-punchline-tail-cut-investigate / F-trial-data-procurement-protocol / F-evidence-jp-coverage-audit-trail / F-grounding-determinism-audit / 本番配線残分 | ★ 並走候補 | PoC 結果待ちの間に消化可 |
 
@@ -225,6 +235,7 @@ ADR-0003 で正典化。★ AI 生成コンテンツ開示 (YouTube/TikTok ラ�
 
 ## 3. 直近の試運転結果サマリー
 
+> ★ F-docs-backlog-registration (2026-06-11) は **docs-only、試運転なし** (LLM 呼び出しゼロ、コスト $0)。
 > ★ F-first-work-golden-master (1-S / 2026-06-11) は **パイプライン試運転なし** (保存済み候補A
 > snapshot に対する単発再生成ハーネス + offline validation run)。
 > **生成**: `manual_poc/generate_golden_master.py` で候補A を再生成。初回 run で 503 波により
@@ -253,8 +264,9 @@ ADR-0003 で正典化。★ AI 生成コンテンツ開示 (YouTube/TikTok ラ�
 
 ## 4. Hydrangea コンセプト防衛機構の現状 (5 層 + 公開前検証)
 
-> ★ 1-S は防衛機構ロジック (F-1〜F-13) 不変。公開前検証 (guard + Guardian 2 層) が第一作の実成果物で
-> 初めてフル稼働し、編集欠陥 (帰属エラー / coverage 過大主張 / title silence) を公開前に捕捉した。
+> ★ F-docs-backlog-registration は防衛機構に一切影響なし (docs-only)。1-S は防衛機構ロジック
+> (F-1〜F-13) 不変。公開前検証 (guard + Guardian 2 層) が第一作の実成果物で初めてフル稼働し、
+> 編集欠陥 (帰属エラー / coverage 過大主張 / title silence) を公開前に捕捉した。
 
 | 層 | バッチ | 場所 | 役割 | 状態 |
 |---|---|---|---|---|
@@ -270,11 +282,11 @@ ADR-0003 で正典化。★ AI 生成コンテンツ開示 (YouTube/TikTok ラ�
 ### 触ってよい領域
 - `manual_poc/` 配下全般 (★ 1-S 新設 = 第一作隔離領域。生成ハーネス / editorial brief / tts_to_captions / `remotion/` 独立 npm プロジェクト。production 経路から import されない)
 - `data/output/golden_master/` (★ 1-S 新設、gitignored。**original は凍結 = 手で書き換えない**、編集は `*_edited.*`。規約は `docs/golden_master_spec.md`)
-- `configs/prompts/` 配下全般 (主戦場: `configs/prompts/analysis/geo_lens/`。★ 1-S では**変更なし** = brief はハーネスのプロセス内注入で production プロンプト不変)
+- `configs/prompts/` 配下全般 (主戦場: `configs/prompts/analysis/geo_lens/`)
 - `configs/` 直下の YAML 構造データ (`coverage_claim_policy.yaml` 等)
-- `src/generation/` への **新規ファイル追加** (★ 1-Q.5 `coverage_claim_guard.py` / 1-T.1 `editorial_guardian.py` / 1-T.2 `editorial_guardian_corroboration.py` / **1-S `image_prompt_writer.py`** = 決定論 5 プレートビルダー、LLM 非関与)
-- `docs/` 配下全般 (★ `docs/ADR/` の ADR 新規作成・部分更新注記可。★ 1-S で `golden_master_spec.md` 新設 + ADR-0001/0002 に部分更新注記)
-- `tests/` 配下に新規テストファイル追加 (既存ファイルは原則変更しない。★ 1-S で `test_image_prompt_writer.py` + `test_tts_to_captions.py` 新規、既存テスト 0 行変更)
+- `src/generation/` への **新規ファイル追加** (★ 1-Q.5 `coverage_claim_guard.py` / 1-T.1 `editorial_guardian.py` / 1-T.2 `editorial_guardian_corroboration.py` / 1-S `image_prompt_writer.py` = 決定論 5 プレートビルダー、LLM 非関与)
+- `docs/` 配下全般 (★ `docs/ADR/` の ADR 新規作成・部分更新注記可。★ 本バッチ F-docs-backlog-registration は docs/ のみで完結)
+- `tests/` 配下に新規テストファイル追加 (既存ファイルは原則変更しない)
 - `scripts/` 配下に新規スクリプト追加
 - `src/triage/` に新規ファイル追加
 - `src/storage/db.py` (不変原則対象外 = storage 層。後方互換必須)
@@ -283,8 +295,8 @@ ADR-0003 で正典化。★ AI 生成コンテンツ開示 (YouTube/TikTok ラ�
 - `src/shared/models.py` (後方互換必須)
 - `src/main.py` (不変原則対象外)
 - `src/llm/factory.py` / `src/shared/config.py` の Gemini モデル ID default (最終布陣 v2 + GUARDIAN role + GUARDIAN_GROUNDING_MODEL 配線済)
-- `src/analysis/` (★ 新規ファイルは例外条件 5 点充足時のみ = X1 前例。★ 1-S では**不変** = 観点候補注入はハーネス側 monkeypatch で実現、analysis_engine.py / perspective_extractor.py 0 行)
-- `.env` / `.env.example` (★ gitignored / secrets 表示ガード = CLAUDE.md §4 遵守。★ 1-S では変更なし = ELEVENLABS_API_KEY は手動 PoC でカズヤが追加予定)
+- `src/analysis/` (★ 新規ファイルは例外条件 5 点充足時のみ = X1 前例)
+- `.env` / `.env.example` (★ gitignored / secrets 表示ガード = CLAUDE.md §4 遵守。ELEVENLABS_API_KEY は手動 PoC でカズヤが追加予定)
 
 ### 触ってはいけない領域
 - `src/generation/article_writer.py` (不変原則 1。★ 1-S で「brief 注入不可 → article は素のまま生成」の制約として実地に効いた = c10/c13 coverage 過大は人間編集で直す)
@@ -328,15 +340,16 @@ ADR-0003 で正典化。★ AI 生成コンテンツ開示 (YouTube/TikTok ラ�
   brief も「言い回しルール」ではなく「人間検証済みの事実関係 + 編集方針」の構造データとして注入
   (語の選択は LLM に委ねる)。
 - **「起案前 grep で起案者前提を検証・訂正する権限 (CP-1)」** (★ クラウド誤り 10 作法) — ★ 1-S で
-  重大乖離 2 件 (analysis.json 非存在 / 観点候補構造的 0 件) を実測で発見・訂正。ルールベース部分の
-  実データドライランが有効だった。
+  重大乖離 2 件 (analysis.json 非存在 / 観点候補構造的 0 件) を実測で発見・訂正。★ 本バッチ
+  (F-docs-backlog-registration) でも適用 = placeholder「3 箇所」を grep 実測「17 箇所」に訂正の上、
+  完了条件 (grep 0 件) の趣旨に沿って全件解消。
 - **「記事は最上級の知能で考えてほしい」** (★ F-article-model-upgrade) — 1-S は article=3.5-flash
   pin で生成。3.1 Pro エスカレは axis_5 評価後 (F-article-3.1-pro-escalation ★低)。
 - **「外部レビュー / 事前情報も grep + コード精読で検証してから起案」** (クラウド誤り 10) /
   **「整合の説明であって検証ではない」** — 外部 AI も一次ソース (公式 docs / repo grep / 実測) で
-  裏取り (1-S では ElevenLabs API / Remotion skills を公式ソースで確認)。
-- **「1 バッチで欲張らない」+「設計判断と実装の分離」** — 1-S は golden master + 道具立てまで。
-  AI 文体改修 / title_generator 根本修正 / 画像 API 配線 / 自動投稿はしない。
+  裏取り。★ 推定定義は正典化しない (auto-progression 原則 = カズヤ確認待ちと明記、本バッチ)。
+- **「1 バッチで欲張らない」+「設計判断と実装の分離」** — 本バッチは登録と placeholder 回収のみ
+  (登録 3 タスクの実装はしない)。
 - **「対症療法じゃなく根本治療」/「動くものを壊さない」/「機械判定は事実の代替ではない」** —
   候補A perspective_gap は人間確定が正 (1-S では機械抽出も一致し訂正不要だった)。
 - **「Hydrangea のメディアとしてのリスクは嘘をつくこと」** — ★ 1-S validation が article の coverage
@@ -354,6 +367,8 @@ ADR-0003 で正典化。★ AI 生成コンテンツ開示 (YouTube/TikTok ラ�
 - 編集ミッションフィルタ設計 (F-13 隠れ層含む) → `docs/EDITORIAL_MISSION_FILTER_DESIGN.md`
 - ★ 「特定角度」概念正典 → `docs/PARTICULAR_ANGLE_DEFINITION.md`
 - Claude Code 振る舞い指針 → `CLAUDE.md`
+- ★★ **F-docs-backlog-registration (本バッチ、docs-only) 完了レポート** →
+  `docs/runs/F-docs-backlog-registration/REPORT.md` (placeholder 17 箇所の対応表 + 登録 3 エントリの位置)
 - ★★ **第一作 golden master 運用規約 (正本)** → `docs/golden_master_spec.md`
 - ★★ **F-first-work-golden-master (1-S) 成果物** → `docs/runs/F-first-work-golden-master/`
   (`flag_summary_for_human_audit.md` = カズヤ監査の入口 / `golden_master/` = 凍結スナップショット /
@@ -375,13 +390,13 @@ ADR-0003 で正典化。★ AI 生成コンテンツ開示 (YouTube/TikTok ラ�
 
 *このドキュメントは F-state-protocol (2026-05-01) で導入。Claude Code が
 バッチ完了時に全置換更新する運用 (BATCH_PROTOCOL.md Task 5)。
-F-first-work-golden-master (2026-06-11) は **ゲート完了後の 27 つ目のバッチ (1-S)**、**実装バッチ**。
-Phase A.5-3b 第一作起案 = **候補A golden master 素材一式の自動出力完成 + 手動動画 PoC の道具立て**。
-生成 (brief script 注入 + モデル pin + fallback fail-fast) → validation (2 ガード 3 ランナー、title
-silence flag / c5 帰属エラー / c10/c13 coverage 過大の明示矛盾 / c6 corroborated 回収 / run 間分散を
-ガード文脈でも実測) → image_prompt レイヤー (決定論 5 プレート) → Remotion (3 帯紙面 + フックカード +
-Ken Burns + フレーズ同期 + ducking、ダミー MP4 実証) → spec 正典化、まで完了。CP-1 で重大乖離 2 件
-訂正 (誤り 10 作法)。punchline 尻切れ標本 2 例目。baseline 1557 → **1581 passed** (+24、破壊ゼロ)。
-不変原則 1-5 + 第一作隔離 (6) 厳守。**現在 = 手動 PoC フェーズ** (カズヤ工程、golden_master_spec §4)。
-次バッチは PoC 結果待ち、並走候補 = F-script-punchline-tail-cut-investigate ★中 等。
+F-docs-backlog-registration (2026-06-11) は **ゲート完了後の 28 つ目のバッチ**、**docs-only**。
+チャット合意 3 件 (F-docs-architecture-refresh / F-tech-debt-audit-pre-3c /
+F-claude-code-auto-progression-principle = 推定定義・カズヤ確認待ち) の FUTURE_WORK 登録漏れ回収 +
+DECISION_LOG コミット placeholder の全件解消 (起案前提 3 箇所 → grep 実測 17 箇所に CP-1 訂正、
+全件 git log / git show --stat 実ハッシュで埋め = grep 0 件。副次発見 = golden/golden-fix 合算
+コミット + post-fix コミットメッセージ流用の誤帰属の罠を注記)。コード・テスト・configs 0 行変更、
+baseline **1581 passed** 維持。不変原則 1-5 + 第一作隔離 (6) は自明に維持。
+**現在 = 手動 PoC フェーズ継続** (カズヤ工程、golden_master_spec §4。1-S はカズヤ承認済・マージ済
+`eadb517`)。次バッチは PoC 結果待ち、並走候補 = F-script-punchline-tail-cut-investigate ★中 等。
 過去の経緯は DECISION_LOG.md / FUTURE_WORK.md / DISCUSSION_NOTES.md を参照。*
